@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 project(VoxaEngine VERSION 0.1.0 LANGUAGES CXX)
 
+# Ensure debug symbols
+set(CMAKE_BUILD_TYPE Debug)
+
+# Include debugging flags
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+
 # SDL2 paths
 set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include")
 set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")

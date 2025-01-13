@@ -1,5 +1,8 @@
+#pragma once
+
 #include <SDL2/SDL.h>
 #include "Math/Vector.h"
+#include "World/Chunk.h"
 
 class GameEngine
 {
@@ -10,16 +13,23 @@ private:
 
     Uint64 FrameStartTime;
 
+    float fixedUpdateTimer = 0;
+
     void m_initVariables();
     void m_initWindow();
     void m_OnKeyboardInput(SDL_Event event);
+    void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
+    void m_FixedUpdate();
 public:
-    static const int MAX_FRAME_RATE = 60;
+    static constexpr int MAX_FRAME_RATE = 60;
+    static constexpr float fixedDeltaTime = 1/30.0;
     bool running = true;
-    float deltaTime;    // time between frames in seconds
-    float FPS;
+    float deltaTime = 1/60;    // time between frames in seconds
+    float FPS = 60;
     
-    Vec2 mousePos;
+    Vec2f mousePos;
+
+    ChunkMatrix chunkMatrix;
 
     GameEngine();
     ~GameEngine();

@@ -17,9 +17,6 @@ int WinMain(int argc, char* argv[]){
     {
         gEngine.StartFrame();
 
-        //Poll keyboard events
-        gEngine.PollEvents();
-
         //Update
         gEngine.Update();
 
