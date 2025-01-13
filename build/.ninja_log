@@ -1,0 +1,15 @@
+# ninja log v6
+4	219	7584766896524213	CMakeFiles/VoxaEngine.dir/main.cpp.obj	fc3c94d60490ff3b
+6	610	7584875675889276	CMakeFiles/VoxaEngine.dir/Files/WinMain.cpp.obj	d54fae4f8e37ee1f
+615	733	7584875681979909	VoxaEngine.exe	d17ec9455616d2ee
+1	7	7584765197647454	help	f046f3d8d0bd16a2
+3	615	7584875675859271	CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj	77238f55e5b034ce
+12	59	7584875557977887	CMakeFiles/VoxaEngine.dir/Files/World/Chunk.cpp.obj	c720e6b81773bfc2
+4	549	7584796828654944	CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj	690aeb15a225b0f0
+7	59	7584875557927872	CMakeFiles/VoxaEngine.dir/Files/Math/GameMath.cpp.obj	11c595e8f623ca2d
+7	60	7584876430218762	CMakeFiles/VoxaEngine.dir/Files/Math/Vector.cpp.obj	e8ca8f07f307ce0d
+10	587	7584876430243841	CMakeFiles/VoxaEngine.dir/Files/WinMain.cpp.obj	d54fae4f8e37ee1f
+3	593	7584876430178755	CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj	77238f55e5b034ce
+593	697	7584876436077362	VoxaEngine.exe	fa01a8f0c49f2d0d
+4	577	7584877419854966	CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj	77238f55e5b034ce
+578	686	7584877425590392	VoxaEngine.exe	fa01a8f0c49f2d0d

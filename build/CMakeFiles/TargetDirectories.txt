@@ -1,0 +1,3 @@
+C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build/CMakeFiles/VoxaEngine.dir
+C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build/CMakeFiles/edit_cache.dir
+C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build/CMakeFiles/rebuild_cache.dir
