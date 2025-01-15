@@ -6,11 +6,6 @@
 #include <iostream>
 
 using namespace Volume; 
-Volume::Chunk::Chunk() : m_x(0), m_y(0)
-{
-    this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
-}
-
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
     this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
@@ -26,7 +21,14 @@ Volume::Chunk::~Chunk()
         this->font = nullptr;
     }
 }
+bool Volume::Chunk::ShouldChunkDelete(AABB &Camera)
+{
+    if(wasCheckedPreviousFrame) return false;
+    if(updateVoxelsNextFrame) return false;
+    if(this->GetAABB().Overlaps(Camera)) return false;
 
+    return true;
+}
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
     this->updateVoxelsNextFrame = false;
@@ -337,6 +339,9 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
     if(!chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][pos.getY() % Chunk::CHUNK_SIZE]){
         return nullptr;
     } 
+
+    chunk->wasCheckedPreviousFrame = true;
+
     return chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
 }
 

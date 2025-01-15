@@ -18,17 +18,18 @@ namespace Volume
     	//VoxelElement*** voxels;
     	std::array<std::array<std::shared_ptr<VoxelElement>, CHUNK_SIZE>, CHUNK_SIZE> voxels;
 
-    	Chunk();
     	Chunk(const Vec2i& pos);
     	~Chunk();
 
+		bool ShouldChunkDelete(AABB &Camera);
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
     	void Render(SDL_Renderer& WindowRenderer, Vec2f offset) const;
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
-    	bool updateVoxelsNextFrame = false; //TODO: temp
+		bool wasCheckedPreviousFrame = true;
+    	bool updateVoxelsNextFrame = true;
     private:
     	short int m_x;
     	short int m_y;
@@ -52,10 +53,12 @@ public:
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
+
 	void PlaceVoxelsAtMousePosition(const Vec2f& pos, Volume::VoxelType elementType, Vec2f offset);
 	void PlaceParticleAtMousePosition(const Vec2f& pos, Volume::VoxelType particleType, Vec2f offset, float angle, float speed);
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
+
 	Volume::Chunk* GenerateChunk(const Vec2i& pos);
 	void DeleteChunk(const Vec2i& pos);
 

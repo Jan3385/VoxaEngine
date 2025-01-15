@@ -13,10 +13,11 @@ private:
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     SDL_Event windowEvent;
-
     Uint64 FrameStartTime;
 
     float fixedUpdateTimer = 0;
+
+    AABB Camera;
 
     void m_initVariables();
     void m_initWindow();
@@ -24,6 +25,7 @@ private:
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
     void m_FixedUpdate();
     void m_UpdateGridSegment(int pass);
+    void m_LoadChunkInView(Vec2i pos);
 public:
     static constexpr int MAX_FRAME_RATE = 60;
     static constexpr float fixedDeltaTime = 1/30.0;
@@ -33,7 +35,6 @@ public:
     
     Vec2f mousePos;
 
-    AABB Camera;
     Vec2f PlayerVelocity;
     bool MovementKeysHeld[4] = {false, false, false, false};
 
@@ -46,4 +47,7 @@ public:
     void Update();
     void PollEvents();
     void Render();
+
+    Vec2f GetCameraPos() const;
+    void MoveCamera(Vec2f pos);
 };

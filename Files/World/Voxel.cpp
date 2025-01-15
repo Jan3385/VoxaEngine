@@ -227,6 +227,7 @@ void VoxelMovableSolid::StopFalling()
 
 bool VoxelLiquid::Step(ChunkMatrix *matrix)
 {
+	//TODO: make water only move when theres water above or below it
     //lazy hack to make the chunk its in update in the next cycle
     if (updatedThisFrame) {
     	return true;

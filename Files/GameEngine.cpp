@@ -7,7 +7,7 @@ using namespace std;
 
 GameEngine::GameEngine()
 {
-    this->Camera = AABB(Vec2f(0, 0), Vec2f(640/Volume::Chunk::RENDER_VOXEL_SIZE, 480/Volume::Chunk::RENDER_VOXEL_SIZE));
+    this->Camera = AABB(Vec2f(0, 0), Vec2f(640.0/Volume::Chunk::RENDER_VOXEL_SIZE, 480.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 
     SDL_Init(SDL_INIT_EVERYTHING);
     if (TTF_Init() == -1) {
@@ -58,28 +58,34 @@ void GameEngine::Update()
     }
 
     if (MovementKeysHeld[0])
-        this->Camera.corner.y(this->Camera.corner.getY() - 1);
+        this->MoveCamera(this->Camera.corner + Vec2f(0, -2));
     if (MovementKeysHeld[1])
-        this->Camera.corner.y(this->Camera.corner.getY() + 1);
+        this->MoveCamera(this->Camera.corner + Vec2f(0, 2));
     if (MovementKeysHeld[2])
-        this->Camera.corner.x(this->Camera.corner.getX() - 1);
+        this->MoveCamera(this->Camera.corner + Vec2f(-2, 0));
     if (MovementKeysHeld[3])
-        this->Camera.corner.x(this->Camera.corner.getX() + 1);
+        this->MoveCamera(this->Camera.corner + Vec2f(2, 0));
 }
 
 void GameEngine::m_UpdateGridSegment(int pass)
 {
     for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
+        if(chunk->ShouldChunkDelete(Camera))
+        {
+            chunkMatrix.DeleteChunk(chunk->GetPos());
+            continue;
+        }
+
         if (chunk->updateVoxelsNextFrame)
             chunk->UpdateVoxels(&this->chunkMatrix);
     }
 }
-
 void GameEngine::m_FixedUpdate()
 {
     for(int i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+            chunk->wasCheckedPreviousFrame = false;
             if (chunk->updateVoxelsNextFrame)
                 chunk->ResetVoxelUpdateData(&this->chunkMatrix);
         }
@@ -164,14 +170,52 @@ void GameEngine::Render()
     for(int i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            chunk->Render(*this->renderer, Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));
+            chunk->Render(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));
         }
     }
 
-    chunkMatrix.RenderParticles(*this->renderer, Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
+    chunkMatrix.RenderParticles(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
     // Update window
     SDL_RenderPresent( renderer );
+}
+
+Vec2f GameEngine::GetCameraPos() const
+{
+    return Vec2f(Camera.corner);
+}
+
+void GameEngine::MoveCamera(Vec2f pos)
+{
+    this->Camera.corner = pos;
+
+    //Spawn chunks that are in the view but don´t exits
+    Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(Camera.corner));
+    int ChunksHorizontal = (Camera.size.getX() / Volume::Chunk::CHUNK_SIZE) + 1; //TODO: figure out why its +2 instead of +1
+    int ChunksVertical = (Camera.size.getY() / Volume::Chunk::CHUNK_SIZE) + 1;
+    
+    vector<thread> threads;
+
+    for (int x = 0; x < ChunksHorizontal; ++x) {
+        for (int y = 0; y < ChunksVertical; ++y) {
+            Vec2i chunkPos = cameraChunkPos + Vec2i(x, y);
+            threads.emplace_back(&GameEngine::m_LoadChunkInView, this, chunkPos);
+        }
+    }
+
+    // Wait for all threads to finish
+    for (auto& thread : threads) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+}
+void GameEngine::m_LoadChunkInView(Vec2i pos)
+{
+    if (!chunkMatrix.GetChunkAtChunkPosition(pos)) {
+        chunkMatrix.GenerateChunk(pos);
+    }
+    return;
 }
 
 void GameEngine::m_initVariables()
