@@ -4,8 +4,10 @@
 #include <array>
 #include <mutex>
 #include <vector>
+#include <SDL2/SDL_ttf.h>
 #include "Voxel.h"
 #include "../Math/Vector.h"
+#include "../Math/AABB.h"
 
 namespace Volume
 {
@@ -23,11 +25,14 @@ namespace Volume
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
     	void Render(SDL_Renderer& WindowRenderer, Vec2f offset) const;
+		Vec2i GetPos() const;
+		AABB GetAABB() const;
 
-    	bool updateVoxelsNextFrame = true;
+    	bool updateVoxelsNextFrame = false; //TODO: temp
     private:
     	short int m_x;
     	short int m_y;
+		TTF_Font* font;
     };
 }
 
@@ -38,7 +43,7 @@ public:
 
 
 	//grid storage logic
-	std::vector<std::vector<Volume::Chunk*>> Grid;
+	//std::vector<std::vector<Volume::Chunk*>> Grid;
 	//precomputed grids for simulation passing - 0 - 3 passees
 	std::vector<Volume::Chunk*> GridSegmented[4];
 
@@ -51,7 +56,8 @@ public:
 	void PlaceParticleAtMousePosition(const Vec2f& pos, Volume::VoxelType particleType, Vec2f offset, float angle, float speed);
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
-	void GenerateChunk(const Vec2i& pos);
+	Volume::Chunk* GenerateChunk(const Vec2i& pos);
+	void DeleteChunk(const Vec2i& pos);
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks

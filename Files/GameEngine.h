@@ -5,6 +5,8 @@
 #include "Math/AABB.h"
 #include "World/Chunk.h"
 
+//TODO: load chunk when voxel enters new area
+
 class GameEngine
 {
 private:
@@ -26,7 +28,7 @@ public:
     static constexpr int MAX_FRAME_RATE = 60;
     static constexpr float fixedDeltaTime = 1/30.0;
     bool running = true;
-    float deltaTime = 1/60;    // time between frames in seconds
+    float deltaTime = 1/60.0;    // time between frames in seconds
     float FPS = 60;
     
     Vec2f mousePos;

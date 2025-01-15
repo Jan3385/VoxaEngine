@@ -154,13 +154,12 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
 
     	return true;
     }
-
-    if (IsFalling) { //On the frame of the impact
+    else if (IsFalling) { //On the frame of the impact
     	StopFalling();
     	//If the voxel below is a solid, try to move to the sides
     
     	//try to set isFalling to true on voxel below - simulates inertia
-    	std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
+    	std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(0, 1)); //TODO: figure out why did the voxel pos change to y=-1 when there was Vec2i(-1,1)
     	if (below && below->GetState() == VoxelState::MovableSolid)
     	{
     		std::shared_ptr<VoxelMovableSolid> belowMovable = std::dynamic_pointer_cast<VoxelMovableSolid>(below);
@@ -179,7 +178,7 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
     	else if (StepAlongDirection(matrix, Vec2i(1, 0), XVelocity))
     		return true;
 
-    	below = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
+    	below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
     	if (below && below->GetState() == VoxelState::MovableSolid)
     	{
     		std::shared_ptr<VoxelMovableSolid> belowMovable = std::dynamic_pointer_cast<VoxelMovableSolid>(below);
@@ -375,13 +374,13 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     //swapping with a random gas voxel nearby
     //TODO: make this function use density
     //TODO: avoid making useless gas swaps
-    Vec2i toSwapPos = this->position + Vec2i(rand() % 3 - 1, rand() % 3 - 1);
-    std::shared_ptr<VoxelElement> toSwap = matrix->VirtualGetAt(toSwapPos);
-    if (toSwap && toSwap->GetState() == VoxelState::Gas && !toSwap->updatedThisFrame)
-    {
-    	if(toSwap->properties->name != this->properties->name) this->Swap(toSwapPos, *matrix);
-    	return false; //TODO: temp return false;
-    }
+    //Vec2i toSwapPos = this->position + Vec2i(rand() % 3 - 1, rand() % 3 - 1);
+    //std::shared_ptr<VoxelElement> toSwap = matrix->VirtualGetAt(toSwapPos);
+    //if (toSwap && toSwap->GetState() == VoxelState::Gas && !toSwap->updatedThisFrame)
+    //{
+    //	if(toSwap->properties->name != this->properties->name) this->Swap(toSwapPos, *matrix);
+    //	return false; //TODO: temp return false;
+    //}
     return false;
 }
 

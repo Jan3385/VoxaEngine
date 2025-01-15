@@ -1,4 +1,5 @@
 #include "GameEngine.h"
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <thread>
 
@@ -6,9 +7,12 @@ using namespace std;
 
 GameEngine::GameEngine()
 {
-    this->Camera = AABB(Vec2f(0, 0), Vec2f(640, 480));
+    this->Camera = AABB(Vec2f(0, 0), Vec2f(640/Volume::Chunk::RENDER_VOXEL_SIZE, 480/Volume::Chunk::RENDER_VOXEL_SIZE));
 
     SDL_Init(SDL_INIT_EVERYTHING);
+    if (TTF_Init() == -1) {
+        std::cerr << "Error initializing SDL_ttf: " << TTF_GetError() << std::endl;
+    }
 
     m_initVariables();
     m_initWindow();
@@ -17,6 +21,7 @@ GameEngine::GameEngine()
 GameEngine::~GameEngine()
 {
     SDL_DestroyWindow(window);
+    TTF_Quit();
     SDL_Quit();
 }
 
@@ -27,7 +32,10 @@ void GameEngine::StartFrame()
 
 void GameEngine::EndFrame()
 {
-    SDL_Delay(1000 / MAX_FRAME_RATE - deltaTime);
+    //cout << "FPS: " << this->FPS << endl;
+    //cout << "Delta Time: " << this->deltaTime << endl;
+    //cout << "Wait time " << ((1000.0 / MAX_FRAME_RATE) - deltaTime*1000) << endl;
+    SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
 
     Uint64 FrameEndTime = SDL_GetPerformanceCounter();
 
@@ -39,8 +47,6 @@ void GameEngine::EndFrame()
 
 void GameEngine::Update()
 {
-    //cout << "FPS: " << this->FPS << endl;
-
     //Polls events - e.g. window close, keyboard input..
     this->PollEvents();
 
@@ -52,13 +58,13 @@ void GameEngine::Update()
     }
 
     if (MovementKeysHeld[0])
-        this->Camera.corner.y(this->Camera.corner.getY() - 5);
+        this->Camera.corner.y(this->Camera.corner.getY() - 1);
     if (MovementKeysHeld[1])
-        this->Camera.corner.y(this->Camera.corner.getY() + 5);
+        this->Camera.corner.y(this->Camera.corner.getY() + 1);
     if (MovementKeysHeld[2])
-        this->Camera.corner.x(this->Camera.corner.getX() - 5);
+        this->Camera.corner.x(this->Camera.corner.getX() - 1);
     if (MovementKeysHeld[3])
-        this->Camera.corner.x(this->Camera.corner.getX() + 5);
+        this->Camera.corner.x(this->Camera.corner.getX() + 1);
 }
 
 void GameEngine::m_UpdateGridSegment(int pass)
@@ -158,11 +164,11 @@ void GameEngine::Render()
     for(int i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            chunk->Render(*this->renderer, Camera.corner*-1);
+            chunk->Render(*this->renderer, Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));
         }
     }
 
-    chunkMatrix.RenderParticles(*this->renderer, Camera.corner*-1);	
+    chunkMatrix.RenderParticles(*this->renderer, Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
     // Update window
     SDL_RenderPresent( renderer );
@@ -198,7 +204,7 @@ void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
-    Vec2f offset = this->Camera.corner;
+    Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:

@@ -30,25 +30,25 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 22,
+				"line" : 26,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 25,
+				"line" : 29,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 17,
+				"line" : 21,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
-				"line" : 27,
+				"line" : 31,
 				"parent" : 0
 			}
 		]
@@ -112,6 +112,11 @@
 			{
 				"backtrace" : 2,
 				"fragment" : "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\SDL2\\lib\\libSDL2main.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\SDL2\\lib\\libSDL2_ttf.dll.a",
 				"role" : "libraries"
 			},
 			{

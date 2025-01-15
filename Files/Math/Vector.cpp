@@ -124,3 +124,7 @@ bool Vec2i::operator!=(const Vec2i &other) const
     return this->getX() != other.getX() || this->getY() != other.getY();
 }
 
+bool Vec2i::operator==(const Vec2i &other) const
+{
+    return this->getX() == other.getX() && this->getY() == other.getY();
+}

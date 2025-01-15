@@ -5,19 +5,26 @@
 #include <cmath>
 #include <iostream>
 
-
 using namespace Volume; 
-
 Volume::Chunk::Chunk() : m_x(0), m_y(0)
 {
+    this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
 }
 
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
+    this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
+    if(!this->font) {
+        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
+    }
 }
 
 Volume::Chunk::~Chunk()
 {
+    if (this->font != nullptr) {
+        TTF_CloseFont(this->font);
+        this->font = nullptr;
+    }
 }
 
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
@@ -69,6 +76,7 @@ void Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) const
     for (int y = 0; y < CHUNK_SIZE; ++y) {
         for (int x = 0; x < CHUNK_SIZE; ++x) {
             const RGB& color = voxels[x][y]->color;
+            //const RGB& color = RGB(voxels[x][y].get()->position.getX() / 2, 0, voxels[x][y].get()->position.getY() / 2);
 
             SDL_SetRenderDrawColor(&WindowRenderer, color.r, color.g, color.b, 255);
 
@@ -96,18 +104,26 @@ void Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) const
     SDL_RenderDrawLine(&WindowRenderer, x2, y2, x1, y2); // Bottom
     SDL_RenderDrawLine(&WindowRenderer, x1, y2, x1, y1); // Left
 
-    // Render chunk position
-    //SDL_Color textColor = {255, 255, 255, 255};
-    //std::string text = std::to_string(m_x) + "," + std::to_string(m_y);
+    //Render chunk position
 
-    //SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
-    //SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-
-    //SDL_Rect textRect = {x1, y1, textSurface->w, textSurface->h};
-    //SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-
-    //SDL_FreeSurface(textSurface);
-    //SDL_DestroyTexture(textTexture);
+    SDL_Color textColor = {255, 255, 255, 255};
+    std::string text = std::to_string(m_x) + "," + std::to_string(m_y);
+    SDL_Surface* textSurface = TTF_RenderText_Solid(this->font, text.c_str(), textColor);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(&WindowRenderer, textSurface);
+    SDL_Rect textRect = {x1, y1, textSurface->w, textSurface->h};
+    SDL_RenderCopy(&WindowRenderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+}
+Vec2i Volume::Chunk::GetPos() const
+{
+    return Vec2i(m_x, m_y);
+}
+AABB Volume::Chunk::GetAABB() const
+{
+    return AABB(
+        Vec2f(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE), 
+        Vec2f(CHUNK_SIZE, CHUNK_SIZE));
 }
 void ChunkMatrix::RenderParticles(SDL_Renderer &renderer, Vec2f offset) const
 {
@@ -180,13 +196,41 @@ Volume::Chunk *ChunkMatrix::GetChunkAtWorldPosition(const Vec2f &pos)
 {
     Vec2i chunkPos = WorldToChunkPosition(pos);
 	if (!IsValidChunkPosition(chunkPos)) return nullptr;
-	return this->Grid[chunkPos.getX()][chunkPos.getY()];
+
+    int AssignedGridPass = 0;
+    if (chunkPos.getX() % 2 != 0) AssignedGridPass += 1;
+    if (chunkPos.getY() % 2 != 0) AssignedGridPass += 2;
+
+    for (size_t i = 0; i < this->GridSegmented[AssignedGridPass].size(); i++)
+    {
+        if(this->GridSegmented[AssignedGridPass][i]->GetPos() == chunkPos)
+        {
+            return this->GridSegmented[AssignedGridPass][i];
+        }
+    }
+    
+
+	return nullptr;
 }
 
 Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
 {
     if (!IsValidChunkPosition(pos)) return nullptr;
-    return this->Grid[pos.getX()][pos.getY()];
+
+    int AssignedGridPass = 0;
+    if (pos.getX() % 2 != 0) AssignedGridPass += 1;
+    if (pos.getY() % 2 != 0) AssignedGridPass += 2;
+
+
+    for (size_t i = 0; i < this->GridSegmented[AssignedGridPass].size(); i++)
+    {
+        if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
+        {
+            return this->GridSegmented[AssignedGridPass][i];
+        }
+    }
+
+    return nullptr;
 }
 
 void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType elementType, Vec2f offset)
@@ -227,7 +271,7 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
     this->ExplodeAt(MouseWorldPosI, radius);
 }
 
-void ChunkMatrix::GenerateChunk(const Vec2i &pos)
+Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 {
     /*
     if (this->Grid.size() <= pos.x)
@@ -258,6 +302,25 @@ void ChunkMatrix::GenerateChunk(const Vec2i &pos)
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
     this->GridSegmented[AssignedGridPass].push_back(chunk);
+
+    return chunk;
+}
+
+void ChunkMatrix::DeleteChunk(const Vec2i &pos)
+{
+    int AssignedGridPass = 0;
+    if (pos.getX() % 2 != 0) AssignedGridPass += 1;
+    if (pos.getY() % 2 != 0) AssignedGridPass += 2;
+
+    for (size_t i = 0; i < this->GridSegmented[AssignedGridPass].size(); i++)
+    {
+        if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
+        {
+            delete this->GridSegmented[AssignedGridPass][i];
+            this->GridSegmented[AssignedGridPass].erase(this->GridSegmented[AssignedGridPass].begin() + i);
+            return;
+        }
+    }
 }
 
 std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos)
@@ -266,24 +329,15 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
 
     if (!IsValidWorldPosition(pos)) return nullptr;
 
-    return this->Grid[chunkPos.getX()][chunkPos.getY()]->voxels[pos.getX() % Chunk::CHUNK_SIZE][pos.getY() % Chunk::CHUNK_SIZE];
-}
-
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, Volume::VoxelType type)
-{
-    Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
-    std::shared_ptr<Volume::VoxelElement> voxel;
-    switch (type)
-    {
-    case Volume::VoxelType::Fire:
-        voxel = std::make_shared<Volume::FireVoxel>(pos);
-        break;
-    
-    default:
-        voxel = std::make_shared<Volume::VoxelMovableSolid>(type, pos);
-        break;
+    Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
+    if(!chunk){
+        chunk = GenerateChunk(chunkPos);
     }
-    VirtualSetAt(voxel);
+
+    if(!chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][pos.getY() % Chunk::CHUNK_SIZE]){
+        return nullptr;
+    } 
+    return chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
 }
 
 void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
@@ -298,14 +352,19 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
     // Calculate positions in the chunk and local position
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(voxel->position));
     Vec2i localPos = Vec2i(
-        voxel->position.getX() % Chunk::CHUNK_SIZE, 
-        voxel->position.getY() % Chunk::CHUNK_SIZE);
+        abs(voxel->position.getX() % Chunk::CHUNK_SIZE), 
+        abs(voxel->position.getY() % Chunk::CHUNK_SIZE));
 
-    // Set the new voxel
-    this->Grid[chunkPos.getX()][chunkPos.getY()]->voxels[localPos.getX()][localPos.getY()] = voxel;
 
-    // Mark the chunk for update
-    this->Grid[chunkPos.getX()][chunkPos.getY()]->updateVoxelsNextFrame = true;
+    Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
+
+    if (!chunk) {
+        chunk = GenerateChunk(chunkPos);
+    }
+
+    // Set the new voxel and mark for update
+    chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
+    chunk->updateVoxelsNextFrame = true;
 
     //update grids near if its on their border
     if (localPos.getX() == 0) {
@@ -327,6 +386,23 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
     }
 }
 
+void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, Volume::VoxelType type)
+{
+    Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
+    std::shared_ptr<Volume::VoxelElement> voxel;
+    switch (type)
+    {
+    case Volume::VoxelType::Fire:
+        voxel = std::make_shared<Volume::FireVoxel>(pos);
+        break;
+    
+    default:
+        voxel = std::make_shared<Volume::VoxelMovableSolid>(type, pos);
+        break;
+    }
+    VirtualSetAt(voxel);
+}
+
 void ChunkMatrix::GetVoxelsInChunkAtWorldPosition(const Vec2f &pos)
 {
     //TODO: Implement
@@ -339,14 +415,16 @@ void ChunkMatrix::GetVoxelsInCubeAtWorldPosition(const Vec2f &start, const Vec2f
 
 bool ChunkMatrix::IsValidWorldPosition(const Vec2i &pos) const
 {
-    return pos.getX() >= 0 && pos.getX() < this->Grid.size() * Chunk::CHUNK_SIZE &&
-        pos.getY() >= 0 && pos.getY() < this->Grid[0].size() * Chunk::CHUNK_SIZE;
+    //return pos.getX() >= 0 && pos.getX() < this->Grid.size() * Chunk::CHUNK_SIZE &&
+    //    pos.getY() >= 0 && pos.getY() < this->Grid[0].size() * Chunk::CHUNK_SIZE;
+    return true; //TODO: temp
 }
 
 bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 {
-    return pos.getX() >= 0 && pos.getX() < this->Grid.size() &&
-	    pos.getY() >= 0 && pos.getY() < this->Grid[0].size();
+    //return pos.getX() >= 0 && pos.getX() < this->Grid.size() &&
+	//    pos.getY() >= 0 && pos.getY() < this->Grid[0].size();
+    return true; //TODO: temp
 }
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
