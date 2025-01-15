@@ -56,6 +56,13 @@ build CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj: CXX_COMPILER__VoxaEngi
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files
 
+build CMakeFiles/VoxaEngine.dir/Files/Math/AABB.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/Math/AABB.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\Math\AABB.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\Math
+
 build CMakeFiles/VoxaEngine.dir/Files/Math/Color.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/Math/Color.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\Math\Color.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
@@ -106,7 +113,7 @@ build CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj: CXX_COMPILER__VoxaEngine_uns
 #############################################
 # Link the executable VoxaEngine.exe
 
-build VoxaEngine.exe: CXX_EXECUTABLE_LINKER__VoxaEngine_Debug CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Color.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Vector.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Chunk.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Voxel.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/voxelTypes.cpp.obj CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj | C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2.dll.a C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2main.a
+build VoxaEngine.exe: CXX_EXECUTABLE_LINKER__VoxaEngine_Debug CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/AABB.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Color.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Vector.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Chunk.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Voxel.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/voxelTypes.cpp.obj CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj | C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2.dll.a C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2main.a
   FLAGS = -g -g
   LINK_LIBRARIES = C:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2.dll.a  C:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2main.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir

@@ -36,20 +36,20 @@ bool VoxelElement::CheckTransitionTemps(ChunkMatrix& matrix) {	return false;	}
 void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 {
     // Get the pointer to the voxel at the swap position
-    std::shared_ptr<VoxelElement> tempVoxel = matrix.VirtualGetAt(toSwapPos);
+    std::shared_ptr<VoxelElement> swapVoxel = matrix.VirtualGetAt(toSwapPos);
 
-    if (!tempVoxel) return;
+    if (!swapVoxel) return;
 
     // Get the position of the current voxel
     Vec2i tempPos = this->position;
 
     //flip positions
     this->position = toSwapPos;
-    tempVoxel->position = tempPos;
+    swapVoxel->position = tempPos;
 
     // Swap the current voxel with the one at the swap position
     matrix.VirtualSetAt(shared_from_this());
-    matrix.VirtualSetAt(tempVoxel);
+    matrix.VirtualSetAt(swapVoxel);
 }
 
 void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::shared_ptr<VoxelElement> replacement)
@@ -94,7 +94,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     		return true;
     	}
 
-    	this->DieAndReplace(*matrix, std::make_shared<VoxelMovableSolid>(this->type, this->position));
+		matrix->PlaceVoxelAt(this->position, this->type);
     	return true;
     }
 
@@ -106,7 +106,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
 
 bool VoxelSolid::CheckTransitionTemps(ChunkMatrix &matrix)
 {
-    if (this->temperature.GetCelsius() > this->properties->SolidToLiquidTemp_C.GetCelsius())
+    if (this->temperature.GetCelsius() > this->properties->lowerTemp.GetCelsius())
     {
     	this->DieAndReplace(matrix, std::make_shared<VoxelLiquid>(this->type, this->position));
     	return true;
@@ -347,12 +347,12 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
 
 bool VoxelLiquid::CheckTransitionTemps(ChunkMatrix &matrix)
 {
-    if (this->temperature.GetCelsius() < this->properties->SolidToLiquidTemp_C.GetCelsius())
+    if (this->temperature.GetCelsius() < this->properties->lowerTemp.GetCelsius())
     {
     	this->DieAndReplace(matrix, std::make_shared<VoxelMovableSolid>(this->type, this->position));
     	return true;
     }
-    else if (this->temperature.GetCelsius() > this->properties->LiquidToGasTemp_C.GetCelsius())
+    else if (this->temperature.GetCelsius() > this->properties->upperTemp.GetCelsius())
     {
     	this->DieAndReplace(matrix, std::make_shared<VoxelGas>(this->type, this->position));
     	return true;
@@ -387,7 +387,7 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 
 bool VoxelGas::CheckTransitionTemps(ChunkMatrix &matrix)
 {
-    if (this->temperature.GetCelsius() < this->properties->LiquidToGasTemp_C.GetCelsius())
+    if (this->temperature.GetCelsius() < this->properties->upperTemp.GetCelsius())
     {
     	this->DieAndReplace(matrix, std::make_shared<VoxelLiquid>(this->type, this->position));
     	return true;

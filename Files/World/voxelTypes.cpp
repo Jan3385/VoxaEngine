@@ -26,6 +26,6 @@ bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
     	this->DieAndReplace(*matrix, std::make_shared<VoxelGas>(VoxelType::Oxygen, this->position));
         return true;
     }
-    VoxelGas::Step(matrix); //TODO: stop fire from turning to liquid
+    VoxelGas::Step(matrix);
     return true;
 }

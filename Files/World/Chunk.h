@@ -22,7 +22,7 @@ namespace Volume
 
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
-    	void Render(SDL_Renderer& WindowRenderer) const;
+    	void Render(SDL_Renderer& WindowRenderer, Vec2f offset) const;
 
     	bool updateVoxelsNextFrame = true;
     private:
@@ -47,15 +47,16 @@ public:
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
-	void PlaceVoxelsAtMousePosition(const Vec2f& pos, Volume::VoxelType elementType);
-	void PlaceParticleAtMousePosition(const Vec2f& pos, Volume::VoxelType particleType, float angle, float speed);
-	void RemoveVoxelAtMousePosition(const Vec2f& pos);
-	void ExplodeAtMousePosition(const Vec2f& pos, short int radius);
+	void PlaceVoxelsAtMousePosition(const Vec2f& pos, Volume::VoxelType elementType, Vec2f offset);
+	void PlaceParticleAtMousePosition(const Vec2f& pos, Volume::VoxelType particleType, Vec2f offset, float angle, float speed);
+	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
+	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 	void GenerateChunk(const Vec2i& pos);
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
 	std::shared_ptr<Volume::VoxelElement> VirtualGetAt(const Vec2i& pos);
+	void PlaceVoxelAt(const Vec2i& pos, Volume::VoxelType type);
 	void VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel);
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
@@ -70,10 +71,10 @@ public:
 	//particle functions
 	void UpdateParticles();
 	void AddParticle(Volume::VoxelType type, const Vec2i& position, float angle, float speed);
-	void RenderParticles(SDL_Renderer& renderer);
+	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions
 	static Vec2i WorldToChunkPosition(const Vec2f& pos);
 	static Vec2f ChunkToWorldPosition(const Vec2i& pos);
-	static Vec2f MousePosToWorldPos(const Vec2f& mousePos);
+	static Vec2f MousePosToWorldPos(const Vec2f& mousePos, Vec2f offset);
 };

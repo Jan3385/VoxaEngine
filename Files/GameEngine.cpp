@@ -1,10 +1,13 @@
 #include "GameEngine.h"
 #include <iostream>
+#include <thread>
 
 using namespace std;
 
 GameEngine::GameEngine()
 {
+    this->Camera = AABB(Vec2f(0, 0), Vec2f(640, 480));
+
     SDL_Init(SDL_INIT_EVERYTHING);
 
     m_initVariables();
@@ -47,21 +50,38 @@ void GameEngine::Update()
         m_FixedUpdate();
         fixedUpdateTimer -= fixedDeltaTime;
     }
+
+    if (MovementKeysHeld[0])
+        this->Camera.corner.y(this->Camera.corner.getY() - 5);
+    if (MovementKeysHeld[1])
+        this->Camera.corner.y(this->Camera.corner.getY() + 5);
+    if (MovementKeysHeld[2])
+        this->Camera.corner.x(this->Camera.corner.getX() - 5);
+    if (MovementKeysHeld[3])
+        this->Camera.corner.x(this->Camera.corner.getX() + 5);
 }
+
+void GameEngine::m_UpdateGridSegment(int pass)
+{
+    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
+        if (chunk->updateVoxelsNextFrame)
+            chunk->UpdateVoxels(&this->chunkMatrix);
+    }
+}
+
 void GameEngine::m_FixedUpdate()
 {
-    for (auto& row : chunkMatrix.Grid) {
-        for (auto& chunk : row) {
+    for(int i = 0; i < 4; ++i)
+    {
+        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
             if (chunk->updateVoxelsNextFrame)
                 chunk->ResetVoxelUpdateData(&this->chunkMatrix);
         }
     }
 
-    for (int i = 0; i < 4; ++i) {
-        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            if (chunk->updateVoxelsNextFrame)
-                chunk->UpdateVoxels(&this->chunkMatrix);
-        }
+    for(int i = 0; i < 4; ++i)
+    {
+        m_UpdateGridSegment(i);
     }
 
     chunkMatrix.UpdateParticles();
@@ -83,11 +103,45 @@ void GameEngine::PollEvents()
                 this->mousePos.x(this->windowEvent.motion.x);
                 this->mousePos.y(this->windowEvent.motion.y);
                 break;
-            case SDL_KEYDOWN:
-                m_OnKeyboardInput(this->windowEvent);
-                break;
             case SDL_MOUSEBUTTONDOWN:
                 m_OnMouseButtonDown(this->windowEvent.button);
+                break;
+            case SDL_KEYDOWN:
+                switch (this->windowEvent.key.keysym.sym)
+                {
+                case SDLK_w:
+                    MovementKeysHeld[0] = true;
+                    break;
+                case SDLK_s:
+                    MovementKeysHeld[1] = true;
+                    break;
+                case SDLK_a:
+                    MovementKeysHeld[2] = true;
+                    break;
+                case SDLK_d:
+                    MovementKeysHeld[3] = true;
+                    break;
+                default:
+                    m_OnKeyboardInput(this->windowEvent.key);
+                    break;
+                }
+                break;
+            case SDL_KEYUP:
+                switch (this->windowEvent.key.keysym.sym)
+                {
+                case SDLK_w:
+                    MovementKeysHeld[0] = false;
+                    break;
+                case SDLK_s:
+                    MovementKeysHeld[1] = false;
+                    break;
+                case SDLK_a:
+                    MovementKeysHeld[2] = false;
+                    break;
+                case SDLK_d:
+                    MovementKeysHeld[3] = false;
+                    break;
+                }
                 break;
         }
     }
@@ -101,13 +155,14 @@ void GameEngine::Render()
     SDL_RenderClear( renderer ); // Clear the screen to solid white
 
     //Draw logic
-    for (const auto& row : chunkMatrix.Grid) {
-        for (const auto& chunk : row) {
-            chunk->Render(*this->renderer);
+    for(int i = 0; i < 4; ++i)
+    {
+        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+            chunk->Render(*this->renderer, Camera.corner*-1);
         }
     }
 
-    chunkMatrix.RenderParticles(*this->renderer);	
+    chunkMatrix.RenderParticles(*this->renderer, Camera.corner*-1);	
 
     // Update window
     SDL_RenderPresent( renderer );
@@ -116,13 +171,13 @@ void GameEngine::Render()
 void GameEngine::m_initVariables()
 {
     constexpr int chunkGenerationSize = 10;
-    this->chunkMatrix.Grid.resize(chunkGenerationSize);
-    for (int i = 0; i < this->chunkMatrix.Grid.size(); ++i) {
-    	this->chunkMatrix.Grid[i].resize(chunkGenerationSize);
-    }
+    //this->chunkMatrix.Grid.resize(chunkGenerationSize);
+    //for (int i = 0; i < this->chunkMatrix.Grid.size(); ++i) {
+    //	this->chunkMatrix.Grid[i].resize(chunkGenerationSize);
+    //}
 
-    for (int x = 0; x < this->chunkMatrix.Grid.size(); ++x) {
-    	for (int y = 0; y < this->chunkMatrix.Grid[0].size(); ++y) {
+    for (int x = 0; x < 10; ++x) {
+    	for (int y = 0; y < 10; ++y) {
     		this->chunkMatrix.GenerateChunk(Vec2i(x, y));
     	}
     }
@@ -136,29 +191,30 @@ void GameEngine::m_initWindow()
     }
 }
 
-void GameEngine::m_OnKeyboardInput(SDL_Event event)
+void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 {
+
 }
 
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
+    Vec2f offset = this->Camera.corner;
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:
-        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, Volume::VoxelType::Sand);
+        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, Volume::VoxelType::Sand, offset);
         break;
     case SDL_BUTTON_RIGHT:
-        this->chunkMatrix.RemoveVoxelAtMousePosition(this->mousePos);
+        this->chunkMatrix.RemoveVoxelAtMousePosition(this->mousePos, offset);
         break;
     case SDL_BUTTON_MIDDLE:
-        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 10);
+        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 10, offset);
         break;
     case SDL_BUTTON_X1:
-        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, Volume::VoxelType::Water);
-        std::cout << "X1" << std::endl;
+        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, Volume::VoxelType::Water, offset);
         break;
     case SDL_BUTTON_X2:
-        this->chunkMatrix.PlaceParticleAtMousePosition(this->mousePos, Volume::VoxelType::Fire, 0, 2);
+        this->chunkMatrix.PlaceParticleAtMousePosition(this->mousePos, Volume::VoxelType::Fire, offset, 0, 2);
         break;
     }
 }

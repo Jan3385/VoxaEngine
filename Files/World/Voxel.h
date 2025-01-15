@@ -49,8 +49,8 @@ namespace Volume {
 	struct VoxelProperty {
 		const std::string name;
 		const RGB pColor;
-		const Volume::Temperature SolidToLiquidTemp_C;
-		const Volume::Temperature LiquidToGasTemp_C;
+		const Volume::Temperature lowerTemp;
+		const Volume::Temperature upperTemp;
 		//g/L or kg/m^3
 		const float Density;
 	};

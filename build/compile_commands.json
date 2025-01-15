@@ -7,6 +7,12 @@
 },
 {
   "directory": "C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build",
+  "command": "C:\\msys64-compiler\\mingw64\\bin\\c++.exe -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include -g -g -std=gnu++17 -o CMakeFiles\\VoxaEngine.dir\\Files\\Math\\AABB.cpp.obj -c C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\AABB.cpp",
+  "file": "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\AABB.cpp",
+  "output": "CMakeFiles\\VoxaEngine.dir\\Files\\Math\\AABB.cpp.obj"
+},
+{
+  "directory": "C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build",
   "command": "C:\\msys64-compiler\\mingw64\\bin\\c++.exe -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include -g -g -std=gnu++17 -o CMakeFiles\\VoxaEngine.dir\\Files\\Math\\Color.cpp.obj -c C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\Color.cpp",
   "file": "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\Color.cpp",
   "output": "CMakeFiles\\VoxaEngine.dir\\Files\\Math\\Color.cpp.obj"
