@@ -363,6 +363,7 @@ bool VoxelLiquid::CheckTransitionTemps(ChunkMatrix &matrix)
 bool VoxelGas::Step(ChunkMatrix *matrix)
 {
     //lazy hack to make the chunk its in update in the next cycle
+	//TODO: fix this making the neighboring chunk active
     if (updatedThisFrame) {
     	return true;
     }

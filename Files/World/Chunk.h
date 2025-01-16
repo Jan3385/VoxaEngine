@@ -13,8 +13,8 @@ namespace Volume
 {
     class Chunk {
     public:
-    	static const short int RENDER_VOXEL_SIZE = 3;
-    	static const short int CHUNK_SIZE = 32;
+    	static const unsigned short int RENDER_VOXEL_SIZE = 5;
+    	static const unsigned short int CHUNK_SIZE = 64;
     	//VoxelElement*** voxels;
     	std::array<std::array<std::shared_ptr<VoxelElement>, CHUNK_SIZE>, CHUNK_SIZE> voxels;
 
@@ -24,11 +24,11 @@ namespace Volume
 		bool ShouldChunkDelete(AABB &Camera);
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
-    	void Render(SDL_Renderer& WindowRenderer, Vec2f offset) const;
+    	SDL_Surface* Render(SDL_Renderer& WindowRenderer, Vec2f offset) const;
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
-		bool wasCheckedPreviousFrame = true;
+		uint8_t lastCheckedCountDown = 20;
     	bool updateVoxelsNextFrame = true;
     private:
     	short int m_x;

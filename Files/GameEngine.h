@@ -5,8 +5,6 @@
 #include "Math/AABB.h"
 #include "World/Chunk.h"
 
-//TODO: load chunk when voxel enters new area
-
 class GameEngine
 {
 private:
@@ -17,6 +15,7 @@ private:
 
     float fixedUpdateTimer = 0;
 
+    TTF_Font* basicFont;
     AABB Camera;
 
     void m_initVariables();

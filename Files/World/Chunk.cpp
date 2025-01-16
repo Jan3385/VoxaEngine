@@ -12,6 +12,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
     if(!this->font) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
     }
+    std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
 }
 
 Volume::Chunk::~Chunk()
@@ -23,7 +24,7 @@ Volume::Chunk::~Chunk()
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB &Camera)
 {
-    if(wasCheckedPreviousFrame) return false;
+    if(lastCheckedCountDown > 0) return false;
     if(updateVoxelsNextFrame) return false;
     if(this->GetAABB().Overlaps(Camera)) return false;
 
@@ -63,7 +64,7 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 
 void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
 {
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (int y = 0; y < CHUNK_SIZE; ++y)
     {
         for (int x = 0; x < CHUNK_SIZE; ++x)
@@ -73,14 +74,14 @@ void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
     }
 }
 
-void Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) const
+SDL_Surface* Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) const //Old renderer took ~16 600 microseconds
 {
+    SDL_Surface surface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
+    
     for (int y = 0; y < CHUNK_SIZE; ++y) {
         for (int x = 0; x < CHUNK_SIZE; ++x) {
             const RGB& color = voxels[x][y]->color;
             //const RGB& color = RGB(voxels[x][y].get()->position.getX() / 2, 0, voxels[x][y].get()->position.getY() / 2);
-
-            SDL_SetRenderDrawColor(&WindowRenderer, color.r, color.g, color.b, 255);
 
             SDL_Rect rect = {
                 static_cast<int>((x + m_x * CHUNK_SIZE) * RENDER_VOXEL_SIZE + offset.getX()),
@@ -88,7 +89,7 @@ void Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) const
                 RENDER_VOXEL_SIZE,
                 RENDER_VOXEL_SIZE
             };
-            SDL_RenderFillRect(&WindowRenderer, &rect);
+            SDL_FillRect(surface, &rect, SDL_MapRGBA(surface->format, color.r, color.g, color.b, 255));
         }
     }
 
@@ -318,8 +319,9 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
     {
         if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
         {
-            delete this->GridSegmented[AssignedGridPass][i];
+            Chunk *c = this->GridSegmented[AssignedGridPass][i];
             this->GridSegmented[AssignedGridPass].erase(this->GridSegmented[AssignedGridPass].begin() + i);
+            delete c;
             return;
         }
     }
@@ -340,7 +342,7 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
         return nullptr;
     } 
 
-    chunk->wasCheckedPreviousFrame = true;
+    chunk->lastCheckedCountDown = 20;
 
     return chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
 }
@@ -420,16 +422,14 @@ void ChunkMatrix::GetVoxelsInCubeAtWorldPosition(const Vec2f &start, const Vec2f
 
 bool ChunkMatrix::IsValidWorldPosition(const Vec2i &pos) const
 {
-    //return pos.getX() >= 0 && pos.getX() < this->Grid.size() * Chunk::CHUNK_SIZE &&
-    //    pos.getY() >= 0 && pos.getY() < this->Grid[0].size() * Chunk::CHUNK_SIZE;
-    return true; //TODO: temp
+    return pos.getX() >= 0 && pos.getX() &&
+	    pos.getY() >= 0 && pos.getY();
 }
 
 bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 {
-    //return pos.getX() >= 0 && pos.getX() < this->Grid.size() &&
-	//    pos.getY() >= 0 && pos.getY() < this->Grid[0].size();
-    return true; //TODO: temp
+    return pos.getX() >= 0 && pos.getX() &&
+	    pos.getY() >= 0 && pos.getY();
 }
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
