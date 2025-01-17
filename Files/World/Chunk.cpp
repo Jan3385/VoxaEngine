@@ -74,9 +74,9 @@ void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
     }
 }
 
-SDL_Surface* Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) const //Old renderer took ~16 600 microseconds
+SDL_Surface* Volume::Chunk::Render() const //Old renderer took ~16 600 microseconds
 {
-    SDL_Surface surface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
+    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
     
     for (int y = 0; y < CHUNK_SIZE; ++y) {
         for (int x = 0; x < CHUNK_SIZE; ++x) {
@@ -84,8 +84,8 @@ SDL_Surface* Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) c
             //const RGB& color = RGB(voxels[x][y].get()->position.getX() / 2, 0, voxels[x][y].get()->position.getY() / 2);
 
             SDL_Rect rect = {
-                static_cast<int>((x + m_x * CHUNK_SIZE) * RENDER_VOXEL_SIZE + offset.getX()),
-                static_cast<int>((y + m_y * CHUNK_SIZE) * RENDER_VOXEL_SIZE + offset.getY()),
+                x*RENDER_VOXEL_SIZE,
+                y*RENDER_VOXEL_SIZE,
                 RENDER_VOXEL_SIZE,
                 RENDER_VOXEL_SIZE
             };
@@ -93,30 +93,43 @@ SDL_Surface* Volume::Chunk::Render(SDL_Renderer &WindowRenderer, Vec2f offset) c
         }
     }
 
-    // Render border
-    SDL_Color borderColor = updateVoxelsNextFrame ? SDL_Color{255, 255, 255, 255} : SDL_Color{255, 0, 0, 255};
-    SDL_SetRenderDrawColor(&WindowRenderer, borderColor.r, borderColor.g, borderColor.b, borderColor.a);
+    // Determine border color based on update state
+    Uint32 borderColor = updateVoxelsNextFrame 
+                         ? SDL_MapRGBA(surface->format, 255, 255, 255, 255) 
+                         : SDL_MapRGBA(surface->format, 255, 0, 0, 255);
 
-    int x1 = m_x * CHUNK_SIZE * RENDER_VOXEL_SIZE + offset.getX();
-    int y1 = m_y * CHUNK_SIZE * RENDER_VOXEL_SIZE + offset.getY();
-    int x2 = (m_x + 1) * CHUNK_SIZE * RENDER_VOXEL_SIZE + offset.getX();
-    int y2 = (m_y + 1) * CHUNK_SIZE * RENDER_VOXEL_SIZE + offset.getY();
+    // Calculate the chunk coordinates
+    int x1 = 0;
+    int y1 = 0;
+    int x2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
+    int y2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
 
-    SDL_RenderDrawLine(&WindowRenderer, x1, y1, x2, y1); // Top
-    SDL_RenderDrawLine(&WindowRenderer, x2, y1, x2, y2); // Right
-    SDL_RenderDrawLine(&WindowRenderer, x2, y2, x1, y2); // Bottom
-    SDL_RenderDrawLine(&WindowRenderer, x1, y2, x1, y1); // Left
+    // Draw border (manual pixel manipulation for lines)
+    SDL_Rect topLine = {x1, y1, x2 - x1, 1};           // Top
+    SDL_Rect bottomLine = {x1, y2 - 1, x2 - x1, 1};    // Bottom
+    SDL_Rect leftLine = {x1, y1, 1, y2 - y1};          // Left
+    SDL_Rect rightLine = {x2 - 1, y1, 1, y2 - y1};     // Right
 
-    //Render chunk position
+    SDL_FillRect(surface, &topLine, borderColor);
+    SDL_FillRect(surface, &bottomLine, borderColor);
+    SDL_FillRect(surface, &leftLine, borderColor);
+    SDL_FillRect(surface, &rightLine, borderColor);
 
+    // Render chunk position as text
     SDL_Color textColor = {255, 255, 255, 255};
     std::string text = std::to_string(m_x) + "," + std::to_string(m_y);
-    SDL_Surface* textSurface = TTF_RenderText_Solid(this->font, text.c_str(), textColor);
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(&WindowRenderer, textSurface);
+
+    // Render text to a surface
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+
+    // Copy the text surface to the target surface
     SDL_Rect textRect = {x1, y1, textSurface->w, textSurface->h};
-    SDL_RenderCopy(&WindowRenderer, textTexture, NULL, &textRect);
+    SDL_BlitSurface(textSurface, nullptr, surface, &textRect);
+
+    // Free the text surface
     SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(textTexture);
+
+    return surface;
 }
 Vec2i Volume::Chunk::GetPos() const
 {
@@ -241,6 +254,8 @@ void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
 
+    if(!IsValidWorldPosition(MouseWorldPos)) return;
+
     constexpr int size = 5;
 
     for (int x = -size; x <= size; x++)
@@ -257,6 +272,8 @@ void ChunkMatrix::PlaceParticleAtMousePosition(const Vec2f &pos, Volume::VoxelTy
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
 
+    if(!IsValidWorldPosition(MouseWorldPos)) return;
+
     AddParticle(particleType, MouseWorldPosI, angle, speed);
 }
 
@@ -264,6 +281,9 @@ void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
+
+    if(!IsValidWorldPosition(MouseWorldPos)) return;
+
     PlaceVoxelAt(MouseWorldPosI, Volume::VoxelType::Oxygen);
 }
 
@@ -271,6 +291,9 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
+
+    if(!IsValidWorldPosition(MouseWorldPos)) return;
+
     this->ExplodeAt(MouseWorldPosI, radius);
 }
 
@@ -422,14 +445,14 @@ void ChunkMatrix::GetVoxelsInCubeAtWorldPosition(const Vec2f &start, const Vec2f
 
 bool ChunkMatrix::IsValidWorldPosition(const Vec2i &pos) const
 {
-    return pos.getX() >= 0 && pos.getX() &&
-	    pos.getY() >= 0 && pos.getY();
+    return pos.getX() >= Volume::Chunk::CHUNK_SIZE && pos.getX() &&
+	    pos.getY() >= Volume::Chunk::CHUNK_SIZE && pos.getY();
 }
 
 bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 {
-    return pos.getX() >= 0 && pos.getX() &&
-	    pos.getY() >= 0 && pos.getY();
+    return pos.getX() > 0 && pos.getX() &&
+	    pos.getY() > 0 && pos.getY();
 }
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)

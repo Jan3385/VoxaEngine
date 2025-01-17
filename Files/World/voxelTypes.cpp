@@ -20,8 +20,9 @@ Volume::FireVoxel::~FireVoxel()
 
 bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
 {
+    forcedLifetimeTime--;
     //15% chance to dissapear
-    if (rand() % 100 < 15)
+    if (rand() % 100 < 15 || forcedLifetimeTime <= 0)
     {
     	this->DieAndReplace(*matrix, std::make_shared<VoxelGas>(VoxelType::Oxygen, this->position));
         return true;

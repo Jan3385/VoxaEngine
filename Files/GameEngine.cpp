@@ -2,6 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
 #include <thread>
+#include <mutex>
 
 using namespace std;
 
@@ -70,19 +71,24 @@ void GameEngine::Update()
 
 void GameEngine::m_UpdateGridSegment(int pass)
 {
-    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
+    //delete all chunks marked for deletion
+    for(auto& chunk : chunkMatrix.GridSegmented[pass]){
         if(chunk->ShouldChunkDelete(Camera))
         {
             chunkMatrix.DeleteChunk(chunk->GetPos());
             continue;
         }
+    }
 
+    //update all undeleted chunks that should get updated
+    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
         if (chunk->updateVoxelsNextFrame)
             chunk->UpdateVoxels(&this->chunkMatrix);
     }
 }
 void GameEngine::m_FixedUpdate()
 {
+    #pragma omp parallel for collapse(2)
     for(int i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
@@ -92,9 +98,16 @@ void GameEngine::m_FixedUpdate()
         }
     }
 
+    std::vector<std::thread> threads;
+
     for(int i = 0; i < 4; ++i)
     {
-        m_UpdateGridSegment(i);
+        threads.push_back(std::thread(&GameEngine::m_UpdateGridSegment, this, i));
+    }
+
+    // Wait for all threads to finish
+    for (auto& thread : threads) {
+        thread.join();
     }
 
     chunkMatrix.UpdateParticles();
@@ -175,12 +188,44 @@ void GameEngine::Render()
     SDL_RenderClear( renderer ); // Clear the screen to solid white
 
     //Draw logic TODO: make parallel
+    std::vector<std::thread> threads;
+    std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
+    std::mutex renderDataMutex;
     for(int i = 0; i < 4; ++i)
     {
-        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            if(chunk->GetAABB().Overlaps(Camera))
-                chunk->Render(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));
-        }
+        threads.push_back(std::thread([&, i]{
+            std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
+            for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+                if(chunk->GetAABB().Overlaps(Camera)){
+                    SDL_Surface *chunkSurface = chunk->Render();
+
+                    SDL_Rect rect = {
+                        static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
+                        static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
+                        Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
+                        Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
+                    };
+
+                    localData.push_back({chunkSurface, rect});
+                }
+            }
+            std::lock_guard<std::mutex> lock(renderDataMutex);
+            renderData.insert(renderData.end(), localData.begin(), localData.end());
+        }));
+    }
+    // Wait for all threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    for(auto& data : renderData){
+        SDL_Surface* chunkSurface = data.first;
+        SDL_Texture* chunkTexture = SDL_CreateTextureFromSurface(renderer, chunkSurface);
+    
+        SDL_RenderCopy(renderer, chunkTexture, NULL, &data.second);
+    
+        SDL_FreeSurface(chunkSurface);
+        SDL_DestroyTexture(chunkTexture);
     }
 
     chunkMatrix.RenderParticles(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
@@ -209,9 +254,10 @@ void GameEngine::MoveCamera(Vec2f pos)
 
     //Spawn chunks that are in the view but don´t exits
     Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(Camera.corner));
-    int ChunksHorizontal = (Camera.size.getX() / Volume::Chunk::CHUNK_SIZE) + 1;
+    int ChunksHorizontal = ceil(Camera.size.getX() / Volume::Chunk::CHUNK_SIZE) + 1;
     int ChunksVertical = ceil(Camera.size.getY() / Volume::Chunk::CHUNK_SIZE) + 1;
 
+    //TODO: rework to look only for chunks that should get loaded
     vector<thread> threads;
 
     for (int x = 0; x < ChunksHorizontal; ++x) {
@@ -223,9 +269,7 @@ void GameEngine::MoveCamera(Vec2f pos)
 
     // Wait for all threads to finish
     for (auto& thread : threads) {
-        if (thread.joinable()) {
-            thread.join();
-        }
+        thread.join();
     }
 }
 void GameEngine::m_LoadChunkInView(Vec2i pos)

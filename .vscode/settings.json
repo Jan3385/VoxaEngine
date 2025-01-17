@@ -84,7 +84,10 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "ios": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "xhash": "cpp",
+        "future": "cpp",
+        "forward_list": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

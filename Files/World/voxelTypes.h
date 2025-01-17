@@ -12,5 +12,7 @@ namespace Volume {
 
 		// Functions
 		bool Step(ChunkMatrix* matrix) override;
+	private:
+		uint8_t forcedLifetimeTime = 20;
 	};
 }

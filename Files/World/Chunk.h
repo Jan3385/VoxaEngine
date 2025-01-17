@@ -24,7 +24,7 @@ namespace Volume
 		bool ShouldChunkDelete(AABB &Camera);
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
-    	SDL_Surface* Render(SDL_Renderer& WindowRenderer, Vec2f offset) const;
+    	SDL_Surface* Render() const;
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
