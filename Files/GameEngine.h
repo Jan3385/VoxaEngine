@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"

@@ -1,5 +1,8 @@
 #include "GameEngine.h"
-#include <SDL2/SDL_ttf.h>
+#include <SDL_ttf.h>
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdlrenderer2.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
@@ -10,10 +13,14 @@ GameEngine::GameEngine()
 {
     this->Camera = AABB(Vec2f(0, 0), Vec2f(640.0/Volume::Chunk::RENDER_VOXEL_SIZE, 480.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
+        std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
+    }
     if (TTF_Init() == -1) {
         std::cerr << "Error initializing SDL_ttf: " << TTF_GetError() << std::endl;
     }
+
+    IMGUI_CHECKVERSION();
 
     m_initVariables();
     m_initWindow();
@@ -21,6 +28,10 @@ GameEngine::GameEngine()
 
 GameEngine::~GameEngine()
 {
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
     TTF_CloseFont(this->basicFont);
     SDL_DestroyWindow(window);
     TTF_Quit();
@@ -30,15 +41,15 @@ GameEngine::~GameEngine()
 void GameEngine::StartFrame()
 {
     this->FrameStartTime = SDL_GetPerformanceCounter();
-}
 
-void GameEngine::EndFrame()
-{
     //cout << "FPS: " << this->FPS << endl;
     //cout << "Delta Time: " << this->deltaTime << endl;
     //cout << "Wait time " << ((1000.0 / MAX_FRAME_RATE) - deltaTime*1000) << endl;
     SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
+}
 
+void GameEngine::EndFrame()
+{
     Uint64 FrameEndTime = SDL_GetPerformanceCounter();
 
     float FrameTime = (FrameEndTime - this->FrameStartTime) / (float)SDL_GetPerformanceFrequency();
@@ -98,47 +109,45 @@ void GameEngine::m_FixedUpdate()
         }
     }
 
-    std::vector<std::thread> threads;
+    //std::vector<std::thread> threads;
 
     for(int i = 0; i < 4; ++i)
     {
-        threads.push_back(std::thread(&GameEngine::m_UpdateGridSegment, this, i));
+        //threads.push_back(std::thread(&GameEngine::m_UpdateGridSegment, this, i));
+        m_UpdateGridSegment(i); //TODO: maybe make this threaded without making a race condition
     }
 
     // Wait for all threads to finish
-    for (auto& thread : threads) {
-        thread.join();
-    }
+    //for (auto& thread : threads) {
+    //    thread.join();
+    //}
 
     chunkMatrix.UpdateParticles();
 }
 
 void GameEngine::PollEvents()
 {
+    ImGuiIO& io = ImGui::GetIO();
     while (SDL_PollEvent(&this->windowEvent) == 1)
     {
-        switch (this->windowEvent.type)
-        {
-            case SDL_QUIT:
-                this->running = false;
-                break;
-            case SDL_WINDOWEVENT:
-                switch (this->windowEvent.window.event)
-                {
-                case SDL_WINDOWEVENT_RESIZED:
-                    Camera.size = Vec2f(
-                        this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
-                        this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
+        ImGui_ImplSDL2_ProcessEvent(&this->windowEvent);
+           
+        //mouse
+        if(!io.WantCaptureMouse){
+            switch (this->windowEvent.type){
+                case SDL_MOUSEMOTION:
+                    this->mousePos.x(this->windowEvent.motion.x);
+                    this->mousePos.y(this->windowEvent.motion.y);
                     break;
-                }
-                break;
-            case SDL_MOUSEMOTION:
-                this->mousePos.x(this->windowEvent.motion.x);
-                this->mousePos.y(this->windowEvent.motion.y);
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                m_OnMouseButtonDown(this->windowEvent.button);
-                break;
+                case SDL_MOUSEBUTTONDOWN:
+                    m_OnMouseButtonDown(this->windowEvent.button);
+                    break;
+            }
+        }
+        //keyboard (except keyUp)
+        if(!io.WantCaptureKeyboard){
+            switch (this->windowEvent.type)
+            {
             case SDL_KEYDOWN:
                 switch (this->windowEvent.key.keysym.sym)
                 {
@@ -159,23 +168,42 @@ void GameEngine::PollEvents()
                     break;
                 }
                 break;
-            case SDL_KEYUP:
-                switch (this->windowEvent.key.keysym.sym)
-                {
-                case SDLK_w:
-                    MovementKeysHeld[0] = false;
-                    break;
-                case SDLK_s:
-                    MovementKeysHeld[1] = false;
-                    break;
-                case SDLK_a:
-                    MovementKeysHeld[2] = false;
-                    break;
-                case SDLK_d:
-                    MovementKeysHeld[3] = false;
-                    break;
-                }
+            }
+        }
+
+        //other events (including keyUp)
+        switch (this->windowEvent.type)
+        {
+        case SDL_QUIT:
+            this->running = false;
+            break;
+        case SDL_WINDOWEVENT:
+            switch (this->windowEvent.window.event)
+            {
+                case SDL_WINDOWEVENT_RESIZED:
+                    Camera.size = Vec2f(
+                        this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
+                        this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
                 break;
+            }
+            break;
+        case SDL_KEYUP:
+            switch (this->windowEvent.key.keysym.sym)
+            {
+            case SDLK_w:
+                MovementKeysHeld[0] = false;
+                break;
+            case SDLK_s:
+                MovementKeysHeld[1] = false;
+                break;
+            case SDLK_a:
+                MovementKeysHeld[2] = false;
+                break;
+            case SDLK_d:
+                MovementKeysHeld[3] = false;
+                break;
+            }
+            break;
         }
     }
 }
@@ -183,11 +211,10 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
-
     SDL_SetRenderDrawColor( renderer, 255, 255, 255, 255 );
     SDL_RenderClear( renderer ); // Clear the screen to solid white
 
-    //Draw logic TODO: make parallel
+    //chunk rendering
     std::vector<std::thread> threads;
     std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
     std::mutex renderDataMutex;
@@ -224,10 +251,10 @@ void GameEngine::Render()
     
         SDL_RenderCopy(renderer, chunkTexture, NULL, &data.second);
     
-        SDL_FreeSurface(chunkSurface);
         SDL_DestroyTexture(chunkTexture);
     }
 
+    //rendering particles
     chunkMatrix.RenderParticles(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
     //fps counter
@@ -238,6 +265,20 @@ void GameEngine::Render()
     SDL_RenderCopy(renderer, texture, NULL, &rect);
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
+
+    //ImGui
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("Hello, world!");
+    ImGui::Text("This is some useful text.");
+
+    ImGui::End();
+
+    ImGui::Render();
+
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
 
     // Update window
     SDL_RenderPresent( renderer );
@@ -304,6 +345,18 @@ void GameEngine::m_initWindow()
         cout << "Error with window creation: " << SDL_GetError() << endl;
         exit(1);
     }
+
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    //ImGui::StyleColorsDark();
+
+    ImGui_ImplSDL2_InitForSDLRenderer(
+        window,
+        renderer
+    );
+
+    ImGui_ImplSDLRenderer2_Init(renderer);
 }
 
 void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)

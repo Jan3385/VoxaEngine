@@ -323,7 +323,8 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	CurrentPosition += Vec2i(-1, 0);
     	std::shared_ptr<VoxelElement> side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
-    	if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
+		
+		if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
     	if (side->GetState() == VoxelState::Gas)
     	{
     		LastValidPosition = CurrentPosition;
@@ -336,6 +337,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	CurrentPosition += Vec2i(1, 0);
     	std::shared_ptr<VoxelElement> side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
+		
     	if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
     	if (side->GetState() == VoxelState::Gas)
     	{

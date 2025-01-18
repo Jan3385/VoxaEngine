@@ -1,10 +1,10 @@
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <array>
 #include <mutex>
 #include <vector>
-#include <SDL2/SDL_ttf.h>
+#include <SDL_ttf.h>
 #include "Voxel.h"
 #include "../Math/Vector.h"
 #include "../Math/AABB.h"
@@ -24,16 +24,18 @@ namespace Volume
 		bool ShouldChunkDelete(AABB &Camera);
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
-    	SDL_Surface* Render() const;
+    	SDL_Surface* Render();
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
 		uint8_t lastCheckedCountDown = 20;
     	bool updateVoxelsNextFrame = true;
+		bool dirtyRender = true;
     private:
     	short int m_x;
     	short int m_y;
 		TTF_Font* font;
+		SDL_Surface* chunkSurface = nullptr;
     };
 }
 

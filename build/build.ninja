@@ -52,58 +52,107 @@ build cmake_object_order_depends_target_VoxaEngine: phony || .
 build CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/GameEngine.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\GameEngine.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files
 
 build CMakeFiles/VoxaEngine.dir/Files/Math/AABB.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/Math/AABB.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\Math\AABB.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\Math
 
 build CMakeFiles/VoxaEngine.dir/Files/Math/Color.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/Math/Color.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\Math\Color.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\Math
 
 build CMakeFiles/VoxaEngine.dir/Files/Math/Vector.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/Math/Vector.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\Math\Vector.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\Math
 
 build CMakeFiles/VoxaEngine.dir/Files/World/Chunk.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/World/Chunk.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\World\Chunk.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\World
 
 build CMakeFiles/VoxaEngine.dir/Files/World/Voxel.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/World/Voxel.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\World\Voxel.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\World
 
 build CMakeFiles/VoxaEngine.dir/Files/World/voxelTypes.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/World/voxelTypes.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\World\voxelTypes.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files\World
 
 build CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/Files/main.cpp || cmake_object_order_depends_target_VoxaEngine
   DEP_FILE = CMakeFiles\VoxaEngine.dir\Files\main.cpp.obj.d
   FLAGS = -g -g -std=gnu++17
-  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir
   OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\Files
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui_demo.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui_demo.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui_demo.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui_draw.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui_draw.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui_draw.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui_impl_sdl2.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui_impl_sdl2.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui_impl_sdl2.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui_impl_sdlrenderer2.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui_impl_sdlrenderer2.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui_impl_sdlrenderer2.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui_tables.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui_tables.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui_tables.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
+
+build CMakeFiles/VoxaEngine.dir/imgui/imgui_widgets.cpp.obj: CXX_COMPILER__VoxaEngine_unscanned_Debug C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/imgui/imgui_widgets.cpp || cmake_object_order_depends_target_VoxaEngine
+  DEP_FILE = CMakeFiles\VoxaEngine.dir\imgui\imgui_widgets.cpp.obj.d
+  FLAGS = -g -g -std=gnu++17
+  INCLUDES = -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui
+  OBJECT_DIR = CMakeFiles\VoxaEngine.dir
+  OBJECT_FILE_DIR = CMakeFiles\VoxaEngine.dir\imgui
 
 
 # =============================================================================
@@ -113,7 +162,7 @@ build CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj: CXX_COMPILER__VoxaEngine_uns
 #############################################
 # Link the executable VoxaEngine.exe
 
-build VoxaEngine.exe: CXX_EXECUTABLE_LINKER__VoxaEngine_Debug CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/AABB.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Color.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Vector.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Chunk.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Voxel.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/voxelTypes.cpp.obj CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj | C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2.dll.a C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2main.a C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2_ttf.dll.a
+build VoxaEngine.exe: CXX_EXECUTABLE_LINKER__VoxaEngine_Debug CMakeFiles/VoxaEngine.dir/Files/GameEngine.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/AABB.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Color.cpp.obj CMakeFiles/VoxaEngine.dir/Files/Math/Vector.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Chunk.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/Voxel.cpp.obj CMakeFiles/VoxaEngine.dir/Files/World/voxelTypes.cpp.obj CMakeFiles/VoxaEngine.dir/Files/main.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui_demo.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui_draw.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui_impl_sdl2.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui_impl_sdlrenderer2.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui_tables.cpp.obj CMakeFiles/VoxaEngine.dir/imgui/imgui_widgets.cpp.obj | C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2.dll.a C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2main.a C$:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2_ttf.dll.a
   FLAGS = -g -g
   LINK_LIBRARIES = C:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2.dll.a  C:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2main.a  C:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/lib/libSDL2_ttf.dll.a  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\VoxaEngine.dir

@@ -8,7 +8,9 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 # SDL2 paths
-set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include")
+set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/SDL2")
+set(IMGUI_INCLUDE_HEADER_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/imgui")
+set(IMGUI_INCLUDE_CPP_DIR "${CMAKE_SOURCE_DIR}/imgui")
 set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
 set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
 set(SDL2_DLL "${CMAKE_SOURCE_DIR}/SDL2/SDL2.dll")
@@ -18,12 +20,13 @@ set(SDL2_TTF_DLL "${CMAKE_SOURCE_DIR}/SDL2/SDL2_ttf.dll")
 set(FONTS_FOLDER "${CMAKE_SOURCE_DIR}/Fonts")
 
 # Add include directories for SDL2
-include_directories(${SDL2_INCLUDE_DIR})
+include_directories(${SDL2_INCLUDE_DIR} ${IMGUI_INCLUDE_HEADER_DIR})
 
 # Automatically include all .cpp files in the Files folder
 file(GLOB_RECURSE SOURCES "Files/*.cpp")
+file(GLOB_RECURSE IMGUI_SOURCES "${IMGUI_INCLUDE_CPP_DIR}/*.cpp")
 
-add_executable(VoxaEngine ${SOURCES})
+add_executable(VoxaEngine ${SOURCES} ${IMGUI_SOURCES})
 
 # Link SDL2 libraries
 target_link_libraries(VoxaEngine ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
