@@ -18,7 +18,7 @@ private:
     TTF_Font* basicFont;
     AABB Camera;
 
-    Volume::VoxelType placeVoxelType = Volume::VoxelType::Sand;
+    std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;
 
     void m_initVariables();

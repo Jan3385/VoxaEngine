@@ -2,65 +2,70 @@
 
 #include <unordered_map>
 #include <string>
+#include <optional>
 #include "../Math/Color.h"
 #include "../Math/Temperature.h"
 
+struct PhaseChange{
+		Volume::Temperature TemperatureAt;
+		std::string To;
+};
+
 namespace Volume{
     static constexpr float TEMP_TRANSITION_THRESHOLD = 1.5f;
-    enum VoxelState {
+    enum class VoxelState {
 		Gas,
 		Liquid,
-		ImmovableSolid,
 		MovableSolid,
+		ImmovableSolid,
 	};
-    enum VoxelType {
-		Dirt,
-		Grass,
-		Stone,
-		Sand,
-		Oxygen,
-		Water,
-		Fire,
-		Plasma,
-		CarbonDioxide,
-		Lava,
-		Steam
+	enum class State {
+		Gas,
+		Liquid,
+		Solid,
 	};
-    struct VoxelProperty {
-		const std::string name;
-		const RGB pColor;
-		const float Density; // g/L or kg/m^3
-		const float HeatCapacity; // J/kg*K
-		const float HeatConductivity; // W/m*K
+	struct VoxelProperty {
+		std::string name;
+		State state;
+		RGB pColor;
+		float Density; // g/L or kg/m^3
+		float HeatCapacity; // J/kg*K
+		float HeatConductivity; // W/m*K
+		std::optional<PhaseChange> CooledChange;
+		std::optional<PhaseChange> HeatedChange;
 	};
 }
 
 class VoxelBuilder{
 public:
-	VoxelBuilder(Volume::VoxelType Type, Volume::VoxelState DefaultState, float tCapacity, float tConductivity);
-	Volume::VoxelType Type;
+	VoxelBuilder(Volume::State State, float tCapacity, float tConductivity, float Density);
 	VoxelBuilder& SetName(std::string Name);
 	VoxelBuilder& SetColor(RGB Color);
-	VoxelBuilder& SetDensity(float Density);
+	VoxelBuilder& PhaseUp(std::string To, float Temperature);
+	VoxelBuilder& PhaseDown(std::string To, float Temperature);
 	Volume::VoxelProperty Build();
 private:
-	std::string Name = "UNNAMED TYPE";
-	Volume::VoxelState DefaultState;
+	Volume::State State;
+	std::string Name = "NONAME";
 	RGB Color;
 	float Density;
 	float HeatCapacity;
 	float HeatConductivity;
+	std::optional<PhaseChange> CooledChange;
+	std::optional<PhaseChange> HeatedChange;
 };
 
 class VoxelRegistry {
 public:
-	static const Volume::VoxelProperty& GetProperties(Volume::VoxelType type);
+	static Volume::VoxelProperty* GetProperties(std::string id);
 	static const bool CanGetMovedByExplosion(Volume::VoxelState state);
-	static const bool CanGetDestroyedByExplosion(Volume::VoxelType type, float explosionPower);
+	static const bool CanGetDestroyedByExplosion(std::string id, float explosionPower);
 	static const bool CanBeMovedBySolid(Volume::VoxelState state);
 	static const bool CanBeMovedByLiquid(Volume::VoxelState state);
-	static void RegisterVoxelType(VoxelBuilder build);
+
+	static void RegisterVoxel(const std::string& name, const Volume::VoxelProperty property);
 	static void RegisterVoxels();
+	static std::unordered_map<std::string, Volume::VoxelProperty> registry;
 private:
-	static std::unordered_map<Volume::VoxelType, Volume::VoxelProperty> voxelProperties;
+	//static std::unordered_map<Volume::VoxelType, Volume::VoxelProperty> voxelProperties;
 };

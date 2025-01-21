@@ -321,7 +321,7 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
     return nullptr;
 }
 
-void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType elementType, Vec2f offset, Temperature temp)
+void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
@@ -334,19 +334,19 @@ void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType
     {
         for (int y = -size; y <= size; y++)
         {
-            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), elementType, temp);
+            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp);
         }
     }
 }
 
-void ChunkMatrix::PlaceParticleAtMousePosition(const Vec2f &pos, Volume::VoxelType particleType, Vec2f offset, float angle, float speed)
+void ChunkMatrix::PlaceParticleAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, float angle, float speed)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    AddParticle(particleType, MouseWorldPosI, Temperature(21), angle, speed);
+    AddParticle(id, MouseWorldPosI, Temperature(21), angle, speed);
 }
 
 void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
@@ -356,7 +356,7 @@ void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    PlaceVoxelAt(MouseWorldPosI, Volume::VoxelType::Oxygen, Temperature(21));
+    PlaceVoxelAt(MouseWorldPosI, "Oxygen", Temperature(21));
 }
 
 void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec2f offset)
@@ -386,19 +386,19 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		//Create voxel determining on its position
             if (pos.getY() > 4) {
                 chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
-                    (VoxelType::Dirt, 
+                    ("Dirt", 
                     Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
                     Temperature(21));
             }
             else {
                 chunk->voxels[x][y] = std::make_shared<VoxelGas>
-                    (VoxelType::Oxygen, 
+                    ("Oxygen", 
                     Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
                     Temperature(21));
             }
     		if (pos.getY() == 4 && pos.getX() <= 3) {
     			chunk->voxels[x][y] = std::make_shared<VoxelMovableSolid>
-                    (VoxelType::Sand, 
+                    ("Sand", 
                     Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
                     Temperature(21));
     		}
@@ -504,20 +504,25 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
     chunk->dirtyRender = true;
 }
 
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, Volume::VoxelType type, Temperature temp)
+void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
     std::shared_ptr<Volume::VoxelElement> voxel;
-    switch (type)
-    {
-    case Volume::VoxelType::Fire:
-        voxel = std::make_shared<Volume::FireVoxel>(pos, Temperature(40000));
-        break;
+
+    VoxelProperty* prop = VoxelRegistry::GetProperties(id);    
+
+    if(id == "Fire")
+        voxel = std::make_shared<Volume::FireVoxel>(pos, temp);
+    else{
+        if(prop->state == State::Gas)
+            voxel = std::make_shared<Volume::VoxelGas>(id, pos, temp);
+        else if(prop->state == State::Liquid)
+            voxel = std::make_shared<Volume::VoxelLiquid>(id, pos, temp);
+        else
+            voxel = std::make_shared<Volume::VoxelMovableSolid>(id, pos, temp);
+    } 
+        
     
-    default:
-        voxel = std::make_shared<Volume::VoxelMovableSolid>(type, pos, temp);
-        break;
-    }
     VirtualSetAt(voxel);
 }
 
@@ -563,15 +568,15 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.4f) {
-                PlaceVoxelAt(currentPos, Volume::VoxelType::Fire, Temperature(radius * 100));
+                PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100));
             }
             else {
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == VoxelState::Gas || voxel->GetState() == VoxelState::ImmovableSolid) 
-                    PlaceVoxelAt(currentPos, Volume::VoxelType::Fire, Temperature(radius * 100));
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100));
                 else {
-    				AddParticle(voxel->type, Vec2i(currentPos), voxel->temperature, static_cast<float>(angle), (radius*1.1f - j)*0.7f);
-                    PlaceVoxelAt(currentPos, Volume::VoxelType::Fire, Temperature(radius * 100));
+    				AddParticle(voxel->id, Vec2i(currentPos), voxel->temperature, static_cast<float>(angle), (radius*1.1f - j)*0.7f);
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100));
                 }
             }
     	}
@@ -594,8 +599,8 @@ void ChunkMatrix::UpdateParticles()
     }
 }
 
-void ChunkMatrix::AddParticle(Volume::VoxelType type, const Vec2i &position, Temperature temp, float angle, float speed)
+void ChunkMatrix::AddParticle(std::string id, const Vec2i &position, Temperature temp, float angle, float speed)
 {
-    this->newParticles.push_back(new VoxelParticle(type, position, temp, angle, speed));
+    this->newParticles.push_back(new VoxelParticle(id, position, temp, angle, speed));
 }
 

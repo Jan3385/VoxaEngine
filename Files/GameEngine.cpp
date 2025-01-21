@@ -11,6 +11,8 @@ using namespace std;
 
 GameEngine::GameEngine()
 {
+    VoxelRegistry::RegisterVoxels();
+
     this->Camera = AABB(Vec2f(0, 0), Vec2f(640.0/Volume::Chunk::RENDER_VOXEL_SIZE, 480.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
@@ -302,11 +304,18 @@ void GameEngine::m_RenderIMGUI()
 
     ImGui::Begin("VoxaEngine");
     
-    static int current_item = static_cast<int>(placeVoxelType);
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
-        "Water", "Fire", "Plasma", "CarbonDioxide"
+        "Water", "Fire", "Plasma", "Carbon_Dioxide"
     };
+    // Find the index of placeVoxelType in voxelTypeNames
+    static int current_item = 0;
+    for (int i = 0; i < IM_ARRAYSIZE(voxelTypeNames); ++i) {
+        if (voxelTypeNames[i] == placeVoxelType) {
+            current_item = i;
+            break;
+        }
+    }
 
     if (ImGui::BeginCombo("Placement Voxel", voxelTypeNames[current_item]))
     {
@@ -316,7 +325,7 @@ void GameEngine::m_RenderIMGUI()
             if (ImGui::Selectable(voxelTypeNames[i], is_selected))
             {
                 current_item = i;
-                placeVoxelType = static_cast<Volume::VoxelType>(i);
+                placeVoxelType = voxelTypeNames[i];
             }
 
             if (is_selected)

@@ -59,8 +59,8 @@ public:
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
 
-	void PlaceVoxelsAtMousePosition(const Vec2f& pos, Volume::VoxelType elementType, Vec2f offset, Volume::Temperature temp);
-	void PlaceParticleAtMousePosition(const Vec2f& pos, Volume::VoxelType particleType, Vec2f offset, float angle, float speed);
+	void PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp);
+	void PlaceParticleAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, float angle, float speed);
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 
@@ -72,7 +72,7 @@ public:
 	std::shared_ptr<Volume::VoxelElement> VirtualGetAt(const Vec2i& pos);
 	void VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel);
 
-	void PlaceVoxelAt(const Vec2i& pos, Volume::VoxelType type, Volume::Temperature temp);
+	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp);
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
 	void GetVoxelsInCubeAtWorldPosition(const Vec2f& start, const Vec2f& end);
@@ -85,7 +85,7 @@ public:
 
 	//particle functions
 	void UpdateParticles();
-	void AddParticle(Volume::VoxelType type, const Vec2i &position, Volume::Temperature temp, float angle, float speed);
+	void AddParticle(std::string id, const Vec2i &position, Volume::Temperature temp, float angle, float speed);
 	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions

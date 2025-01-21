@@ -21,10 +21,10 @@ namespace Volume {
 	{
 	public:
 		VoxelElement();
-		VoxelElement(VoxelType type, Vec2i position, Temperature temperature);
+		VoxelElement(std::string id, Vec2i position, Temperature temperature);
 		virtual ~VoxelElement();
 
-		const VoxelType type;
+		const std::string id;
 		const VoxelProperty* properties = nullptr;
 		Vec2i position;
 		RGB color;
@@ -39,11 +39,11 @@ namespace Volume {
 		//return true if the voxel acted on another voxel
 		virtual bool ActOnAnother() { return false; };
 		//return true if the voxel transitioned to another state
-		virtual bool CheckTransitionTemps(ChunkMatrix& matrix);
+		bool CheckTransitionTemps(ChunkMatrix& matrix);
 
 		// Swap the voxel with another voxel
 		void Swap(Vec2i& toSwapPos,ChunkMatrix& matrix);
-		void DieAndReplace(ChunkMatrix& matrix, std::shared_ptr<VoxelElement> replacement);
+		void DieAndReplace(ChunkMatrix &matrix, std::string id);
 	private:
 		Volume::VoxelState state = VoxelState::ImmovableSolid;
 	};
@@ -51,7 +51,7 @@ namespace Volume {
 	class VoxelParticle : public VoxelElement {
 	public:
 		VoxelParticle();
-		VoxelParticle(VoxelType type,const Vec2i& position, Temperature temp, float angle, float speed);
+		VoxelParticle(std::string id,const Vec2i& position, Temperature temp, float angle, float speed);
 
 		Vec2f fPosition;
 
@@ -69,18 +69,17 @@ namespace Volume {
 	//Solid Voxels -> inherit from base voxel class
 	class VoxelSolid : public VoxelElement {
 	public:
-		VoxelSolid() : VoxelElement(VoxelType::Dirt, Vec2i(0, 0), Temperature(21)) {};
-		VoxelSolid(VoxelType type, Vec2i position, Temperature temp) : VoxelElement(type, position, temp) {};
+		VoxelSolid() : VoxelElement("Dirt" , Vec2i(0, 0), Temperature(21)) {};
+		VoxelSolid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		virtual ~VoxelSolid() {};
 
 		virtual VoxelState GetState() override { return VoxelState::ImmovableSolid; };
-		bool CheckTransitionTemps(ChunkMatrix& matrix) override;
 	};
 	//Solid immovable voxels -> inherit from solid voxels
 	class VoxelImmovableSolid : public VoxelSolid {
 	public:
-		VoxelImmovableSolid() : VoxelSolid(VoxelType::Dirt, Vec2i(0, 0), Temperature(21)) {};
-		VoxelImmovableSolid(VoxelType type, Vec2i position, Temperature temp) : VoxelSolid(type, position, temp) {};
+		VoxelImmovableSolid() : VoxelSolid("Dirt", Vec2i(0, 0), Temperature(21)) {};
+		VoxelImmovableSolid(std::string id, Vec2i position, Temperature temp) : VoxelSolid(id, position, temp) {};
 		~VoxelImmovableSolid() {};
 
 		VoxelState GetState() override { return VoxelState::ImmovableSolid; };
@@ -89,8 +88,8 @@ namespace Volume {
 	//solid movable voxels -> inherit from solid voxels
 	class VoxelMovableSolid : public VoxelSolid, public IGravity {
 	public:
-		VoxelMovableSolid() : VoxelSolid(VoxelType::Sand, Vec2i(0, 0), Temperature(21)) {};
-		VoxelMovableSolid(VoxelType type, Vec2i position, Temperature temp) : VoxelSolid(type, position, temp) {};
+		VoxelMovableSolid() : VoxelSolid("Sand", Vec2i(0, 0), Temperature(21)) {};
+		VoxelMovableSolid(std::string id, Vec2i position, Temperature temp) : VoxelSolid(id, position, temp) {};
 		~VoxelMovableSolid() {};
 
 		short unsigned int XVelocity = 0;     // 0 - short unsigned int max
@@ -105,27 +104,25 @@ namespace Volume {
 	//liquid voxels -> inherit from base voxel class
 	class VoxelLiquid : public VoxelElement, public IGravity {
 	public:
-		VoxelLiquid() : VoxelElement(VoxelType::Water, Vec2i(0, 0), Temperature(21)) {};
-		VoxelLiquid(VoxelType type, Vec2i position, Temperature temp) : VoxelElement(type, position, temp) {};
+		VoxelLiquid() : VoxelElement("Water", Vec2i(0, 0), Temperature(21)) {};
+		VoxelLiquid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		~VoxelLiquid() {};
 
 		VoxelState GetState() override { return VoxelState::Liquid; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		Vec2i GetValidSideSwapPosition(ChunkMatrix& matrix, short int length);
-		bool CheckTransitionTemps(ChunkMatrix& matrix) override;
 
 		short int dispursionRate = 10;
 	};
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
 	public:
-		VoxelGas() : VoxelElement(VoxelType::Oxygen, Vec2i(0, 0), Temperature(21)) {};
-		VoxelGas(VoxelType type, Vec2i position, Temperature temp) : VoxelElement(type, position, temp) {};
+		VoxelGas() : VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21)) {};
+		VoxelGas(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		~VoxelGas() {};
 
 		VoxelState GetState() override { return VoxelState::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
-		bool CheckTransitionTemps(ChunkMatrix& matrix) override;
 	};
 }
