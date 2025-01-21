@@ -2,58 +2,13 @@
 
 #include <map>
 #include <memory>
-#include <string>
 #include "../Math/Vector.h"
-#include "../Math/Color.h"
+#include "../Registry/VoxelRegistry.h"
 
 // Forward declaration of ChunkMatrix
 class ChunkMatrix;
 
 namespace Volume {
-	enum VoxelType {
-		Dirt,
-		Grass,
-		Stone,
-		Sand,
-		Oxygen,
-		Water,
-		Fire,
-		Plasma,
-		CarbonDioxide,
-	};
-	enum VoxelState {
-		Gas,
-		Liquid,
-		ImmovableSolid,
-		MovableSolid,
-	};
-	struct Temperature {
-	private:
-		float Temperature_C;  // Temperature in Celsius
-
-		static constexpr float KELVIN_OFFSET = 273.15f;
-		static constexpr float FAHRENHEIT_OFFSET = 32.0f;
-		static constexpr float FAHRENHEIT_RATIO = 9.0f / 5.0f;
-		static constexpr float FAHRENHEIT_INVERSE_RATIO = 5.0f / 9.0f;
-	public:
-		float GetKelvin() const { return Temperature_C + KELVIN_OFFSET; }
-		void SetKelvin(float kelvin) { Temperature_C = kelvin - KELVIN_OFFSET; }
-		float GetFahrenheit() const { return Temperature_C * FAHRENHEIT_RATIO + FAHRENHEIT_OFFSET; }
-		void SetFahrenheit(float fahrenheit) { Temperature_C = (fahrenheit - FAHRENHEIT_OFFSET) * FAHRENHEIT_INVERSE_RATIO; }
-		float GetCelsius() const { return Temperature_C; }
-		void SetCelsius(float celsius) { Temperature_C = celsius; }
-
-		Temperature() : Temperature_C(0) {}
-		Temperature(float celsius) : Temperature_C(celsius) {}
-	};
-	struct VoxelProperty {
-		const std::string name;
-		const RGB pColor;
-		const Volume::Temperature lowerTemp;
-		const Volume::Temperature upperTemp;
-		//g/L or kg/m^3
-		const float Density;
-	};
 	//Interfaces
 	class IGravity {
 	public:
@@ -66,14 +21,14 @@ namespace Volume {
 	{
 	public:
 		VoxelElement();
-		VoxelElement(VoxelType type, Vec2i position);
+		VoxelElement(VoxelType type, Vec2i position, Temperature temperature);
 		virtual ~VoxelElement();
 
 		const VoxelType type;
 		const VoxelProperty* properties = nullptr;
 		Vec2i position;
 		RGB color;
-		Temperature temperature = Temperature(21.f);
+		Temperature temperature;
 		bool updatedThisFrame = false; //TODO: maybe set to true
 
 		// Functions
@@ -96,7 +51,7 @@ namespace Volume {
 	class VoxelParticle : public VoxelElement {
 	public:
 		VoxelParticle();
-		VoxelParticle(VoxelType type,const Vec2i& position, float angle, float speed);
+		VoxelParticle(VoxelType type,const Vec2i& position, Temperature temp, float angle, float speed);
 
 		Vec2f fPosition;
 
@@ -114,8 +69,8 @@ namespace Volume {
 	//Solid Voxels -> inherit from base voxel class
 	class VoxelSolid : public VoxelElement {
 	public:
-		VoxelSolid() : VoxelElement(VoxelType::Dirt, Vec2i(0, 0)) {};
-		VoxelSolid(VoxelType type, Vec2i position) : VoxelElement(type, position) {};
+		VoxelSolid() : VoxelElement(VoxelType::Dirt, Vec2i(0, 0), Temperature(21)) {};
+		VoxelSolid(VoxelType type, Vec2i position, Temperature temp) : VoxelElement(type, position, temp) {};
 		virtual ~VoxelSolid() {};
 
 		virtual VoxelState GetState() override { return VoxelState::ImmovableSolid; };
@@ -124,8 +79,8 @@ namespace Volume {
 	//Solid immovable voxels -> inherit from solid voxels
 	class VoxelImmovableSolid : public VoxelSolid {
 	public:
-		VoxelImmovableSolid() : VoxelSolid(VoxelType::Dirt, Vec2i(0, 0)) {};
-		VoxelImmovableSolid(VoxelType type, Vec2i position) : VoxelSolid(type, position) {};
+		VoxelImmovableSolid() : VoxelSolid(VoxelType::Dirt, Vec2i(0, 0), Temperature(21)) {};
+		VoxelImmovableSolid(VoxelType type, Vec2i position, Temperature temp) : VoxelSolid(type, position, temp) {};
 		~VoxelImmovableSolid() {};
 
 		VoxelState GetState() override { return VoxelState::ImmovableSolid; };
@@ -134,8 +89,8 @@ namespace Volume {
 	//solid movable voxels -> inherit from solid voxels
 	class VoxelMovableSolid : public VoxelSolid, public IGravity {
 	public:
-		VoxelMovableSolid() : VoxelSolid(VoxelType::Sand, Vec2i(0, 0)) {};;
-		VoxelMovableSolid(VoxelType type, Vec2i position) : VoxelSolid(type, position) {};;
+		VoxelMovableSolid() : VoxelSolid(VoxelType::Sand, Vec2i(0, 0), Temperature(21)) {};
+		VoxelMovableSolid(VoxelType type, Vec2i position, Temperature temp) : VoxelSolid(type, position, temp) {};
 		~VoxelMovableSolid() {};
 
 		short unsigned int XVelocity = 0;     // 0 - short unsigned int max
@@ -150,8 +105,8 @@ namespace Volume {
 	//liquid voxels -> inherit from base voxel class
 	class VoxelLiquid : public VoxelElement, public IGravity {
 	public:
-		VoxelLiquid() : VoxelElement(VoxelType::Water, Vec2i(0, 0)) {};
-		VoxelLiquid(VoxelType type, Vec2i position) : VoxelElement(type, position) {};
+		VoxelLiquid() : VoxelElement(VoxelType::Water, Vec2i(0, 0), Temperature(21)) {};
+		VoxelLiquid(VoxelType type, Vec2i position, Temperature temp) : VoxelElement(type, position, temp) {};
 		~VoxelLiquid() {};
 
 		VoxelState GetState() override { return VoxelState::Liquid; };
@@ -165,8 +120,8 @@ namespace Volume {
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
 	public:
-		VoxelGas() : VoxelElement(VoxelType::Oxygen, Vec2i(0, 0)) {};
-		VoxelGas(VoxelType type, Vec2i position) : VoxelElement(type, position) {};
+		VoxelGas() : VoxelElement(VoxelType::Oxygen, Vec2i(0, 0), Temperature(21)) {};
+		VoxelGas(VoxelType type, Vec2i position, Temperature temp) : VoxelElement(type, position, temp) {};
 		~VoxelGas() {};
 
 		VoxelState GetState() override { return VoxelState::Gas; };
@@ -174,13 +129,3 @@ namespace Volume {
 		bool CheckTransitionTemps(ChunkMatrix& matrix) override;
 	};
 }
-class VoxelRegistry {
-public:
-	static const Volume::VoxelProperty& GetProperties(Volume::VoxelType type);
-	static const bool CanGetMovedByExplosion(Volume::VoxelState state);
-	static const bool CanGetDestroyedByExplosion(Volume::VoxelElement& element, float explosionPower);
-	static const bool CanBeMovedBySolid(Volume::VoxelState state);
-	static const bool CanBeMovedByLiquid(Volume::VoxelState state);
-private:
-	static const std::map<Volume::VoxelType, Volume::VoxelProperty> voxelProperties;
-};

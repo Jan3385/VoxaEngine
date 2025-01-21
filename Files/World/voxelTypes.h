@@ -7,7 +7,7 @@ namespace Volume {
 	{
 	public:
 		FireVoxel();
-		FireVoxel(Vec2i position);
+		FireVoxel(Vec2i position, Temperature temp);
 		~FireVoxel();
 
 		// Functions

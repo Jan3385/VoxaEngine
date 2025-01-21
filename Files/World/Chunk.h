@@ -22,7 +22,10 @@ namespace Volume
     	~Chunk();
 
 		bool ShouldChunkDelete(AABB &Camera);
+		bool ShouldChunkCalculateHeat();
     	void UpdateVoxels(ChunkMatrix* matrix);
+    	void UpdateHeat();
+		void TransferBorderHeat(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
     	SDL_Surface* Render();
 		Vec2i GetPos() const;
@@ -30,10 +33,12 @@ namespace Volume
 
 		uint8_t lastCheckedCountDown = 20;
     	bool updateVoxelsNextFrame = true;
+		bool forceHeatUpdate = true;
 		bool dirtyRender = true;
     private:
     	short int m_x;
     	short int m_y;
+		short int m_lastMaxHeatDifference = 0;
 		TTF_Font* font;
 		SDL_Surface* chunkSurface = nullptr;
     };
@@ -44,9 +49,7 @@ public:
 	ChunkMatrix();
 	~ChunkMatrix();
 
-
 	//grid storage logic
-	//std::vector<std::vector<Volume::Chunk*>> Grid;
 	//precomputed grids for simulation passing - 0 - 3 passees
 	std::vector<Volume::Chunk*> GridSegmented[4];
 
@@ -56,7 +59,7 @@ public:
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
 
-	void PlaceVoxelsAtMousePosition(const Vec2f& pos, Volume::VoxelType elementType, Vec2f offset);
+	void PlaceVoxelsAtMousePosition(const Vec2f& pos, Volume::VoxelType elementType, Vec2f offset, Volume::Temperature temp);
 	void PlaceParticleAtMousePosition(const Vec2f& pos, Volume::VoxelType particleType, Vec2f offset, float angle, float speed);
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
@@ -67,8 +70,9 @@ public:
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
 	std::shared_ptr<Volume::VoxelElement> VirtualGetAt(const Vec2i& pos);
-	void PlaceVoxelAt(const Vec2i& pos, Volume::VoxelType type);
 	void VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel);
+
+	void PlaceVoxelAt(const Vec2i& pos, Volume::VoxelType type, Volume::Temperature temp);
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
 	void GetVoxelsInCubeAtWorldPosition(const Vec2f& start, const Vec2f& end);
@@ -81,7 +85,7 @@ public:
 
 	//particle functions
 	void UpdateParticles();
-	void AddParticle(Volume::VoxelType type, const Vec2i& position, float angle, float speed);
+	void AddParticle(Volume::VoxelType type, const Vec2i &position, Volume::Temperature temp, float angle, float speed);
 	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions

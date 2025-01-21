@@ -4,6 +4,7 @@
 #include <math.h>
 #include <cmath>
 #include <iostream>
+#include "../GameEngine.h"
 
 using namespace Volume; 
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
@@ -30,6 +31,13 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera)
     if(this->GetAABB().Overlaps(Camera)) return false;
 
     return true;
+}
+bool Volume::Chunk::ShouldChunkCalculateHeat()
+{
+    return(
+        m_lastMaxHeatDifference > 0.1f ||
+        forceHeatUpdate
+    );
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
@@ -63,6 +71,59 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
     }
 }
 
+//transfer heat within the chunk
+void Volume::Chunk::UpdateHeat()
+{
+    //TODO: forceHeatUpdate = false;
+    m_lastMaxHeatDifference = 0;
+    float newHeatMap[CHUNK_SIZE][CHUNK_SIZE];
+
+    for(int x = 0; x < CHUNK_SIZE; ++x){
+        for(int y = 0; y < CHUNK_SIZE; ++y){
+            newHeatMap[x][y] = voxels[x][y]->temperature.GetCelsius();
+        }
+    }
+
+    for (int x = 0; x < CHUNK_SIZE; ++x)
+    {
+        for (int y = 0; y < CHUNK_SIZE; ++y)
+        {
+            float heat = voxels[x][y]->temperature.GetCelsius();
+
+            for(int dx = -1; dx <= 1; dx++){
+                for(int dy = -1; dy <= 1; dy++){
+                    if(dx == 0 && dy == 0) continue;
+                    if(x + dx < 0 || x + dx >= CHUNK_SIZE || y + dy < 0 || y + dy >= CHUNK_SIZE) continue;
+
+                    float neighbourHeat = voxels[x + dx][y + dy]->temperature.GetCelsius();
+                    float heatDifference = heat - neighbourHeat;
+                    float heatTransfer = heatDifference * voxels[x][y]->properties->HeatConductivity;
+
+                    newHeatMap[x][y] -= heatTransfer / voxels[x][y]->properties->HeatCapacity;
+                    newHeatMap[x + dx][y + dy] += heatTransfer / voxels[x + dx][y + dy]->properties->HeatCapacity;
+
+                    if(heatDifference > m_lastMaxHeatDifference){
+                        m_lastMaxHeatDifference = heatDifference;
+                    }
+                }
+            }
+        }
+    }
+
+    for (int x = 0; x < CHUNK_SIZE; ++x)
+    {
+        for (int y = 0; y < CHUNK_SIZE; ++y)
+        {
+            voxels[x][y]->temperature.SetCelsius(newHeatMap[x][y]);
+        }
+    }
+}
+
+//transfer heat to the bordering chunks
+void Volume::Chunk::TransferBorderHeat(ChunkMatrix *matrix)
+{
+}
+
 void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
 {
     #pragma omp parallel for collapse(2)
@@ -86,14 +147,17 @@ SDL_Surface* Volume::Chunk::Render()
     if(this->chunkSurface == nullptr) {
         this->chunkSurface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
     }
-    else if(this->dirtyRender){
+    else if(this->dirtyRender ||true){
         this->dirtyRender = false;
         //SDL_FreeSurface(this->chunkSurface);
 
         //render individual voxels
         for (int y = 0; y < CHUNK_SIZE; ++y) {
             for (int x = 0; x < CHUNK_SIZE; ++x) {
-                const RGB& color = voxels[x][y]->color;
+                RGB& color = voxels[x][y]->color;
+                //color.r = SDL_clamp(color.r, 0, 255);
+                //color.g = 0;
+                //color.b = SDL_clamp(255 - voxels[x][y]->temperature.GetCelsius(), 0, 255);
                 //const RGB& color = RGB(voxels[x][y].get()->position.getX() / 2, 0, voxels[x][y].get()->position.getY() / 2);
 
                 SDL_Rect rect = {
@@ -174,13 +238,12 @@ ChunkMatrix::~ChunkMatrix()
 {
     for(int i = 0; i < 4; ++i)
     {
-        for(auto& chunk : GridSegmented[i])
+        for(int j = GridSegmented[i].size() - 1; j >= 0; --j)
         {
-            delete chunk;
+            delete GridSegmented[i][j];
         }
         GridSegmented[i].clear();
     }
-    //Grid.clear();
     
     for (auto& particle : particles) {
     	delete particle;
@@ -258,7 +321,7 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
     return nullptr;
 }
 
-void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType elementType, Vec2f offset)
+void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType elementType, Vec2f offset, Temperature temp)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
@@ -271,7 +334,7 @@ void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, Volume::VoxelType
     {
         for (int y = -size; y <= size; y++)
         {
-            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), elementType);
+            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), elementType, temp);
         }
     }
 }
@@ -283,7 +346,7 @@ void ChunkMatrix::PlaceParticleAtMousePosition(const Vec2f &pos, Volume::VoxelTy
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    AddParticle(particleType, MouseWorldPosI, angle, speed);
+    AddParticle(particleType, MouseWorldPosI, Temperature(21), angle, speed);
 }
 
 void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
@@ -293,7 +356,7 @@ void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    PlaceVoxelAt(MouseWorldPosI, Volume::VoxelType::Oxygen);
+    PlaceVoxelAt(MouseWorldPosI, Volume::VoxelType::Oxygen, Temperature(21));
 }
 
 void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec2f offset)
@@ -322,13 +385,22 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
         for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
     		//Create voxel determining on its position
             if (pos.getY() > 4) {
-                chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>(VoxelType::Dirt, Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE));
+                chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
+                    (VoxelType::Dirt, 
+                    Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
+                    Temperature(21));
             }
             else {
-                chunk->voxels[x][y] = std::make_shared<VoxelGas>(VoxelType::Oxygen, Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE));
+                chunk->voxels[x][y] = std::make_shared<VoxelGas>
+                    (VoxelType::Oxygen, 
+                    Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
+                    Temperature(21));
             }
     		if (pos.getY() == 4 && pos.getX() <= 3) {
-    			chunk->voxels[x][y] = std::make_shared<VoxelMovableSolid>(VoxelType::Sand, Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE));
+    			chunk->voxels[x][y] = std::make_shared<VoxelMovableSolid>
+                    (VoxelType::Sand, 
+                    Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
+                    Temperature(21));
     		}
         }
     }
@@ -407,6 +479,7 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
     // Set the new voxel and mark for update
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
     chunk->updateVoxelsNextFrame = true;
+    chunk->forceHeatUpdate = true;
 
     //update grids near if its on their border
     if (localPos.getX() == 0) {
@@ -431,18 +504,18 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
     chunk->dirtyRender = true;
 }
 
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, Volume::VoxelType type)
+void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, Volume::VoxelType type, Temperature temp)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
     std::shared_ptr<Volume::VoxelElement> voxel;
     switch (type)
     {
     case Volume::VoxelType::Fire:
-        voxel = std::make_shared<Volume::FireVoxel>(pos);
+        voxel = std::make_shared<Volume::FireVoxel>(pos, Temperature(40000));
         break;
     
     default:
-        voxel = std::make_shared<Volume::VoxelMovableSolid>(type, pos);
+        voxel = std::make_shared<Volume::VoxelMovableSolid>(type, pos, temp);
         break;
     }
     VirtualSetAt(voxel);
@@ -490,15 +563,15 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.4f) {
-                PlaceVoxelAt(currentPos, Volume::VoxelType::Fire);
+                PlaceVoxelAt(currentPos, Volume::VoxelType::Fire, Temperature(radius * 100));
             }
             else {
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == VoxelState::Gas || voxel->GetState() == VoxelState::ImmovableSolid) 
-                    PlaceVoxelAt(currentPos, Volume::VoxelType::Fire);
+                    PlaceVoxelAt(currentPos, Volume::VoxelType::Fire, Temperature(radius * 100));
                 else {
-    				AddParticle(voxel->type, Vec2i(currentPos), static_cast<float>(angle), (radius*1.1f - j)*0.7f);
-                    PlaceVoxelAt(currentPos, Volume::VoxelType::Fire);
+    				AddParticle(voxel->type, Vec2i(currentPos), voxel->temperature, static_cast<float>(angle), (radius*1.1f - j)*0.7f);
+                    PlaceVoxelAt(currentPos, Volume::VoxelType::Fire, Temperature(radius * 100));
                 }
             }
     	}
@@ -521,8 +594,8 @@ void ChunkMatrix::UpdateParticles()
     }
 }
 
-void ChunkMatrix::AddParticle(Volume::VoxelType type, const Vec2i &position, float angle, float speed)
+void ChunkMatrix::AddParticle(Volume::VoxelType type, const Vec2i &position, Temperature temp, float angle, float speed)
 {
-    this->newParticles.push_back(new VoxelParticle(type, position, angle, speed));
+    this->newParticles.push_back(new VoxelParticle(type, position, temp, angle, speed));
 }
 

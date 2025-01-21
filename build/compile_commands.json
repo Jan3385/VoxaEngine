@@ -19,9 +19,21 @@
 },
 {
   "directory": "C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build",
+  "command": "C:\\msys64-compiler\\mingw64\\bin\\c++.exe -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui -g -g -std=gnu++17 -o CMakeFiles\\VoxaEngine.dir\\Files\\Math\\Temperature.cpp.obj -c C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\Temperature.cpp",
+  "file": "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\Temperature.cpp",
+  "output": "CMakeFiles\\VoxaEngine.dir\\Files\\Math\\Temperature.cpp.obj"
+},
+{
+  "directory": "C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build",
   "command": "C:\\msys64-compiler\\mingw64\\bin\\c++.exe -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui -g -g -std=gnu++17 -o CMakeFiles\\VoxaEngine.dir\\Files\\Math\\Vector.cpp.obj -c C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\Vector.cpp",
   "file": "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Math\\Vector.cpp",
   "output": "CMakeFiles\\VoxaEngine.dir\\Files\\Math\\Vector.cpp.obj"
+},
+{
+  "directory": "C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build",
+  "command": "C:\\msys64-compiler\\mingw64\\bin\\c++.exe -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/SDL2 -IC:/Users/Honza/OneDrive/Plocha/VoxaEngine/SDL2/include/imgui -g -g -std=gnu++17 -o CMakeFiles\\VoxaEngine.dir\\Files\\Registry\\VoxelRegistry.cpp.obj -c C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Registry\\VoxelRegistry.cpp",
+  "file": "C:\\Users\\Honza\\OneDrive\\Plocha\\VoxaEngine\\Files\\Registry\\VoxelRegistry.cpp",
+  "output": "CMakeFiles\\VoxaEngine.dir\\Files\\Registry\\VoxelRegistry.cpp.obj"
 },
 {
   "directory": "C:/Users/Honza/OneDrive/Plocha/VoxaEngine/build",

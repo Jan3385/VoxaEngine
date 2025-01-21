@@ -80,8 +80,9 @@ void GameEngine::Update()
         this->MoveCamera(this->Camera.corner + Vec2f(2, 0));
 }
 
-void GameEngine::m_UpdateGridSegment(int pass)
+void GameEngine::m_UpdateGridVoxel(int pass)
 {
+    //TODO: make this threaded
     //delete all chunks marked for deletion
     for(auto& chunk : chunkMatrix.GridSegmented[pass]){
         if(chunk->ShouldChunkDelete(Camera))
@@ -97,6 +98,17 @@ void GameEngine::m_UpdateGridSegment(int pass)
             chunk->UpdateVoxels(&this->chunkMatrix);
     }
 }
+void GameEngine::m_UpdateGridHeat(int pass)
+{
+    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
+        if (chunk->ShouldChunkCalculateHeat())
+            chunk->UpdateHeat();
+    }
+}
+void GameEngine::m_UpdateGridHeatBetweenChunks(int pass)
+{
+    //TODO: Implement
+}
 void GameEngine::m_FixedUpdate()
 {
     #pragma omp parallel for collapse(2)
@@ -109,18 +121,26 @@ void GameEngine::m_FixedUpdate()
         }
     }
 
-    //std::vector<std::thread> threads;
-
+    //Voxel update logic
     for(int i = 0; i < 4; ++i)
     {
-        //threads.push_back(std::thread(&GameEngine::m_UpdateGridSegment, this, i));
-        m_UpdateGridSegment(i); //TODO: maybe make this threaded without making a race condition
+        m_UpdateGridVoxel(i); //TODO: maybe make this threaded without making a race condition
     }
 
+    //Heat update logic
+    std::vector<std::thread> threads;
+    for(int i = 0; i < 4; ++i)
+    {
+        threads.push_back(std::thread(&GameEngine::m_UpdateGridHeat, this, i));
+    }
     // Wait for all threads to finish
-    //for (auto& thread : threads) {
-    //    thread.join();
-    //}
+    for (auto& thread : threads) {
+        thread.join();
+    }
+    for(int i = 0; i < 4; ++i)
+    {
+        m_UpdateGridHeatBetweenChunks(i);
+    }
 
     chunkMatrix.UpdateParticles();
 }
@@ -267,21 +287,48 @@ void GameEngine::Render()
     SDL_DestroyTexture(texture);
 
     //ImGui
-    ImGui_ImplSDLRenderer2_NewFrame();
-    ImGui_ImplSDL2_NewFrame();
-    ImGui::NewFrame();
-
-    ImGui::Begin("Hello, world!");
-    ImGui::Text("This is some useful text.");
-
-    ImGui::End();
-
-    ImGui::Render();
+    m_RenderIMGUI();
 
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
 
     // Update window
     SDL_RenderPresent( renderer );
+}
+void GameEngine::m_RenderIMGUI()
+{
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("VoxaEngine");
+    
+    static int current_item = static_cast<int>(placeVoxelType);
+    const char* voxelTypeNames[] = {
+        "Dirt", "Grass", "Stone", "Sand", "Oxygen",
+        "Water", "Fire", "Plasma", "CarbonDioxide"
+    };
+
+    if (ImGui::BeginCombo("Placement Voxel", voxelTypeNames[current_item]))
+    {
+        for (int i = 0; i < IM_ARRAYSIZE(voxelTypeNames); ++i)
+        {
+            bool is_selected = (current_item == i);
+            if (ImGui::Selectable(voxelTypeNames[i], is_selected))
+            {
+                current_item = i;
+                placeVoxelType = static_cast<Volume::VoxelType>(i);
+            }
+
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::DragFloat("Placement Temperature", &placeVoxelTemperature, 0.5f, 0.0f, 1000.0f);
+
+    ImGui::End();
+
+    ImGui::Render();
 }
 
 Vec2f GameEngine::GetCameraPos() const
@@ -321,7 +368,6 @@ void GameEngine::m_LoadChunkInView(Vec2i pos)
     chunkMatrix.GenerateChunk(pos);
     return;
 }
-
 void GameEngine::m_initVariables()
 {
     this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
@@ -370,19 +416,9 @@ void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:
-        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, Volume::VoxelType::Sand, offset);
+        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, offset, Volume::Temperature(this->placeVoxelTemperature));
         break;
     case SDL_BUTTON_RIGHT:
-        this->chunkMatrix.RemoveVoxelAtMousePosition(this->mousePos, offset);
-        break;
-    case SDL_BUTTON_MIDDLE:
-        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 10, offset);
-        break;
-    case SDL_BUTTON_X1:
-        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, Volume::VoxelType::Water, offset);
-        break;
-    case SDL_BUTTON_X2:
-        this->chunkMatrix.PlaceParticleAtMousePosition(this->mousePos, Volume::VoxelType::Fire, offset, 0, 2);
-        break;
+        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, offset);
     }
 }

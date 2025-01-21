@@ -11,12 +11,14 @@ VoxelElement::VoxelElement()
 {
 	this->properties = &VoxelRegistry::GetProperties(VoxelType::Oxygen);
 	this->position = Vec2i(0, 0);
+	this->temperature = Temperature(21);
 }
 
-VoxelElement::VoxelElement(VoxelType type, Vec2i position)
+VoxelElement::VoxelElement(VoxelType type, Vec2i position, Temperature temperature)
 	:position(position), type(type)
 {
 	this->properties = &VoxelRegistry::GetProperties(type);
+	this->temperature = temperature;
 
 	//tint the color factor 1 to 1.2
 	float factor = 1 + ((rand() % 21) / 100.0f);
@@ -58,11 +60,11 @@ void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::shared_ptr<VoxelEleme
 }
 
 VoxelParticle::VoxelParticle()
-	: VoxelElement(VoxelType::Oxygen, Vec2i(0, 0)), fPosition(Vec2f(0,0)), angle(0), speed(0),
+	: VoxelElement(VoxelType::Oxygen, Vec2i(0, 0), Temperature(21)), fPosition(Vec2f(0,0)), angle(0), speed(0),
 	m_dPosition(0,0) { }
 
-VoxelParticle::VoxelParticle(VoxelType type, const Vec2i &position, float angle, float speed)
-	: VoxelElement(type, position), fPosition(Vec2f(position)), angle(angle), speed(speed),
+VoxelParticle::VoxelParticle(VoxelType type, const Vec2i &position, Temperature temp, float angle, float speed)
+	: VoxelElement(type, position, temp), fPosition(Vec2f(position)), angle(angle), speed(speed),
 	m_dPosition(speed* cos(angle), speed* sin(angle)) { }
 
 bool VoxelParticle::Step(ChunkMatrix *matrix)
@@ -94,7 +96,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     		return true;
     	}
 
-		matrix->PlaceVoxelAt(this->position, this->type);
+		matrix->PlaceVoxelAt(this->position, this->type, this->temperature);
     	return true;
     }
 
@@ -106,9 +108,9 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
 
 bool VoxelSolid::CheckTransitionTemps(ChunkMatrix &matrix)
 {
-    if (this->temperature.GetCelsius() > this->properties->lowerTemp.GetCelsius())
+    if (this->temperature.GetCelsius() > this->properties->lowerTemp.GetCelsius() + Volume::TEMP_TRANSITION_THRESHOLD)
     {
-    	this->DieAndReplace(matrix, std::make_shared<VoxelLiquid>(this->type, this->position));
+    	this->DieAndReplace(matrix, std::make_shared<VoxelLiquid>(this->type, this->position, this->temperature));
     	return true;
     }
     return false;
@@ -349,14 +351,14 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
 
 bool VoxelLiquid::CheckTransitionTemps(ChunkMatrix &matrix)
 {
-    if (this->temperature.GetCelsius() < this->properties->lowerTemp.GetCelsius())
+    if (this->temperature.GetCelsius() < this->properties->lowerTemp.GetCelsius() - Volume::TEMP_TRANSITION_THRESHOLD)
     {
-    	this->DieAndReplace(matrix, std::make_shared<VoxelMovableSolid>(this->type, this->position));
+    	this->DieAndReplace(matrix, std::make_shared<VoxelMovableSolid>(this->type, this->position, this->temperature));
     	return true;
     }
-    else if (this->temperature.GetCelsius() > this->properties->upperTemp.GetCelsius())
+    else if (this->temperature.GetCelsius() > this->properties->upperTemp.GetCelsius() + Volume::TEMP_TRANSITION_THRESHOLD)
     {
-    	this->DieAndReplace(matrix, std::make_shared<VoxelGas>(this->type, this->position));
+    	this->DieAndReplace(matrix, std::make_shared<VoxelGas>(this->type, this->position, this->temperature));
     	return true;
     }
     return false;
@@ -390,49 +392,10 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 
 bool VoxelGas::CheckTransitionTemps(ChunkMatrix &matrix)
 {
-    if (this->temperature.GetCelsius() < this->properties->upperTemp.GetCelsius())
+    if (this->temperature.GetCelsius() < this->properties->upperTemp.GetCelsius() - Volume::TEMP_TRANSITION_THRESHOLD)
     {
-    	this->DieAndReplace(matrix, std::make_shared<VoxelLiquid>(this->type, this->position));
+    	this->DieAndReplace(matrix, std::make_shared<VoxelLiquid>(this->type, this->position, this->temperature));
     	return true;
     }
     return false;
-}
-
-// Initialize the voxel properties
-//TODO: phase changes - for example grass to dirt at 60C and dirt to lava at 1200C or Fire to Carbon dioxide at 200C. probably using a custom boil, freeze and solidify function
-const std::map<Volume::VoxelType, VoxelProperty> VoxelRegistry::voxelProperties = {
-	{ VoxelType::Oxygen, {"Oxygen", RGB(15, 15, 15), Temperature(-218.79f), Temperature(-182.96f), 1.429f}},
-	{ VoxelType::Water, {"Water", RGB(3, 169, 244), Temperature(0.f), Temperature(99.98f), 2}},
-	{ VoxelType::Stone, {"Stone", RGB(128, 128, 128), Temperature(1200.f), Temperature(3000.f), 200.f} },
-	{ VoxelType::Grass, {"Grass", RGB(34, 139, 34), Temperature(1200.f), Temperature(3000.f), 200.f} },
-	{ VoxelType::Sand, {"Sand", RGB(255, 193, 7), Temperature(1200.f), Temperature(3000.f), 190.f}},
-	{ VoxelType::Dirt, {"Dirt", RGB(121, 85, 72), Temperature(1700.f), Temperature(5000.f), 200.f}},
-	{ VoxelType::Fire, {"Fire", RGB(255, 87, 34), Temperature(-600.f), Temperature(30000.f), 1.f}},
-	{ VoxelType::Plasma, {"Plasma", RGB(156, 39, 176), Temperature(-600.f), Temperature(30000.f), 1.f}},
-	{ VoxelType::CarbonDioxide, {"Carbon Dioxide", RGB(4, 4, 4), Temperature(-56.6f), Temperature(-78.5f), 1.98f}},
-};
-
-const VoxelProperty &VoxelRegistry::GetProperties(VoxelType type)
-{
-    return voxelProperties.at(type);
-}
-
-const bool VoxelRegistry::CanGetMovedByExplosion(VoxelState state)
-{
-    return state == VoxelState::Liquid || state == VoxelState::MovableSolid;
-}
-
-const bool VoxelRegistry::CanGetDestroyedByExplosion(VoxelElement &element, float explosionPower)
-{
-    return true;
-}
-
-const bool VoxelRegistry::CanBeMovedBySolid(VoxelState state)
-{
-    return state == VoxelState::Gas || state == VoxelState::Liquid;
-}
-
-const bool VoxelRegistry::CanBeMovedByLiquid(VoxelState state)
-{
-    return state == VoxelState::Gas;
 }

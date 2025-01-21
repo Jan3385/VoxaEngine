@@ -18,16 +18,23 @@ private:
     TTF_Font* basicFont;
     AABB Camera;
 
+    Volume::VoxelType placeVoxelType = Volume::VoxelType::Sand;
+    float placeVoxelTemperature = 21.0;
+
     void m_initVariables();
     void m_initWindow();
     void m_OnKeyboardInput(SDL_KeyboardEvent event);
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
     void m_FixedUpdate();
-    void m_UpdateGridSegment(int pass);
+    void m_UpdateGridVoxel(int pass);
+    void m_UpdateGridHeat(int pass);
+    void m_UpdateGridHeatBetweenChunks(int pass);
     void m_LoadChunkInView(Vec2i pos);
+    void m_RenderIMGUI();
 public:
     static constexpr int MAX_FRAME_RATE = 60;
     static constexpr float fixedDeltaTime = 1/30.0;
+
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
     float FPS = 60;
