@@ -24,7 +24,7 @@ Volume::Chunk::~Chunk()
     }
     SDL_FreeSurface(this->chunkSurface);
 }
-bool Volume::Chunk::ShouldChunkDelete(AABB &Camera)
+bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(updateVoxelsNextFrame) return false;
@@ -32,10 +32,10 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera)
 
     return true;
 }
-bool Volume::Chunk::ShouldChunkCalculateHeat()
+bool Volume::Chunk::ShouldChunkCalculateHeat() const
 {
     return(
-        m_lastMaxHeatDifference > 0.1f ||
+        m_lastMaxHeatDifference > 0.7f || m_lastMaxHeatTransfer > 0.1f ||
         forceHeatUpdate
     );
 }
@@ -76,6 +76,9 @@ void Volume::Chunk::UpdateHeat()
 {
     //TODO: forceHeatUpdate = false;
     m_lastMaxHeatDifference = 0;
+    m_lastMaxHeatTransfer = 0;
+    forceHeatUpdate = false;
+
     float newHeatMap[CHUNK_SIZE][CHUNK_SIZE];
 
     for(int x = 0; x < CHUNK_SIZE; ++x){
@@ -97,13 +100,16 @@ void Volume::Chunk::UpdateHeat()
 
                     float neighbourHeat = voxels[x + dx][y + dy]->temperature.GetCelsius();
                     float heatDifference = heat - neighbourHeat;
-                    float heatTransfer = heatDifference * voxels[x][y]->properties->HeatConductivity;
+                    float heatTransfer = heatDifference * voxels[x][y]->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
 
                     newHeatMap[x][y] -= heatTransfer / voxels[x][y]->properties->HeatCapacity;
                     newHeatMap[x + dx][y + dy] += heatTransfer / voxels[x + dx][y + dy]->properties->HeatCapacity;
 
                     if(heatDifference > m_lastMaxHeatDifference){
                         m_lastMaxHeatDifference = heatDifference;
+                    }
+                    if(heatTransfer > m_lastMaxHeatTransfer){
+                        m_lastMaxHeatTransfer = heatTransfer;
                     }
                 }
             }
@@ -117,11 +123,14 @@ void Volume::Chunk::UpdateHeat()
             voxels[x][y]->temperature.SetCelsius(newHeatMap[x][y]);
         }
     }
+
+    std::cout << "Heat difference: " << m_lastMaxHeatDifference << " Heat transfer: " << m_lastMaxHeatTransfer << std::endl;
 }
 
 //transfer heat to the bordering chunks
 void Volume::Chunk::TransferBorderHeat(ChunkMatrix *matrix)
 {
+    
 }
 
 void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
@@ -201,6 +210,12 @@ SDL_Surface* Volume::Chunk::Render()
     SDL_FillRect(this->chunkSurface, &bottomLine, borderColor);
     SDL_FillRect(this->chunkSurface, &leftLine, borderColor);
     SDL_FillRect(this->chunkSurface, &rightLine, borderColor);
+
+    //draws a blue box at the corner of the chunk if the heat updated on the chunk
+    if(ShouldChunkCalculateHeat()){
+        SDL_Rect box = {x1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, y1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, 10, 10};
+        SDL_FillRect(this->chunkSurface, &box, SDL_MapRGBA(this->chunkSurface->format, 0, 0, 255, 255));
+    }
 
     return this->chunkSurface;
 }

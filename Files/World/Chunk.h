@@ -21,8 +21,8 @@ namespace Volume
     	Chunk(const Vec2i& pos);
     	~Chunk();
 
-		bool ShouldChunkDelete(AABB &Camera);
-		bool ShouldChunkCalculateHeat();
+		bool ShouldChunkDelete(AABB &Camera) const;
+		bool ShouldChunkCalculateHeat() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void UpdateHeat();
 		void TransferBorderHeat(ChunkMatrix* matrix);
@@ -38,7 +38,8 @@ namespace Volume
     private:
     	short int m_x;
     	short int m_y;
-		short int m_lastMaxHeatDifference = 0;
+		float m_lastMaxHeatDifference = 0;
+		float m_lastMaxHeatTransfer = 0;		
 		TTF_Font* font;
 		SDL_Surface* chunkSurface = nullptr;
     };
@@ -76,7 +77,6 @@ public:
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
 	void GetVoxelsInCubeAtWorldPosition(const Vec2f& start, const Vec2f& end);
-
 
 	bool IsValidWorldPosition(const Vec2i& pos) const;
 	bool IsValidChunkPosition(const Vec2i& pos) const;

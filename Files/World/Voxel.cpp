@@ -78,6 +78,15 @@ void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::string id)
 	matrix.PlaceVoxelAt(this->position, id, this->temperature);
 }
 
+bool Volume::VoxelElement::IsStateBelowDensity(VoxelState state, float density)
+{
+	if (this->GetState() == state && this->properties->Density < density)
+	{
+		return true;
+	}
+	return false;
+}
+
 VoxelParticle::VoxelParticle()
 	: VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21)), fPosition(Vec2f(0,0)), angle(0), speed(0),
 	m_dPosition(0,0) { }
@@ -263,21 +272,21 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     //If the voxel below is a solid, try to move to the bottom left and bottom right
     std::shared_ptr<VoxelElement> left = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
     std::shared_ptr<VoxelElement> right = matrix->VirtualGetAt(this->position + Vec2i(1, 1));
-    if (left && VoxelRegistry::CanBeMovedByLiquid(left->GetState()))
+    if (left && (VoxelRegistry::CanBeMovedByLiquid(left->GetState()) || left->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     {
     	this->Swap(left->position, *matrix);
     	return true;
     }
-    else if (right && VoxelRegistry::CanBeMovedByLiquid(right->GetState()))
+    else if (right && (VoxelRegistry::CanBeMovedByLiquid(right->GetState()) || right->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     {
     	this->Swap(right->position, *matrix);
     	return true;
     }
 
-    //if there is a liquid voxel above, skip
+    //if there is the same liquid voxel above, skip
     std::shared_ptr<VoxelElement> above = matrix->VirtualGetAt(this->position + Vec2i(0, -1));
     std::shared_ptr<VoxelElement> moreAbove = matrix->VirtualGetAt(this->position + Vec2i(0, -2));
-    if (above && above->GetState() == VoxelState::Liquid && moreAbove && moreAbove->GetState() == VoxelState::Liquid)
+    if (above && above->properties == this->properties && moreAbove && moreAbove->properties == this->properties)
     	return false;
 
     /*
@@ -301,22 +310,23 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 
 bool VoxelLiquid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short int length)
 {
-    std::shared_ptr<VoxelElement> side = matrix->VirtualGetAt(this->position + direction);
-    if (side && (side->GetState() == VoxelState::Gas))
+    std::shared_ptr<VoxelElement> next = matrix->VirtualGetAt(this->position + direction);
+    if (next && (VoxelRegistry::CanBeMovedByLiquid(next->GetState()) || next->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     {
-    	Vec2i sidePos = side->position;
+    	Vec2i nextPos = next->position;
     	for (short int i = 0; i < length; ++i)
     	{
-    		sidePos += direction;
-    		side = matrix->VirtualGetAt(sidePos);
-    		if (!side || !VoxelRegistry::CanBeMovedByLiquid(side->GetState()))
+    		nextPos += direction;
+    		next = matrix->VirtualGetAt(nextPos);
+			//if the next voxel is a solid, stop
+    		if (!next || !(VoxelRegistry::CanBeMovedByLiquid(next->GetState()) || next->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     		{
-    			sidePos -= direction;
-    			this->Swap(sidePos, *matrix);
+    			nextPos -= direction;
+    			this->Swap(nextPos, *matrix);
     			return true;
     		}
     	}
-    	this->Swap(sidePos, *matrix);
+    	this->Swap(nextPos, *matrix);
     	return true;
     }
     return false;
@@ -336,10 +346,10 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	if (!side) break;
 		
 		if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
-    	if (side->GetState() == VoxelState::Gas)
-    	{
-    		LastValidPosition = CurrentPosition;
-    	}
+    	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
+		{
+			LastValidPosition = CurrentPosition;
+		}
     }
     if (LastValidPosition != StartPosition) return LastValidPosition;
     CurrentPosition = StartPosition;
@@ -350,7 +360,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	if (!side) break;
 		
     	if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
-    	if (side->GetState() == VoxelState::Gas)
+    	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
     	{
     		LastValidPosition = CurrentPosition;
     	}

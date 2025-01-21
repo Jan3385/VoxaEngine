@@ -1,5 +1,6 @@
 #include "VoxelRegistry.h"
 #include <stdexcept>
+#include <iostream>
 
 using namespace Volume;
 // Initialize the voxel properties
@@ -13,6 +14,7 @@ void VoxelRegistry::RegisterVoxel(const std::string &name, const Volume::VoxelPr
 
 void VoxelRegistry::RegisterVoxels()
 {
+	std::cout << "Registering voxels ";
 	using namespace Volume;
 	VoxelRegistry::RegisterVoxel(
 		"Oxygen",
@@ -26,7 +28,7 @@ void VoxelRegistry::RegisterVoxels()
 		"Liquid_Oxygen",
 		VoxelBuilder(State::Liquid, 919, 0.026, 1.429)
 			.SetName("Liquid Oxygen")
-			.SetColor(RGB(15, 15, 15))
+			.SetColor(RGB(50, 50, 50))
 			.PhaseUp("Oxygen", -182.96)
 			.PhaseDown("Solid_Oxygen", -218.79)
 			.Build()
@@ -35,7 +37,7 @@ void VoxelRegistry::RegisterVoxels()
 		"Solid_Oxygen",
 		VoxelBuilder(State::Solid, 919, 0.026, 1.429)
 			.SetName("Solid Oxygen")
-			.SetColor(RGB(15, 15, 15))
+			.SetColor(RGB(70, 70, 70))
 			.PhaseUp("Liquid_Oxygen", -218.79)
 			.Build()
 	);
@@ -106,7 +108,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Liquid_Glass",
-		VoxelBuilder(State::Solid, 830, 0.25, 190)
+		VoxelBuilder(State::Liquid, 830, 0.25, 190)
 			.SetName("Glass")
 			.SetColor(RGB(255, 219, 176))
 			.PhaseDown("Glass", 1000)
@@ -124,7 +126,7 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(State::Gas, 100, 0.4, 1)
 			.SetName("Fire")
 			.SetColor(RGB(255, 87, 34))
-			.PhaseDown("CarbonDioxide", 200)
+			.PhaseDown("Carbon_Dioxide", 200)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -148,8 +150,8 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(State::Liquid, 850, 0.016, 1.98)
 			.SetName("Liquid Carbon Dioxide")
 			.SetColor(RGB(4, 4, 4))
-			.PhaseDown("Solid_CarbonDioxide", -78.5)
-			.PhaseUp("CarbonDioxide", -56.6)
+			.PhaseDown("Solid_Carbon_Dioxide", -78.5)
+			.PhaseUp("Carbon_Dioxide", -56.6)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -157,9 +159,11 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(State::Solid, 850, 0.016, 1.98)
 			.SetName("Solid Carbon Dioxide")
 			.SetColor(RGB(4, 4, 4))
-			.PhaseUp("Liquid_CarbonDioxide", -78.5)
+			.PhaseUp("Liquid_Carbon_Dioxide", -78.5)
 			.Build()
 	);
+
+	std::cout << "[ OK ]" << std::endl;
 }
 
 VoxelProperty* VoxelRegistry::GetProperties(std::string id)

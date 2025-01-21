@@ -44,6 +44,8 @@ namespace Volume {
 		// Swap the voxel with another voxel
 		void Swap(Vec2i& toSwapPos,ChunkMatrix& matrix);
 		void DieAndReplace(ChunkMatrix &matrix, std::string id);
+
+		bool IsStateBelowDensity(VoxelState state, float density);
 	private:
 		Volume::VoxelState state = VoxelState::ImmovableSolid;
 	};

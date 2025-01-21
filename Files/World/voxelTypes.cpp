@@ -2,19 +2,10 @@
 
 #include <iostream>
 
-Volume::FireVoxel::FireVoxel()
-    : VoxelGas("Fire", Vec2i(0, 0), Temperature(40000))
-{
-}
+Volume::FireVoxel::FireVoxel() : VoxelGas("Fire", Vec2i(0, 0), Temperature(40000)) { }
 
-Volume::FireVoxel::FireVoxel(Vec2i position, Temperature temp)
-    : VoxelGas("Fire", position, temp)
-{
-}
-
-Volume::FireVoxel::~FireVoxel()
-{
-}
+Volume::FireVoxel::FireVoxel(Vec2i position, Temperature temp) : VoxelGas("Fire", position, temp){ }
+Volume::FireVoxel::~FireVoxel() { }
 
 bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
 {
