@@ -18,7 +18,7 @@ public:
     ~Vec2f();
     Vec2f operator+(const Vec2f& other) const;
     Vec2f operator+=(const Vec2f& other);
-    Vec2f operator*(const int& other);
+    Vec2f operator*(const int& other) const;
 };
 class Vec2i
 {

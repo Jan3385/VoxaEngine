@@ -85,7 +85,6 @@ void GameEngine::Update()
 
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
-    //TODO: make this threaded
     //delete all chunks marked for deletion
     for(auto& chunk : chunkMatrix.GridSegmented[pass]){
         if(chunk->ShouldChunkDelete(Camera))
@@ -95,10 +94,15 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         }
     }
 
-    //update all undeleted chunks that should get updated
+    std::vector<std::thread> threads;
     for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
-        if (chunk->updateVoxelsNextFrame)
-            chunk->UpdateVoxels(&this->chunkMatrix);
+        threads.push_back(std::thread([&]() {
+            if (chunk->updateVoxelsNextFrame)
+                chunk->UpdateVoxels(&this->chunkMatrix);
+        }));
+    }
+    for (auto& thread : threads) {
+        thread.join();
     }
 }
 void GameEngine::m_UpdateGridHeat(int pass)
@@ -129,7 +133,7 @@ void GameEngine::m_FixedUpdate()
     //Voxel update logic
     for(int i = 0; i < 4; ++i)
     {
-        m_UpdateGridVoxel(i); //TODO: maybe make this threaded without making a race condition
+        m_UpdateGridVoxel(i);
     }
 
     //Heat update logic

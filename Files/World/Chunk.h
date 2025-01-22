@@ -13,8 +13,8 @@ namespace Volume
 {
     class Chunk {
     public:
-    	static const unsigned short int RENDER_VOXEL_SIZE = 5;
-    	static const unsigned short int CHUNK_SIZE = 64;
+    	static const unsigned short int RENDER_VOXEL_SIZE = 5; // 5
+    	static const unsigned short int CHUNK_SIZE = 64; // 64
     	//VoxelElement*** voxels;
     	std::array<std::array<std::shared_ptr<VoxelElement>, CHUNK_SIZE>, CHUNK_SIZE> voxels;
 

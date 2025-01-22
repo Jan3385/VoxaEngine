@@ -58,7 +58,7 @@ Vec2f Vec2f::operator+=(const Vec2f &other)
     return *this;
 }
 
-Vec2f Vec2f::operator*(const int &other)
+Vec2f Vec2f::operator*(const int &other) const
 {
     return Vec2f(
         this->getX() * other,
