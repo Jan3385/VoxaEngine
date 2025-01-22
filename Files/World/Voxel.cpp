@@ -141,9 +141,6 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
     	return true;
     }
     updatedThisFrame = true;
-    if(this->CheckTransitionTemps(*matrix)){
-        return true;
-    }
 
     //Fall below and if not falling try to move to the sides
 
@@ -253,12 +250,8 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     	return true;
     }
     updatedThisFrame = true;
+
     //falling down + acceleration
-
-    if(this->CheckTransitionTemps(*matrix)){
-        return true;
-    }
-
     if (StepAlongDirection(matrix, Vec2i(0, 1), Acceleration)) {
     	IsFalling = true;
     	Acceleration += 1;
@@ -377,10 +370,6 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     }
     updatedThisFrame = true;
 
-    if(this->CheckTransitionTemps(*matrix)){
-        return true;
-    }
-
     //swapping with a random gas voxel nearby
     //TODO: make this function use density
     //TODO: avoid making useless gas swaps
@@ -392,4 +381,10 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     //	return false; //TODO: temp return false;
     //}
     return false;
+}
+
+bool Volume::VoxelImmovableSolid::Step(ChunkMatrix *matrix)
+{
+	updatedThisFrame = true;
+	return false;
 }

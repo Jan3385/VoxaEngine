@@ -85,7 +85,7 @@ namespace Volume {
 		~VoxelImmovableSolid() {};
 
 		VoxelState GetState() override { return VoxelState::ImmovableSolid; };
-		bool Step(ChunkMatrix* matrix) override { updatedThisFrame = true; return false; };
+		bool Step(ChunkMatrix* matrix) override;
 	};
 	//solid movable voxels -> inherit from solid voxels
 	class VoxelMovableSolid : public VoxelSolid, public IGravity {

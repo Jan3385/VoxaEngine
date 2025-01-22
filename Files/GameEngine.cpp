@@ -6,6 +6,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <future>
 
 using namespace std;
 
@@ -104,12 +105,14 @@ void GameEngine::m_UpdateGridHeat(int pass)
 {
     for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
         if (chunk->ShouldChunkCalculateHeat())
-            chunk->UpdateHeat();
+            chunk->UpdateHeat(&this->chunkMatrix);
     }
 }
 void GameEngine::m_UpdateGridHeatBetweenChunks(int pass)
 {
-    //TODO: Implement
+    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
+        chunk->TransferBorderHeat(&this->chunkMatrix);
+    }
 }
 void GameEngine::m_FixedUpdate()
 {
@@ -288,6 +291,19 @@ void GameEngine::Render()
     SDL_FreeSurface(surface);
     SDL_DestroyTexture(texture);
 
+    //info about the voxel under the mouse
+    Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+    Vec2f mouseWorldPos = ChunkMatrix::MousePosToWorldPos(this->mousePos, offset);
+    auto voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
+    if(voxel){
+        SDL_Surface* surface = TTF_RenderText_Solid(basicFont, to_string(voxel->temperature.GetCelsius()).c_str(), color);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_Rect rect = { 0, 20, surface->w, surface->h };
+        SDL_RenderCopy(renderer, texture, NULL, &rect);
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(texture);
+    }
+
     //ImGui
     m_RenderIMGUI();
 
@@ -354,19 +370,24 @@ void GameEngine::MoveCamera(Vec2f pos)
     int ChunksHorizontal = ceil(Camera.size.getX() / Volume::Chunk::CHUNK_SIZE) + 1;
     int ChunksVertical = ceil(Camera.size.getY() / Volume::Chunk::CHUNK_SIZE) + 1;
 
-    //TODO: rework to look only for chunks that should get loaded
-    vector<thread> threads;
-
+    std::vector<Vec2i> chunksToLoad;
     for (int x = 0; x < ChunksHorizontal; ++x) {
         for (int y = 0; y < ChunksVertical; ++y) {
             Vec2i chunkPos = cameraChunkPos + Vec2i(x, y);
-            threads.emplace_back(&GameEngine::m_LoadChunkInView, this, chunkPos);
+            if (!chunkMatrix.GetChunkAtChunkPosition(chunkPos)) {
+                chunksToLoad.push_back(chunkPos);
+            }
         }
     }
 
-    // Wait for all threads to finish
-    for (auto& thread : threads) {
-        thread.join();
+    std::vector<std::future<void>> futures;
+    for (const auto& chunkPos : chunksToLoad) {
+        futures.emplace_back(std::async(std::launch::async, &GameEngine::m_LoadChunkInView, this, chunkPos));
+    }
+
+    // Wait for all chunks to finish loading
+    for (auto& future : futures) {
+        future.get();
     }
 }
 void GameEngine::m_LoadChunkInView(Vec2i pos)

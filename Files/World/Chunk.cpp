@@ -72,7 +72,7 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 }
 
 //transfer heat within the chunk
-void Volume::Chunk::UpdateHeat()
+void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix)
 {
     //TODO: forceHeatUpdate = false;
     m_lastMaxHeatDifference = 0;
@@ -124,13 +124,71 @@ void Volume::Chunk::UpdateHeat()
         }
     }
 
-    std::cout << "Heat difference: " << m_lastMaxHeatDifference << " Heat transfer: " << m_lastMaxHeatTransfer << std::endl;
+    for(int x = 0; x < CHUNK_SIZE; ++x){
+        for(int y = 0; y < CHUNK_SIZE; ++y){
+            if(voxels[x][y]->CheckTransitionTemps(*matrix)){
+                this->updateVoxelsNextFrame = true;
+            }
+        }
+    }
+
+    //std::cout << "Heat difference: " << m_lastMaxHeatDifference << " Heat transfer: " << m_lastMaxHeatTransfer << std::endl;
 }
 
 //transfer heat to the bordering chunks
 void Volume::Chunk::TransferBorderHeat(ChunkMatrix *matrix)
 {
+    Chunk* ChunkUp = matrix->GetChunkAtChunkPosition(Vec2i(m_x, m_y - 1));
+    Chunk* ChunkDown = matrix->GetChunkAtChunkPosition(Vec2i(m_x, m_y + 1));
+    for (short int x = 0; x < Chunk::CHUNK_SIZE; x++)
+    {
+        VoxelElement* voxeluP = voxels[x][0].get();
+        VoxelElement* voxelDown = voxels[x][Chunk::CHUNK_SIZE - 1].get();
+
+        VoxelElement* neighbourVoxelUp = ChunkUp ? ChunkUp->voxels[x][Chunk::CHUNK_SIZE - 1].get() : nullptr;
+        VoxelElement* neighbourVoxelDown = ChunkDown ? ChunkDown->voxels[x][0].get() : nullptr;
+
+        if(neighbourVoxelUp){
+            float heatDifference = voxeluP->temperature.GetCelsius() - neighbourVoxelUp->temperature.GetCelsius();
+            float heatTransfer = heatDifference * voxeluP->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+
+            voxeluP->temperature.SetCelsius(voxeluP->temperature.GetCelsius() - heatTransfer / voxeluP->properties->HeatCapacity);
+            neighbourVoxelUp->temperature.SetCelsius(neighbourVoxelUp->temperature.GetCelsius() + heatTransfer / neighbourVoxelUp->properties->HeatCapacity);
+        }
+        if(neighbourVoxelDown){
+            float heatDifference = voxelDown->temperature.GetCelsius() - neighbourVoxelDown->temperature.GetCelsius();
+            float heatTransfer = heatDifference * voxelDown->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+
+            voxelDown->temperature.SetCelsius(voxelDown->temperature.GetCelsius() - heatTransfer / voxelDown->properties->HeatCapacity);
+            neighbourVoxelDown->temperature.SetCelsius(neighbourVoxelDown->temperature.GetCelsius() + heatTransfer / neighbourVoxelDown->properties->HeatCapacity);
+        }
+    }
     
+    Chunk* ChunkLeft = matrix->GetChunkAtChunkPosition(Vec2i(m_x - 1, m_y));
+    Chunk* ChunkRight = matrix->GetChunkAtChunkPosition(Vec2i(m_x + 1, m_y));
+    for (short int y = 0; y < Chunk::CHUNK_SIZE; y++)
+    {
+        VoxelElement* voxelLeft = voxels[0][y].get();
+        VoxelElement* voxelRight = voxels[Chunk::CHUNK_SIZE - 1][y].get();
+
+        VoxelElement* neighbourVoxelLeft = ChunkLeft ? ChunkLeft->voxels[Chunk::CHUNK_SIZE - 1][y].get() : nullptr;
+        VoxelElement* neighbourVoxelRight = ChunkRight ? ChunkRight->voxels[0][y].get() : nullptr;
+
+        if(neighbourVoxelLeft){
+            float heatDifference = voxelLeft->temperature.GetCelsius() - neighbourVoxelLeft->temperature.GetCelsius();
+            float heatTransfer = heatDifference * voxelLeft->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+
+            voxelLeft->temperature.SetCelsius(voxelLeft->temperature.GetCelsius() - heatTransfer / voxelLeft->properties->HeatCapacity);
+            neighbourVoxelLeft->temperature.SetCelsius(neighbourVoxelLeft->temperature.GetCelsius() + heatTransfer / neighbourVoxelLeft->properties->HeatCapacity);
+        }
+        if(neighbourVoxelRight){
+            float heatDifference = voxelRight->temperature.GetCelsius() - neighbourVoxelRight->temperature.GetCelsius();
+            float heatTransfer = heatDifference * voxelRight->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+
+            voxelRight->temperature.SetCelsius(voxelRight->temperature.GetCelsius() - heatTransfer / voxelRight->properties->HeatCapacity);
+            neighbourVoxelRight->temperature.SetCelsius(neighbourVoxelRight->temperature.GetCelsius() + heatTransfer / neighbourVoxelRight->properties->HeatCapacity);
+        }
+    }
 }
 
 void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
@@ -156,7 +214,7 @@ SDL_Surface* Volume::Chunk::Render()
     if(this->chunkSurface == nullptr) {
         this->chunkSurface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
     }
-    else if(this->dirtyRender ||true){
+    else if(this->dirtyRender){
         this->dirtyRender = false;
         //SDL_FreeSurface(this->chunkSurface);
 
@@ -400,10 +458,17 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
         for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
     		//Create voxel determining on its position
             if (pos.getY() > 4) {
-                chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
-                    ("Dirt", 
-                    Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
-                    Temperature(21));
+                if(pos.getY() == 5 && y <= 5){
+                    chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
+                        ("Grass", 
+                        Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
+                        Temperature(21));
+                }else{
+                    chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
+                        ("Dirt", 
+                        Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
+                        Temperature(21));
+                }
             }
             else {
                 chunk->voxels[x][y] = std::make_shared<VoxelGas>
@@ -495,6 +560,7 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
     chunk->updateVoxelsNextFrame = true;
     chunk->forceHeatUpdate = true;
+    chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 
     //update grids near if its on their border
     if (localPos.getX() == 0) {
@@ -514,9 +580,6 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
         Chunk* c = this->GetChunkAtChunkPosition(Vec2i(chunkPos.getX(), chunkPos.getY() + 1));
         if (c) c->updateVoxelsNextFrame = true;
     }
-
-    // Mark the chunk as dirty for rendering
-    chunk->dirtyRender = true;
 }
 
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp)
