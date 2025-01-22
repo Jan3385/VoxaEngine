@@ -87,6 +87,15 @@ bool Volume::VoxelElement::IsStateBelowDensity(VoxelState state, float density)
 	return false;
 }
 
+bool Volume::VoxelElement::IsStateAboveDensity(VoxelState state, float density)
+{
+	if (this->GetState() == state && this->properties->Density > density)
+	{
+		return true;
+	}
+	return false;
+}
+
 VoxelParticle::VoxelParticle()
 	: VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21)), fPosition(Vec2f(0,0)), angle(0), speed(0),
 	m_dPosition(0,0) { }
@@ -364,22 +373,60 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
 bool VoxelGas::Step(ChunkMatrix *matrix)
 {
     //lazy hack to make the chunk its in update in the next cycle
-	//TODO: fix this making the neighboring chunk active
     if (updatedThisFrame) {
     	return true;
     }
     updatedThisFrame = true;
 
-    //swapping with a random gas voxel nearby
-    //TODO: make this function use density
-    //TODO: avoid making useless gas swaps
-    //Vec2i toSwapPos = this->position + Vec2i(rand() % 3 - 1, rand() % 3 - 1);
-    //std::shared_ptr<VoxelElement> toSwap = matrix->VirtualGetAt(toSwapPos);
-    //if (toSwap && toSwap->GetState() == VoxelState::Gas && !toSwap->updatedThisFrame)
-    //{
-    //	if(toSwap->properties->name != this->properties->name) this->Swap(toSwapPos, *matrix);
-    //	return false; //TODO: temp return false;
-    //}
+	//try to move up
+	if (MoveInDirection(matrix, Vec2i(0, -1)))
+		return true;
+	//try to fall down
+	if (MoveInDirection(matrix, Vec2i(0, 1)))
+		return true;
+	//try to randomly move to the sides
+	bool left = rand() % 2;
+	if (left){
+		if (MoveInDirection(matrix, Vec2i(-1, 0)))
+			return true;
+	}
+	else{
+		if (MoveInDirection(matrix, Vec2i(1, 0)))
+			return true;
+	}	
+
+    return false;
+}
+
+bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
+{
+    std::shared_ptr<VoxelElement> next = matrix->VirtualGetAtNoLoad(this->position + direction); // gasses cannot load new chunks
+
+	if(next == nullptr) return false; // if the next voxel is null, stop
+
+	if(next->properties == this->properties) return false; // if the next voxel is the same, stop
+	if(next->GetState() != VoxelState::Gas) return false; // if the next voxel is not gas, stop
+
+	if(next->updatedThisFrame) return false; // if the next voxel was updated this frame, stop
+
+	if(direction.getY() > 0){
+		// down
+		if(next->IsStateBelowDensity(this->GetState(), this->properties->Density) && !next->updatedThisFrame){
+			this->Swap(next->position, *matrix);
+			return true;
+		}
+	}else if(direction.getY() < 0){
+		// up
+		if(next->IsStateAboveDensity(this->GetState(), this->properties->Density)){
+			this->Swap(next->position, *matrix);
+			return true;
+		}
+	}else{
+		// sides
+		this->Swap(next->position, *matrix);
+		return true;
+	}
+    
     return false;
 }
 

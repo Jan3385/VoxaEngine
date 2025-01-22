@@ -29,7 +29,7 @@ namespace Volume {
 		Vec2i position;
 		RGB color;
 		Temperature temperature;
-		bool updatedThisFrame = false; //TODO: maybe set to true
+		bool updatedThisFrame = false;
 
 		// Functions
 		//return the state of the element
@@ -46,6 +46,7 @@ namespace Volume {
 		void DieAndReplace(ChunkMatrix &matrix, std::string id);
 
 		bool IsStateBelowDensity(VoxelState state, float density);
+		bool IsStateAboveDensity(VoxelState state, float density);
 	private:
 		Volume::VoxelState state = VoxelState::ImmovableSolid;
 	};
@@ -126,5 +127,6 @@ namespace Volume {
 
 		VoxelState GetState() override { return VoxelState::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
+		bool MoveInDirection(ChunkMatrix* matrix, Vec2i direction);
 	};
 }

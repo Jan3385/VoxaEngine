@@ -534,6 +534,28 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
     return voxel;
 }
 
+std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAtNoLoad(const Vec2i &pos)
+{
+    Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
+
+    if (!IsValidWorldPosition(pos)) return nullptr;
+
+    Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
+    if(!chunk){
+        return nullptr;
+    }
+
+    std::shared_ptr<Volume::VoxelElement> voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
+
+    if(!voxel){
+        return nullptr;
+    } 
+
+    chunk->lastCheckedCountDown = 20;
+
+    return voxel;
+}
+
 void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
 {
     if (!voxel) return; // Check for null pointer
