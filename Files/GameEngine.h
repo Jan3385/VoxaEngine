@@ -18,6 +18,8 @@ private:
     TTF_Font* basicFont;
     AABB Camera;
 
+    bool debugRendering = false;
+
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;
 
@@ -31,6 +33,8 @@ private:
     void m_UpdateGridHeatBetweenChunks(int pass);
     void m_LoadChunkInView(Vec2i pos);
     void m_RenderIMGUI();
+
+    void m_toggleDebugRendering();
 public:
     static constexpr int MAX_FRAME_RATE = 60;
     static constexpr float fixedDeltaTime = 1/30.0;

@@ -18,16 +18,16 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 
 Volume::Chunk::~Chunk()
 {
-    if (this->font != nullptr) {
-        TTF_CloseFont(this->font);
-        this->font = nullptr;
+    if (font != nullptr) {
+        TTF_CloseFont(font);
+        font = nullptr;
     }
     SDL_FreeSurface(this->chunkSurface);
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
-    if(updateVoxelsNextFrame) return false;
+    if(!this->dirtyRect.IsEmpty()) return false;
     if(this->GetAABB().Overlaps(Camera)) return false;
 
     return true;
@@ -41,29 +41,28 @@ bool Volume::Chunk::ShouldChunkCalculateHeat() const
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
-    this->updateVoxelsNextFrame = false;
-    for (int x = CHUNK_SIZE - 1; x >= 0; --x)
+    for (int x = dirtyRect.end.getX(); x >= dirtyRect.start.getX(); --x)
     {
-        for (int y = 0; y < CHUNK_SIZE; ++y)
+        for (int y = dirtyRect.start.getY(); y <= dirtyRect.end.getY(); ++y)
         {
+            if(x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE) continue;
     		if (voxels[x][y]->Step(matrix)) {
-    			this->updateVoxelsNextFrame = true;
-    			//if voxel is at the edge of chunk, update neighbour chunk
-    			if (x == 0) {
+                //if voxel is at the edge of chunk, update neighbour chunk
+    			if (x == 0) { // left
                     Chunk* c = matrix->GetChunkAtChunkPosition(Vec2i(m_x - 1, m_y));
-                    if(c) c->updateVoxelsNextFrame = true;
+                    if(c)c->dirtyRect.Include(Vec2i(CHUNK_SIZE - 1, y));
     			}
-    			else if (x == CHUNK_SIZE - 1) {
+    			else if (x == CHUNK_SIZE - 1) { // right
                     Chunk* c = matrix->GetChunkAtChunkPosition(Vec2i(m_x + 1, m_y));
-                    if (c) c->updateVoxelsNextFrame = true;
+                    if(c)c->dirtyRect.Include(Vec2i(0, y));
     			}
-    			if (y == 0) {
+    			if (y == 0) { // top
                     Chunk* c = matrix->GetChunkAtChunkPosition(Vec2i(m_x, m_y - 1));
-                    if (c) c->updateVoxelsNextFrame = true;
+                    if(c)c->dirtyRect.Include(Vec2i(x, CHUNK_SIZE - 1));
     			}
-    			else if (y == CHUNK_SIZE - 1) {
+    			else if (y == CHUNK_SIZE - 1) { // bottom
                     Chunk* c = matrix->GetChunkAtChunkPosition(Vec2i(m_x, m_y + 1));
-                    if (c) c->updateVoxelsNextFrame = true;
+                    if(c)c->dirtyRect.Include(Vec2i(x, 0));
     			}
     		}
 
@@ -127,7 +126,7 @@ void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix)
     for(int x = 0; x < CHUNK_SIZE; ++x){
         for(int y = 0; y < CHUNK_SIZE; ++y){
             if(voxels[x][y]->CheckTransitionTemps(*matrix)){
-                this->updateVoxelsNextFrame = true;
+                // do stuff when voxel transitioned
             }
         }
     }
@@ -203,7 +202,7 @@ void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
     }
 }
 
-SDL_Surface* Volume::Chunk::Render()
+SDL_Surface* Volume::Chunk::Render(bool debugRender)
 {
     // Calculate the chunk coordinates
     int x1 = 0;
@@ -214,7 +213,7 @@ SDL_Surface* Volume::Chunk::Render()
     if(this->chunkSurface == nullptr) {
         this->chunkSurface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
     }
-    else if(this->dirtyRender){
+    else if(this->dirtyRender || debugRender){
         this->dirtyRender = false;
         //SDL_FreeSurface(this->chunkSurface);
 
@@ -236,27 +235,28 @@ SDL_Surface* Volume::Chunk::Render()
                 SDL_FillRect(this->chunkSurface, &rect, SDL_MapRGBA(this->chunkSurface->format, color.r, color.g, color.b, 255));
             }
         }
+        if(debugRender){
+            // Render chunk position as text
+            SDL_Color textColor = {255, 255, 255, 255};
+            std::string text = std::to_string(m_x) + "," + std::to_string(m_y);
+
+            // Render text to a surface
+            SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+
+            // Copy the text surface to the target surface
+            SDL_Rect textRect = {x1, y1, textSurface->w, textSurface->h};
+            SDL_BlitSurface(textSurface, nullptr, this->chunkSurface, &textRect);
+
+            // Free the text surface
+            SDL_FreeSurface(textSurface);
+        }
         
-        // Render chunk position as text
-        SDL_Color textColor = {255, 255, 255, 255};
-        std::string text = std::to_string(m_x) + "," + std::to_string(m_y);
-
-        // Render text to a surface
-        SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
-
-        // Copy the text surface to the target surface
-        SDL_Rect textRect = {x1, y1, textSurface->w, textSurface->h};
-        SDL_BlitSurface(textSurface, nullptr, this->chunkSurface, &textRect);
-
-        // Free the text surface
-        SDL_FreeSurface(textSurface);
     }
 
+    if(!debugRender) return this->chunkSurface;
 
     // Determine border color based on update state
-    Uint32 borderColor = updateVoxelsNextFrame 
-                         ? SDL_MapRGBA(this->chunkSurface->format, 255, 255, 255, 255) 
-                         : SDL_MapRGBA(this->chunkSurface->format, 255, 0, 0, 255);
+    Uint32 borderColor = SDL_MapRGBA(this->chunkSurface->format, 255, 0, 0, 255);
 
     // Draw border (manual pixel manipulation for lines)
     SDL_Rect topLine = {x1, y1, x2 - x1, 1};           // Top
@@ -273,6 +273,27 @@ SDL_Surface* Volume::Chunk::Render()
     if(ShouldChunkCalculateHeat()){
         SDL_Rect box = {x1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, y1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, 10, 10};
         SDL_FillRect(this->chunkSurface, &box, SDL_MapRGBA(this->chunkSurface->format, 0, 0, 255, 255));
+    }
+
+    //draws the dirty rect borders
+    if(!this->dirtyRect.IsEmpty()){
+        SDL_Rect dirtyRect = {
+            this->dirtyRect.start.getX() * RENDER_VOXEL_SIZE,
+            this->dirtyRect.start.getY() * RENDER_VOXEL_SIZE,
+            (this->dirtyRect.end.getX() - this->dirtyRect.start.getX() + 1) * RENDER_VOXEL_SIZE,
+            (this->dirtyRect.end.getY() - this->dirtyRect.start.getY() + 1) * RENDER_VOXEL_SIZE
+        };
+
+        // Draw the dirty rect borders
+        SDL_Rect topLine = {dirtyRect.x, dirtyRect.y, dirtyRect.w, 1};           // Top
+        SDL_Rect bottomLine = {dirtyRect.x, dirtyRect.y + dirtyRect.h - 1, dirtyRect.w, 1};    // Bottom
+        SDL_Rect leftLine = {dirtyRect.x, dirtyRect.y, 1, dirtyRect.h};          // Left
+        SDL_Rect rightLine = {dirtyRect.x + dirtyRect.w - 1, dirtyRect.y, 1, dirtyRect.h};     // Right
+
+        SDL_FillRect(this->chunkSurface, &topLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
+        SDL_FillRect(this->chunkSurface, &bottomLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
+        SDL_FillRect(this->chunkSurface, &leftLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
+        SDL_FillRect(this->chunkSurface, &rightLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
     }
 
     return this->chunkSurface;
@@ -500,7 +521,7 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
 
-    for (size_t i = 0; i < this->GridSegmented[AssignedGridPass].size(); i++)
+    for (size_t i = this->GridSegmented[AssignedGridPass].size()-1; i >= 0; --i)
     {
         if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
         {
@@ -580,28 +601,11 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
 
     // Set the new voxel and mark for update
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
-    chunk->updateVoxelsNextFrame = true;
+
+    chunk->dirtyRect.Include(localPos);
+
     chunk->forceHeatUpdate = true;
     chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
-
-    //update grids near if its on their border
-    if (localPos.getX() == 0) {
-        Chunk* c = this->GetChunkAtChunkPosition(Vec2i(chunkPos.getX() - 1, chunkPos.getY()));
-        if (c) c->updateVoxelsNextFrame = true;
-    }
-    else if (localPos.getX() == Chunk::CHUNK_SIZE - 1) {
-        Chunk* c = this->GetChunkAtChunkPosition(Vec2i(chunkPos.getX() + 1, chunkPos.getY()));
-        if (c) c->updateVoxelsNextFrame = true;
-    }
-
-    if (localPos.getY() == 0) {
-        Chunk* c = this->GetChunkAtChunkPosition(Vec2i(chunkPos.getX(), chunkPos.getY() - 1));
-        if (c) c->updateVoxelsNextFrame = true;
-    }
-    else if (localPos.getY() == Chunk::CHUNK_SIZE - 1) {
-        Chunk* c = this->GetChunkAtChunkPosition(Vec2i(chunkPos.getX(), chunkPos.getY() + 1));
-        if (c) c->updateVoxelsNextFrame = true;
-    }
 }
 
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp)
@@ -704,3 +708,24 @@ void ChunkMatrix::AddParticle(std::string id, const Vec2i &position, Temperature
     this->newParticles.push_back(new VoxelParticle(id, position, temp, angle, speed));
 }
 
+void DirtyRect::Include(Vec2i pos)
+{
+    m_startW.x(std::min(m_startW.getX(), pos.getX()));
+    m_startW.y(std::min(m_startW.getY(), pos.getY()));
+    m_endW.x(std::max(m_endW.getX(), pos.getX()));
+    m_endW.y(std::max(m_endW.getY(), pos.getY()));
+}
+
+void DirtyRect::Update()
+{
+    this->start = m_startW-Vec2i(2,2);  
+    this->end = m_endW+Vec2i(2,2);
+
+    m_startW = Vec2i(INT_MAX, INT_MAX);
+    m_endW = Vec2i(INT_MIN, INT_MIN);
+}
+
+bool DirtyRect::IsEmpty() const
+{
+    return this->start.getX() == INT_MAX-1;
+}

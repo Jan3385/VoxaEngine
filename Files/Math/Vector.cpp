@@ -111,6 +111,11 @@ Vec2i Vec2i::operator+(const Vec2i &other) const
     return Vec2i(this->getX() + other.getX(), this->getY() + other.getY());
 }
 
+Vec2i Vec2i::operator-(const Vec2i &other) const
+{
+    return Vec2i(this->getX() - other.getX(), this->getY() - other.getY());
+}
+
 Vec2i Vec2i::operator+=(const Vec2i &other)
 {
     this->x(this->getX() + other.getX());

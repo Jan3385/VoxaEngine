@@ -86,10 +86,10 @@ void GameEngine::Update()
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
     //delete all chunks marked for deletion
-    for(auto& chunk : chunkMatrix.GridSegmented[pass]){
-        if(chunk->ShouldChunkDelete(Camera))
+    for(int i = chunkMatrix.GridSegmented[pass].size() - 1; i >= 0; --i){
+        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(Camera))
         {
-            chunkMatrix.DeleteChunk(chunk->GetPos());
+            chunkMatrix.DeleteChunk(chunkMatrix.GridSegmented[pass][i]->GetPos());
             continue;
         }
     }
@@ -97,8 +97,10 @@ void GameEngine::m_UpdateGridVoxel(int pass)
     std::vector<std::thread> threads;
     for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
         threads.push_back(std::thread([&]() {
-            if (chunk->updateVoxelsNextFrame)
+            chunk->dirtyRect.Update();
+            if (!chunk->dirtyRect.IsEmpty()){
                 chunk->UpdateVoxels(&this->chunkMatrix);
+            }
         }));
     }
     for (auto& thread : threads) {
@@ -125,7 +127,7 @@ void GameEngine::m_FixedUpdate()
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
             if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
-            if (chunk->updateVoxelsNextFrame)
+            if (!chunk->dirtyRect.IsEmpty())
                 chunk->ResetVoxelUpdateData(&this->chunkMatrix);
         }
     }
@@ -253,7 +255,7 @@ void GameEngine::Render()
             std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
             for (auto& chunk : chunkMatrix.GridSegmented[i]) {
                 if(chunk->GetAABB().Overlaps(Camera)){
-                    SDL_Surface *chunkSurface = chunk->Render();
+                    SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
 
                     SDL_Rect rect = {
                         static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
@@ -360,10 +362,24 @@ void GameEngine::m_RenderIMGUI()
         ImGui::EndCombo();
     }
     ImGui::DragFloat("Placement Temperature", &placeVoxelTemperature, 0.5f, 0.0f, 1000.0f);
+    if(ImGui::Button("Toggle Debug Rendering")) m_toggleDebugRendering();
 
     ImGui::End();
 
     ImGui::Render();
+}
+
+void GameEngine::m_toggleDebugRendering()
+{
+    this->debugRendering = !this->debugRendering;
+
+    //redraw all chunks
+    for(int i = 0; i < 4; ++i)
+    {
+        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+            chunk->dirtyRender = true;
+        }
+    }
 }
 
 Vec2f GameEngine::GetCameraPos() const

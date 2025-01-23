@@ -23,14 +23,14 @@ int WinMain(int argc, char* argv[]){
         gEngine.Update();
         auto updateEnd = std::chrono::high_resolution_clock::now();
         auto updateDuration = std::chrono::duration_cast<std::chrono::microseconds>(updateEnd - updateStart).count();
-        std::cout << "Update took: " << updateDuration << " microseconds" << std::endl;
+        //std::cout << "Update took: " << updateDuration << " microseconds" << std::endl;
 
         auto renderStart = std::chrono::high_resolution_clock::now();
         //Render
         gEngine.Render();
         auto renderEnd = std::chrono::high_resolution_clock::now();
         auto renderDuration = std::chrono::duration_cast<std::chrono::microseconds>(renderEnd - renderStart).count();
-        std::cout << "Render took: " << renderDuration << " microseconds" << std::endl;
+        //std::cout << "Render took: " << renderDuration << " microseconds" << std::endl;
 
         gEngine.EndFrame();
     }

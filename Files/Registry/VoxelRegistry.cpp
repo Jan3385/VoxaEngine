@@ -142,7 +142,7 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(State::Gas, 850, 0.016, 1.98)
 			.SetName("Carbon Dioxide")
 			.SetColor(RGB(4, 4, 4))
-			.PhaseDown("Liquid_CarbonDioxide", -56.6)
+			.PhaseDown("Liquid_Carbon_Dioxide", -56.6)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(

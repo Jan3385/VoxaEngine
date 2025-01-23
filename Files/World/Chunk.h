@@ -9,11 +9,26 @@
 #include "../Math/Vector.h"
 #include "../Math/AABB.h"
 
+class DirtyRect{
+public:
+	Vec2i start;
+	Vec2i end;
+	DirtyRect(Vec2i start, Vec2i end) : start(start), end(end) {};
+	DirtyRect() : start(Vec2i(INT_MAX, INT_MAX)), end(Vec2i(INT_MIN, INT_MIN)) {};
+	//Takes in local voxel position
+	void Include(Vec2i pos);
+	void Update();
+	bool IsEmpty() const;
+private:
+	Vec2i m_startW = Vec2i(INT_MAX, INT_MAX); // working dirty rect
+	Vec2i m_endW = Vec2i(INT_MIN, INT_MIN);
+};
+
 namespace Volume
 {
     class Chunk {
     public:
-    	static const unsigned short int RENDER_VOXEL_SIZE = 5; // 5
+    	static const unsigned short int RENDER_VOXEL_SIZE = 10; // 5
     	static const unsigned short int CHUNK_SIZE = 64; // 64
     	//VoxelElement*** voxels;
     	std::array<std::array<std::shared_ptr<VoxelElement>, CHUNK_SIZE>, CHUNK_SIZE> voxels;
@@ -27,14 +42,14 @@ namespace Volume
     	void UpdateHeat(ChunkMatrix *matrix);
 		void TransferBorderHeat(ChunkMatrix* matrix);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
-    	SDL_Surface* Render();
+    	SDL_Surface* Render(bool debugRender);
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
 		uint8_t lastCheckedCountDown = 20;
-    	bool updateVoxelsNextFrame = true;
 		bool forceHeatUpdate = true;
 		bool dirtyRender = true;
+		DirtyRect dirtyRect = DirtyRect();
     private:
     	short int m_x;
     	short int m_y;
