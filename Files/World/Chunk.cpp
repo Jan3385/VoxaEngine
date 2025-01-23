@@ -43,7 +43,8 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
     for (int x = dirtyRect.end.getX(); x >= dirtyRect.start.getX(); --x)
     {
-        for (int y = dirtyRect.start.getY(); y <= dirtyRect.end.getY(); ++y)
+        //for (int y = dirtyRect.end.getY(); y >= dirtyRect.start.getY(); --y) -> better gasses, worse solids
+        for (int y = dirtyRect.start.getY(); y <= dirtyRect.end.getY(); ++y) //better solids, worse gasses
         {
             if(x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE) continue;
     		if (voxels[x][y]->Step(matrix)) {
