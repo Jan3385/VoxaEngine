@@ -288,6 +288,47 @@ void GameEngine::Render()
     //rendering particles
     chunkMatrix.RenderParticles(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
+    if(showHeatAroundCursor){
+        SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_BLEND );
+        Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+        Vec2f voxelPos = ChunkMatrix::MousePosToWorldPos(this->mousePos, offset);
+
+        constexpr int radius = 16;
+        for(int x = -radius; x <= radius; ++x){
+            for(int y = -radius; y <= radius; ++y){
+                //render a circle around the cursor
+                int distance = SDL_sqrt(x*x + y*y);
+                if(distance > radius) continue;
+
+                Vec2i pos = voxelPos + Vec2i(x, y);
+                if(!chunkMatrix.IsValidWorldPosition(pos)) continue;
+                Vec2i chunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(pos));
+                Volume::Chunk* chunk = chunkMatrix.GetChunkAtChunkPosition(chunkPos);
+                if(chunk){
+                    Vec2i localPos = pos - chunkPos*Volume::Chunk::CHUNK_SIZE;
+                    SDL_Rect rect = {
+                        static_cast<int>(localPos.getX() * Volume::Chunk::RENDER_VOXEL_SIZE + (chunkPos.getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
+                        static_cast<int>(localPos.getY() * Volume::Chunk::RENDER_VOXEL_SIZE + (chunkPos.getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
+                        Volume::Chunk::RENDER_VOXEL_SIZE,
+                        Volume::Chunk::RENDER_VOXEL_SIZE
+                    };
+                    float temperature = chunk->voxels[localPos.getX()][localPos.getY()]->temperature.GetCelsius();
+                    // show temperature from -20 to 235 degrees (255 range)
+                    if(temperature > 200) temperature = 200;
+                    if(temperature < -20) temperature = -20;
+
+                    temperature += 20;
+                    RGB color = RGB(temperature, 0, 255 - temperature);
+                    int alpha = distance < radius/1.4 ? 180 : 180 - (distance - radius/1.4) * 180 / (radius - radius/1.4);
+                    SDL_SetRenderDrawColor(renderer, 
+                        color.r, 0, color.b, alpha);
+                    SDL_RenderFillRect(renderer, &rect);
+                }
+            }
+        }
+        SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_NONE );
+    }
+
     if(debugRendering) {
         //fps counter
         SDL_Color color = { 255, 255, 255 };
@@ -332,11 +373,11 @@ void GameEngine::m_RenderIMGUI()
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Begin("VoxaEngine");
+    ImGui::Begin("VoxaEngine Debug Panel");
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
-        "Water", "Fire", "Plasma", "Carbon_Dioxide"
+        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron"
     };
     // Find the index of placeVoxelType in voxelTypeNames
     static int current_item = 0;
@@ -363,8 +404,9 @@ void GameEngine::m_RenderIMGUI()
         }
         ImGui::EndCombo();
     }
-    ImGui::DragFloat("Placement Temperature", &placeVoxelTemperature, 0.5f, 0.0f, 1000.0f);
+    ImGui::DragFloat("Placement Temperature", &placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
     if(ImGui::Button("Toggle Debug Rendering")) m_toggleDebugRendering();
+    ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
     ImGui::End();
 
@@ -461,6 +503,13 @@ void GameEngine::m_initWindow()
     );
 
     ImGui_ImplSDLRenderer2_Init(renderer);
+
+    SDL_SetWindowTitle(window, "VoxaEngine");
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    this->glContext = SDL_GL_CreateContext(window);
 }
 
 void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)

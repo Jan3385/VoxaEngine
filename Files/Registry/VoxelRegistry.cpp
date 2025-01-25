@@ -162,6 +162,21 @@ void VoxelRegistry::RegisterVoxels()
 			.PhaseUp("Liquid_Carbon_Dioxide", -78.5)
 			.Build()
 	);
+	VoxelRegistry::RegisterVoxel(
+		"Iron",
+		VoxelBuilder(State::Solid, 450, 80, 7874)
+			.SetName("Iron")
+			.SetColor(RGB(130, 130, 130))
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Molten_Iron",
+		VoxelBuilder(State::Liquid, 450, 80, 7874)
+			.SetName("Molten Iron")
+			.SetColor(RGB(130, 130, 130))
+			.PhaseDown("Iron", 1538)
+			.Build()
+	);
 
 	std::cout << "[ OK ]" << std::endl;
 }

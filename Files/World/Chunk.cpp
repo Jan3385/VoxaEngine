@@ -4,6 +4,7 @@
 #include <math.h>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 #include "../GameEngine.h"
 
 using namespace Volume; 
@@ -35,7 +36,7 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 bool Volume::Chunk::ShouldChunkCalculateHeat() const
 {
     return(
-        m_lastMaxHeatDifference > 0.7f || m_lastMaxHeatTransfer > 0.1f ||
+        m_lastMaxHeatDifference > 0.75f || m_lastMaxHeatTransfer > 0.3f ||
         forceHeatUpdate
     );
 }
@@ -104,7 +105,15 @@ void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix)
 
                     float neighbourHeat = neighborVoxel->temperature.GetCelsius();
                     float heatDifference = heat - neighbourHeat;
-                    float heatTransfer = heatDifference * heatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+
+                    int UpTransferMultiplier = dy == -1 ? 2 : 1;
+                    float maxHeatTransfer = heatDifference * 0.6f; // Limit to 60%
+
+                    float heatTransfer = std::clamp(
+                        heatDifference * heatConductivity * Temperature::HEAT_TRANSFER_SPEED * UpTransferMultiplier,
+                        -maxHeatTransfer,
+                        maxHeatTransfer
+                    );
 
                     newHeatMap[x][y] -= heatTransfer / heatCapacity;
                     newHeatMap[x + dx][y + dy] += heatTransfer / neighborVoxel->properties->HeatCapacity;
@@ -146,25 +155,45 @@ void Volume::Chunk::TransferBorderHeat(ChunkMatrix *matrix)
     Chunk* ChunkDown = matrix->GetChunkAtChunkPosition(Vec2i(m_x, m_y + 1));
     for (short int x = 0; x < Chunk::CHUNK_SIZE; x++)
     {
-        VoxelElement* voxeluP = voxels[x][0].get();
+        VoxelElement* voxelUp = voxels[x][0].get();
         VoxelElement* voxelDown = voxels[x][Chunk::CHUNK_SIZE - 1].get();
 
         VoxelElement* neighbourVoxelUp = ChunkUp ? ChunkUp->voxels[x][Chunk::CHUNK_SIZE - 1].get() : nullptr;
         VoxelElement* neighbourVoxelDown = ChunkDown ? ChunkDown->voxels[x][0].get() : nullptr;
 
         if(neighbourVoxelUp){
-            float heatDifference = voxeluP->temperature.GetCelsius() - neighbourVoxelUp->temperature.GetCelsius();
-            float heatTransfer = heatDifference * voxeluP->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+            float heatDifference = voxelUp->temperature.GetCelsius() - neighbourVoxelUp->temperature.GetCelsius();
+            float maxHeatTransfer = heatDifference * 0.6f; // Limit to 60%
 
-            voxeluP->temperature.SetCelsius(voxeluP->temperature.GetCelsius() - heatTransfer / voxeluP->properties->HeatCapacity);
+            float heatTransfer = std::clamp(
+                heatDifference * voxelUp->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED,
+                -maxHeatTransfer,
+                maxHeatTransfer
+            );
+
+            voxelUp->temperature.SetCelsius(voxelUp->temperature.GetCelsius() - heatTransfer / voxelUp->properties->HeatCapacity);
             neighbourVoxelUp->temperature.SetCelsius(neighbourVoxelUp->temperature.GetCelsius() + heatTransfer / neighbourVoxelUp->properties->HeatCapacity);
+        
+            if(heatDifference > .5f){
+                ChunkUp->forceHeatUpdate = true;
+            }
         }
         if(neighbourVoxelDown){
             float heatDifference = voxelDown->temperature.GetCelsius() - neighbourVoxelDown->temperature.GetCelsius();
-            float heatTransfer = heatDifference * voxelDown->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+            float maxHeatTransfer = heatDifference * 0.6f; // Limit to 60%
+
+            float heatTransfer = std::clamp(
+                heatDifference * voxelDown->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED,
+                -maxHeatTransfer,
+                maxHeatTransfer
+            );
 
             voxelDown->temperature.SetCelsius(voxelDown->temperature.GetCelsius() - heatTransfer / voxelDown->properties->HeatCapacity);
             neighbourVoxelDown->temperature.SetCelsius(neighbourVoxelDown->temperature.GetCelsius() + heatTransfer / neighbourVoxelDown->properties->HeatCapacity);
+        
+            if(heatDifference > .5f){
+                ChunkDown->forceHeatUpdate = true;
+            }
         }
     }
     
@@ -180,17 +209,37 @@ void Volume::Chunk::TransferBorderHeat(ChunkMatrix *matrix)
 
         if(neighbourVoxelLeft){
             float heatDifference = voxelLeft->temperature.GetCelsius() - neighbourVoxelLeft->temperature.GetCelsius();
-            float heatTransfer = heatDifference * voxelLeft->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+            float maxHeatTransfer = heatDifference * 0.6f; // Limit to 60%
+
+            float heatTransfer = std::clamp(
+                heatDifference * voxelLeft->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED,
+                -maxHeatTransfer,
+                maxHeatTransfer
+            );
 
             voxelLeft->temperature.SetCelsius(voxelLeft->temperature.GetCelsius() - heatTransfer / voxelLeft->properties->HeatCapacity);
             neighbourVoxelLeft->temperature.SetCelsius(neighbourVoxelLeft->temperature.GetCelsius() + heatTransfer / neighbourVoxelLeft->properties->HeatCapacity);
+
+            if(heatDifference > .5f){
+                ChunkLeft->forceHeatUpdate = true;
+            }
         }
         if(neighbourVoxelRight){
             float heatDifference = voxelRight->temperature.GetCelsius() - neighbourVoxelRight->temperature.GetCelsius();
-            float heatTransfer = heatDifference * voxelRight->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+            float maxHeatTransfer = heatDifference * 0.6f; // Limit to 60%
+
+            float heatTransfer = std::clamp(
+                heatDifference * voxelRight->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED,
+                -maxHeatTransfer,
+                maxHeatTransfer
+            );
 
             voxelRight->temperature.SetCelsius(voxelRight->temperature.GetCelsius() - heatTransfer / voxelRight->properties->HeatCapacity);
             neighbourVoxelRight->temperature.SetCelsius(neighbourVoxelRight->temperature.GetCelsius() + heatTransfer / neighbourVoxelRight->properties->HeatCapacity);
+
+            if(heatDifference > .5f){
+                ChunkRight->forceHeatUpdate = true;
+            }
         }
     }
 }
@@ -470,13 +519,6 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
 
 Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 {
-    /*
-    if (this->Grid.size() <= pos.x)
-    	this->Grid.resize(static_cast<std::size_t>(pos.x) + 1);
-    if (this->Grid[pos.x].size() <= pos.y)
-    	this->Grid[pos.x].resize(static_cast<std::size_t>(pos.y) + 1);
-    */
-
     Chunk *chunk = new Chunk(pos);
     // Fill the voxels array with Voxel objects
     #pragma omp parallel for collapse(2)
@@ -510,7 +552,6 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		}
         }
     }
-    //this->Grid[pos.getX()][pos.getY()] = chunk;
 
     int AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;

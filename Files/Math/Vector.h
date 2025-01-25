@@ -38,6 +38,7 @@ public:
     Vec2i operator-(const Vec2i& other) const;
     Vec2i operator+=(const Vec2i& other);
     Vec2i operator-=(const Vec2i& other);
+    Vec2i operator*(const int& other) const;
     bool operator!=(const Vec2i& other) const;
     bool operator==(const Vec2i& other) const;
 };

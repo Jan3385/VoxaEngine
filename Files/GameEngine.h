@@ -8,6 +8,7 @@
 class GameEngine
 {
 private:
+    SDL_GLContext glContext;
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     SDL_Event windowEvent;
@@ -19,6 +20,7 @@ private:
     AABB Camera;
 
     bool debugRendering = false;
+    bool showHeatAroundCursor = false;
 
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;
