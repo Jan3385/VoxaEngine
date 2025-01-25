@@ -288,32 +288,34 @@ void GameEngine::Render()
     //rendering particles
     chunkMatrix.RenderParticles(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
-    //fps counter
-    SDL_Color color = { 255, 255, 255 };
-    SDL_Surface* surface = TTF_RenderText_Solid(basicFont, to_string(FPS).c_str(), color);
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_Rect rect = { 0, 0, surface->w, surface->h };
-    SDL_RenderCopy(renderer, texture, NULL, &rect);
-    SDL_FreeSurface(surface);
-    SDL_DestroyTexture(texture);
-
-    //info about the voxel under the mouse
-    Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
-    Vec2f mouseWorldPos = ChunkMatrix::MousePosToWorldPos(this->mousePos, offset);
-    auto voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
-    if(voxel){
-        SDL_Surface* surface = TTF_RenderText_Solid(basicFont, (to_string(voxel->temperature.GetCelsius()) + "deg C").c_str(), color);
+    if(debugRendering) {
+        //fps counter
+        SDL_Color color = { 255, 255, 255 };
+        SDL_Surface* surface = TTF_RenderText_Solid(basicFont, to_string(FPS).c_str(), color);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_Rect rect = { 0, 20, surface->w, surface->h };
+        SDL_Rect rect = { 0, 0, surface->w, surface->h };
         SDL_RenderCopy(renderer, texture, NULL, &rect);
         SDL_FreeSurface(surface);
         SDL_DestroyTexture(texture);
-        surface = TTF_RenderText_Solid(basicFont, voxel->id.c_str(), color);
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
-        rect = { 0, 40, surface->w, surface->h };
-        SDL_RenderCopy(renderer, texture, NULL, &rect);
-        SDL_FreeSurface(surface);
-        SDL_DestroyTexture(texture);
+    
+        //info about the voxel under the mouse
+        Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+        Vec2f mouseWorldPos = ChunkMatrix::MousePosToWorldPos(this->mousePos, offset);
+        auto voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
+        if(voxel){
+            SDL_Surface* surface = TTF_RenderText_Solid(basicFont, (to_string(voxel->temperature.GetCelsius()) + "deg C").c_str(), color);
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_Rect rect = { 0, 20, surface->w, surface->h };
+            SDL_RenderCopy(renderer, texture, NULL, &rect);
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(texture);
+            surface = TTF_RenderText_Solid(basicFont, voxel->id.c_str(), color);
+            texture = SDL_CreateTextureFromSurface(renderer, surface);
+            rect = { 0, 40, surface->w, surface->h };
+            SDL_RenderCopy(renderer, texture, NULL, &rect);
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(texture);
+        }
     }
 
     //ImGui

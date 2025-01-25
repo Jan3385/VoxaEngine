@@ -185,7 +185,7 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
     	//If the voxel below is a solid, try to move to the sides
     
     	//try to set isFalling to true on voxel below - simulates inertia
-    	std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(0, 1)); //TODO: figure out why did the voxel pos change to y=-1 when there was Vec2i(-1,1)
+    	std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
     	if (below && below->GetState() == VoxelState::MovableSolid)
     	{
     		std::shared_ptr<VoxelMovableSolid> belowMovable = std::dynamic_pointer_cast<VoxelMovableSolid>(below);
@@ -385,15 +385,9 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 	if (MoveInDirection(matrix, Vec2i(0, 1)))
 		return true;
 	//try to randomly move to the sides
-	bool left = rand() % 2;
-	if (left){
-		if (MoveInDirection(matrix, Vec2i(-1, 0)))
-			return true;
-	}
-	else{
-		if (MoveInDirection(matrix, Vec2i(1, 0)))
-			return true;
-	}	
+	bool positiveX = rand() % 2;
+	if(this->StepAlongSide(matrix, positiveX, rand()%3 + 2))
+		return true;
 
     return false;
 }
@@ -421,10 +415,36 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 		}
 	}else{
 		// sides
-		this->Swap(next->position, *matrix);
+		//this->Swap(next->position, *matrix);
+		this->StepAlongSide(matrix, direction.getX() > 0, 1);
 		return true;
 	}
     
+    return false;
+}
+
+bool Volume::VoxelGas::StepAlongSide(ChunkMatrix *matrix, bool positiveX, short int length)
+{
+	Vec2i direction = positiveX ? Vec2i(1, 0) : Vec2i(-1, 0);
+    std::shared_ptr<VoxelElement> next = matrix->VirtualGetAt(this->position + direction);
+    if (next && next->GetState() == VoxelState::Gas && next->properties != this->properties)
+    {
+    	Vec2i nextPos = next->position;
+    	for (short int i = 0; i < length; ++i)
+    	{
+    		nextPos += direction;
+    		next = matrix->VirtualGetAt(nextPos);
+			//if the next voxel is a solid, stop
+    		if (next && (next->GetState() != VoxelState::Gas || next->properties == this->properties))
+    		{
+    			nextPos -= direction;
+    			this->Swap(nextPos, *matrix);
+    			return true;
+    		}
+    	}
+    	this->Swap(nextPos, *matrix);
+    	return true;
+    }
     return false;
 }
 

@@ -127,6 +127,7 @@ namespace Volume {
 
 		VoxelState GetState() override { return VoxelState::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
+		bool StepAlongSide(ChunkMatrix *matrix, bool positiveX, short int length);
 		bool MoveInDirection(ChunkMatrix* matrix, Vec2i direction);
 	};
 }

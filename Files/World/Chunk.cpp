@@ -74,7 +74,6 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 //transfer heat within the chunk
 void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix)
 {
-    //TODO: forceHeatUpdate = false;
     m_lastMaxHeatDifference = 0;
     m_lastMaxHeatTransfer = 0;
     forceHeatUpdate = false;
@@ -87,23 +86,28 @@ void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix)
         }
     }
 
+    //TODO: maybe make with compute shader
     for (int x = 0; x < CHUNK_SIZE; ++x)
     {
         for (int y = 0; y < CHUNK_SIZE; ++y)
         {
             float heat = voxels[x][y]->temperature.GetCelsius();
+            float heatCapacity = voxels[x][y]->properties->HeatCapacity;
+            float heatConductivity = voxels[x][y]->properties->HeatConductivity;
 
             for(int dx = -1; dx <= 1; dx++){
                 for(int dy = -1; dy <= 1; dy++){
                     if(dx == 0 && dy == 0) continue;
                     if(x + dx < 0 || x + dx >= CHUNK_SIZE || y + dy < 0 || y + dy >= CHUNK_SIZE) continue;
 
-                    float neighbourHeat = voxels[x + dx][y + dy]->temperature.GetCelsius();
-                    float heatDifference = heat - neighbourHeat;
-                    float heatTransfer = heatDifference * voxels[x][y]->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+                    auto neighborVoxel = voxels[x + dx][y + dy];
 
-                    newHeatMap[x][y] -= heatTransfer / voxels[x][y]->properties->HeatCapacity;
-                    newHeatMap[x + dx][y + dy] += heatTransfer / voxels[x + dx][y + dy]->properties->HeatCapacity;
+                    float neighbourHeat = neighborVoxel->temperature.GetCelsius();
+                    float heatDifference = heat - neighbourHeat;
+                    float heatTransfer = heatDifference * heatConductivity * Temperature::HEAT_TRANSFER_SPEED;
+
+                    newHeatMap[x][y] -= heatTransfer / heatCapacity;
+                    newHeatMap[x + dx][y + dy] += heatTransfer / neighborVoxel->properties->HeatCapacity;
 
                     if(heatDifference > m_lastMaxHeatDifference){
                         m_lastMaxHeatDifference = heatDifference;
