@@ -41,6 +41,9 @@ public:
     static constexpr int MAX_FRAME_RATE = 60;
     static constexpr float fixedDeltaTime = 1/30.0;
 
+    static bool placeUnmovableSolidVoxels;
+    static int placementRadius;
+
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
     float FPS = 60;

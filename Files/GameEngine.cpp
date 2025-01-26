@@ -10,6 +10,9 @@
 
 using namespace std;
 
+bool GameEngine::placeUnmovableSolidVoxels = false;
+int GameEngine::placementRadius = 5;
+
 GameEngine::GameEngine()
 {
     VoxelRegistry::RegisterVoxels();
@@ -404,7 +407,9 @@ void GameEngine::m_RenderIMGUI()
         }
         ImGui::EndCombo();
     }
+    ImGui::SliderInt("Placement Radius", &placementRadius, 1, 10);
     ImGui::DragFloat("Placement Temperature", &placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
+    ImGui::Checkbox("Place Unmovable Solid Voxels", &placeUnmovableSolidVoxels);
     if(ImGui::Button("Toggle Debug Rendering")) m_toggleDebugRendering();
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 

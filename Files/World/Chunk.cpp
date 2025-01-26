@@ -476,7 +476,7 @@ void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, V
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    constexpr int size = 5;
+    const int size = GameEngine::placementRadius;
 
     for (int x = -size; x <= size; x++)
     {
@@ -668,8 +668,12 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
             voxel = std::make_shared<Volume::VoxelGas>(id, pos, temp);
         else if(prop->state == State::Liquid)
             voxel = std::make_shared<Volume::VoxelLiquid>(id, pos, temp);
-        else
-            voxel = std::make_shared<Volume::VoxelMovableSolid>(id, pos, temp);
+        else{
+            if(GameEngine::placeUnmovableSolidVoxels)
+                voxel = std::make_shared<Volume::VoxelImmovableSolid>(id, pos, temp);
+            else
+                voxel = std::make_shared<Volume::VoxelMovableSolid>(id, pos, temp);
+        }
     } 
         
     
@@ -717,8 +721,8 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
             std::shared_ptr<Volume::VoxelElement> voxel = VirtualGetAt(Vec2i(currentPos));
     		if (voxel == nullptr) continue;
 
-    		if (j < radius * 0.4f) {
-                PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100));
+    		if (j < radius * 0.2f) {
+                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)));
             }
             else {
                 //destroy gas and immovable solids.. create particles for other

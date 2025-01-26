@@ -60,7 +60,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Steam",
-		VoxelBuilder(State::Gas, 4186, 0.6f, 2)
+		VoxelBuilder(State::Gas, 4186, 0.6f, 1)
 			.SetName("Steam")
 			.SetColor(RGB(101, 193, 235))
 			.PhaseDown("Water", 99.98)
