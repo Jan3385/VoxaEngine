@@ -17,7 +17,7 @@ namespace Volume{
 		float GetCelsius() const { return Temperature_C; }
 		void SetCelsius(float celsius) { Temperature_C = celsius; }
 
-		static constexpr float HEAT_TRANSFER_SPEED = 35;
+		static constexpr float HEAT_TRANSFER_SPEED = 30;
 
 		Temperature() : Temperature_C(0) {}
 		Temperature(float celsius) : Temperature_C(celsius) {}

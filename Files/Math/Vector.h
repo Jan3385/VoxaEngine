@@ -14,7 +14,6 @@ public:
     Vec2f();
     Vec2f(float x, float y);
     Vec2f(const Vec2i vec);
-    Vec2f(const Vec2f& vec);
     ~Vec2f();
     Vec2f operator+(const Vec2f& other) const;
     Vec2f operator+=(const Vec2f& other);

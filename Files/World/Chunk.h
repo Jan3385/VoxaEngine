@@ -39,8 +39,7 @@ namespace Volume
 		bool ShouldChunkDelete(AABB &Camera) const;
 		bool ShouldChunkCalculateHeat() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
-    	void UpdateHeat(ChunkMatrix *matrix);
-		void TransferBorderHeat(ChunkMatrix* matrix);
+    	void UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations);
     	void ResetVoxelUpdateData(ChunkMatrix* matrix);
     	SDL_Surface* Render(bool debugRender);
 		Vec2i GetPos() const;

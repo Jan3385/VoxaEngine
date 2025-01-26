@@ -14,6 +14,8 @@ private:
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
 
+    bool oddHeatUpdatePass = false;
+
     float fixedUpdateTimer = 0;
 
     TTF_Font* basicFont;
@@ -32,7 +34,6 @@ private:
     void m_FixedUpdate();
     void m_UpdateGridVoxel(int pass);
     void m_UpdateGridHeat(int pass);
-    void m_UpdateGridHeatBetweenChunks(int pass);
     void m_LoadChunkInView(Vec2i pos);
     void m_RenderIMGUI();
 

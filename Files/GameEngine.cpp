@@ -114,13 +114,7 @@ void GameEngine::m_UpdateGridHeat(int pass)
 {
     for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
         if (chunk->ShouldChunkCalculateHeat())
-            chunk->UpdateHeat(&this->chunkMatrix);
-    }
-}
-void GameEngine::m_UpdateGridHeatBetweenChunks(int pass)
-{
-    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
-        chunk->TransferBorderHeat(&this->chunkMatrix);
+            chunk->UpdateHeat(&this->chunkMatrix, oddHeatUpdatePass);
     }
 }
 void GameEngine::m_FixedUpdate()
@@ -147,13 +141,11 @@ void GameEngine::m_FixedUpdate()
     {
         threads.push_back(std::thread(&GameEngine::m_UpdateGridHeat, this, i));
     }
+    oddHeatUpdatePass = !oddHeatUpdatePass;
+    
     // Wait for all threads to finish
     for (auto& thread : threads) {
         thread.join();
-    }
-    for(int i = 0; i < 4; ++i)
-    {
-        m_UpdateGridHeatBetweenChunks(i);
     }
 
     chunkMatrix.UpdateParticles();

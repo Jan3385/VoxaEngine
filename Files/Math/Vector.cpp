@@ -36,12 +36,6 @@ Vec2f::Vec2f(const Vec2i vec)
     this->y(vec.getY());
 }
 
-Vec2f::Vec2f(const Vec2f& vec)
-{
-    this->x(vec.getX());
-    this->y(vec.getY());
-}
-
 Vec2f::~Vec2f()
 {
 }
