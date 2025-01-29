@@ -27,7 +27,7 @@ namespace Volume {
 		const std::string id;
 		const VoxelProperty* properties = nullptr;
 		Vec2i position;
-		RGB color;
+		RGBA color;
 		Temperature temperature;
 		bool updatedThisFrame = false;
 

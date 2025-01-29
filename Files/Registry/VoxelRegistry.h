@@ -27,7 +27,7 @@ namespace Volume{
 	struct VoxelProperty {
 		std::string name;
 		State state;
-		RGB pColor;
+		RGBA pColor;
 		float Density; // g/L or kg/m^3
 		float HeatCapacity; // J/kg*K
 		float HeatConductivity; // W/m*K
@@ -40,14 +40,14 @@ class VoxelBuilder{
 public:
 	VoxelBuilder(Volume::State State, float tCapacity, float tConductivity, float Density);
 	VoxelBuilder& SetName(std::string Name);
-	VoxelBuilder& SetColor(RGB Color);
+	VoxelBuilder& SetColor(RGBA Color);
 	VoxelBuilder& PhaseUp(std::string To, float Temperature);
 	VoxelBuilder& PhaseDown(std::string To, float Temperature);
 	Volume::VoxelProperty Build();
 private:
 	Volume::State State;
 	std::string Name = "NONAME";
-	RGB Color;
+	RGBA Color;
 	float Density;
 	float HeatCapacity;
 	float HeatConductivity;

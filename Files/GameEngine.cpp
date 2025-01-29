@@ -17,7 +17,7 @@ GameEngine::GameEngine()
 {
     VoxelRegistry::RegisterVoxels();
 
-    this->Camera = AABB(Vec2f(0, 0), Vec2f(640.0/Volume::Chunk::RENDER_VOXEL_SIZE, 480.0/Volume::Chunk::RENDER_VOXEL_SIZE));
+    this->Camera = AABB(Vec2f(0, 0), Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
         std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
@@ -243,7 +243,7 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
-    SDL_SetRenderDrawColor( renderer, 255, 255, 255, 255 );
+    SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
     SDL_RenderClear( renderer ); // Clear the screen to solid white
 
     //chunk rendering
@@ -490,7 +490,7 @@ void GameEngine::m_initVariables()
 
 void GameEngine::m_initWindow()
 {
-    if(SDL_CreateWindowAndRenderer(640, 480, SDL_WindowFlags::SDL_WINDOW_RESIZABLE, &window, &renderer) != 0){
+    if(SDL_CreateWindowAndRenderer(800, 600, SDL_WindowFlags::SDL_WINDOW_RESIZABLE, &window, &renderer) != 0){
         cout << "Error with window creation: " << SDL_GetError() << endl;
         exit(1);
     }

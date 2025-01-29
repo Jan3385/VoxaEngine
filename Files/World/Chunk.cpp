@@ -281,7 +281,7 @@ SDL_Surface* Volume::Chunk::Render(bool debugRender)
         //render individual voxels
         for (int y = 0; y < CHUNK_SIZE; ++y) {
             for (int x = 0; x < CHUNK_SIZE; ++x) {
-                RGB& color = voxels[x][y]->color;
+                RGBA& color = voxels[x][y]->color;
                 //color.r = SDL_clamp(color.r, 0, 255);
                 //color.g = 0;
                 //color.b = SDL_clamp(255 - voxels[x][y]->temperature.GetCelsius(), 0, 255);
@@ -293,7 +293,7 @@ SDL_Surface* Volume::Chunk::Render(bool debugRender)
                     RENDER_VOXEL_SIZE,
                     RENDER_VOXEL_SIZE
                 };
-                SDL_FillRect(this->chunkSurface, &rect, SDL_MapRGBA(this->chunkSurface->format, color.r, color.g, color.b, 255));
+                SDL_FillRect(this->chunkSurface, &rect, SDL_MapRGBA(this->chunkSurface->format, color.r, color.g, color.b, color.a));
             }
         }
         if(debugRender){

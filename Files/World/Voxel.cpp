@@ -22,10 +22,11 @@ VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperatu
 
 	//tint the color factor 1 to 1.2
 	float factor = 1 + ((rand() % 21) / 100.0f);
-	this->color = RGB(
+	this->color = RGBA(
 		std::clamp(static_cast<int>(this->properties->pColor.r * factor), 0, 255),
 		std::clamp(static_cast<int>(this->properties->pColor.g * factor), 0, 255),
-		std::clamp(static_cast<int>(this->properties->pColor.b * factor), 0, 255)
+		std::clamp(static_cast<int>(this->properties->pColor.b * factor), 0, 255),
+		std::clamp(static_cast<int>(this->properties->pColor.a), 0, 255)
 	);
 }
 
