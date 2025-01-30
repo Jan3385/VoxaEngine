@@ -16,6 +16,7 @@ public:
     Vec2f(const Vec2i vec);
     ~Vec2f();
     Vec2f operator+(const Vec2f& other) const;
+    Vec2f operator-(const Vec2f& other) const;
     Vec2f operator+=(const Vec2f& other);
     Vec2f operator*(const int& other) const;
 };

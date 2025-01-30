@@ -88,7 +88,7 @@ public:
 	std::shared_ptr<Volume::VoxelElement> VirtualGetAtNoLoad(const Vec2i& pos);
 	void VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel);
 
-	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp);
+	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids);
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
 	void GetVoxelsInCubeAtWorldPosition(const Vec2f& start, const Vec2f& end);

@@ -87,7 +87,7 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::string id)
 {
     //matrix.VirtualSetAt(replacement);
-	matrix.PlaceVoxelAt(this->position, id, this->temperature);
+	matrix.PlaceVoxelAt(this->position, id, this->temperature, false);
 }
 
 bool Volume::VoxelElement::IsStateBelowDensity(VoxelState state, float density)
@@ -145,7 +145,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     		return true;
     	}
 
-		matrix->PlaceVoxelAt(this->position, this->id, this->temperature);
+		matrix->PlaceVoxelAt(this->position, this->id, this->temperature, false);
     	return true;
     }
 
@@ -464,4 +464,16 @@ bool Volume::VoxelImmovableSolid::Step(ChunkMatrix *matrix)
 {
 	updatedThisFrame = true;
 	return false;
+}
+
+int Volume::GetLiquidVoxelPercentile(std::vector<VoxelElement *> voxels)
+{
+	if(voxels.empty()) return 0;
+	int liquidCount = 0;
+	for (const auto& voxel : voxels)
+	{
+		if (voxel->GetState() == VoxelState::Liquid)
+			liquidCount++;
+	}
+	return (liquidCount * 100) / voxels.size();
 }

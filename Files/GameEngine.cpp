@@ -12,12 +12,13 @@ using namespace std;
 
 bool GameEngine::placeUnmovableSolidVoxels = false;
 int GameEngine::placementRadius = 5;
+bool GameEngine::MovementKeysHeld[4] = {false, false, false, false};
+GameEngine* GameEngine::instance = nullptr;
 
 GameEngine::GameEngine()
 {
+    GameEngine::instance = this;
     VoxelRegistry::RegisterVoxels();
-
-    this->Camera = AABB(Vec2f(0, 0), Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
         std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
@@ -30,6 +31,9 @@ GameEngine::GameEngine()
 
     m_initVariables();
     m_initWindow();
+
+    Player = Game::Player();
+    Player.LoadPlayerTexture(renderer);
 }
 
 GameEngine::~GameEngine()
@@ -69,28 +73,22 @@ void GameEngine::Update()
     //Polls events - e.g. window close, keyboard input..
     this->PollEvents();
 
+    //Update Player
+    this->Player.Update(this->chunkMatrix, this->deltaTime);
+
     fixedUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
         m_FixedUpdate();
         fixedUpdateTimer -= fixedDeltaTime;
     }
-
-    if (MovementKeysHeld[0])
-        this->MoveCamera(this->Camera.corner + Vec2f(0, -2));
-    if (MovementKeysHeld[1])
-        this->MoveCamera(this->Camera.corner + Vec2f(0, 2));
-    if (MovementKeysHeld[2])
-        this->MoveCamera(this->Camera.corner + Vec2f(-2, 0));
-    if (MovementKeysHeld[3])
-        this->MoveCamera(this->Camera.corner + Vec2f(2, 0));
 }
 
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
     //delete all chunks marked for deletion
     for(int i = chunkMatrix.GridSegmented[pass].size() - 1; i >= 0; --i){
-        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(Camera))
+        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player.Camera))
         {
             chunkMatrix.DeleteChunk(chunkMatrix.GridSegmented[pass][i]->GetPos());
             continue;
@@ -213,7 +211,7 @@ void GameEngine::PollEvents()
             switch (this->windowEvent.window.event)
             {
                 case SDL_WINDOWEVENT_RESIZED:
-                    Camera.size = Vec2f(
+                    this->Player.Camera.size = Vec2f(
                         this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
                         this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
                 break;
@@ -246,6 +244,9 @@ void GameEngine::Render()
     SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
     SDL_RenderClear( renderer ); // Clear the screen to solid white
 
+    //Player rendering
+    this->Player.Render(renderer);
+
     //chunk rendering
     std::vector<std::thread> threads;
     std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
@@ -255,12 +256,14 @@ void GameEngine::Render()
         threads.push_back(std::thread([&, i]{
             std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
             for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-                if(chunk->GetAABB().Overlaps(Camera)){
+                if(chunk->GetAABB().Overlaps(this->Player.Camera)){
                     SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
 
                     SDL_Rect rect = {
-                        static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
-                        static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
+                        static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
+                            (this->Player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
+                        static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
+                            (this->Player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
                         Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
                         Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
                     };
@@ -287,11 +290,11 @@ void GameEngine::Render()
     }
 
     //rendering particles
-    chunkMatrix.RenderParticles(*this->renderer, GetCameraPos()*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
+    chunkMatrix.RenderParticles(*this->renderer, this->Player.Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
     if(showHeatAroundCursor){
         SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_BLEND );
-        Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+        Vec2f offset = this->Player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
         Vec2f voxelPos = ChunkMatrix::MousePosToWorldPos(this->mousePos, offset);
 
         constexpr int radius = 16;
@@ -308,8 +311,8 @@ void GameEngine::Render()
                 if(chunk){
                     Vec2i localPos = pos - chunkPos*Volume::Chunk::CHUNK_SIZE;
                     SDL_Rect rect = {
-                        static_cast<int>(localPos.getX() * Volume::Chunk::RENDER_VOXEL_SIZE + (chunkPos.getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
-                        static_cast<int>(localPos.getY() * Volume::Chunk::RENDER_VOXEL_SIZE + (chunkPos.getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (GetCameraPos().getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
+                        static_cast<int>(localPos.getX() * Volume::Chunk::RENDER_VOXEL_SIZE + (chunkPos.getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (this->Player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
+                        static_cast<int>(localPos.getY() * Volume::Chunk::RENDER_VOXEL_SIZE + (chunkPos.getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + (this->Player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
                         Volume::Chunk::RENDER_VOXEL_SIZE,
                         Volume::Chunk::RENDER_VOXEL_SIZE
                     };
@@ -341,7 +344,7 @@ void GameEngine::Render()
         SDL_DestroyTexture(texture);
     
         //info about the voxel under the mouse
-        Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+        Vec2f offset = this->Player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
         Vec2f mouseWorldPos = ChunkMatrix::MousePosToWorldPos(this->mousePos, offset);
         auto voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
         if(voxel){
@@ -411,6 +414,8 @@ void GameEngine::m_RenderIMGUI()
     if(ImGui::Button("Toggle Debug Rendering")) m_toggleDebugRendering();
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
+    ImGui::Checkbox("No Clip", &Player.NoClip);
+
     ImGui::End();
 
     ImGui::Render();
@@ -429,41 +434,7 @@ void GameEngine::m_toggleDebugRendering()
     }
 }
 
-Vec2f GameEngine::GetCameraPos() const
-{
-    return Vec2f(Camera.corner);
-}
-
-void GameEngine::MoveCamera(Vec2f pos)
-{
-    this->Camera.corner = pos;
-
-    //Spawn chunks that are in the view but don´t exits
-    Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(Camera.corner));
-    int ChunksHorizontal = ceil(Camera.size.getX() / Volume::Chunk::CHUNK_SIZE) + 1;
-    int ChunksVertical = ceil(Camera.size.getY() / Volume::Chunk::CHUNK_SIZE) + 1;
-
-    std::vector<Vec2i> chunksToLoad;
-    for (int x = 0; x < ChunksHorizontal; ++x) {
-        for (int y = 0; y < ChunksVertical; ++y) {
-            Vec2i chunkPos = cameraChunkPos + Vec2i(x, y);
-            if (!chunkMatrix.GetChunkAtChunkPosition(chunkPos)) {
-                chunksToLoad.push_back(chunkPos);
-            }
-        }
-    }
-
-    std::vector<std::future<void>> futures;
-    for (const auto& chunkPos : chunksToLoad) {
-        futures.emplace_back(std::async(std::launch::async, &GameEngine::m_LoadChunkInView, this, chunkPos));
-    }
-
-    // Wait for all chunks to finish loading
-    for (auto& future : futures) {
-        future.get();
-    }
-}
-void GameEngine::m_LoadChunkInView(Vec2i pos)
+void GameEngine::LoadChunkInView(Vec2i pos)
 {
     if(!chunkMatrix.IsValidChunkPosition(pos)) return;
     if(chunkMatrix.GetChunkAtChunkPosition(pos)) return;
@@ -474,18 +445,6 @@ void GameEngine::m_LoadChunkInView(Vec2i pos)
 void GameEngine::m_initVariables()
 {
     this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
-    MoveCamera(Vec2f(0, 0));
-    //constexpr int chunkGenerationSize = 10;
-    //this->chunkMatrix.Grid.resize(chunkGenerationSize);
-    //for (int i = 0; i < this->chunkMatrix.Grid.size(); ++i) {
-    //	this->chunkMatrix.Grid[i].resize(chunkGenerationSize);
-    //}
-
-    //for (int x = 0; x < 10; ++x) {
-    //	for (int y = 0; y < 10; ++y) {
-    //		this->chunkMatrix.GenerateChunk(Vec2i(x, y));
-    //	}
-    //}
 }
 
 void GameEngine::m_initWindow()
@@ -522,7 +481,7 @@ void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
-    Vec2f offset = this->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+    Vec2f offset = this->Player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:

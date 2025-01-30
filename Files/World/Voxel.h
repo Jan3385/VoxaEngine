@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 #include <memory>
 #include "../Math/Vector.h"
 #include "../Registry/VoxelRegistry.h"
@@ -9,6 +10,7 @@
 class ChunkMatrix;
 
 namespace Volume {
+	static constexpr float VOXEL_SIZE_METERS = 0.1f;
 	//Interfaces
 	class IGravity {
 	public:
@@ -33,7 +35,7 @@ namespace Volume {
 
 		// Functions
 		//return the state of the element
-		virtual VoxelState GetState() { return VoxelState::ImmovableSolid; };
+		virtual VoxelState GetState() const { return VoxelState::ImmovableSolid; };
 		//returm true if the voxel moved
 		virtual bool Step(ChunkMatrix* matrix) { updatedThisFrame = true; return false; };
 		//return true if the voxel acted on another voxel
@@ -76,7 +78,7 @@ namespace Volume {
 		VoxelSolid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		virtual ~VoxelSolid() {};
 
-		virtual VoxelState GetState() override { return VoxelState::ImmovableSolid; };
+		virtual VoxelState GetState() const override { return VoxelState::ImmovableSolid; };
 	};
 	//Solid immovable voxels -> inherit from solid voxels
 	class VoxelImmovableSolid : public VoxelSolid {
@@ -85,7 +87,7 @@ namespace Volume {
 		VoxelImmovableSolid(std::string id, Vec2i position, Temperature temp) : VoxelSolid(id, position, temp) {};
 		~VoxelImmovableSolid() {};
 
-		VoxelState GetState() override { return VoxelState::ImmovableSolid; };
+		VoxelState GetState() const override { return VoxelState::ImmovableSolid; };
 		bool Step(ChunkMatrix* matrix) override;
 	};
 	//solid movable voxels -> inherit from solid voxels
@@ -98,7 +100,7 @@ namespace Volume {
 		short unsigned int XVelocity = 0;     // 0 - short unsigned int max
 		float InertiaResistance = 0; //0 - 1
 
-		VoxelState GetState() override { return VoxelState::MovableSolid; };
+		VoxelState GetState() const override { return VoxelState::MovableSolid; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 	private:
@@ -111,7 +113,7 @@ namespace Volume {
 		VoxelLiquid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		~VoxelLiquid() {};
 
-		VoxelState GetState() override { return VoxelState::Liquid; };
+		VoxelState GetState() const override { return VoxelState::Liquid; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		Vec2i GetValidSideSwapPosition(ChunkMatrix& matrix, short int length);
@@ -125,9 +127,11 @@ namespace Volume {
 		VoxelGas(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		~VoxelGas() {};
 
-		VoxelState GetState() override { return VoxelState::Gas; };
+		VoxelState GetState() const override { return VoxelState::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongSide(ChunkMatrix *matrix, bool positiveX, short int length);
 		bool MoveInDirection(ChunkMatrix* matrix, Vec2i direction);
 	};
+
+	int GetLiquidVoxelPercentile(std::vector<VoxelElement *> voxels);
 }

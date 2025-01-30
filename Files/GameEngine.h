@@ -4,6 +4,7 @@
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
+#include "Player/Player.h"
 
 class GameEngine
 {
@@ -19,7 +20,6 @@ private:
     float fixedUpdateTimer = 0;
 
     TTF_Font* basicFont;
-    AABB Camera;
 
     bool debugRendering = false;
     bool showHeatAroundCursor = false;
@@ -34,25 +34,27 @@ private:
     void m_FixedUpdate();
     void m_UpdateGridVoxel(int pass);
     void m_UpdateGridHeat(int pass);
-    void m_LoadChunkInView(Vec2i pos);
     void m_RenderIMGUI();
 
     void m_toggleDebugRendering();
 public:
+    static GameEngine* instance;
+
     static constexpr int MAX_FRAME_RATE = 60;
     static constexpr float fixedDeltaTime = 1/30.0;
 
     static bool placeUnmovableSolidVoxels;
     static int placementRadius;
 
+    static bool MovementKeysHeld[4]; //W, S, A, D
+
+    Game::Player Player;
+
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
     float FPS = 60;
     
     Vec2f mousePos;
-
-    Vec2f PlayerVelocity;
-    bool MovementKeysHeld[4] = {false, false, false, false};
 
     ChunkMatrix chunkMatrix;
 
@@ -64,6 +66,5 @@ public:
     void PollEvents();
     void Render();
 
-    Vec2f GetCameraPos() const;
-    void MoveCamera(Vec2f pos);
+    void LoadChunkInView(Vec2i pos);
 };
