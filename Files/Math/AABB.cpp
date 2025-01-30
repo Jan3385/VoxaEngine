@@ -29,3 +29,13 @@ bool AABB::Overlaps(const AABB &other) const
             corner.getY() <= other.corner.getY() + other.size.getY() &&
             corner.getY() + size.getY() >= other.corner.getY());
 }
+
+AABB AABB::Expand(float amount) const
+{
+    return AABB(
+        corner.getX() - amount,
+        corner.getY() - amount,
+        size.getX() + amount * 2,
+        size.getY() + amount * 2
+    );
+}

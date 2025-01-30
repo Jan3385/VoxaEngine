@@ -5,6 +5,7 @@
 #include "../World/Chunk.h"
 
 namespace Game{
+    constexpr int CAMERA_CHUNK_BUFFER = 10;
     class Player{
     public:
         static bool NoClip;

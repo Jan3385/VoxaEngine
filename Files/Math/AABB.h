@@ -18,4 +18,5 @@ public:
     void SetCenter(Vec2f& center);
     bool Contains(const Vec2f& point) const;
     bool Overlaps(const AABB& other) const;
+    AABB Expand(float amount) const;
 };

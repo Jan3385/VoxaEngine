@@ -298,8 +298,8 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 
     //Spawn chunks that are in the view but don´t exits
     Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(Camera.corner));
-    int ChunksHorizontal = ceil(Camera.size.getX() / Volume::Chunk::CHUNK_SIZE) + 1;
-    int ChunksVertical =   ceil(Camera.size.getY() / Volume::Chunk::CHUNK_SIZE) + 1;
+    int ChunksHorizontal = ceil((Camera.size.getX()) / Volume::Chunk::CHUNK_SIZE) + 1;
+    int ChunksVertical =   ceil((Camera.size.getY()) / Volume::Chunk::CHUNK_SIZE) + 1;
 
     std::vector<Vec2i> chunksToLoad;
     for (int x = 0; x < ChunksHorizontal; ++x) {

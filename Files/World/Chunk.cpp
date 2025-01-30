@@ -30,7 +30,7 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;
-    if(this->GetAABB().Overlaps(Camera)) return false;
+    if(this->GetAABB().Overlaps(Camera.Expand(Game::CAMERA_CHUNK_BUFFER))) return false;
 
     return true;
 }
