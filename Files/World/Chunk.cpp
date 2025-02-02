@@ -30,7 +30,7 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;
-    if(this->GetAABB().Overlaps(Camera.Expand(Game::CAMERA_CHUNK_BUFFER))) return false;
+    if(this->GetAABB().Overlaps(Camera.Expand(Game::CAMERA_CHUNK_PADDING))) return false;
 
     return true;
 }
@@ -609,7 +609,7 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
     return voxel;
 }
 
-std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAtNoLoad(const Vec2i &pos)
+std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
 

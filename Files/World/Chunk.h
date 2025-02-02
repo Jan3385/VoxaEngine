@@ -85,7 +85,7 @@ public:
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
 	std::shared_ptr<Volume::VoxelElement> VirtualGetAt(const Vec2i& pos);
-	std::shared_ptr<Volume::VoxelElement> VirtualGetAtNoLoad(const Vec2i& pos);
+	std::shared_ptr<Volume::VoxelElement> VirtualGetAt_NoLoad(const Vec2i& pos);
 	void VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel);
 
 	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids);

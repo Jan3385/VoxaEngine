@@ -406,7 +406,7 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 
 bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 {
-    std::shared_ptr<VoxelElement> next = matrix->VirtualGetAtNoLoad(this->position + direction); // gasses cannot load new chunks
+    std::shared_ptr<VoxelElement> next = matrix->VirtualGetAt_NoLoad(this->position + direction); // gasses cannot load new chunks
 
 	if(next == nullptr) return false; // if the next voxel is null, stop
 

@@ -70,7 +70,7 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
     }
     if (GameEngine::MovementKeysHeld[1]){ // S
         if(isInWater){
-            this->MovePlayerBy(Vec2f(0, 100 * deltaTime), chunkMatrix);
+            this->acceleration += (1+(LiquidPercentile*0.005f)) * GRAVITY * deltaTime;
         }
 
         if(this->NoClip){
@@ -294,12 +294,20 @@ void Game::Player::MovePlayerBy(Vec2f pos, ChunkMatrix &chunkMatrix)
 
 void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
+    using namespace Volume;
+
     Camera.corner = (pos-Vec2f(Camera.size.getX()/2, Camera.size.getY()/2));
 
     //Spawn chunks that are in the view but don´t exits
-    Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(Camera.corner));
-    int ChunksHorizontal = ceil((Camera.size.getX()) / Volume::Chunk::CHUNK_SIZE) + 1;
-    int ChunksVertical =   ceil((Camera.size.getY()) / Volume::Chunk::CHUNK_SIZE) + 1;
+    Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Camera.corner - Vec2f(Game::CAMERA_CHUNK_PADDING/2, Game::CAMERA_CHUNK_PADDING/2));
+
+    float cameraHorizontalAdd = (Chunk::CHUNK_SIZE/2 - abs(fmod(Camera.corner.getX() + Chunk::CHUNK_SIZE/2, Chunk::CHUNK_SIZE) - Chunk::CHUNK_SIZE/2))*2;
+    int ChunksHorizontal = ceil((Camera.size.getX() + Game::CAMERA_CHUNK_PADDING + cameraHorizontalAdd) 
+                                    / Chunk::CHUNK_SIZE);
+    
+    float cameraVerticalAdd =   (Chunk::CHUNK_SIZE/2 - abs(fmod(Camera.corner.getY() + Chunk::CHUNK_SIZE/2, Chunk::CHUNK_SIZE) - Chunk::CHUNK_SIZE/2))*2;
+    int ChunksVertical =   ceil((Camera.size.getY() + Game::CAMERA_CHUNK_PADDING + cameraVerticalAdd) 
+                                    / Chunk::CHUNK_SIZE);
 
     std::vector<Vec2i> chunksToLoad;
     for (int x = 0; x < ChunksHorizontal; ++x) {

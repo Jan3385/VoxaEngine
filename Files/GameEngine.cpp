@@ -251,12 +251,14 @@ void GameEngine::Render()
     std::vector<std::thread> threads;
     std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
     std::mutex renderDataMutex;
+
+    AABB cameraAABB = this->Player.Camera.Expand(1);
     for(int i = 0; i < 4; ++i)
     {
         threads.push_back(std::thread([&, i]{
             std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
             for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-                if(chunk->GetAABB().Overlaps(this->Player.Camera)){
+                if(chunk->GetAABB().Overlaps(cameraAABB)){
                     SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
 
                     SDL_Rect rect = {
