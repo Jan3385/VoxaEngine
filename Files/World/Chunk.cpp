@@ -776,8 +776,8 @@ void DirtyRect::Include(Vec2i pos)
 
 void DirtyRect::Update()
 {
-    this->start = m_startW-Vec2i(2,2);  
-    this->end = m_endW+Vec2i(2,2);
+    this->start = m_startW-Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);  
+    this->end = m_endW+Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);
 
     m_startW = Vec2i(INT_MAX, INT_MAX);
     m_endW = Vec2i(INT_MIN, INT_MIN);
@@ -785,5 +785,5 @@ void DirtyRect::Update()
 
 bool DirtyRect::IsEmpty() const
 {
-    return this->start.getX() == INT_MAX-2;
+    return this->start.getX() == INT_MAX-DIRTY_RECT_PADDING;
 }
