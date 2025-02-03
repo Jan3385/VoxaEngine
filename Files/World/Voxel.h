@@ -98,7 +98,6 @@ namespace Volume {
 		~VoxelMovableSolid() {};
 
 		short unsigned int XVelocity = 0;     // 0 - short unsigned int max
-		float InertiaResistance = 0; //0 - 1
 
 		VoxelState GetState() const override { return VoxelState::MovableSolid; };
 		bool Step(ChunkMatrix* matrix) override;
@@ -117,8 +116,6 @@ namespace Volume {
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		Vec2i GetValidSideSwapPosition(ChunkMatrix& matrix, short int length);
-
-		short int dispursionRate = 10;
 	};
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
