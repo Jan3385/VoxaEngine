@@ -195,28 +195,26 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
     else if (IsFalling) { //On the frame of the impact
     	StopFalling();
     	//If the voxel below is a solid, try to move to the sides
-    
-    	//try to set isFalling to true on voxel below - simulates inertia
-    	std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
-    	if (below && below->GetState() == VoxelState::MovableSolid)
-    	{
-    		std::shared_ptr<VoxelMovableSolid> belowMovable = std::dynamic_pointer_cast<VoxelMovableSolid>(below);
-    		if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
-    			belowMovable->IsFalling = true;
-    			belowMovable->XVelocity = 1;
-    		}
-    	}
 
-    	if (StepAlongDirection(matrix, Vec2i(-1, 1), 1))
-    		return true;
-    	else if (StepAlongDirection(matrix, Vec2i(1, 1), 1))
-    		return true;
-    	else if (StepAlongDirection(matrix, Vec2i(-1, 0), XVelocity))
-    		return true;
-    	else if (StepAlongDirection(matrix, Vec2i(1, 0), XVelocity))
-    		return true;
+    	if (StepAlongDirection(matrix, Vec2i(-1, 1), 1)){
+			TryToMoveVoxelBelow(matrix);
+			return true;
+		}
+    	if (StepAlongDirection(matrix, Vec2i(1, 1), 1)){
+			TryToMoveVoxelBelow(matrix);
+			return true;
+		}
+    	if (StepAlongDirection(matrix, Vec2i(-1, 0), XVelocity)){
+			TryToMoveVoxelBelow(matrix);
+			return true;
+		}
+    	if (StepAlongDirection(matrix, Vec2i(1, 0), XVelocity)){
+			TryToMoveVoxelBelow(matrix);
+			return true;
+		}
 
-    	below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
+
+		std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
     	if (below && below->GetState() == VoxelState::MovableSolid)
     	{
     		std::shared_ptr<VoxelMovableSolid> belowMovable = std::dynamic_pointer_cast<VoxelMovableSolid>(below);
@@ -254,6 +252,20 @@ bool VoxelMovableSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction,
     	return true;
     }
     return false;
+}
+
+void Volume::VoxelMovableSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
+{
+	//try to set isFalling to true on voxel below - simulates inertia
+    std::shared_ptr<VoxelElement> below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
+    if (below && below->GetState() == VoxelState::MovableSolid)
+    {
+    	std::shared_ptr<VoxelMovableSolid> belowMovable = std::dynamic_pointer_cast<VoxelMovableSolid>(below);
+    	if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
+    		belowMovable->IsFalling = true;
+    		belowMovable->XVelocity = 1;
+    	}
+    }
 }
 
 void VoxelMovableSolid::StopFalling()
@@ -303,16 +315,6 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     if (above && above->properties == this->properties && moreAbove && moreAbove->properties == this->properties)
     	return false;
 
-    /*
-    //If the voxel below is a solid, try to move to the sides
-    short int direction = 1;
-    if (StepAlongDirection(matrix, sf::Vector2i(direction, 0), this->dispursionRate - rand()%20))
-    	return true;
-
-    direction *= -1;
-    if (StepAlongDirection(matrix, sf::Vector2i(direction, 0), this->dispursionRate - rand() % 20))
-    	return true;
-    */
     Vec2i MovePosition = GetValidSideSwapPosition(*matrix, this->properties->FluidDispursionRate);
     if (MovePosition != this->position) {
     	this->Swap(MovePosition, *matrix);

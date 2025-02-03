@@ -102,6 +102,7 @@ namespace Volume {
 		VoxelState GetState() const override { return VoxelState::MovableSolid; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
+		void TryToMoveVoxelBelow(ChunkMatrix* matrix);
 	private:
 		void StopFalling();
 	};
