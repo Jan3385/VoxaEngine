@@ -20,6 +20,7 @@ public:
 	void Update();
 	bool IsEmpty() const;
 private:
+	static constexpr int DIRTY_RECT_PADDING = 1;
 	Vec2i m_startW = Vec2i(INT_MAX, INT_MAX); // working dirty rect
 	Vec2i m_endW = Vec2i(INT_MIN, INT_MIN);
 };

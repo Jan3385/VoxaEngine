@@ -98,10 +98,10 @@ void GameEngine::m_UpdateGridVoxel(int pass)
     std::vector<std::thread> threads;
     for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
         threads.push_back(std::thread([&]() {
-            chunk->dirtyRect.Update();
             if (!chunk->dirtyRect.IsEmpty()){
                 chunk->UpdateVoxels(&this->chunkMatrix);
             }
+            chunk->dirtyRect.Update();
         }));
     }
     for (auto& thread : threads) {
@@ -417,6 +417,7 @@ void GameEngine::m_RenderIMGUI()
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
     ImGui::Checkbox("No Clip", &Player.NoClip);
+    ImGui::DragFloat("Fixed Update speed", &fixedDeltaTime, 0.05f, 1/30.0, 4);
 
     ImGui::End();
 

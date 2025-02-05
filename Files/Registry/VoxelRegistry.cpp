@@ -22,6 +22,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Oxygen")
 			.SetColor(RGBA(15, 15, 15, 50))
 			.PhaseDown("Liquid_Oxygen", -182.96)
+			.SetFluidDispursionRate(3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -31,6 +32,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetColor(RGBA(50, 50, 50, 122))
 			.PhaseUp("Oxygen", -182.96)
 			.PhaseDown("Solid_Oxygen", -218.79)
+			.SetFluidDispursionRate(10)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -39,6 +41,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Solid Oxygen")
 			.SetColor(RGBA(70, 70, 70, 200))
 			.PhaseUp("Liquid_Oxygen", -218.79)
+			.SetSolidInertiaResistance(0.15)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -48,6 +51,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetColor(RGBA(3, 169, 244, 200))
 			.PhaseDown("Ice", 0)
 			.PhaseUp("Steam", 99.98)
+			.SetFluidDispursionRate(10)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -56,6 +60,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Ice")
 			.SetColor(RGBA(3, 169, 244, 220))
 			.PhaseUp("Water", 0)
+			.SetSolidInertiaResistance(0.4)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -64,6 +69,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Steam")
 			.SetColor(RGBA(101, 193, 235, 180))
 			.PhaseDown("Water", 99.98)
+			.SetFluidDispursionRate(7)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -72,6 +78,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Stone")
 			.SetColor(RGBA(128, 128, 128, 255))
 			.PhaseUp("Magma", 1200)
+			.SetSolidInertiaResistance(0.8)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -80,6 +87,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Magma")
 			.SetColor(RGBA(161, 56, 14, 230))
 			.PhaseDown("Stone", 1200)
+			.SetFluidDispursionRate(3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -88,6 +96,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Grass")
 			.SetColor(RGBA(34, 139, 34, 255))
 			.PhaseUp("Dirt", 200)
+			.SetSolidInertiaResistance(0.5)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -96,6 +105,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Dirt")
 			.SetColor(RGBA(121, 85, 72, 255))
 			.PhaseUp("Magma", 1400)
+			.SetSolidInertiaResistance(0.7)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -104,6 +114,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Sand")
 			.SetColor(RGBA(255, 193, 7, 255))
 			.PhaseUp("Liquid_Glass", 1000)
+			.SetSolidInertiaResistance(0.1)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -112,6 +123,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Glass")
 			.SetColor(RGBA(255, 219, 176, 100))
 			.PhaseDown("Glass", 1000)
+			.SetFluidDispursionRate(4)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -119,6 +131,8 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(State::Solid, 830, 0.25, 190)
 			.SetName("Glass")
 			.SetColor(RGBA(255, 255, 255, 80))
+			.PhaseUp("Liquid_Glass", 1000)
+			.SetSolidInertiaResistance(0.2)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -127,6 +141,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", 200)
+			.SetFluidDispursionRate(5)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -135,6 +150,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Plasma")
 			.SetColor(RGBA(156, 39, 176, 160))
 			.PhaseDown("Fire", 1000)
+			.SetFluidDispursionRate(1)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -143,6 +159,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Carbon Dioxide")
 			.SetColor(RGBA(4, 4, 4, 50))
 			.PhaseDown("Liquid_Carbon_Dioxide", -56.6)
+			.SetFluidDispursionRate(3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -152,6 +169,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetColor(RGBA(4, 4, 4, 150))
 			.PhaseDown("Solid_Carbon_Dioxide", -78.5)
 			.PhaseUp("Carbon_Dioxide", -56.6)
+			.SetFluidDispursionRate(13)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -160,6 +178,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Solid Carbon Dioxide")
 			.SetColor(RGBA(4, 4, 4, 130))
 			.PhaseUp("Liquid_Carbon_Dioxide", -78.5)
+			.SetSolidInertiaResistance(0.3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -167,6 +186,8 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(State::Solid, 450, 80, 7874)
 			.SetName("Iron")
 			.SetColor(RGBA(130, 130, 130, 255))
+			.PhaseUp("Molten_Iron", 1538)
+			.SetSolidInertiaResistance(1)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -175,6 +196,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Molten Iron")
 			.SetColor(RGBA(130, 130, 130, 240))
 			.PhaseDown("Iron", 1538)
+			.SetFluidDispursionRate(4)
 			.Build()
 	);
 
@@ -242,6 +264,18 @@ VoxelBuilder &VoxelBuilder::PhaseDown(std::string To, float Temperature)
 	return *this;
 }
 
+VoxelBuilder &VoxelBuilder::SetSolidInertiaResistance(float resistance)
+{
+	this->SolidInertiaResistance = resistance;
+	return *this;
+}
+
+VoxelBuilder &VoxelBuilder::SetFluidDispursionRate(uint8_t rate)
+{
+	this->FluidDispursionRate = rate;
+	return *this;
+}
+
 Volume::VoxelProperty VoxelBuilder::Build()
 {
     return {
@@ -252,6 +286,8 @@ Volume::VoxelProperty VoxelBuilder::Build()
 		this->HeatCapacity,
 		this->HeatConductivity,
 		this->CooledChange,
-		this->HeatedChange
+		this->HeatedChange,
+		0,
+		10
 	};
 }

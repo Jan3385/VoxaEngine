@@ -41,7 +41,7 @@ public:
     static GameEngine* instance;
 
     static constexpr int MAX_FRAME_RATE = 60;
-    static constexpr float fixedDeltaTime = 1/30.0;
+    float fixedDeltaTime = 1/30.0;
 
     static bool placeUnmovableSolidVoxels;
     static int placementRadius;

@@ -33,6 +33,8 @@ namespace Volume{
 		float HeatConductivity; // W/m*K
 		std::optional<PhaseChange> CooledChange;
 		std::optional<PhaseChange> HeatedChange;
+		float SolidInertiaResistance;
+		uint8_t FluidDispursionRate;
 	};
 }
 
@@ -43,6 +45,8 @@ public:
 	VoxelBuilder& SetColor(RGBA Color);
 	VoxelBuilder& PhaseUp(std::string To, float Temperature);
 	VoxelBuilder& PhaseDown(std::string To, float Temperature);
+	VoxelBuilder& SetSolidInertiaResistance(float resistance);
+	VoxelBuilder& SetFluidDispursionRate(uint8_t rate);
 	Volume::VoxelProperty Build();
 private:
 	Volume::State State;
@@ -53,6 +57,8 @@ private:
 	float HeatConductivity;
 	std::optional<PhaseChange> CooledChange;
 	std::optional<PhaseChange> HeatedChange;
+	float SolidInertiaResistance; // 0 - 1
+	uint8_t FluidDispursionRate; // 0 - 255
 };
 
 class VoxelRegistry {

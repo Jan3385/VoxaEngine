@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cmath>
 
-bool Game::Player::NoClip = false;
+bool Game::Player::NoClip = true;
 
 Game::Player::Player()
 {
