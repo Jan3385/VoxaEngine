@@ -14,7 +14,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
     if(!this->font) {
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
     }
-    std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
+    //std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
 }
 
 Volume::Chunk::~Chunk()

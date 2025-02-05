@@ -383,7 +383,7 @@ void GameEngine::m_RenderIMGUI()
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
-        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron"
+        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron", "Rust"
     };
     // Find the index of placeVoxelType in voxelTypeNames
     static int current_item = 0;

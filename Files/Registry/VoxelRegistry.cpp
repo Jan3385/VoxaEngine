@@ -199,6 +199,15 @@ void VoxelRegistry::RegisterVoxels()
 			.SetFluidDispursionRate(4)
 			.Build()
 	);
+	VoxelRegistry::RegisterVoxel(
+		"Rust",
+		VoxelBuilder(State::Solid, 450, 80, 7874)
+			.SetName("Rust")
+			.SetColor(RGBA(219, 139, 48, 255))
+			.PhaseUp("Molten_Iron", 1538)
+			.SetSolidInertiaResistance(0.5)
+			.Build()
+	);
 
 	std::cout << "[ OK ]" << std::endl;
 }

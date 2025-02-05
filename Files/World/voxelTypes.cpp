@@ -2,10 +2,7 @@
 
 #include <iostream>
 
-Volume::FireVoxel::FireVoxel() : VoxelGas("Fire", Vec2i(0, 0), Temperature(40000)) { }
-
 Volume::FireVoxel::FireVoxel(Vec2i position, Temperature temp) : VoxelGas("Fire", position, temp){ }
-Volume::FireVoxel::~FireVoxel() { }
 
 bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
 {
@@ -18,4 +15,16 @@ bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
     }
     VoxelGas::Step(matrix);
     return true;
+}
+
+Volume::IronVoxel::IronVoxel(Vec2i position, Temperature temp) : VoxelSolid("Iron", position, temp){ } 
+//TODO: major rewrite -> combine movable and unmovavble solids into one class with a boolean
+
+bool Volume::IronVoxel::Step(ChunkMatrix *matrix)
+{
+    if(rand() % 100 < 3){
+        DieAndReplace(*matrix, "Rust");
+        return true;
+    }
+    return VoxelSolid::Step(matrix);
 }

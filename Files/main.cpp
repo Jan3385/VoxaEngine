@@ -4,6 +4,8 @@
 
 int main(){
     // nothing
+    std::cout << "Program only executable in Windows!" << std::endl;
+    system("pause");
     return 0;
 }
 
