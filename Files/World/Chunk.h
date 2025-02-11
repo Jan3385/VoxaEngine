@@ -32,7 +32,7 @@ namespace Volume
     	static const unsigned short int RENDER_VOXEL_SIZE = 5; // 5
     	static const unsigned short int CHUNK_SIZE = 64; // 64
     	//VoxelElement*** voxels;
-    	std::array<std::array<std::shared_ptr<VoxelElement>, CHUNK_SIZE>, CHUNK_SIZE> voxels;
+    	std::array<std::array<VoxelElement*, CHUNK_SIZE>, CHUNK_SIZE> voxels;
 
     	Chunk(const Vec2i& pos);
     	~Chunk();
@@ -85,9 +85,10 @@ public:
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
-	std::shared_ptr<Volume::VoxelElement> VirtualGetAt(const Vec2i& pos);
-	std::shared_ptr<Volume::VoxelElement> VirtualGetAt_NoLoad(const Vec2i& pos);
-	void VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel);
+	Volume::VoxelElement* VirtualGetAt(const Vec2i& pos);
+	Volume::VoxelElement* VirtualGetAt_NoLoad(const Vec2i& pos);
+	void VirtualSetAt(Volume::VoxelElement *voxel);
+	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel);
 
 	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids);
 

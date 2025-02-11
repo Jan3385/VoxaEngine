@@ -25,6 +25,15 @@ Volume::Chunk::~Chunk()
         font = nullptr;
     }
     SDL_FreeSurface(this->chunkSurface);
+
+    for (int i = 0; i < static_cast<int>(voxels.size()); i++)
+    {
+        for (int j = 0; j < static_cast<int>(voxels[i].size()); j++)
+        {
+            delete voxels[i][j];
+        }
+    }
+    
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
@@ -535,25 +544,25 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		//Create voxel determining on its position
             if (pos.getY() > 4) {
                 if(pos.getY() == 5 && y <= 5){
-                    chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
+                    chunk->voxels[x][y] = new VoxelImmovableSolid
                         ("Grass", 
                         Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
                         Temperature(21));
                 }else{
-                    chunk->voxels[x][y] = std::make_shared<VoxelImmovableSolid>
+                    chunk->voxels[x][y] = new VoxelImmovableSolid
                         ("Dirt", 
                         Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
                         Temperature(21));
                 }
             }
             else {
-                chunk->voxels[x][y] = std::make_shared<VoxelGas>
+                chunk->voxels[x][y] = new VoxelGas
                     ("Oxygen", 
                     Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
                     Temperature(21));
             }
     		if (pos.getY() == 4 && pos.getX() <= 3) {
-    			chunk->voxels[x][y] = std::make_shared<VoxelMovableSolid>
+    			chunk->voxels[x][y] = new VoxelMovableSolid
                     ("Sand", 
                     Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
                     Temperature(21));
@@ -587,7 +596,7 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
     }
 }
 
-std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos)
+Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
 
@@ -598,7 +607,7 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
         chunk = GenerateChunk(chunkPos);
     }
 
-    std::shared_ptr<Volume::VoxelElement> voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
+    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
 
     if(!voxel){
         return nullptr;
@@ -609,7 +618,7 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt(const Vec2i &pos
     return voxel;
 }
 
-std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
+Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
 
@@ -620,7 +629,7 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt_NoLoad(const Vec
         return nullptr;
     }
 
-    std::shared_ptr<Volume::VoxelElement> voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
+    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
 
     if(!voxel){
         return nullptr;
@@ -631,7 +640,7 @@ std::shared_ptr<Volume::VoxelElement> ChunkMatrix::VirtualGetAt_NoLoad(const Vec
     return voxel;
 }
 
-void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
+void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
 {
     if (!voxel) return; // Check for null pointer
 
@@ -653,6 +662,41 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
         chunk = GenerateChunk(chunkPos);
     }
 
+    //delete the old voxel if it exists
+    if(chunk->voxels[localPos.getX()][localPos.getY()]){
+        delete chunk->voxels[localPos.getX()][localPos.getY()];
+    }
+
+    // Set the new voxel and mark for update
+    chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
+
+    chunk->dirtyRect.Include(localPos);
+
+    chunk->forceHeatUpdate = true;
+    chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
+}
+
+void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
+{
+    if (!voxel) return; // Check for null pointer
+
+    // Check if chunkPos is within bounds of the Grid
+    if (!IsValidWorldPosition(voxel->position)) {
+        return;
+    }
+
+    // Calculate positions in the chunk and local position
+    Vec2i chunkPos = WorldToChunkPosition(Vec2f(voxel->position));
+    Vec2i localPos = Vec2i(
+        abs(voxel->position.getX() % Chunk::CHUNK_SIZE), 
+        abs(voxel->position.getY() % Chunk::CHUNK_SIZE));
+    
+    Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
+
+    if (!chunk) {
+        chunk = GenerateChunk(chunkPos);
+    }
+
     // Set the new voxel and mark for update
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
 
@@ -665,22 +709,22 @@ void ChunkMatrix::VirtualSetAt(std::shared_ptr<Volume::VoxelElement> voxel)
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
-    std::shared_ptr<Volume::VoxelElement> voxel;
+    Volume::VoxelElement *voxel;
 
     VoxelProperty* prop = VoxelRegistry::GetProperties(id);    
 
     if(id == "Fire")
-        voxel = std::make_shared<Volume::FireVoxel>(pos, temp);
+        voxel = new Volume::FireVoxel(pos, temp);
     else{
         if(prop->state == State::Gas)
-            voxel = std::make_shared<Volume::VoxelGas>(id, pos, temp);
+            voxel = new Volume::VoxelGas(id, pos, temp);
         else if(prop->state == State::Liquid)
-            voxel = std::make_shared<Volume::VoxelLiquid>(id, pos, temp);
+            voxel = new Volume::VoxelLiquid(id, pos, temp);
         else{
             if(placeUnmovableSolids)
-                voxel = std::make_shared<Volume::VoxelImmovableSolid>(id, pos, temp);
+                voxel = new Volume::VoxelImmovableSolid(id, pos, temp);
             else
-                voxel = std::make_shared<Volume::VoxelMovableSolid>(id, pos, temp);
+                voxel = new Volume::VoxelMovableSolid(id, pos, temp);
         }
     } 
         
@@ -726,7 +770,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     	{
     		currentPos.x(currentPos.getX() + dx);
     		currentPos.y(currentPos.getY() + dy);
-            std::shared_ptr<Volume::VoxelElement> voxel = VirtualGetAt(Vec2i(currentPos));
+            Volume::VoxelElement *voxel = VirtualGetAt(Vec2i(currentPos));
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.2f) {

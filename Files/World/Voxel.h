@@ -19,7 +19,7 @@ namespace Volume {
 		bool IsFalling = false;
 	};
 	//Base class for all voxel elements
-	class VoxelElement : public std::enable_shared_from_this<VoxelElement>
+	class VoxelElement
 	{
 	public:
 		VoxelElement();

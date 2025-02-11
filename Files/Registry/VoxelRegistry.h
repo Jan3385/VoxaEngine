@@ -73,6 +73,4 @@ public:
 	static void RegisterVoxel(const std::string& name, const Volume::VoxelProperty property);
 	static void RegisterVoxels();
 	static std::unordered_map<std::string, Volume::VoxelProperty> registry;
-private:
-	//static std::unordered_map<Volume::VoxelType, Volume::VoxelProperty> voxelProperties;
 };
