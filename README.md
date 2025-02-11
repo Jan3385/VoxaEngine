@@ -3,6 +3,8 @@
 
 VoxaEngine is currently capable of making sand falling simulations and heat transfer simulations
 
+Uses **SDL2** with **SDL_TTF** library and **Dear ImGui**. Engine is entirely programmed in C++.
+
 ### Sand Falling simulation
 Utilizes Dirty Rect's and multithreading for maximum performance.
 
@@ -17,15 +19,11 @@ Utilizes multithreading, sectioning and flagging chunks needing to compute heat 
 
 Simulation includes heat capacity and heat conductivity for each voxel for more realistic transfers.
 
-
-
-> Uses **SDL2** with **SDL_TTF** library and **Dear ImGui**. Engine is entirely programmed in C++.
-
 ### How To Run:
 
-Make sure you have at least CMake v3.10 installed and functional. Also ensure you have a g++ compiler installed. 
+Make sure you have at least CMake v3.10 installed and functional. Ensure you have a g++ compiler installed and working with CMake. 
 
-To compile simply run `cmake --preset release` and after that run `cmake --build build` in the project folder.
+To compile simply run `cmake --preset release` and follow with `cmake --build build` in the project folder.
 
 After that, run `VoxaEngine.exe` inside the build folder.
 
