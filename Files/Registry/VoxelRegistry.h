@@ -64,10 +64,10 @@ private:
 class VoxelRegistry {
 public:
 	static Volume::VoxelProperty* GetProperties(std::string id);
-	static const bool CanGetMovedByExplosion(Volume::VoxelState state);
-	static const bool CanGetDestroyedByExplosion(std::string id, float explosionPower);
-	static const bool CanBeMovedBySolid(Volume::VoxelState state);
-	static const bool CanBeMovedByLiquid(Volume::VoxelState state);
+	static bool CanGetMovedByExplosion(Volume::VoxelState state);
+	static bool CanGetDestroyedByExplosion(std::string id, float explosionPower);
+	static bool CanBeMovedBySolid(Volume::VoxelState state);
+	static bool CanBeMovedByLiquid(Volume::VoxelState state);
 
 	static void RegisterVoxel(const std::string& name, const Volume::VoxelProperty property);
 	static void RegisterVoxels();

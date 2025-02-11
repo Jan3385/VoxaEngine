@@ -221,22 +221,22 @@ VoxelProperty* VoxelRegistry::GetProperties(std::string id)
 	return &it->second;
 }
 
-const bool VoxelRegistry::CanGetMovedByExplosion(Volume::VoxelState state)
+bool VoxelRegistry::CanGetMovedByExplosion(Volume::VoxelState state)
 {
     return state == VoxelState::Liquid || state == VoxelState::MovableSolid;
 }
 
-const bool VoxelRegistry::CanGetDestroyedByExplosion(std::string id, float explosionPower)
+bool VoxelRegistry::CanGetDestroyedByExplosion(std::string id, float explosionPower)
 {
     return true;
 }
 
-const bool VoxelRegistry::CanBeMovedBySolid(VoxelState state)
+bool VoxelRegistry::CanBeMovedBySolid(VoxelState state)
 {
     return state == VoxelState::Gas || state == VoxelState::Liquid;
 }
 
-const bool VoxelRegistry::CanBeMovedByLiquid(VoxelState state)
+bool VoxelRegistry::CanBeMovedByLiquid(VoxelState state)
 {
     return state == VoxelState::Gas;
 }

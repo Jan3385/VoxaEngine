@@ -252,7 +252,7 @@ void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations)
     }
 }*/
 
-void Volume::Chunk::ResetVoxelUpdateData(ChunkMatrix *matrix)
+void Volume::Chunk::ResetVoxelUpdateData()
 {
     #pragma omp parallel for collapse(2)
     for (int y = 0; y < CHUNK_SIZE; ++y)
@@ -575,7 +575,7 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
 
-    for (size_t i = this->GridSegmented[AssignedGridPass].size()-1; i >= 0; --i)
+    for (long long int i = this->GridSegmented[AssignedGridPass].size()-1; i >= 0; --i)
     {
         if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
         {

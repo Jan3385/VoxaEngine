@@ -41,7 +41,7 @@ namespace Volume
 		bool ShouldChunkCalculateHeat() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
     	void UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations);
-    	void ResetVoxelUpdateData(ChunkMatrix* matrix);
+    	void ResetVoxelUpdateData();
     	SDL_Surface* Render(bool debugRender);
 		Vec2i GetPos() const;
 		AABB GetAABB() const;

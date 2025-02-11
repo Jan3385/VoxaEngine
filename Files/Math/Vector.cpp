@@ -1,11 +1,11 @@
 #include "Vector.h"
 
-const float Vec2f::getX() const
+float Vec2f::getX() const
 {
     return m_x;
 }
 
-const float Vec2f::getY() const
+float Vec2f::getY() const
 {
     return m_y;
 }
@@ -65,12 +65,12 @@ Vec2f Vec2f::operator*(const int &other) const
     );
 }
 
-const int Vec2i::getX() const
+int Vec2i::getX() const
 {
     return m_x;
 }
 
-const int Vec2i::getY() const
+int Vec2i::getY() const
 {
     return m_y;
 }

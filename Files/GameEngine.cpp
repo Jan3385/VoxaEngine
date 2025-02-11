@@ -129,7 +129,7 @@ void GameEngine::m_FixedUpdate()
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
             if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
             if (!chunk->dirtyRect.IsEmpty())
-                chunk->ResetVoxelUpdateData(&this->chunkMatrix);
+                chunk->ResetVoxelUpdateData();
         }
     }
 
@@ -337,7 +337,7 @@ void GameEngine::Render()
 
     if(debugRendering) {
         //fps counter
-        SDL_Color color = { 255, 255, 255 };
+        SDL_Color color = { 255, 255, 255, 255 };
         SDL_Surface* surface = TTF_RenderText_Solid(basicFont, to_string(FPS).c_str(), color);
         SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_Rect rect = { 0, 0, surface->w, surface->h };

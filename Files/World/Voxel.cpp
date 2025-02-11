@@ -15,7 +15,7 @@ VoxelElement::VoxelElement()
 }
 
 VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperature)
-	:position(position), id(id)
+	:id(id), position(position)
 {
 	this->properties = VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;

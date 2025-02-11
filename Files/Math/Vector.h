@@ -7,8 +7,8 @@ class Vec2f
     float m_x;
     float m_y;
 public:
-    const float getX() const;
-    const float getY() const;
+    float getX() const;
+    float getY() const;
     void x(float x);
     void y(float y);
     Vec2f();
@@ -26,8 +26,8 @@ private:
     int m_x;
     int m_y;
 public:
-    const int getX() const;
-    const int getY() const;
+    int getX() const;
+    int getY() const;
     void x(int x);
     void y(int y);
     Vec2i();

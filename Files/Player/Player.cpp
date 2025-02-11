@@ -217,7 +217,7 @@ int Game::Player::touchLeftWall(ChunkMatrix &chunkMatrix)
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsLeft(chunkMatrix);
     int highest = 0;
-    for(int i = 0; i < voxels.size(); ++i){
+    for(size_t i = 0; i < voxels.size(); ++i){
         if(voxels[i]->GetState() == Volume::VoxelState::MovableSolid || voxels[i]->GetState() == Volume::VoxelState::ImmovableSolid){
             highest = voxels.size() - i;
             break;
@@ -233,7 +233,7 @@ int Game::Player::touchRightWall(ChunkMatrix &chunkMatrix)
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsRight(chunkMatrix);
     int highest = 0;
-    for(int i = 0; i < voxels.size(); ++i){
+    for(size_t i = 0; i < voxels.size(); ++i){
         if(voxels[i]->GetState() == Volume::VoxelState::MovableSolid || voxels[i]->GetState() == Volume::VoxelState::ImmovableSolid){
             highest = voxels.size() - i;
             break;
@@ -244,6 +244,13 @@ int Game::Player::touchRightWall(ChunkMatrix &chunkMatrix)
 
 void Game::Player::MovePlayer(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
+    //check if the player isnt being teleported into a solid voxel
+    if(!this->NoClip){
+        if(chunkMatrix.VirtualGetAt(Vec2i(floor(pos.getX()), floor(pos.getY())))->GetState() >= Volume::VoxelState::MovableSolid){
+            return;
+        }
+    }
+
     this->position = pos;
     //this->MoveCamera(Vec2f(this->position), chunkMatrix);
 }
@@ -267,7 +274,7 @@ void Game::Player::MovePlayerBy(Vec2f pos, ChunkMatrix &chunkMatrix)
     int leftWallLevel = this->touchLeftWall(chunkMatrix);
     int rightWallLevel = this->touchRightWall(chunkMatrix);
     if((leftWallLevel < STEP_HEIGHT && pos.getX() < 0) || 
-        rightWallLevel < STEP_HEIGHT && pos.getX() > 0){
+        (rightWallLevel < STEP_HEIGHT && pos.getX() > 0)){
 
         this->position.x(this->position.getX() + std::fmod(pos.getX(), 1.0f)); // Move the remaining part
         if(pos.getX() < 0)this->position.y(this->position.getY() - leftWallLevel);
