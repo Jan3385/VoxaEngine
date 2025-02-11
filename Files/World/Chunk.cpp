@@ -639,7 +639,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
 
     return voxel;
 }
-
+// Set a voxel at a specific position, deleting the old one
 void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
 {
     if (!voxel) return; // Check for null pointer
@@ -675,7 +675,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     chunk->forceHeatUpdate = true;
     chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 }
-
+// Same as VirtualSetAt but does not delete the old voxel
 void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
 {
     if (!voxel) return; // Check for null pointer
