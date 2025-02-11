@@ -25,7 +25,7 @@ Simulation includes heat capacity and heat conductivity for each voxel for more 
 
 Make sure you have at least CMake v3.10 installed and functional. Also ensure you have a g++ compiler installed. 
 
-To compile simply run `cmake --preset release` and after that run `cmake --build build`.
+To compile simply run `cmake --preset release` and after that run `cmake --build build` in the project folder.
 
 After that, run `VoxaEngine.exe` inside the build folder.
 
