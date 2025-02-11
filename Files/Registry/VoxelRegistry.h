@@ -19,6 +19,7 @@ namespace Volume{
 		MovableSolid,
 		ImmovableSolid,
 	};
+	static bool isSolid(VoxelState state) { return state >= VoxelState::MovableSolid; }
 	enum class State {
 		Gas,
 		Liquid,

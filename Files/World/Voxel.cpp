@@ -133,9 +133,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     );
 
     std::shared_ptr<VoxelElement> futureVoxel = matrix->VirtualGetAt(futurePos);
-    if (!futureVoxel ||
-    	futureVoxel->GetState() == VoxelState::ImmovableSolid || futureVoxel->GetState() == VoxelState::MovableSolid || 
-    	particleIterations <= 0)
+    if (!futureVoxel || isSolid(futureVoxel->GetState()) || particleIterations <= 0)
     {
     	this->position = newPos;
 
@@ -361,7 +359,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	std::shared_ptr<VoxelElement> side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
 		
-		if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
+		if (isSolid(side->GetState())) break;
     	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
 		{
 			LastValidPosition = CurrentPosition;
@@ -375,7 +373,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	std::shared_ptr<VoxelElement> side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
 		
-    	if (side->GetState() == VoxelState::ImmovableSolid || side->GetState() == VoxelState::MovableSolid) break;
+    	if (isSolid(side->GetState())) break;
     	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
     	{
     		LastValidPosition = CurrentPosition;

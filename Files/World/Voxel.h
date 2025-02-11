@@ -49,8 +49,6 @@ namespace Volume {
 
 		bool IsStateBelowDensity(VoxelState state, float density);
 		bool IsStateAboveDensity(VoxelState state, float density);
-	private:
-		Volume::VoxelState state = VoxelState::ImmovableSolid;
 	};
 
 	class VoxelParticle : public VoxelElement {
