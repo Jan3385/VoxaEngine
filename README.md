@@ -20,3 +20,13 @@ Simulation includes heat capacity and heat conductivity for each voxel for more 
 
 
 > Uses **SDL2** with **SDL_TTF** library and **Dear ImGui**. Engine is entirely programmed in C++.
+
+### How To Run:
+
+Make sure you have at least CMake v3.10 installed and functional. Also ensure you have a g++ compiler installed. 
+
+To compile simply run `cmake --preset release` and after that run `cmake --build build`.
+
+After that, run `VoxaEngine.exe` inside the build folder.
+
+*Currently, only Windows is supported!*

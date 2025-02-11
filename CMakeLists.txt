@@ -1,11 +1,11 @@
+set(CMAKE_GENERATOR "Ninja")
+
 cmake_minimum_required(VERSION 3.10)
-project(VoxaEngine VERSION 0.1.0 LANGUAGES CXX)
 
-# Ensure debug symbols
-set(CMAKE_BUILD_TYPE Debug)
+# Set compiler
+set(CMAKE_CXX_COMPILER "g++")
 
-# Include debugging flags
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+project(VoxaEngine VERSION 0.2.0 LANGUAGES CXX)
 
 # SDL2 paths
 set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/SDL2")

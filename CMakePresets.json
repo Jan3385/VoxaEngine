@@ -2,14 +2,16 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "default",
+            "name": "debug",
             "hidden": false,
-            "description": "Default configuration",
+            "description": "Debug configuration",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Werror",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g"
             }
         },
         {
