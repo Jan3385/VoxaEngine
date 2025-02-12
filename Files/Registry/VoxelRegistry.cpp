@@ -183,7 +183,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Iron",
-		VoxelBuilder(State::Solid, 450, 80, 7874)
+		VoxelBuilder(State::Solid, 450, 5, 7874)
 			.SetName("Iron")
 			.SetColor(RGBA(130, 130, 130, 255))
 			.PhaseUp("Molten_Iron", 1538)
@@ -192,7 +192,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Molten_Iron",
-		VoxelBuilder(State::Liquid, 450, 80, 7874)
+		VoxelBuilder(State::Liquid, 450, 5, 7874)
 			.SetName("Molten Iron")
 			.SetColor(RGBA(130, 130, 130, 240))
 			.PhaseDown("Iron", 1538)
@@ -201,7 +201,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Rust",
-		VoxelBuilder(State::Solid, 450, 80, 7874)
+		VoxelBuilder(State::Solid, 450, 5, 7874)
 			.SetName("Rust")
 			.SetColor(RGBA(219, 139, 48, 255))
 			.PhaseUp("Molten_Iron", 1538)

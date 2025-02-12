@@ -11,9 +11,9 @@ using namespace Volume;
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
     this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
-    if(!this->font) {
+    
+    if(!this->font)
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
-    }
     //std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
 }
 
@@ -105,6 +105,7 @@ void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations)
     for(int s_x = 0; s_x < sections; ++s_x){
         int sectionOffsetX = s_x * sectionSize;
         for(int s_y = 0; s_y < sections; ++s_y){
+            //TODO: maybe use a computational shader?
             int sectionOffsetY = s_y * sectionSize;
 
             double sectionHeatSum = 0;
@@ -401,6 +402,13 @@ ChunkMatrix::ChunkMatrix()
 
 ChunkMatrix::~ChunkMatrix()
 {
+    this->cleanup();
+}
+
+void ChunkMatrix::cleanup()
+{
+    if(cleaned) return;
+
     for(int i = 0; i < 4; ++i)
     {
         for(int j = GridSegmented[i].size() - 1; j >= 0; --j)
@@ -419,6 +427,8 @@ ChunkMatrix::~ChunkMatrix()
         delete particle;
     }
     newParticles.clear();
+    
+    cleaned = true;
 }
 
 Vec2i ChunkMatrix::WorldToChunkPosition(const Vec2f &pos)
@@ -728,7 +738,6 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
         }
     } 
         
-    
     VirtualSetAt(voxel);
 }
 

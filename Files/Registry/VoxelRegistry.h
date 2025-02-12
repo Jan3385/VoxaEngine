@@ -19,7 +19,6 @@ namespace Volume{
 		MovableSolid,
 		ImmovableSolid,
 	};
-	static bool isSolid(VoxelState state) { return state >= VoxelState::MovableSolid; }
 	enum class State {
 		Gas,
 		Liquid,
@@ -37,6 +36,7 @@ namespace Volume{
 		float SolidInertiaResistance;
 		uint8_t FluidDispursionRate;
 	};
+	inline bool isSolid(Volume::VoxelState state) { return state >= Volume::VoxelState::MovableSolid; }
 }
 
 class VoxelBuilder{

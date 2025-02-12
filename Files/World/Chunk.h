@@ -55,7 +55,7 @@ namespace Volume
     	short int m_y;
 		float m_lastMaxHeatDifference = 0;
 		float m_lastMaxHeatTransfer = 0;		
-		TTF_Font* font;
+		TTF_Font* font = nullptr;
 		SDL_Surface* chunkSurface = nullptr;
     };
 }
@@ -64,6 +64,9 @@ class ChunkMatrix {
 public:
 	ChunkMatrix();
 	~ChunkMatrix();
+
+	// cleans the chunkMatrix, so that its safe to invoke TFF_CloseFont
+	void cleanup();
 
 	//grid storage logic
 	//precomputed grids for simulation passing - 0 - 3 passees
@@ -109,4 +112,6 @@ public:
 	static Vec2i WorldToChunkPosition(const Vec2f& pos);
 	static Vec2f ChunkToWorldPosition(const Vec2i& pos);
 	static Vec2f MousePosToWorldPos(const Vec2f& mousePos, Vec2f offset);
+private:
+	bool cleaned = false;
 };

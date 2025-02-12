@@ -43,7 +43,11 @@ GameEngine::~GameEngine()
     ImGui::DestroyContext();
 
     TTF_CloseFont(this->basicFont);
+    SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
+
+    chunkMatrix.cleanup();
+
     TTF_Quit();
     SDL_Quit();
 }
@@ -466,7 +470,7 @@ void GameEngine::m_initWindow()
         window,
         renderer
     );
-
+    
     ImGui_ImplSDLRenderer2_Init(renderer);
 
     SDL_SetWindowTitle(window, "VoxaEngine");
