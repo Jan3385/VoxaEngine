@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glew.h>
 #include <SDL.h>
 #include "Math/Vector.h"
 #include "Math/AABB.h"
@@ -33,10 +34,14 @@ private:
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
     void m_FixedUpdate();
     void m_UpdateGridVoxel(int pass);
-    void m_UpdateGridHeat(int pass);
+    void m_UpdateGridHeat();
     void m_RenderIMGUI();
 
     void m_toggleDebugRendering();
+
+    GLuint m_chunkHeatComputeShader;
+
+    GLuint m_compileComputeShader(const char* shader);
 public:
     static GameEngine* instance;
 

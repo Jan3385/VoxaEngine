@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <future>
+#include <cstring>
 
 using namespace std;
 
@@ -31,6 +32,15 @@ GameEngine::GameEngine()
 
     m_initVariables();
     m_initWindow();
+
+    //Initialize GLEW
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
+    }
+
+    m_chunkHeatComputeShader = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
 
     Player = Game::Player();
     Player.LoadPlayerTexture(renderer);
@@ -112,22 +122,94 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         thread.join();
     }
 }
-void GameEngine::m_UpdateGridHeat(int pass)
+
+void GameEngine::m_UpdateGridHeat()
 {
-    std::vector<std::thread> threads;
-    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
-        threads.push_back(std::thread([&]() {
-            if (chunk->ShouldChunkCalculateHeat())
-                chunk->UpdateHeat(&this->chunkMatrix, oddHeatUpdatePass);
-        }));
+    int NumberOfChunks = 0;
+    for(int i = 0; i < 4; ++i)
+    {
+        NumberOfChunks += chunkMatrix.GridSegmented[i].size();
     }
-    for (auto& thread : threads) {
-        thread.join();
+
+    int NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
+
+    std::vector<float> VoxelHeatArray(NumberOfVoxels);
+    std::vector<float> VoxelCapacityArray(NumberOfVoxels);
+    std::vector<float> VoxelConductivityArray(NumberOfVoxels);
+
+    // doesnt create critical section, because the passes dont overlap
+    int chunkIndex = 0;
+    std::vector<Volume::Chunk*> chunksToUpdate;
+    for(int i = 0; i < static_cast<int>(chunkMatrix.Grid.size()); ++i){
+        if (chunkMatrix.Grid[i]->ShouldChunkCalculateHeat()){
+            chunksToUpdate.push_back(chunkMatrix.Grid[i]);
+
+            //load the heat maps from chunk
+            chunkMatrix.Grid[i]->GetHeatMap(
+                &this->chunkMatrix, oddHeatUpdatePass,
+                VoxelHeatArray.data(), VoxelCapacityArray.data(), VoxelConductivityArray.data(), chunkIndex++);
+            
+        }
     }
+
+    GLuint inputSSBO, outputSSBO;
+
+    glGenBuffers(1, &inputSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, 
+        sizeof(int) + 1 * sizeof(float) * NumberOfVoxels,
+        nullptr, GL_DYNAMIC_COPY);
+
+    //buffer mapping
+    void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, 
+        sizeof(int) + 1 * sizeof(float) * NumberOfVoxels,
+        GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    
+    int* VoxelsSizePtr = static_cast<int*>(ptr);
+    *VoxelsSizePtr = NumberOfVoxels;
+
+    float* dataPtr = reinterpret_cast<float*>(VoxelsSizePtr + 1);
+    std::memcpy(dataPtr, VoxelHeatArray.data(), NumberOfVoxels * sizeof(float));
+    //std::memcpy(dataPtr + NumberOfVoxels, VoxelCapacityArray.data(), NumberOfVoxels * sizeof(float));
+    //std::memcpy(dataPtr + 2 * NumberOfVoxels, VoxelConductivityArray.data(), NumberOfVoxels * sizeof(float));
+
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO); // Binding = 0
+
+    // Output Buffer
+    glGenBuffers(1, &outputSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(float), nullptr, GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO); // Binding = 1
+
+    // Compute Shader
+    glUseProgram(m_chunkHeatComputeShader);
+    glDispatchCompute(SDL_sqrt(Volume::Chunk::CHUNK_SIZE)*2, SDL_sqrt(Volume::Chunk::CHUNK_SIZE)*2, NumberOfChunks);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    // Read back the data
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
+    float* outputData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
+
+    #pragma omp parallel for
+    for(int i = 0; i < NumberOfVoxels; ++i){
+        int chunkIndex = i / (Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
+        int voxelIndex = i % (Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
+        int x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
+        int y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
+
+        auto& chunk = chunksToUpdate[chunkIndex];
+        chunk->voxels[x][y]->temperature.SetCelsius(outputData[i]);
+        chunk->voxels[x][y]->CheckTransitionTemps(chunkMatrix);
+    }
+    
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    glDeleteBuffers(1, &inputSSBO);
+    glDeleteBuffers(1, &outputSSBO);
 }
 void GameEngine::m_FixedUpdate()
 {
-    #pragma omp parallel for collapse(2)
+    #pragma omp parallel for
     for(int i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
@@ -144,17 +226,8 @@ void GameEngine::m_FixedUpdate()
     }
 
     //Heat update logic
-    std::vector<std::thread> threads;
-    for(int i = 0; i < 4; ++i)
-    {
-        threads.push_back(std::thread(&GameEngine::m_UpdateGridHeat, this, i));
-    }
+    GameEngine::m_UpdateGridHeat();
     oddHeatUpdatePass = !oddHeatUpdatePass;
-
-    // Wait for all threads to finish
-    for (auto& thread : threads) {
-        thread.join();
-    }
 
     chunkMatrix.UpdateParticles();
 }
@@ -384,6 +457,8 @@ void GameEngine::m_RenderIMGUI()
     ImGui::NewFrame();
 
     ImGui::Begin("VoxaEngine Debug Panel");
+
+    ImGui::Text("FPS: %lf", this->FPS);
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
@@ -423,6 +498,8 @@ void GameEngine::m_RenderIMGUI()
     ImGui::Checkbox("No Clip", &Player.NoClip);
     ImGui::DragFloat("Fixed Update speed", &fixedDeltaTime, 0.05f, 1/30.0, 4);
 
+    ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
+
     ImGui::End();
 
     ImGui::Render();
@@ -441,6 +518,36 @@ void GameEngine::m_toggleDebugRendering()
     }
 }
 
+GLuint GameEngine::m_compileComputeShader(const char *shader)
+{
+    GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(computeShader, 1, &shader, NULL);
+    glCompileShader(computeShader);
+
+    GLint success;
+    glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(computeShader, 512, NULL, infoLog);
+        std::cerr << "Error compiling compute shader: " << infoLog << std::endl;
+    }
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, computeShader);
+    glLinkProgram(program);
+
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(program, 512, NULL, infoLog);
+        std::cerr << "Error linking compute shader program: " << infoLog << std::endl;
+    }
+
+    glDeleteShader(computeShader);
+
+    return program;
+}
+
 void GameEngine::LoadChunkInView(Vec2i pos)
 {
     if(!chunkMatrix.IsValidChunkPosition(pos)) return;
@@ -456,7 +563,7 @@ void GameEngine::m_initVariables()
 
 void GameEngine::m_initWindow()
 {
-    if(SDL_CreateWindowAndRenderer(800, 600, SDL_WindowFlags::SDL_WINDOW_RESIZABLE, &window, &renderer) != 0){
+    if(SDL_CreateWindowAndRenderer(800, 600, SDL_WindowFlags::SDL_WINDOW_RESIZABLE | SDL_WindowFlags::SDL_WINDOW_OPENGL, &window, &renderer) != 0){
         cout << "Error with window creation: " << SDL_GetError() << endl;
         exit(1);
     }
@@ -479,6 +586,10 @@ void GameEngine::m_initWindow()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     this->glContext = SDL_GL_CreateContext(window);
+    if (!this->glContext) {
+        std::cerr << "Error creating OpenGL context: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
 }
 
 void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)

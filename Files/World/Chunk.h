@@ -40,7 +40,11 @@ namespace Volume
 		bool ShouldChunkDelete(AABB &Camera) const;
 		bool ShouldChunkCalculateHeat() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
-    	void UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations);
+
+    	void GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations, 
+			float VoxelHeatArray[], float VoxelCapacityArray[], float VoxelConductivityArray[],  // flattened arrays
+			int chunkNumber);
+
     	void ResetVoxelUpdateData();
     	SDL_Surface* Render(bool debugRender);
 		Vec2i GetPos() const;
@@ -50,6 +54,8 @@ namespace Volume
 		bool forceHeatUpdate = true;
 		bool dirtyRender = true;
 		DirtyRect dirtyRect = DirtyRect();
+
+		static const char* computeShaderHeat;
     private:
     	short int m_x;
     	short int m_y;
@@ -69,6 +75,8 @@ public:
 	void cleanup();
 
 	//grid storage logic
+	//not precomputed array of chunks
+	std::vector<Volume::Chunk*> Grid;
 	//precomputed grids for simulation passing - 0 - 3 passees
 	std::vector<Volume::Chunk*> GridSegmented[4];
 

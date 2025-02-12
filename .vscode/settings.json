@@ -89,7 +89,9 @@
         "future": "cpp",
         "forward_list": "cpp",
         "coroutine": "cpp",
-        "resumable": "cpp"
+        "resumable": "cpp",
+        "cfloat": "cpp",
+        "climits": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

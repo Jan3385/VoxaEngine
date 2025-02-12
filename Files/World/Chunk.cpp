@@ -8,6 +8,35 @@
 #include "../GameEngine.h"
 
 using namespace Volume; 
+
+const char* Chunk::computeShaderHeat = R"(#version 460 core
+layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+
+#define CHUNK_SIZE 64
+
+layout(std430, binding = 0) buffer InputBuffer {
+    int NumberOfVoxels;
+    // flattened arrays (c = chunk, x = x, y = y)
+    float voxelTemps[];
+    //float voxelHeatCapacity[];
+    //float voxelHeatConductivity[];
+};
+layout(std430, binding = 1) buffer OutputBuffer {
+    float voxelTempsOut[];
+};
+
+void main(){
+    uint x = gl_GlobalInvocationID.x;
+    uint y = gl_GlobalInvocationID.y;
+    uint c = gl_GlobalInvocationID.z;
+
+    uint index = c * CHUNK_SIZE * CHUNK_SIZE + y * CHUNK_SIZE + x;
+
+    voxelTempsOut[index] = (voxelTemps[index] + 5.0);
+}
+
+)";
+
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
     this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
@@ -83,17 +112,16 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 }
 
 //transfer heat within the chunk
-void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations)
+void Volume::Chunk::GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations, 
+    float VoxelHeatArray[], float VoxelCapacityArray[], float VoxelConductivityArray[],  // flattened arrays
+    int chunkNumber)
 {
     m_lastMaxHeatDifference = 0;
     m_lastMaxHeatTransfer = 0;
-    forceHeatUpdate = false;
+    forceHeatUpdate = true;
 
-    constexpr int sections = 8;
-    constexpr int sectionSize = CHUNK_SIZE / sections;
-    constexpr int sectionVolume = sectionSize * sectionSize;
-
-    const int offset = offsetCalculations ? sectionSize/2 : 0;
+    //const int offset = offsetCalculations ? Chunk::CHUNK_SIZE/2 : 0; //TODO: fix with offset
+    const int offset = 0;
 
     Chunk *chunks[4] = {
         this,
@@ -102,66 +130,39 @@ void Volume::Chunk::UpdateHeat(ChunkMatrix *matrix, bool offsetCalculations)
         matrix->GetChunkAtChunkPosition(Vec2i(m_x + 1, m_y + 1))
     };
 
-    for(int s_x = 0; s_x < sections; ++s_x){
-        int sectionOffsetX = s_x * sectionSize;
-        for(int s_y = 0; s_y < sections; ++s_y){
-            //TODO: maybe use a computational shader?
-            int sectionOffsetY = s_y * sectionSize;
 
-            double sectionHeatSum = 0;
-            for(int x = offset; x < sectionSize+offset; ++x){
-                for(int y = offset; y < sectionSize+offset; ++y){
-                    int vX = sectionOffsetX + x;
-                    int vY = sectionOffsetY + y;
-
-                    int chunkIndex = 0;
-                    if(vX >= CHUNK_SIZE){
-                        vX -= CHUNK_SIZE;
-                        chunkIndex += 1;
-                    }
-                    if(vY >= CHUNK_SIZE){
-                        vY -= CHUNK_SIZE;
-                        chunkIndex += 2;
-                    }
-                    
-                    if(chunks[chunkIndex] != nullptr)
-                        sectionHeatSum += chunks[chunkIndex]->voxels[vX][vY]->temperature.GetCelsius();
-                }
+    #pragma omp parallel for collapse(2)
+    for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
+        for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
+            int vX = offset + x;
+            int vY = offset + y;
+            int chunkIndex = 0;
+            if(vX >= CHUNK_SIZE){
+                vX -= CHUNK_SIZE;
+                chunkIndex += 1;
             }
-            double sectionHeatAverage = sectionHeatSum / sectionVolume;
-
-            for(int x = offset; x < sectionSize+offset; ++x){
-                for(int y = offset; y < sectionSize+offset; ++y){
-                    int vX = sectionOffsetX + x;
-                    int vY = sectionOffsetY + y;
-
-                    int chunkIndex = 0;
-                    if(vX >= CHUNK_SIZE){
-                        vX -= CHUNK_SIZE;
-                        chunkIndex += 1;
-                    }
-                    if(vY >= CHUNK_SIZE){
-                        vY -= CHUNK_SIZE;
-                        chunkIndex += 2;
-                    }
-
-                    if(chunks[chunkIndex] == nullptr) continue;
-
-                    auto voxel = chunks[chunkIndex]->voxels[vX][vY];
-                    float heat = voxel->temperature.GetCelsius();
-                    float heatDifference = heat - sectionHeatAverage;
-                    
-                    float heatTransfer = heatDifference*voxel->properties->HeatConductivity*Temperature::HEAT_TRANSFER_SPEED/voxel->properties->HeatCapacity;
-
-                    voxel->temperature.SetCelsius(heat - heatTransfer);
-                    voxel->CheckTransitionTemps(*matrix);
-
-                    chunks[chunkIndex]->m_lastMaxHeatDifference = std::max(m_lastMaxHeatDifference, std::abs(heatDifference));
-                    chunks[chunkIndex]->m_lastMaxHeatTransfer = std::max(m_lastMaxHeatTransfer, std::abs(heatTransfer));
-                }
+            if(vY >= CHUNK_SIZE){
+                vY -= CHUNK_SIZE;
+                chunkIndex += 2;
+            }
+            
+            if(chunks[chunkIndex] != nullptr){
+                int index = chunkNumber * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE + vY * Chunk::CHUNK_SIZE + vX;
+                VoxelHeatArray[index] = chunks[chunkIndex]->voxels[vX][vY]->temperature.GetCelsius();
+                VoxelCapacityArray[index] = chunks[chunkIndex]->voxels[vX][vY]->properties->HeatCapacity;
+                VoxelConductivityArray[index] = chunks[chunkIndex]->voxels[vX][vY]->properties->HeatConductivity;
             }
         }
     }
+
+    //auto voxel = chunks[chunkIndex]->voxels[vX][vY];
+    //float heat = voxel->temperature.GetCelsius();
+    //float heatDifference = heat - sectionHeatAverage;
+    //float heatTransfer = heatDifference*voxel->properties->HeatConductivity*Temperature::HEAT_TRANSFER_SPEED/voxel->properties->HeatCapacity;
+    //voxel->temperature.SetCelsius(heat - heatTransfer);
+    //voxel->CheckTransitionTemps(*matrix);
+    //chunks[chunkIndex]->m_lastMaxHeatDifference = std::max(m_lastMaxHeatDifference, std::abs(heatDifference));
+    //chunks[chunkIndex]->m_lastMaxHeatTransfer = std::max(m_lastMaxHeatTransfer, std::abs(heatTransfer));
 
     //std::cout << "Heat difference: " << m_lastMaxHeatDifference << " Heat transfer: " << m_lastMaxHeatTransfer << std::endl;
 }
@@ -585,6 +586,8 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
     this->GridSegmented[AssignedGridPass].push_back(chunk);
 
+    this->Grid.push_back(chunk);
+
     return chunk;
 }
 
@@ -598,8 +601,17 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
     {
         if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
         {
-            Chunk *c = this->GridSegmented[AssignedGridPass][i];
             this->GridSegmented[AssignedGridPass].erase(this->GridSegmented[AssignedGridPass].begin() + i);
+            break;
+        }
+    }
+
+    for (long long int i = this->Grid.size()-1; i >= 0; --i)
+    {
+        if(this->Grid[i]->GetPos() == pos)
+        {
+            Chunk *c = this->Grid[i];
+            this->Grid.erase(this->Grid.begin() + i);
             delete c;
             return;
         }
