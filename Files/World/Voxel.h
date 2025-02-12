@@ -10,6 +10,12 @@
 class ChunkMatrix;
 
 namespace Volume {
+	struct VoxelHeatData{
+		float temperature;
+		float capacity;
+		float conductivity;
+	};
+
 	static constexpr float VOXEL_SIZE_METERS = 0.1f;
 	//Interfaces
 	class IGravity {

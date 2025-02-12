@@ -133,9 +133,7 @@ void GameEngine::m_UpdateGridHeat()
 
     int NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
 
-    std::vector<float> VoxelHeatArray(NumberOfVoxels);
-    std::vector<float> VoxelCapacityArray(NumberOfVoxels);
-    std::vector<float> VoxelConductivityArray(NumberOfVoxels);
+    std::vector<Volume::VoxelHeatData> VoxelHeatArray(NumberOfVoxels);
 
     // doesnt create critical section, because the passes dont overlap
     int chunkIndex = 0;
@@ -147,7 +145,7 @@ void GameEngine::m_UpdateGridHeat()
             //load the heat maps from chunk
             chunkMatrix.Grid[i]->GetHeatMap(
                 &this->chunkMatrix, oddHeatUpdatePass,
-                VoxelHeatArray.data(), VoxelCapacityArray.data(), VoxelConductivityArray.data(), chunkIndex++);
+                VoxelHeatArray.data(), chunkIndex++);
             
         }
     }
@@ -157,19 +155,19 @@ void GameEngine::m_UpdateGridHeat()
     glGenBuffers(1, &inputSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, 
-        sizeof(int) + 1 * sizeof(float) * NumberOfVoxels,
+        sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
         nullptr, GL_DYNAMIC_COPY);
 
     //buffer mapping
     void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, 
-        sizeof(int) + 1 * sizeof(float) * NumberOfVoxels,
+        sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
     
     int* VoxelsSizePtr = static_cast<int*>(ptr);
     *VoxelsSizePtr = NumberOfVoxels;
 
-    float* dataPtr = reinterpret_cast<float*>(VoxelsSizePtr + 1);
-    std::memcpy(dataPtr, VoxelHeatArray.data(), NumberOfVoxels * sizeof(float));
+    Volume::VoxelHeatData* dataPtr = reinterpret_cast<Volume::VoxelHeatData*>(VoxelsSizePtr + 1);
+    std::memcpy(dataPtr, VoxelHeatArray.data(), NumberOfVoxels * sizeof(Volume::VoxelHeatData));
     //std::memcpy(dataPtr + NumberOfVoxels, VoxelCapacityArray.data(), NumberOfVoxels * sizeof(float));
     //std::memcpy(dataPtr + 2 * NumberOfVoxels, VoxelConductivityArray.data(), NumberOfVoxels * sizeof(float));
 
@@ -179,12 +177,12 @@ void GameEngine::m_UpdateGridHeat()
     // Output Buffer
     glGenBuffers(1, &outputSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(float), nullptr, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(Volume::VoxelHeatData), nullptr, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO); // Binding = 1
 
     // Compute Shader
     glUseProgram(m_chunkHeatComputeShader);
-    glDispatchCompute(SDL_sqrt(Volume::Chunk::CHUNK_SIZE)*2, SDL_sqrt(Volume::Chunk::CHUNK_SIZE)*2, NumberOfChunks);
+    glDispatchCompute(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, NumberOfChunks);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     // Read back the data

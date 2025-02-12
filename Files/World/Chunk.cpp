@@ -14,10 +14,23 @@ layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 #define CHUNK_SIZE 64
 
+const ivec2 directions[4] = {
+    ivec2(-1, 0),
+    ivec2(1, 1),
+    ivec2(0, -1),
+    ivec2(0, 1)
+};
+
+struct VoxelHeatData{
+    float temperature;
+    float capacity;
+    float conductivity;
+};
+
 layout(std430, binding = 0) buffer InputBuffer {
     int NumberOfVoxels;
     // flattened arrays (c = chunk, x = x, y = y)
-    float voxelTemps[];
+    VoxelHeatData voxelTemps[];
     //float voxelHeatCapacity[];
     //float voxelHeatConductivity[];
 };
@@ -32,10 +45,24 @@ void main(){
 
     uint index = c * CHUNK_SIZE * CHUNK_SIZE + y * CHUNK_SIZE + x;
 
-    voxelTempsOut[index] = (voxelTemps[index] + 5.0);
-}
+    //ivec2 pos = ivec2(x, y);
+    //for(ivec2 dir : directions){
+    //    ivec2 nPos = pos + dir;
+    //
+    //}
 
+    voxelTempsOut[index] = voxelTemps[index].temperature + 1.0;
+}
 )";
+
+//auto voxel = chunks[chunkIndex]->voxels[vX][vY];
+//float heat = voxel->temperature.GetCelsius();
+//float heatDifference = heat - sectionHeatAverage;
+//float heatTransfer = heatDifference*voxel->properties->HeatConductivity*Temperature::HEAT_TRANSFER_SPEED/voxel->properties->HeatCapacity;
+//voxel->temperature.SetCelsius(heat - heatTransfer);
+//voxel->CheckTransitionTemps(*matrix);
+//chunks[chunkIndex]->m_lastMaxHeatDifference = std::max(m_lastMaxHeatDifference, std::abs(heatDifference));
+//chunks[chunkIndex]->m_lastMaxHeatTransfer = std::max(m_lastMaxHeatTransfer, std::abs(heatTransfer));
 
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
@@ -113,7 +140,7 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 
 //transfer heat within the chunk
 void Volume::Chunk::GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations, 
-    float VoxelHeatArray[], float VoxelCapacityArray[], float VoxelConductivityArray[],  // flattened arrays
+    Volume::VoxelHeatData HeatDataArray[],  // flattened array
     int chunkNumber)
 {
     m_lastMaxHeatDifference = 0;
@@ -148,9 +175,9 @@ void Volume::Chunk::GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations,
             
             if(chunks[chunkIndex] != nullptr){
                 int index = chunkNumber * Chunk::CHUNK_SIZE * Chunk::CHUNK_SIZE + vY * Chunk::CHUNK_SIZE + vX;
-                VoxelHeatArray[index] = chunks[chunkIndex]->voxels[vX][vY]->temperature.GetCelsius();
-                VoxelCapacityArray[index] = chunks[chunkIndex]->voxels[vX][vY]->properties->HeatCapacity;
-                VoxelConductivityArray[index] = chunks[chunkIndex]->voxels[vX][vY]->properties->HeatConductivity;
+                HeatDataArray[index].temperature = chunks[chunkIndex]->voxels[vX][vY]->temperature.GetCelsius();
+                HeatDataArray[index].capacity = chunks[chunkIndex]->voxels[vX][vY]->properties->HeatCapacity;
+                HeatDataArray[index].conductivity = chunks[chunkIndex]->voxels[vX][vY]->properties->HeatConductivity;
             }
         }
     }

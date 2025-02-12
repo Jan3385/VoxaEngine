@@ -42,7 +42,7 @@ namespace Volume
     	void UpdateVoxels(ChunkMatrix* matrix);
 
     	void GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations, 
-			float VoxelHeatArray[], float VoxelCapacityArray[], float VoxelConductivityArray[],  // flattened arrays
+			Volume::VoxelHeatData HeatDataArray[],  // flattened arrays
 			int chunkNumber);
 
     	void ResetVoxelUpdateData();
