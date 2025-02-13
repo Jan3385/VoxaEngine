@@ -67,7 +67,7 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 	float heatDifference = this->temperature.GetCelsius() - swapVoxel->temperature.GetCelsius();
 	float maxHeatTransfer = heatDifference * 0.6f; // Limit to 60%
 	float heatTransfer = std::clamp(
-		heatDifference * this->properties->HeatConductivity * Temperature::HEAT_TRANSFER_SPEED,
+		heatDifference * this->properties->HeatConductivity * 5,
 		-maxHeatTransfer,
 		maxHeatTransfer
 	);

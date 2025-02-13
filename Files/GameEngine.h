@@ -28,18 +28,14 @@ private:
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;
 
-    void m_initVariables();
     void m_initWindow();
     void m_OnKeyboardInput(SDL_KeyboardEvent event);
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
     void m_FixedUpdate();
     void m_UpdateGridVoxel(int pass);
-    void m_UpdateGridHeat();
     void m_RenderIMGUI();
 
     void m_toggleDebugRendering();
-
-    GLuint m_chunkHeatComputeShader;
 
     GLuint m_compileComputeShader(const char* shader);
 public:

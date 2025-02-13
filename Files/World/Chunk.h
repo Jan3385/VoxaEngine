@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL.h>
+#include <glew.h>
 #include <array>
 #include <mutex>
 #include <vector>
@@ -56,6 +57,7 @@ namespace Volume
 		DirtyRect dirtyRect = DirtyRect();
 
 		static const char* computeShaderHeat;
+		static GLuint computeShaderHeat_Program;
     private:
     	short int m_x;
     	short int m_y;
@@ -93,6 +95,8 @@ public:
 
 	Volume::Chunk* GenerateChunk(const Vec2i& pos);
 	void DeleteChunk(const Vec2i& pos);
+
+	void UpdateGridHeat(bool oddHeatUpdatePass);
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks

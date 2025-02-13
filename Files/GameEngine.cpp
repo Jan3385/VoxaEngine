@@ -30,7 +30,7 @@ GameEngine::GameEngine()
 
     IMGUI_CHECKVERSION();
 
-    m_initVariables();
+    this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
     m_initWindow();
 
     //Initialize GLEW
@@ -40,7 +40,7 @@ GameEngine::GameEngine()
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
 
-    m_chunkHeatComputeShader = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
+    Volume::Chunk::computeShaderHeat_Program = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
 
     Player = Game::Player();
     Player.LoadPlayerTexture(renderer);
@@ -122,89 +122,6 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         thread.join();
     }
 }
-
-void GameEngine::m_UpdateGridHeat()
-{
-    int NumberOfChunks = 0;
-    for(int i = 0; i < 4; ++i)
-    {
-        NumberOfChunks += chunkMatrix.GridSegmented[i].size();
-    }
-
-    int NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
-
-    std::vector<Volume::VoxelHeatData> VoxelHeatArray(NumberOfVoxels);
-
-    // doesnt create critical section, because the passes dont overlap
-    int chunkIndex = 0;
-    std::vector<Volume::Chunk*> chunksToUpdate;
-    for(int i = 0; i < static_cast<int>(chunkMatrix.Grid.size()); ++i){
-        if (chunkMatrix.Grid[i]->ShouldChunkCalculateHeat()){
-            chunksToUpdate.push_back(chunkMatrix.Grid[i]);
-
-            //load the heat maps from chunk
-            chunkMatrix.Grid[i]->GetHeatMap(
-                &this->chunkMatrix, oddHeatUpdatePass,
-                VoxelHeatArray.data(), chunkIndex++);
-            
-        }
-    }
-
-    GLuint inputSSBO, outputSSBO;
-
-    glGenBuffers(1, &inputSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, 
-        sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
-        nullptr, GL_DYNAMIC_COPY);
-
-    //buffer mapping
-    void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, 
-        sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
-        GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    
-    int* VoxelsSizePtr = static_cast<int*>(ptr);
-    *VoxelsSizePtr = NumberOfVoxels;
-
-    Volume::VoxelHeatData* dataPtr = reinterpret_cast<Volume::VoxelHeatData*>(VoxelsSizePtr + 1);
-    std::memcpy(dataPtr, VoxelHeatArray.data(), NumberOfVoxels * sizeof(Volume::VoxelHeatData));
-    //std::memcpy(dataPtr + NumberOfVoxels, VoxelCapacityArray.data(), NumberOfVoxels * sizeof(float));
-    //std::memcpy(dataPtr + 2 * NumberOfVoxels, VoxelConductivityArray.data(), NumberOfVoxels * sizeof(float));
-
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO); // Binding = 0
-
-    // Output Buffer
-    glGenBuffers(1, &outputSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(Volume::VoxelHeatData), nullptr, GL_DYNAMIC_COPY);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO); // Binding = 1
-
-    // Compute Shader
-    glUseProgram(m_chunkHeatComputeShader);
-    glDispatchCompute(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, NumberOfChunks);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    // Read back the data
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
-    float* outputData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
-
-    #pragma omp parallel for
-    for(int i = 0; i < NumberOfVoxels; ++i){
-        int chunkIndex = i / (Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
-        int voxelIndex = i % (Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
-        int x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
-        int y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
-
-        auto& chunk = chunksToUpdate[chunkIndex];
-        chunk->voxels[x][y]->temperature.SetCelsius(outputData[i]);
-        chunk->voxels[x][y]->CheckTransitionTemps(chunkMatrix);
-    }
-    
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    glDeleteBuffers(1, &inputSSBO);
-    glDeleteBuffers(1, &outputSSBO);
-}
 void GameEngine::m_FixedUpdate()
 {
     #pragma omp parallel for
@@ -224,7 +141,7 @@ void GameEngine::m_FixedUpdate()
     }
 
     //Heat update logic
-    GameEngine::m_UpdateGridHeat();
+    chunkMatrix.UpdateGridHeat(oddHeatUpdatePass);
     oddHeatUpdatePass = !oddHeatUpdatePass;
 
     chunkMatrix.UpdateParticles();
@@ -554,10 +471,6 @@ void GameEngine::LoadChunkInView(Vec2i pos)
     chunkMatrix.GenerateChunk(pos);
     return;
 }
-void GameEngine::m_initVariables()
-{
-    this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
-}
 
 void GameEngine::m_initWindow()
 {
@@ -569,7 +482,7 @@ void GameEngine::m_initWindow()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
-    //ImGui::StyleColorsDark();
+    ImGui::StyleColorsDark();
 
     ImGui_ImplSDL2_InitForSDLRenderer(
         window,
