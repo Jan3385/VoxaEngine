@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.10)
 # Set compiler
 set(CMAKE_CXX_COMPILER "g++")
 
-project(VoxaEngine VERSION 0.2.0 LANGUAGES CXX)
+project(VoxaEngine VERSION 0.2.1 LANGUAGES CXX)
 
 # SDL2 paths
 set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/SDL2")

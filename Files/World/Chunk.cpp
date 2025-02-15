@@ -41,13 +41,23 @@ struct VoxelHeatData{
     float capacity;
     float conductivity;
 };
+struct ChunkConnectivityData{
+	uint chunk;
+	uint chunkUp;
+	uint chunkDown;
+	uint chunkLeft;
+	uint chunkRight;
+};
 
 layout(std430, binding = 0) buffer InputBuffer {
     int NumberOfVoxels;
     // flattened array (c = chunk, x = x, y = y)
     VoxelHeatData voxelTemps[];
 };
-layout(std430, binding = 1) buffer OutputBuffer {
+layout(std430, binding = 1) buffer ChunkBuffer {
+    ChunkConnectivityData chunkData[];
+};
+layout(std430, binding = 2) buffer OutputBuffer {
     float voxelTempsOut[];
 };
 
@@ -61,18 +71,78 @@ void main(){
 
     uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
+    uint numberOfChunks = NumberOfVoxels / CHUNK_SIZE_SQUARED;
+
     float sum = 0.0;
     int maxHeatDiff = 0;
     int maxHeatTrans = 0;
 
     ivec2 pos = ivec2(x, y);
     ivec2 localPos = ivec2(localX, localY);
+
+    uint NumOfValidDirections = 0;
     for(int i = 0; i < DIRECTION_COUNT; ++i){
         ivec2 testPos = localPos + directions[i];
-        if(testPos.x < 0 || testPos.x >= CHUNK_SIZE || testPos.y < 0 || testPos.y >= CHUNK_SIZE) continue;
 
         ivec2 nPos = pos + directions[i];
-        uint nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
+        uint nIndex;
+
+        // forbid diagonal heat transfer
+        if((testPos.x < 0 || testPos.x >= CHUNK_SIZE) && (testPos.y < 0 || testPos.y >= CHUNK_SIZE))
+            continue;
+
+        // if out of bounds from current chunk
+        if(testPos.x < 0 || testPos.x >= CHUNK_SIZE || testPos.y < 0 || testPos.y >= CHUNK_SIZE) {
+            if(testPos.x < 0){ // right
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkRight == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + CHUNK_SIZE + (nPos.x - CHUNK_SIZE);
+                NumOfValidDirections++;
+            }else if (testPos.x >= CHUNK_SIZE){ // left
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkLeft == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - nPos.x);
+                NumOfValidDirections++;
+            }
+            if(testPos.y >= CHUNK_SIZE){ // up
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkUp == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - nPos.y) * CHUNK_SIZE + nPos.x;
+                NumOfValidDirections++;
+            }else if(testPos.y < 0){ // down
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkDown == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE + nPos.y) * CHUNK_SIZE + nPos.x;
+                NumOfValidDirections++;
+            }
+        }else{
+            nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
+            NumOfValidDirections++;
+        }
         
         float heatCapacity = voxelTemps[index].capacity/TEMPERATURE_TRANSITION_SPEED;
         float heatDiff = voxelTemps[nIndex].temperature - voxelTemps[index].temperature;
@@ -81,7 +151,7 @@ void main(){
         sum += heatTrans;
     }
     
-    voxelTempsOut[index] = voxelTemps[index].temperature + (sum / DIRECTION_COUNT);
+    voxelTempsOut[index] = voxelTemps[index].temperature + (sum / NumOfValidDirections);
 }
 )";
 
@@ -211,17 +281,6 @@ void Volume::Chunk::GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations,
             }
         }
     }
-
-    //auto voxel = chunks[chunkIndex]->voxels[vX][vY];
-    //float heat = voxel->temperature.GetCelsius();
-    //float heatDifference = heat - sectionHeatAverage;
-    //float heatTransfer = heatDifference*voxel->properties->HeatConductivity*Temperature::HEAT_TRANSFER_SPEED/voxel->properties->HeatCapacity;
-    //voxel->temperature.SetCelsius(heat - heatTransfer);
-    //voxel->CheckTransitionTemps(*matrix);
-    //chunks[chunkIndex]->m_lastMaxHeatDifference = std::max(m_lastMaxHeatDifference, std::abs(heatDifference));
-    //chunks[chunkIndex]->m_lastMaxHeatTransfer = std::max(m_lastMaxHeatTransfer, std::abs(heatTransfer));
-
-    //std::cout << "Heat difference: " << m_lastMaxHeatDifference << " Heat transfer: " << m_lastMaxHeatTransfer << std::endl;
 }
 
 //transfer heat to the bordering chunks
@@ -720,15 +779,48 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, inputSSBO); // Binding = 0
 
+    //chunk info input
+    std::vector<ChunkConnectivityData> chunkData;
+    for(uint8_t i = 0; i < static_cast<uint8_t>(this->Grid.size()); ++i){
+        if (this->Grid[i]->ShouldChunkCalculateHeat()){
+            ChunkConnectivityData d;
+            d.chunk = i;
+
+            Vec2i pos = this->Grid[i]->GetPos();
+            Vec2i posUp = pos + Vec2i(0, -1);
+            Vec2i posDown = pos + Vec2i(0, 1);
+            Vec2i posLeft = pos + Vec2i(-1, 0);
+            Vec2i posRight = pos + Vec2i(1, 0);
+            for(uint8_t j = 0; j < static_cast<uint8_t>(this->Grid.size()); ++j){
+                if(this->Grid[j]->GetPos() == posUp)
+                    d.chunkUp = j;
+                else if(this->Grid[j]->GetPos() == posDown)
+                    d.chunkDown = j;
+                else if(this->Grid[j]->GetPos() == posLeft)
+                    d.chunkLeft = j;
+                else if(this->Grid[j]->GetPos() == posRight)
+                    d.chunkRight = j;
+            }
+            chunkData.push_back(d);
+        }
+    }
+
+    GLuint chunkDataSSBO;
+    glGenBuffers(1, &chunkDataSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunkDataSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, chunkData.size() * sizeof(ChunkConnectivityData), chunkData.data(), GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, chunkDataSSBO); // Binding = 1
+
     // Output Buffer
     glGenBuffers(1, &outputSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(Volume::VoxelHeatData), nullptr, GL_DYNAMIC_COPY);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, outputSSBO); // Binding = 1
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, outputSSBO); // Binding = 2
 
     // Compute Shader
     glUseProgram(Volume::Chunk::computeShaderHeat_Program);
     glDispatchCompute(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, NumberOfChunks);
+
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     // Read back the data

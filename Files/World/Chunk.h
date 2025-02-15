@@ -28,6 +28,13 @@ private:
 
 namespace Volume
 {
+	struct ChunkConnectivityData{
+		uint32_t chunk;
+		uint32_t chunkUp = -1;
+		uint32_t chunkDown = -1;
+		uint32_t chunkLeft = -1;
+		uint32_t chunkRight = -1;
+	};
     class Chunk {
     public:
     	static const unsigned short int RENDER_VOXEL_SIZE = 5; // 5
