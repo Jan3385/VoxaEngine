@@ -13,12 +13,6 @@ struct PhaseChange{
 
 namespace Volume{
     static constexpr float TEMP_TRANSITION_THRESHOLD = 1.5f;
-    enum class VoxelState {
-		Gas,
-		Liquid,
-		MovableSolid,
-		ImmovableSolid,
-	};
 	enum class State {
 		Gas,
 		Liquid,
@@ -36,7 +30,6 @@ namespace Volume{
 		float SolidInertiaResistance;
 		uint8_t FluidDispursionRate;
 	};
-	inline bool isSolid(Volume::VoxelState state) { return state >= Volume::VoxelState::MovableSolid; }
 }
 
 class VoxelBuilder{
@@ -65,10 +58,10 @@ private:
 class VoxelRegistry {
 public:
 	static Volume::VoxelProperty* GetProperties(std::string id);
-	static bool CanGetMovedByExplosion(Volume::VoxelState state);
+	static bool CanGetMovedByExplosion(Volume::State state);
 	static bool CanGetDestroyedByExplosion(std::string id, float explosionPower);
-	static bool CanBeMovedBySolid(Volume::VoxelState state);
-	static bool CanBeMovedByLiquid(Volume::VoxelState state);
+	static bool CanBeMovedBySolid(Volume::State state);
+	static bool CanBeMovedByLiquid(Volume::State state);
 
 	static void RegisterVoxel(const std::string& name, const Volume::VoxelProperty property);
 	static void RegisterVoxels();

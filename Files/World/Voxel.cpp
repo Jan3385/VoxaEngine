@@ -92,7 +92,27 @@ void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::string id)
 	matrix.PlaceVoxelAt(this->position, id, this->temperature, false);
 }
 
-bool Volume::VoxelElement::IsStateBelowDensity(VoxelState state, float density)
+bool Volume::VoxelElement::IsMoveableSolid()
+{
+    if(this->GetState() != State::Solid) return false;
+
+	VoxelSolid *solid = dynamic_cast<VoxelSolid*>(this);
+	if (solid->isStatic) return false;
+
+	return true;
+}
+
+bool Volume::VoxelElement::IsUnmoveableSolid()
+{
+	if(this->GetState() != State::Solid) return false;
+
+	VoxelSolid *solid = dynamic_cast<VoxelSolid*>(this);
+	if (!solid->isStatic) return false;
+
+	return true;
+}
+
+bool Volume::VoxelElement::IsStateBelowDensity(State state, float density) const
 {
 	if (this->GetState() == state && this->properties->Density < density)
 	{
@@ -101,7 +121,7 @@ bool Volume::VoxelElement::IsStateBelowDensity(VoxelState state, float density)
 	return false;
 }
 
-bool Volume::VoxelElement::IsStateAboveDensity(VoxelState state, float density)
+bool Volume::VoxelElement::IsStateAboveDensity(State state, float density) const
 {
 	if (this->GetState() == state && this->properties->Density > density)
 	{
@@ -135,7 +155,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     );
 
     VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
-    if (!futureVoxel || isSolid(futureVoxel->GetState()) || particleIterations <= 0)
+    if (!futureVoxel || futureVoxel->GetState() == State::Solid || particleIterations <= 0)
     {
     	this->position = newPos;
 
@@ -155,8 +175,13 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     return false;
 }
 
-bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
+bool VoxelSolid::Step(ChunkMatrix *matrix)
 {
+	if(isStatic){
+		updatedThisFrame = true;
+		return false;
+	}
+
     //lazy hack to make the chunk its in update in the next cycle
     if (updatedThisFrame) {
     	return true;
@@ -173,17 +198,17 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
     	//try to set isFalling to true on adjasent voxels - simulates inertia
     	VoxelElement *left = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
     	VoxelElement *right = matrix->VirtualGetAt(this->position + Vec2i(1, 1));
-    	if (left && left->GetState() == VoxelState::MovableSolid)
+    	if (left && left->IsMoveableSolid())
     	{
-    		VoxelMovableSolid *leftMovable = dynamic_cast<VoxelMovableSolid*>(left);
+    		VoxelSolid *leftMovable = dynamic_cast<VoxelSolid*>(left);
     		if ((1 - leftMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
     			leftMovable->IsFalling = true;
     			leftMovable->XVelocity = 1;
     		}
     	}
-    	if (right && right->GetState() == VoxelState::MovableSolid)
+    	if (right && right->IsMoveableSolid())
     	{
-    		VoxelMovableSolid *rightMovable = dynamic_cast<VoxelMovableSolid*>(right);
+    		VoxelSolid *rightMovable = dynamic_cast<VoxelSolid*>(right);
     		if ((1 - rightMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
     			rightMovable->IsFalling = true;
     			rightMovable->XVelocity = 1;
@@ -215,9 +240,9 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
 
 
 		VoxelElement *below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
-    	if (below && below->GetState() == VoxelState::MovableSolid)
+    	if (below && below->IsMoveableSolid())
     	{
-    		VoxelMovableSolid *belowMovable = dynamic_cast<VoxelMovableSolid*>(below);
+    		VoxelSolid *belowMovable = dynamic_cast<VoxelSolid*>(below);
     		if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
     			belowMovable->IsFalling = true;
     			belowMovable->XVelocity = 1;
@@ -231,7 +256,7 @@ bool VoxelMovableSolid::Step(ChunkMatrix *matrix)
     return false;
 }
 
-bool VoxelMovableSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short int length)
+bool VoxelSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short int length)
 {
     VoxelElement* side = matrix->VirtualGetAt(this->position + direction);
     if (side && VoxelRegistry::CanBeMovedBySolid(side->GetState()))
@@ -241,7 +266,7 @@ bool VoxelMovableSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction,
     	{
     		sidePos += direction;
     		side = matrix->VirtualGetAt(sidePos);
-    		if (!side || (side->GetState() != VoxelState::Gas))
+    		if (!side || (side->GetState() != State::Gas))
     		{
     			sidePos -= direction;
     			this->Swap(sidePos, *matrix);
@@ -254,13 +279,13 @@ bool VoxelMovableSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction,
     return false;
 }
 
-void Volume::VoxelMovableSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
+void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
 {
 	//try to set isFalling to true on voxel below - simulates inertia
     VoxelElement* below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
-    if (below && below->GetState() == VoxelState::MovableSolid)
+    if (below && below->IsMoveableSolid())
     {
-    	VoxelMovableSolid* belowMovable = dynamic_cast<VoxelMovableSolid*>(below);
+    	VoxelSolid* belowMovable = dynamic_cast<VoxelSolid*>(below);
     	if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
     		belowMovable->IsFalling = true;
     		belowMovable->XVelocity = 1;
@@ -268,7 +293,7 @@ void Volume::VoxelMovableSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
     }
 }
 
-void VoxelMovableSolid::StopFalling()
+void VoxelSolid::StopFalling()
 {
     XVelocity = ((Acceleration / 6) / (rand()%2 + 1)) + 1;
     IsFalling = false;
@@ -361,7 +386,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	VoxelElement* side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
 		
-		if (isSolid(side->GetState())) break;
+		if (side->GetState() == State::Solid) break;
     	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
 		{
 			LastValidPosition = CurrentPosition;
@@ -375,7 +400,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	VoxelElement* side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
 		
-    	if (isSolid(side->GetState())) break;
+    	if (side->GetState() == State::Solid) break;
     	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
     	{
     		LastValidPosition = CurrentPosition;
@@ -413,7 +438,7 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 	if(next == nullptr) return false; // if the next voxel is null, stop
 
 	if(next->properties == this->properties) return false; // if the next voxel is the same, stop
-	if(next->GetState() != VoxelState::Gas) return false; // if the next voxel is not gas, stop
+	if(next->GetState() != State::Gas) return false; // if the next voxel is not gas, stop
 	
 	if(direction.getY() > 0){
 		// down
@@ -441,7 +466,7 @@ bool Volume::VoxelGas::StepAlongSide(ChunkMatrix *matrix, bool positiveX, short 
 {
 	Vec2i direction = positiveX ? Vec2i(1, 0) : Vec2i(-1, 0);
     VoxelElement* next = matrix->VirtualGetAt(this->position + direction);
-    if (next && next->GetState() == VoxelState::Gas && next->properties != this->properties)
+    if (next && next->GetState() == State::Gas && next->properties != this->properties)
     {
     	Vec2i nextPos = next->position;
     	for (short int i = 0; i < length; ++i)
@@ -449,7 +474,7 @@ bool Volume::VoxelGas::StepAlongSide(ChunkMatrix *matrix, bool positiveX, short 
     		nextPos += direction;
     		next = matrix->VirtualGetAt(nextPos);
 			//if the next voxel is a solid, stop
-    		if (next && (next->GetState() != VoxelState::Gas || next->properties == this->properties))
+    		if (next && (next->GetState() != State::Gas || next->properties == this->properties))
     		{
     			nextPos -= direction;
     			this->Swap(nextPos, *matrix);
@@ -462,19 +487,13 @@ bool Volume::VoxelGas::StepAlongSide(ChunkMatrix *matrix, bool positiveX, short 
     return false;
 }
 
-bool Volume::VoxelImmovableSolid::Step(ChunkMatrix *matrix)
-{
-	updatedThisFrame = true;
-	return false;
-}
-
 int Volume::GetLiquidVoxelPercentile(std::vector<VoxelElement *> voxels)
 {
 	if(voxels.empty()) return 0;
 	int liquidCount = 0;
 	for (const auto& voxel : voxels)
 	{
-		if (voxel->GetState() == VoxelState::Liquid)
+		if (voxel->GetState() == State::Liquid)
 			liquidCount++;
 	}
 	return (liquidCount * 100) / voxels.size();

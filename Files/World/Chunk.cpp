@@ -671,15 +671,17 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		//Create voxel determining on its position
             if (pos.getY() > 4) {
                 if(pos.getY() == 5 && y <= 5){
-                    chunk->voxels[x][y] = new VoxelImmovableSolid
+                    chunk->voxels[x][y] = new VoxelSolid
                         ("Grass", 
                         Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
-                        Temperature(21));
+                        Temperature(21), 
+                        true);
                 }else{
-                    chunk->voxels[x][y] = new VoxelImmovableSolid
+                    chunk->voxels[x][y] = new VoxelSolid
                         ("Dirt", 
                         Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
-                        Temperature(21));
+                        Temperature(21), 
+                        true);
                 }
             }
             else {
@@ -689,10 +691,11 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
                     Temperature(21));
             }
     		if (pos.getY() == 4 && pos.getX() <= 3) {
-    			chunk->voxels[x][y] = new VoxelMovableSolid
+    			chunk->voxels[x][y] = new VoxelSolid
                     ("Sand", 
                     Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
-                    Temperature(21));
+                    Temperature(21),
+                    false);
     		}
         }
     }
@@ -971,10 +974,7 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
         else if(prop->state == State::Liquid)
             voxel = new Volume::VoxelLiquid(id, pos, temp);
         else{
-            if(placeUnmovableSolids)
-                voxel = new Volume::VoxelImmovableSolid(id, pos, temp);
-            else
-                voxel = new Volume::VoxelMovableSolid(id, pos, temp);
+            voxel = new Volume::VoxelSolid(id, pos, temp, placeUnmovableSolids);
         }
     } 
         
@@ -1027,7 +1027,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
             }
             else {
                 //destroy gas and immovable solids.. create particles for other
-    			if (voxel->GetState() == VoxelState::Gas || voxel->GetState() == VoxelState::ImmovableSolid) 
+    			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
                     PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false);
                 else {
     				AddParticle(voxel->id, Vec2i(currentPos), voxel->temperature, static_cast<float>(angle), (radius*1.1f - j)*0.7f);

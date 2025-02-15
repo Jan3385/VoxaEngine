@@ -17,14 +17,14 @@ bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
     return true;
 }
 
-Volume::IronVoxel::IronVoxel(Vec2i position, Temperature temp) : VoxelSolid("Iron", position, temp){ } 
-//TODO: major rewrite -> combine movable and unmovavble solids into one class with a boolean
-
-bool Volume::IronVoxel::Step(ChunkMatrix *matrix)
-{
-    if(rand() % 100 < 3){
-        DieAndReplace(*matrix, "Rust");
-        return true;
-    }
-    return VoxelSolid::Step(matrix);
-}
+//Volume::IronVoxel::IronVoxel(Vec2i position, Temperature temp) : VoxelSolid("Iron", position, temp){ } 
+////TODO: major rewrite -> combine movable and unmovavble solids into one class with a boolean
+//
+//bool Volume::IronVoxel::Step(ChunkMatrix *matrix)
+//{
+//    if(rand() % 100 < 3){
+//        DieAndReplace(*matrix, "Rust");
+//        return true;
+//    }
+//    return VoxelSolid::Step(matrix);
+//}

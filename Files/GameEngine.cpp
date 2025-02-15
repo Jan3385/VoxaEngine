@@ -251,7 +251,6 @@ void GameEngine::Render()
             std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
             for (auto& chunk : chunkMatrix.GridSegmented[i]) {
                 if(chunk->GetAABB().Overlaps(cameraAABB)){
-                    //odečíst první chunky
                     // wierd hack to fix seams between chunks
                     Vec2i padding = Vec2i(0, 0);
                     if(chunk->GetAABB().corner.getX() <= cameraAABB.corner.getX()+1) padding.x(1);

@@ -41,7 +41,7 @@ namespace Volume {
 
 		// Functions
 		//return the state of the element
-		virtual VoxelState GetState() const { return VoxelState::ImmovableSolid; };
+		virtual State GetState() const { return State::Solid; };
 		//returm true if the voxel moved
 		virtual bool Step(ChunkMatrix* matrix) { updatedThisFrame = true; return false; };
 		//return true if the voxel acted on another voxel
@@ -53,8 +53,11 @@ namespace Volume {
 		void Swap(Vec2i& toSwapPos,ChunkMatrix& matrix);
 		void DieAndReplace(ChunkMatrix &matrix, std::string id);
 
-		bool IsStateBelowDensity(VoxelState state, float density);
-		bool IsStateAboveDensity(VoxelState state, float density);
+		bool IsMoveableSolid();
+		bool IsUnmoveableSolid();
+
+		bool IsStateBelowDensity(State state, float density) const;
+		bool IsStateAboveDensity(State state, float density) const;
 	};
 
 	class VoxelParticle : public VoxelElement {
@@ -76,34 +79,16 @@ namespace Volume {
 	};
 
 	//Solid Voxels -> inherit from base voxel class
-	class VoxelSolid : public VoxelElement {
+	class VoxelSolid : public VoxelElement, public IGravity {
 	public:
 		VoxelSolid() : VoxelElement("Dirt" , Vec2i(0, 0), Temperature(21)) {};
-		VoxelSolid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
-		virtual ~VoxelSolid() {};
+		VoxelSolid(std::string id, Vec2i position, Temperature temp, bool isStatic) : VoxelElement(id, position, temp), isStatic(isStatic) {};
+		~VoxelSolid() {};
 
-		virtual VoxelState GetState() const override { return VoxelState::ImmovableSolid; };
-	};
-	//Solid immovable voxels -> inherit from solid voxels
-	class VoxelImmovableSolid : public VoxelSolid {
-	public:
-		VoxelImmovableSolid() : VoxelSolid("Dirt", Vec2i(0, 0), Temperature(21)) {};
-		VoxelImmovableSolid(std::string id, Vec2i position, Temperature temp) : VoxelSolid(id, position, temp) {};
-		~VoxelImmovableSolid() {};
-
-		VoxelState GetState() const override { return VoxelState::ImmovableSolid; };
-		bool Step(ChunkMatrix* matrix) override;
-	};
-	//solid movable voxels -> inherit from solid voxels
-	class VoxelMovableSolid : public VoxelSolid, public IGravity {
-	public:
-		VoxelMovableSolid() : VoxelSolid("Sand", Vec2i(0, 0), Temperature(21)) {};
-		VoxelMovableSolid(std::string id, Vec2i position, Temperature temp) : VoxelSolid(id, position, temp) {};
-		~VoxelMovableSolid() {};
-
+		bool isStatic;
 		short unsigned int XVelocity = 0;     // 0 - short unsigned int max
 
-		VoxelState GetState() const override { return VoxelState::MovableSolid; };
+		State GetState() const override { return State::Solid; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		void TryToMoveVoxelBelow(ChunkMatrix* matrix);
@@ -117,7 +102,7 @@ namespace Volume {
 		VoxelLiquid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		~VoxelLiquid() {};
 
-		VoxelState GetState() const override { return VoxelState::Liquid; };
+		State GetState() const override { return State::Liquid; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		Vec2i GetValidSideSwapPosition(ChunkMatrix& matrix, short int length);
@@ -129,7 +114,7 @@ namespace Volume {
 		VoxelGas(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
 		~VoxelGas() {};
 
-		VoxelState GetState() const override { return VoxelState::Gas; };
+		State GetState() const override { return State::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongSide(ChunkMatrix *matrix, bool positiveX, short int length);
 		bool MoveInDirection(ChunkMatrix* matrix, Vec2i direction);

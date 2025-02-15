@@ -189,7 +189,7 @@ bool Game::Player::isOnGround(ChunkMatrix &chunkMatrix)
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsUnder(chunkMatrix);
     for (const auto& voxel : voxels) {
-        if(voxel->GetState() == Volume::VoxelState::MovableSolid || voxel->GetState() == Volume::VoxelState::ImmovableSolid){
+        if(voxel->GetState() == Volume::State::Solid){
             return true;
             break;
         }
@@ -203,7 +203,7 @@ bool Game::Player::isOnCeiling(ChunkMatrix &chunkMatrix)
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsAbove(chunkMatrix);
     for (const auto& voxel : voxels) {
-        if(voxel->GetState() == Volume::VoxelState::MovableSolid || voxel->GetState() == Volume::VoxelState::ImmovableSolid){
+        if(voxel->GetState() == Volume::State::Solid){
             return true;
             break;
         }
@@ -218,7 +218,7 @@ int Game::Player::touchLeftWall(ChunkMatrix &chunkMatrix)
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsLeft(chunkMatrix);
     int highest = 0;
     for(size_t i = 0; i < voxels.size(); ++i){
-        if(voxels[i]->GetState() == Volume::VoxelState::MovableSolid || voxels[i]->GetState() == Volume::VoxelState::ImmovableSolid){
+        if(voxels[i]->GetState() == Volume::State::Solid){
             highest = voxels.size() - i;
             break;
         }
@@ -234,7 +234,7 @@ int Game::Player::touchRightWall(ChunkMatrix &chunkMatrix)
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsRight(chunkMatrix);
     int highest = 0;
     for(size_t i = 0; i < voxels.size(); ++i){
-        if(voxels[i]->GetState() == Volume::VoxelState::MovableSolid || voxels[i]->GetState() == Volume::VoxelState::ImmovableSolid){
+        if(voxels[i]->GetState() == Volume::State::Solid){
             highest = voxels.size() - i;
             break;
         }
@@ -246,7 +246,7 @@ void Game::Player::MovePlayer(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
     //check if the player isnt being teleported into a solid voxel
     if(!this->NoClip){
-        if(chunkMatrix.VirtualGetAt(Vec2i(floor(pos.getX()), floor(pos.getY())))->GetState() >= Volume::VoxelState::MovableSolid){
+        if(chunkMatrix.VirtualGetAt(Vec2i(floor(pos.getX()), floor(pos.getY())))->GetState() == Volume::State::Solid){
             return;
         }
     }
