@@ -22,6 +22,14 @@ bool AABB::Contains(const Vec2f &point) const
             point.getY() >= corner.getY() && point.getY() <= corner.getY() + size.getY());
 }
 
+bool AABB::Contains(const AABB &other) const
+{
+    return (corner.getX() <= other.corner.getX() &&
+            corner.getX() + size.getX() >= other.corner.getX() + other.size.getX() &&
+            corner.getY() <= other.corner.getY() &&
+            corner.getY() + size.getY() >= other.corner.getY() + other.size.getY());
+}
+
 bool AABB::Overlaps(const AABB &other) const
 {
     return (corner.getX() <= other.corner.getX() + other.size.getX() &&

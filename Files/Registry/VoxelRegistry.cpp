@@ -20,6 +20,7 @@ void VoxelRegistry::RegisterVoxels()
 		"Oxygen",
 		VoxelBuilder(State::Gas, 919, 0.026, 1.429)
 			.SetName("Oxygen")
+			//.SetColor(RGBA(15, 15, 15, 50))
 			.SetColor(RGBA(15, 15, 15, 50))
 			.PhaseDown("Liquid_Oxygen", -182.96)
 			.SetFluidDispursionRate(3)

@@ -233,7 +233,7 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
-    SDL_SetRenderDrawColor( renderer, 0, 0, 0, 255 );
+    SDL_SetRenderDrawColor( renderer, 26, 198, 255, 255 );
     SDL_RenderClear( renderer ); // Clear the screen to solid white
 
     //Player rendering
@@ -251,13 +251,19 @@ void GameEngine::Render()
             std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
             for (auto& chunk : chunkMatrix.GridSegmented[i]) {
                 if(chunk->GetAABB().Overlaps(cameraAABB)){
+                    //odečíst první chunky
+                    // wierd hack to fix seams between chunks
+                    Vec2i padding = Vec2i(0, 0);
+                    if(chunk->GetAABB().corner.getX() <= cameraAABB.corner.getX()+1) padding.x(1);
+                    if (chunk->GetAABB().corner.getY() <= cameraAABB.corner.getY()+1) padding.y(1);
+
                     SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
 
                     SDL_Rect rect = {
                         static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                            (this->Player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
+                            (this->Player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getX(),
                         static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                            (this->Player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1)),
+                            (this->Player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getY(),
                         Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
                         Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
                     };
