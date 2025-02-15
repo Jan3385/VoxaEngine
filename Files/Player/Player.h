@@ -5,7 +5,7 @@
 #include "../World/Chunk.h"
 
 namespace Game{
-    constexpr int CAMERA_CHUNK_PADDING = 24;
+    constexpr int CAMERA_CHUNK_PADDING = 12;
     class Player{
     public:
         static bool NoClip;

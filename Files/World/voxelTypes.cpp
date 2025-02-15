@@ -18,7 +18,7 @@ bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
 }
 
 //Volume::IronVoxel::IronVoxel(Vec2i position, Temperature temp) : VoxelSolid("Iron", position, temp){ } 
-////TODO: major rewrite -> combine movable and unmovavble solids into one class with a boolean
+//
 //
 //bool Volume::IronVoxel::Step(ChunkMatrix *matrix)
 //{

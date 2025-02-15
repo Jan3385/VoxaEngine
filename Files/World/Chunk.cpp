@@ -170,7 +170,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
     
     if(!this->font)
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
-    //std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
+    std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
 }
 
 Volume::Chunk::~Chunk()
@@ -195,7 +195,6 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;
-    if(this->GetAABB().Overlaps(Camera.Expand(Game::CAMERA_CHUNK_PADDING))) return false;
 
     return true;
 }

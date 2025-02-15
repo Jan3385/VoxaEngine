@@ -308,20 +308,21 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
     //Spawn chunks that are in the view but don´t exits
     Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Camera.corner - Vec2f(Game::CAMERA_CHUNK_PADDING/2, Game::CAMERA_CHUNK_PADDING/2));
 
-    float cameraHorizontalAdd = (Chunk::CHUNK_SIZE/2 - abs(fmod(Camera.corner.getX() + Chunk::CHUNK_SIZE/2, Chunk::CHUNK_SIZE) - Chunk::CHUNK_SIZE/2))*2;
-    int ChunksHorizontal = ceil((Camera.size.getX() + Game::CAMERA_CHUNK_PADDING + cameraHorizontalAdd) 
-                                    / Chunk::CHUNK_SIZE);
+    int ChunksHorizontal = ceil((Camera.size.getX() + Game::CAMERA_CHUNK_PADDING*2) 
+                                    / Chunk::CHUNK_SIZE)+1;
     
-    float cameraVerticalAdd =   (Chunk::CHUNK_SIZE/2 - abs(fmod(Camera.corner.getY() + Chunk::CHUNK_SIZE/2, Chunk::CHUNK_SIZE) - Chunk::CHUNK_SIZE/2))*2;
-    int ChunksVertical =   ceil((Camera.size.getY() + Game::CAMERA_CHUNK_PADDING + cameraVerticalAdd) 
-                                    / Chunk::CHUNK_SIZE);
+    int ChunksVertical =   ceil((Camera.size.getY() + Game::CAMERA_CHUNK_PADDING*2) 
+                                    / Chunk::CHUNK_SIZE)+1;
 
     std::vector<Vec2i> chunksToLoad;
     for (int x = 0; x < ChunksHorizontal; ++x) {
         for (int y = 0; y < ChunksVertical; ++y) {
             Vec2i chunkPos = cameraChunkPos + Vec2i(x, y);
-            if (!chunkMatrix.GetChunkAtChunkPosition(chunkPos)) {
+            Chunk* chunk = chunkMatrix.GetChunkAtChunkPosition(chunkPos);
+            if (!chunk) {
                 chunksToLoad.push_back(chunkPos);
+            }else{
+                chunk->lastCheckedCountDown = 20;
             }
         }
     }
