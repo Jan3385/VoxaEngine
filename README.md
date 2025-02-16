@@ -19,9 +19,9 @@ Utilizes multithreading, sectioning and flagging chunks needing to compute heat 
 
 Simulation includes heat capacity and heat conductivity for each voxel for more realistic transfers.
 
-### How To Run:
+## How To Run:
 
-## Windows 10/11
+### Windows 10/11
 
 Make sure you have at least CMake v3.10 installed and functional. Ensure you have a g++ compiler installed and working with CMake. 
 
@@ -29,7 +29,7 @@ To compile simply run `cmake --preset release` and follow with `cmake --build bu
 
 After that, run `VoxaEngine.exe` inside the build folder.
 
-## UNIX Linux
+### UNIX Linux
 
 Make sure you have at least CMake v3.10 installed and functional. Ensure you have a g++ compiler installed and working with CMake. 
 
