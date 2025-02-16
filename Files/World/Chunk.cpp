@@ -103,7 +103,7 @@ void main(){
                 }
                 if(nC == -1) continue;
                 nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + CHUNK_SIZE + (nPos.x - CHUNK_SIZE);
-                NumOfValidDirections++;
+                ++NumOfValidDirections;
             }else if (testPos.x >= CHUNK_SIZE){ // left
                 uint nC;
                 for(int i = 0; i < numberOfChunks; ++i){
@@ -114,7 +114,7 @@ void main(){
                 }
                 if(nC == -1) continue;
                 nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - nPos.x);
-                NumOfValidDirections++;
+                ++NumOfValidDirections;
             }
             if(testPos.y >= CHUNK_SIZE){ // up
                 uint nC;
@@ -126,7 +126,7 @@ void main(){
                 }
                 if(nC == -1) continue;
                 nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - nPos.y) * CHUNK_SIZE + nPos.x;
-                NumOfValidDirections++;
+                ++NumOfValidDirections;
             }else if(testPos.y < 0){ // down
                 uint nC;
                 for(int i = 0; i < numberOfChunks; ++i){
@@ -137,11 +137,11 @@ void main(){
                 }
                 if(nC == -1) continue;
                 nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE + nPos.y) * CHUNK_SIZE + nPos.x;
-                NumOfValidDirections++;
+                ++NumOfValidDirections;
             }
         }else{
             nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
-            NumOfValidDirections++;
+            ++NumOfValidDirections;
         }
         
         float heatCapacity = voxelTemps[index].capacity/TEMPERATURE_TRANSITION_SPEED;
@@ -150,6 +150,8 @@ void main(){
 
         sum += heatTrans;
     }
+
+    if(NumOfValidDirections == 0) NumOfValidDirections = 1;
     
     voxelTempsOut[index] = voxelTemps[index].temperature + (sum / NumOfValidDirections);
 }
