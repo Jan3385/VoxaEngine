@@ -39,7 +39,7 @@ find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(VoxaEngine OpenMP::OpenMP_CXX)
 endif()
-
+# install glew/libglew-dev ... sdl2 sdl2_ttf
 # Link GLEW library
 if(WIN32)
     set(GLEW_LIBRARY "${CMAKE_SOURCE_DIR}/GLEW/lib/Release/x64/glew32.lib")
@@ -50,7 +50,17 @@ elseif(UNIX)
 endif()
 
 # Link SDL2 libraries
-target_link_libraries(VoxaEngine ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
+if (WIN32)
+    set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
+    set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
+    set(SDL2_LIBRARY_TFF "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2_ttf.dll.a")
+    target_link_libraries(VoxaEngine ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
+elseif (UNIX)
+    find_package(SDL2 REQUIRED)
+    find_package(SDL2_ttf REQUIRED)
+    target_include_directories(VoxaEngine PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(VoxaEngine ${SDL2_LIBRARIES} SDL2_ttf)
+endif()
 
 set_property(TARGET VoxaEngine PROPERTY CXX_STANDARD 20)
 
