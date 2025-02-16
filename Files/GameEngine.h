@@ -23,6 +23,7 @@ private:
     TTF_Font* basicFont;
 
     bool debugRendering = false;
+    bool runHeatSimulation = false;
     bool showHeatAroundCursor = false;
 
     std::string placeVoxelType = "Sand";

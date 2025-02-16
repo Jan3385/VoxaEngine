@@ -50,7 +50,7 @@ struct ChunkConnectivityData{
 };
 
 layout(std430, binding = 0) buffer InputBuffer {
-    int NumberOfVoxels;
+    uint NumberOfVoxels;
     // flattened array (c = chunk, x = x, y = y)
     VoxelHeatData voxelTemps[];
 };
@@ -772,7 +772,7 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
         sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
     
-    int* VoxelsSizePtr = static_cast<int*>(ptr);
+    uint32_t* VoxelsSizePtr = static_cast<uint32_t*>(ptr);
     *VoxelsSizePtr = NumberOfVoxels;
 
     Volume::VoxelHeatData* dataPtr = reinterpret_cast<Volume::VoxelHeatData*>(VoxelsSizePtr + 1);

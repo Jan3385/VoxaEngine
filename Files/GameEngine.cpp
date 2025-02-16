@@ -141,7 +141,7 @@ void GameEngine::m_FixedUpdate()
     }
 
     //Heat update logic
-    chunkMatrix.UpdateGridHeat(oddHeatUpdatePass);
+    if(runHeatSimulation) chunkMatrix.UpdateGridHeat(oddHeatUpdatePass);
     oddHeatUpdatePass = !oddHeatUpdatePass;
 
     chunkMatrix.UpdateParticles();
@@ -416,6 +416,7 @@ void GameEngine::m_RenderIMGUI()
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
     ImGui::Checkbox("No Clip", &Player.NoClip);
+    ImGui::Checkbox("Heat Simulation", &runHeatSimulation);
     ImGui::DragFloat("Fixed Update speed", &fixedDeltaTime, 0.05f, 1/30.0, 4);
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
