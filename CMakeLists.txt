@@ -17,7 +17,6 @@ set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
 set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
 set(SDL2_DLL "${CMAKE_SOURCE_DIR}/SDL2/SDL2.dll")
 
-set(GLEW_LIBRARY "${CMAKE_SOURCE_DIR}/GLEW/lib/Release/x64/glew32.lib")
 set(GLEW_INCLUDE "${CMAKE_SOURCE_DIR}/GLEW/include/GL")
 set(GLEW_DLL "${CMAKE_SOURCE_DIR}/GLEW/glew32.dll")
 
@@ -41,8 +40,17 @@ if(OpenMP_CXX_FOUND)
     target_link_libraries(VoxaEngine OpenMP::OpenMP_CXX)
 endif()
 
+# Link GLEW library
+if(WIN32)
+    set(GLEW_LIBRARY "${CMAKE_SOURCE_DIR}/GLEW/lib/Release/x64/glew32.lib")
+    target_link_libraries(VoxaEngine ${GLEW_LIBRARY})
+elseif(UNIX)
+    find_package(GLEW REQUIRED)
+    target_link_libraries(VoxaEngine ${GLEW_LIBRARIES} GL)
+endif()
+
 # Link SDL2 libraries
-target_link_libraries(VoxaEngine ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF} ${GLEW_LIBRARY})
+target_link_libraries(VoxaEngine ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
 
 set_property(TARGET VoxaEngine PROPERTY CXX_STANDARD 20)
 
