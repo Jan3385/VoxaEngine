@@ -170,7 +170,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
     
     if(!this->font)
         std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
-    std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
+    //std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
 }
 
 Volume::Chunk::~Chunk()
@@ -783,7 +783,7 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
 
     //chunk info input
     std::vector<ChunkConnectivityData> chunkData;
-    for(uint8_t i = 0; i < static_cast<uint8_t>(this->Grid.size()); ++i){
+    for(uint32_t i = 0; i < static_cast<uint32_t>(this->Grid.size()); ++i){
         if (this->Grid[i]->ShouldChunkCalculateHeat()){
             ChunkConnectivityData d;
             d.chunk = i;
@@ -793,7 +793,7 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
             Vec2i posDown = pos + Vec2i(0, 1);
             Vec2i posLeft = pos + Vec2i(-1, 0);
             Vec2i posRight = pos + Vec2i(1, 0);
-            for(uint8_t j = 0; j < static_cast<uint8_t>(this->Grid.size()); ++j){
+            for(uint32_t j = 0; j < static_cast<uint32_t>(this->Grid.size()); ++j){
                 if(this->Grid[j]->GetPos() == posUp)
                     d.chunkUp = j;
                 else if(this->Grid[j]->GetPos() == posDown)

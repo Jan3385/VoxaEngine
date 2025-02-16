@@ -6,10 +6,20 @@ using namespace Volume;
 // Initialize the voxel properties
 
 std::unordered_map<std::string, Volume::VoxelProperty> VoxelRegistry::registry = {};
+std::unordered_map<uint32_t, Volume::VoxelProperty*> VoxelRegistry::idRegistry = {};
+uint32_t VoxelRegistry::idCounter = 0;
+bool VoxelRegistry::registriesClosed = false;
 
-void VoxelRegistry::RegisterVoxel(const std::string &name, const Volume::VoxelProperty property)
+void VoxelRegistry::RegisterVoxel(const std::string &name, Volume::VoxelProperty property)
 {
+	if(registriesClosed) 
+		throw std::runtime_error("Voxel registered after designated time window: " + name);
+	
+	property.id = idCounter++;
+
 	registry[name] = property;
+
+	idRegistry[property.id] = &property;
 }
 
 void VoxelRegistry::RegisterVoxels()
@@ -210,6 +220,7 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 
+	registriesClosed = true;
 	std::cout << "[ OK ]" << std::endl;
 }
 
@@ -217,9 +228,18 @@ VoxelProperty* VoxelRegistry::GetProperties(std::string id)
 {
     auto it = VoxelRegistry::registry.find(id);
 	if(it == VoxelRegistry::registry.end()){
-		throw std::runtime_error("Voxel property not found for id: " + id);
+		throw std::runtime_error("Voxel property not found for character id: " + id);
 	}
 	return &it->second;
+}
+
+Volume::VoxelProperty *VoxelRegistry::GetProperties(uint32_t id)
+{
+    auto it = VoxelRegistry::idRegistry.find(id);
+	if(it == VoxelRegistry::idRegistry.end()){
+		throw std::runtime_error("Voxel property not found for numeric id: " + id);
+	}
+	return it->second;
 }
 
 bool VoxelRegistry::CanGetMovedByExplosion(Volume::State state)

@@ -29,6 +29,8 @@ namespace Volume{
 		std::optional<PhaseChange> HeatedChange;
 		float SolidInertiaResistance;
 		uint8_t FluidDispursionRate;
+
+		uint32_t id = 0;
 	};
 }
 
@@ -58,12 +60,17 @@ private:
 class VoxelRegistry {
 public:
 	static Volume::VoxelProperty* GetProperties(std::string id);
+	static Volume::VoxelProperty* GetProperties(uint32_t id);
 	static bool CanGetMovedByExplosion(Volume::State state);
 	static bool CanGetDestroyedByExplosion(std::string id, float explosionPower);
 	static bool CanBeMovedBySolid(Volume::State state);
 	static bool CanBeMovedByLiquid(Volume::State state);
 
-	static void RegisterVoxel(const std::string& name, const Volume::VoxelProperty property);
+	static void RegisterVoxel(const std::string& name, Volume::VoxelProperty property);
 	static void RegisterVoxels();
 	static std::unordered_map<std::string, Volume::VoxelProperty> registry;
+	static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
+private:
+	static uint32_t idCounter;
+	static bool registriesClosed;
 };
