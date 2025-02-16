@@ -101,7 +101,7 @@ void GameEngine::Update()
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
     //delete all chunks marked for deletion
-    for(int i = chunkMatrix.GridSegmented[pass].size() - 1; i >= 0; --i){
+    for(int32_t i = static_cast<int32_t>(chunkMatrix.GridSegmented[pass].size()) - 1; i >= 0; --i){
         if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player.Camera))
         {
             chunkMatrix.DeleteChunk(chunkMatrix.GridSegmented[pass][i]->GetPos());
@@ -125,7 +125,7 @@ void GameEngine::m_UpdateGridVoxel(int pass)
 void GameEngine::m_FixedUpdate()
 {
     #pragma omp parallel for
-    for(int i = 0; i < 4; ++i)
+    for(uint8_t i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
             if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
@@ -135,7 +135,7 @@ void GameEngine::m_FixedUpdate()
     }
 
     //Voxel update logic
-    for(int i = 0; i < 4; ++i)
+    for(uint8_t i = 0; i < 4; ++i)
     {
         m_UpdateGridVoxel(i);
     }
@@ -245,7 +245,7 @@ void GameEngine::Render()
     std::mutex renderDataMutex;
 
     AABB cameraAABB = this->Player.Camera.Expand(1);
-    for(int i = 0; i < 4; ++i)
+    for(uint8_t i = 0; i < 4; ++i)
     {
         threads.push_back(std::thread([&, i]{
             std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
@@ -322,7 +322,7 @@ void GameEngine::Render()
 
                     temperature += 20;
                     RGB color = RGB(temperature, 0, 255 - temperature);
-                    int alpha = distance < radius/1.4 ? 180 : 180 - (distance - radius/1.4) * 180 / (radius - radius/1.4);
+                    uint8_t alpha = distance < radius/1.4 ? 180 : 180 - (distance - radius/1.4) * 180 / (radius - radius/1.4);
                     SDL_SetRenderDrawColor(renderer, 
                         color.r, 0, color.b, alpha);
                     SDL_RenderFillRect(renderer, &rect);
@@ -431,7 +431,7 @@ void GameEngine::m_toggleDebugRendering()
     this->debugRendering = !this->debugRendering;
 
     //redraw all chunks
-    for(int i = 0; i < 4; ++i)
+    for(uint8_t i = 0; i < 4; ++i)
     {
         for (auto& chunk : chunkMatrix.GridSegmented[i]) {
             chunk->dirtyRender = true;

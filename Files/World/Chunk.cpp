@@ -184,9 +184,9 @@ Volume::Chunk::~Chunk()
     }
     SDL_FreeSurface(this->chunkSurface);
 
-    for (int i = 0; i < static_cast<int>(voxels.size()); i++)
+    for (uint8_t i = 0; i < static_cast<uint8_t>(voxels.size()); i++)
     {
-        for (int j = 0; j < static_cast<int>(voxels[i].size()); j++)
+        for (uint8_t j = 0; j < static_cast<uint8_t>(voxels[i].size()); j++)
         {
             delete voxels[i][j];
         }
@@ -527,9 +527,9 @@ void ChunkMatrix::cleanup()
 {
     if(cleaned) return;
 
-    for(int i = 0; i < 4; ++i)
+    for(uint8_t i = 0; i < 4; ++i)
     {
-        for(int j = GridSegmented[i].size() - 1; j >= 0; --j)
+        for(int64_t j = GridSegmented[i].size() - 1; j >= 0; --j)
         {
             delete GridSegmented[i][j];
         }
@@ -578,7 +578,7 @@ Volume::Chunk *ChunkMatrix::GetChunkAtWorldPosition(const Vec2f &pos)
     Vec2i chunkPos = WorldToChunkPosition(pos);
 	if (!IsValidChunkPosition(chunkPos)) return nullptr;
 
-    int AssignedGridPass = 0;
+    uint8_t AssignedGridPass = 0;
     if (chunkPos.getX() % 2 != 0) AssignedGridPass += 1;
     if (chunkPos.getY() % 2 != 0) AssignedGridPass += 2;
 
@@ -598,7 +598,7 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
 {
     if (!IsValidChunkPosition(pos)) return nullptr;
 
-    int AssignedGridPass = 0;
+    uint8_t AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
 
@@ -701,11 +701,12 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
         }
     }
 
-    int AssignedGridPass = 0;
+    uint8_t AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
     this->GridSegmented[AssignedGridPass].push_back(chunk);
 
+    //TODO: fix sometimes crash here? (deallocation issue?)
     this->Grid.push_back(chunk);
 
     return chunk;
@@ -713,11 +714,11 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 
 void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 {
-    int AssignedGridPass = 0;
+    uint8_t AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
 
-    for (long long int i = this->GridSegmented[AssignedGridPass].size()-1; i >= 0; --i)
+    for (int32_t i = this->GridSegmented[AssignedGridPass].size()-1; i >= 0; --i)
     {
         if(this->GridSegmented[AssignedGridPass][i]->GetPos() == pos)
         {
@@ -726,7 +727,7 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
         }
     }
 
-    for (long long int i = this->Grid.size()-1; i >= 0; --i)
+    for (int32_t i = this->Grid.size()-1; i >= 0; --i)
     {
         if(this->Grid[i]->GetPos() == pos)
         {
@@ -740,16 +741,16 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 
 void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
 {
-    int NumberOfChunks = this->Grid.size();
+    uint16_t NumberOfChunks = this->Grid.size();
 
-    int NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
+    uint32_t NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
 
     std::vector<Volume::VoxelHeatData> VoxelHeatArray(NumberOfVoxels);
 
     // doesnt create critical section, because the passes dont overlap
-    int chunkIndex = 0;
+    uint16_t chunkIndex = 0;
     std::vector<Volume::Chunk*> chunksToUpdate;
-    for(int i = 0; i < static_cast<int>(this->Grid.size()); ++i){
+    for(uint16_t i = 0; i < static_cast<uint16_t>(this->Grid.size()); ++i){
         if (this->Grid[i]->ShouldChunkCalculateHeat()){
             chunksToUpdate.push_back(this->Grid[i]);
 
@@ -761,17 +762,17 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
         }
     }
 
-    GLuint inputSSBO, outputSSBO;
+    GLuint inputSSBO, chunkDataSSBO, outputSSBO;
 
     glGenBuffers(1, &inputSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, 
-        sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
+        sizeof(uint32_t) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
         nullptr, GL_DYNAMIC_COPY);
 
     //buffer mapping
     void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, 
-        sizeof(int) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
+        sizeof(uint32_t) + sizeof(Volume::VoxelHeatData) * NumberOfVoxels,
         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
     
     uint32_t* VoxelsSizePtr = static_cast<uint32_t*>(ptr);
@@ -809,7 +810,6 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
         }
     }
 
-    GLuint chunkDataSSBO;
     glGenBuffers(1, &chunkDataSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, chunkDataSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, chunkData.size() * sizeof(ChunkConnectivityData), chunkData.data(), GL_DYNAMIC_COPY);
@@ -831,14 +831,14 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
     float* outputData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
 
-    const int ChunkSizeSquared = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE;
+    uint16_t ChunkSizeSquared = static_cast<uint16_t>(Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
 
     #pragma omp parallel for
-    for(int i = 0; i < NumberOfVoxels; ++i){
-        int chunkIndex = i / ChunkSizeSquared;
-        int voxelIndex = i % ChunkSizeSquared;
-        int x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
-        int y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
+    for(uint32_t i = 0; i < NumberOfVoxels; ++i){
+        uint16_t chunkIndex = i / ChunkSizeSquared;
+        uint16_t voxelIndex = i % ChunkSizeSquared;
+        uint16_t x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
+        uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
         auto& chunk = chunksToUpdate[chunkIndex];
         chunk->voxels[x][y]->temperature.SetCelsius(outputData[i]);
@@ -1006,10 +1006,10 @@ bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 {
-    const short int numOfRays = 360;
+    const uint16_t numOfRays = 360;
     const double angleStep = M_PI * 2 / numOfRays;
 
-    for (int i = 0; i < numOfRays; i++)
+    for (uint16_t i = 0; i < numOfRays; i++)
     {
     	double angle = angleStep * i;
     	float dx = static_cast<float>(std::cos(angle));
