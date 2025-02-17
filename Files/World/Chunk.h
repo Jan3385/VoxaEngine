@@ -67,9 +67,7 @@ namespace Volume
 		static GLuint computeShaderHeat_Program;
     private:
     	short int m_x;
-    	short int m_y;
-		float m_lastMaxHeatDifference = 0;
-		float m_lastMaxHeatTransfer = 0;		
+    	short int m_y;	
 		TTF_Font* font = nullptr;
 		SDL_Surface* chunkSurface = nullptr;
     };

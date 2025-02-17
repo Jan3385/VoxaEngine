@@ -19,7 +19,7 @@ layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 #define CHUNK_SIZE 64
 #define CHUNK_SIZE_SQUARED 4096
 
-#define DIRECTION_COUNT 12
+#define DIRECTION_COUNT 8
 
 const ivec2 directions[DIRECTION_COUNT] = {
     ivec2(-1, -1),
@@ -30,10 +30,6 @@ const ivec2 directions[DIRECTION_COUNT] = {
     ivec2(-1, 1),
     ivec2(0, 1),
     ivec2(1, 1),
-    ivec2(-2, 0),
-    ivec2(2, 0),
-    ivec2(0, -2),
-    ivec2(0, 2)
 };
 
 struct VoxelHeatData{
@@ -42,11 +38,11 @@ struct VoxelHeatData{
     float conductivity;
 };
 struct ChunkConnectivityData{
-	uint chunk;
-	uint chunkUp;
-	uint chunkDown;
-	uint chunkLeft;
-	uint chunkRight;
+    uint chunk;
+    uint chunkUp;
+    uint chunkDown;
+    uint chunkLeft;
+    uint chunkRight;
 };
 
 layout(std430, binding = 0) buffer InputBuffer {
@@ -57,8 +53,11 @@ layout(std430, binding = 0) buffer InputBuffer {
 layout(std430, binding = 1) buffer ChunkBuffer {
     ChunkConnectivityData chunkData[];
 };
-layout(std430, binding = 2) buffer OutputBuffer {
+layout(std430, binding = 2) buffer OutputVoxelBuffer {
     float voxelTempsOut[];
+};
+layout(std430, binding = 3) buffer OutputChunkBuffer {
+    uint maxHeatDiffChunk[];
 };
 
 void main(){
@@ -149,6 +148,9 @@ void main(){
         float heatTrans = heatDiff * voxelTemps[nIndex].conductivity / heatCapacity;
 
         sum += heatTrans;
+
+        // Update heat value for the chunk
+        atomicMax(maxHeatDiffChunk[c], uint(heatDiff*1000));
     }
 
     if(NumOfValidDirections == 0) NumOfValidDirections = 1;
@@ -202,10 +204,7 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 }
 bool Volume::Chunk::ShouldChunkCalculateHeat() const
 {
-    return(
-        m_lastMaxHeatDifference > 0.75f || m_lastMaxHeatTransfer > 0.3f ||
-        forceHeatUpdate
-    );
+    return(forceHeatUpdate);
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
@@ -244,10 +243,6 @@ void Volume::Chunk::GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations,
     Volume::VoxelHeatData HeatDataArray[],  // flattened array
     int chunkNumber)
 {
-    m_lastMaxHeatDifference = 0;
-    m_lastMaxHeatTransfer = 0;
-    forceHeatUpdate = true;
-
     //const int offset = offsetCalculations ? Chunk::CHUNK_SIZE/2 : 0;
     const int offset = 0;
 
@@ -741,11 +736,7 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 
 void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
 {
-    uint16_t NumberOfChunks = this->Grid.size();
-
-    uint32_t NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
-
-    std::vector<Volume::VoxelHeatData> VoxelHeatArray(NumberOfVoxels);
+    std::vector<Volume::VoxelHeatData> VoxelHeatArray(0);
 
     // doesnt create critical section, because the passes dont overlap
     uint16_t chunkIndex = 0;
@@ -753,6 +744,8 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
     for(uint16_t i = 0; i < static_cast<uint16_t>(this->Grid.size()); ++i){
         if (this->Grid[i]->ShouldChunkCalculateHeat()){
             chunksToUpdate.push_back(this->Grid[i]);
+
+            VoxelHeatArray.resize(VoxelHeatArray.size() + Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
 
             //load the heat maps from chunk
             this->Grid[i]->GetHeatMap(
@@ -762,7 +755,12 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
         }
     }
 
-    GLuint inputSSBO, chunkDataSSBO, outputSSBO;
+    uint16_t NumberOfChunks = chunksToUpdate.size();
+
+    uint32_t NumberOfVoxels = Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE * NumberOfChunks;
+
+
+    GLuint inputSSBO, chunkDataSSBO, outputVoxelSSBO, outputChunkSSBO;
 
     glGenBuffers(1, &inputSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, inputSSBO);
@@ -816,10 +814,18 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, chunkDataSSBO); // Binding = 1
 
     // Output Buffer
-    glGenBuffers(1, &outputSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
+    glGenBuffers(1, &outputVoxelSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputVoxelSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(Volume::VoxelHeatData), nullptr, GL_DYNAMIC_COPY);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, outputSSBO); // Binding = 2
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, outputVoxelSSBO); // Binding = 2
+
+    glGenBuffers(1, &outputChunkSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputChunkSSBO);
+    uint32_t* zeroData = new uint32_t[NumberOfChunks]();
+    std::fill(zeroData, zeroData + NumberOfChunks, 0);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfChunks * sizeof(uint32_t), zeroData, GL_DYNAMIC_COPY);
+    delete[] zeroData;
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, outputChunkSSBO); // Binding = 3
 
     // Compute Shader
     glUseProgram(Volume::Chunk::computeShaderHeat_Program);
@@ -828,8 +834,11 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     // Read back the data
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputSSBO);
-    float* outputData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputVoxelSSBO);
+    float* VoxelHeatData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputChunkSSBO);
+    uint32_t* heatDiff = (uint32_t*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfChunks * sizeof(uint32_t), GL_MAP_READ_BIT);
+
 
     uint16_t ChunkSizeSquared = static_cast<uint16_t>(Volume::Chunk::CHUNK_SIZE * Volume::Chunk::CHUNK_SIZE);
 
@@ -841,13 +850,34 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
         auto& chunk = chunksToUpdate[chunkIndex];
-        chunk->voxels[x][y]->temperature.SetCelsius(outputData[i]);
+        chunk->voxels[x][y]->temperature.SetCelsius(VoxelHeatData[i]);
         chunk->voxels[x][y]->CheckTransitionTemps(*this);
+    }
+
+    for(uint16_t i = 0; i < NumberOfChunks; ++i){
+        if((heatDiff[i]/1000.0f) > 0.2f){
+            chunksToUpdate[i]->forceHeatUpdate = true;
+            //also force heat update on neighbours
+            Vec2i pos = chunksToUpdate[i]->GetPos();
+            Vec2i positions[4] = {
+                pos + Vec2i(0, -1),
+                pos + Vec2i(0, 1),
+                pos + Vec2i(-1, 0),
+                pos + Vec2i(1, 0)
+            };
+
+            for(auto& p : positions){
+                Volume::Chunk *c = GetChunkAtChunkPosition(p);
+                if(c) c->forceHeatUpdate = true;
+            }
+        }else{
+            chunksToUpdate[i]->forceHeatUpdate = false;
+        }
     }
     
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glDeleteBuffers(1, &inputSSBO);
-    glDeleteBuffers(1, &outputSSBO);
+    glDeleteBuffers(1, &outputVoxelSSBO);
 }
 
 Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
