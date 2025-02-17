@@ -2,6 +2,7 @@
 
 #include <glew.h>
 #include <SDL.h>
+#include "Renderer.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
@@ -11,8 +12,7 @@ class GameEngine
 {
 private:
     SDL_GLContext glContext;
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
+    GameRenderer renderer;
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
 
@@ -20,16 +20,11 @@ private:
 
     float fixedUpdateTimer = 0;
 
-    TTF_Font* basicFont;
-
-    bool debugRendering = false;
     bool runHeatSimulation = false;
-    bool showHeatAroundCursor = false;
 
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;
 
-    void m_initWindow();
     void m_OnKeyboardInput(SDL_KeyboardEvent event);
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
     void m_FixedUpdate();
