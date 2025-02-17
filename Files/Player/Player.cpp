@@ -15,11 +15,9 @@ Game::Player::Player()
         Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 }
 
-void Game::Player::LoadPlayerTexture(SDL_Renderer *renderer)
+void Game::Player::SetPlayerTexture(SDL_Texture *texture)
 {
-    SDL_Surface* surface = SDL_LoadBMP("Textures/Player.bmp");
-    this->playerTexture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
+    this->playerTexture = texture;
 }
 
 Game::Player::~Player()

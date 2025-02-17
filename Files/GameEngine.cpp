@@ -1,14 +1,9 @@
 #include "GameEngine.h"
-#include <SDL_ttf.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
 #include <future>
 #include <cstring>
-
-#include <imgui.h>
-#include <imgui_impl_sdl2.h>
-#include <imgui_impl_sdlrenderer2.h>
 
 using namespace std;
 
@@ -22,24 +17,19 @@ GameEngine::GameEngine()
     GameEngine::instance = this;
     VoxelRegistry::RegisterVoxels();
 
-    //Initialize GLEW
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if (err != GLEW_OK) {
-        std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
-    }
-
-    renderer = GameRenderer(&glContext);
+    this->renderer = new GameRenderer(&glContext);
 
     Volume::Chunk::computeShaderHeat_Program = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
 
     Player = Game::Player();
-    Player.LoadPlayerTexture(renderer);
+    Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
 }
 
 GameEngine::~GameEngine()
 {
     SDL_GL_DeleteContext(glContext);
+
+    delete this->renderer;
 
     chunkMatrix.cleanup();
 }
@@ -214,24 +204,8 @@ void GameEngine::PollEvents()
 
 void GameEngine::Render()
 {
-    
-}
-void GameEngine::m_RenderIMGUI()
-{
-    
-}
-
-void GameEngine::m_toggleDebugRendering()
-{
-    this->debugRendering = !this->debugRendering;
-
-    //redraw all chunks
-    for(uint8_t i = 0; i < 4; ++i)
-    {
-        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            chunk->dirtyRender = true;
-        }
-    }
+    //Render
+    renderer->Render(chunkMatrix, this->mousePos);
 }
 
 GLuint GameEngine::m_compileComputeShader(const char *shader)

@@ -2,6 +2,11 @@
 
 #include <glew.h>
 #include <SDL.h>
+#include <SDL_ttf.h>
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdlrenderer2.h>
+
 #include "Renderer.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
@@ -12,7 +17,7 @@ class GameEngine
 {
 private:
     SDL_GLContext glContext;
-    GameRenderer renderer;
+    GameRenderer* renderer;
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
 
@@ -20,18 +25,10 @@ private:
 
     float fixedUpdateTimer = 0;
 
-    bool runHeatSimulation = false;
-
-    std::string placeVoxelType = "Sand";
-    float placeVoxelTemperature = 21.0;
-
     void m_OnKeyboardInput(SDL_KeyboardEvent event);
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
     void m_FixedUpdate();
     void m_UpdateGridVoxel(int pass);
-    void m_RenderIMGUI();
-
-    void m_toggleDebugRendering();
 
     GLuint m_compileComputeShader(const char* shader);
 public:
@@ -50,6 +47,11 @@ public:
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
     float FPS = 60;
+
+    bool runHeatSimulation = false;
+
+    std::string placeVoxelType = "Sand";
+    float placeVoxelTemperature = 21.0;
     
     Vec2f mousePos;
 

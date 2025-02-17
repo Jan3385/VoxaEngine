@@ -1,18 +1,16 @@
 #pragma once
 
-#include <glew.h>
-#include <SDL.h>
-#include <SDL_ttf.h>
-
 #include "World/Chunk.h"
 #include "Math/Vector.h"
 
 class GameRenderer{
 private:
-    SDL_Window *SDL_window = nullptr;
-    SDL_Renderer *SDL_renderer = nullptr;
+    SDL_Window *r_window = nullptr;
+    SDL_Renderer *r_renderer = nullptr;
 
     TTF_Font* basicFont;
+
+    void ToggleDebugRendering();
 public:
     GameRenderer();
     GameRenderer(SDL_GLContext *glContext);
@@ -22,5 +20,7 @@ public:
     bool debugRendering = false;
 
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos);
-    void RenderIMGUI();
+    void RenderIMGUI(ChunkMatrix &chunkMatrix);
+
+    SDL_Texture* LoadTexture(const char* path);
 };

@@ -11,7 +11,7 @@ namespace Game{
         static bool NoClip;
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 4;
         Player();
-        void LoadPlayerTexture(SDL_Renderer* renderer);
+        void SetPlayerTexture(SDL_Texture* texture);
         ~Player();
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
         void Render(SDL_Renderer* renderer);
