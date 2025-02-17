@@ -23,4 +23,5 @@ public:
     void RenderIMGUI(ChunkMatrix &chunkMatrix);
 
     SDL_Texture* LoadTexture(const char* path);
+    SDL_Surface* LoadSurface(const char* path);
 };

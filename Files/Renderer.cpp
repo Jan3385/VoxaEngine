@@ -16,7 +16,6 @@ GameRenderer::GameRenderer()
 
 GameRenderer::GameRenderer(SDL_GLContext *glContext)
 {
-    std::cout << "Initializing SDL2" << std::endl;
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
         std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
     }
@@ -287,10 +286,26 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 
 SDL_Texture *GameRenderer::LoadTexture(const char *path)
 {
-    SDL_Surface *surface = SDL_LoadBMP(path);
+    SDL_Surface *surface = LoadSurface(path);
     SDL_Texture *texture = SDL_CreateTextureFromSurface(r_renderer, surface);
     SDL_FreeSurface(surface);
+
+    if(texture == nullptr){
+        std::cerr << "Error loading texture: " << SDL_GetError() << std::endl;
+    }
+
     return texture;
+}
+
+SDL_Surface *GameRenderer::LoadSurface(const char *path)
+{
+    SDL_Surface *surface = SDL_LoadBMP(path);
+
+    if(surface == nullptr){
+        std::cerr << "Error loading surface: " << SDL_GetError() << std::endl;
+    }
+
+    return surface;
 }
 
 void GameRenderer::ToggleDebugRendering()
