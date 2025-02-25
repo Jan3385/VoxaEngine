@@ -7,7 +7,7 @@ using namespace Volume;
 
 std::unordered_map<std::string, Volume::VoxelProperty> VoxelRegistry::registry = {};
 std::unordered_map<uint32_t, Volume::VoxelProperty*> VoxelRegistry::idRegistry = {};
-uint32_t VoxelRegistry::idCounter = 0;
+uint32_t VoxelRegistry::idCounter = 1;
 bool VoxelRegistry::registriesClosed = false;
 
 void VoxelRegistry::RegisterVoxel(const std::string &name, Volume::VoxelProperty property)

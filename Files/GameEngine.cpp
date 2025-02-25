@@ -9,6 +9,7 @@ using namespace std;
 
 bool GameEngine::placeUnmovableSolidVoxels = false;
 int GameEngine::placementRadius = 5;
+int GameEngine::placeVoxelAmount = 1;
 bool GameEngine::MovementKeysHeld[4] = {false, false, false, false};
 GameEngine* GameEngine::instance = nullptr;
 
@@ -19,7 +20,9 @@ GameEngine::GameEngine()
 
     this->renderer = new GameRenderer(&glContext);
 
+    //compile compute shaders
     Volume::Chunk::computeShaderHeat_Program = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
+    Volume::VoxelElement::computeShaderPressure_Program = m_compileComputeShader(Volume::VoxelElement::computeShaderPressure);
 
     Player = Game::Player();
     Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
@@ -38,9 +41,6 @@ void GameEngine::StartFrame()
 {
     this->FrameStartTime = SDL_GetPerformanceCounter();
 
-    //cout << "FPS: " << this->FPS << endl;
-    //cout << "Delta Time: " << this->deltaTime << endl;
-    //cout << "Wait time " << ((1000.0 / MAX_FRAME_RATE) - deltaTime*1000) << endl;
     SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
 }
 
@@ -96,6 +96,7 @@ void GameEngine::m_UpdateGridVoxel(int pass)
 }
 void GameEngine::m_FixedUpdate()
 {
+    //Reset voxels to default pre-simulation state
     #pragma omp parallel for
     for(uint8_t i = 0; i < 4; ++i)
     {
@@ -113,8 +114,11 @@ void GameEngine::m_FixedUpdate()
     }
 
     //Heat update logic
-    if(runHeatSimulation) chunkMatrix.UpdateGridHeat(oddHeatUpdatePass);
-    oddHeatUpdatePass = !oddHeatUpdatePass;
+    if(runHeatSimulation) chunkMatrix.UpdateGridHeat(oddUpdatePass);
+
+    //Pressure update logic
+    if(runPressureSimulation) chunkMatrix.UpdateGridPressure(oddUpdatePass);
+    oddUpdatePass = !oddUpdatePass;
 
     chunkMatrix.UpdateParticles();
 }

@@ -6,6 +6,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <math.h>
 
 #include "Math/AABB.h"
 #include "Player/Player.h"
@@ -151,7 +152,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         for(int x = -radius; x <= radius; ++x){
             for(int y = -radius; y <= radius; ++y){
                 //render a circle around the cursor
-                int distance = SDL_sqrt(x*x + y*y);
+                int distance = SDL_sqrtf(x*x + y*y);
                 if(distance > radius) continue;
 
                 Vec2i pos = voxelPos + Vec2i(x, y);
@@ -209,9 +210,17 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
             SDL_RenderCopy(r_renderer, texture, NULL, &rect);
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(texture);
+
             surface = TTF_RenderText_Solid(basicFont, voxel->id.c_str(), color);
             texture = SDL_CreateTextureFromSurface(r_renderer, surface);
             rect = { 0, 40, surface->w, surface->h };
+            SDL_RenderCopy(r_renderer, texture, NULL, &rect);
+            SDL_FreeSurface(surface);
+            SDL_DestroyTexture(texture);
+
+            surface = TTF_RenderText_Solid(basicFont, (std::to_string(voxel->amount) + " amout").c_str(), color);
+            texture = SDL_CreateTextureFromSurface(r_renderer, surface);
+            rect = { 0, 65, surface->w, surface->h };
             SDL_RenderCopy(r_renderer, texture, NULL, &rect);
             SDL_FreeSurface(surface);
             SDL_DestroyTexture(texture);
@@ -269,12 +278,14 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     }
     ImGui::SliderInt("Placement Radius", &GameEngine::instance->placementRadius, 1, 10);
     ImGui::DragFloat("Placement Temperature", &GameEngine::instance->placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
+    ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 1, 1, 100);
     ImGui::Checkbox("Place Unmovable Solid Voxels", &GameEngine::instance->placeUnmovableSolidVoxels);
     if(ImGui::Button("Toggle Debug Rendering")) ToggleDebugRendering();
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
     ImGui::Checkbox("No Clip", &player.NoClip);
     ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
+    ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
     ImGui::DragFloat("Fixed Update speed", &GameEngine::instance->fixedDeltaTime, 0.05f, 1/30.0, 4);
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());

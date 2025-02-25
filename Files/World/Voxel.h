@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <glew.h>
 #include "../Math/Vector.h"
 #include "../Registry/VoxelRegistry.h"
 
@@ -14,6 +15,10 @@ namespace Volume {
 		float temperature;
 		float capacity;
 		float conductivity;
+	};
+	struct VoxelPressureData{
+		float pressure;
+		uint32_t id; // Voxel ID (last two bit reserved for voxel type (00 - gas, 01 - liquid, 10 - solid))
 	};
 
 	static constexpr float VOXEL_SIZE_METERS = 0.1f;
@@ -29,7 +34,7 @@ namespace Volume {
 	{
 	public:
 		VoxelElement();
-		VoxelElement(std::string id, Vec2i position, Temperature temperature);
+		VoxelElement(std::string id, Vec2i position, Temperature temperature, float amount);
 		virtual ~VoxelElement();
 
 		const std::string id;
@@ -38,6 +43,8 @@ namespace Volume {
 		RGBA color;
 		Temperature temperature;
 		bool updatedThisFrame = false;
+
+		float amount;
 
 		// Functions
 		//return the state of the element
@@ -58,12 +65,15 @@ namespace Volume {
 
 		bool IsStateBelowDensity(State state, float density) const;
 		bool IsStateAboveDensity(State state, float density) const;
+
+		static const char* computeShaderPressure;
+		static GLuint computeShaderPressure_Program;
 	};
 
 	class VoxelParticle : public VoxelElement {
 	public:
 		VoxelParticle();
-		VoxelParticle(std::string id,const Vec2i& position, Temperature temp, float angle, float speed);
+		VoxelParticle(std::string id,const Vec2i& position, float amount, Temperature temp, float angle, float speed);
 
 		Vec2f fPosition;
 
@@ -81,8 +91,8 @@ namespace Volume {
 	//Solid Voxels -> inherit from base voxel class
 	class VoxelSolid : public VoxelElement, public IGravity {
 	public:
-		VoxelSolid() : VoxelElement("Dirt" , Vec2i(0, 0), Temperature(21)) {};
-		VoxelSolid(std::string id, Vec2i position, Temperature temp, bool isStatic) : VoxelElement(id, position, temp), isStatic(isStatic) {};
+		VoxelSolid() : VoxelElement("Dirt" , Vec2i(0, 0), Temperature(21), 1) {};
+		VoxelSolid(std::string id, Vec2i position, Temperature temp, bool isStatic, float amount) : VoxelElement(id, position, temp, amount), isStatic(isStatic) {};
 		~VoxelSolid() {};
 
 		bool isStatic;
@@ -98,8 +108,8 @@ namespace Volume {
 	//liquid voxels -> inherit from base voxel class
 	class VoxelLiquid : public VoxelElement, public IGravity {
 	public:
-		VoxelLiquid() : VoxelElement("Water", Vec2i(0, 0), Temperature(21)) {};
-		VoxelLiquid(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
+		VoxelLiquid() : VoxelElement("Water", Vec2i(0, 0), Temperature(21), 1) {};
+		VoxelLiquid(std::string id, Vec2i position, Temperature temp, float amount) : VoxelElement(id, position, temp, amount) {};
 		~VoxelLiquid() {};
 
 		State GetState() const override { return State::Liquid; };
@@ -110,8 +120,8 @@ namespace Volume {
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
 	public:
-		VoxelGas() : VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21)) {};
-		VoxelGas(std::string id, Vec2i position, Temperature temp) : VoxelElement(id, position, temp) {};
+		VoxelGas() : VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21), 1) {};
+		VoxelGas(std::string id, Vec2i position, Temperature temp, float amount);
 		~VoxelGas() {};
 
 		State GetState() const override { return State::Gas; };

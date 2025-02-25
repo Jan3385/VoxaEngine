@@ -21,7 +21,7 @@ private:
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
 
-    bool oddHeatUpdatePass = false;
+    bool oddUpdatePass = false;
 
     float fixedUpdateTimer = 0;
 
@@ -38,6 +38,7 @@ public:
     float fixedDeltaTime = 1/30.0;
 
     static bool placeUnmovableSolidVoxels;
+    static int placeVoxelAmount;
     static int placementRadius;
 
     static bool MovementKeysHeld[4]; //W, S, A, D
@@ -47,8 +48,10 @@ public:
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
     float FPS = 60;
+    
 
-    bool runHeatSimulation = false;
+    bool runHeatSimulation = true;
+    bool runPressureSimulation = false;
 
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;

@@ -6,6 +6,154 @@
 
 using namespace Volume;
 
+GLuint VoxelElement::computeShaderPressure_Program = 0;
+const char* VoxelElement::computeShaderPressure = R"(#version 460 core
+layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+
+// bigger number = slower
+#define PRESSURE_TRANSITION_SPEED 1
+
+#define CHUNK_SIZE 64
+#define CHUNK_SIZE_SQUARED 4096
+
+#define DIRECTION_COUNT 4
+
+const ivec2 directions[DIRECTION_COUNT] = {
+    ivec2(0, -1),
+    ivec2(-1, 0),
+    ivec2(1, 0),
+    ivec2(0, 1),
+};
+struct ChunkConnectivityData{
+    int chunk;
+    int chunkUp;
+    int chunkDown;
+    int chunkLeft;
+    int chunkRight;
+};
+struct VoxelPressureData{
+    float pressure;
+    uint id; // Voxel ID (last two bit reserved for voxel type (00 - gas, 01 - liquid, 10 - solid))
+};
+
+layout(std430, binding = 0) buffer InputBuffer {
+    uint NumberOfVoxels;
+    // flattened array (c = chunk, x = x, y = y)
+    VoxelPressureData voxelPressures[];
+};
+layout(std430, binding = 1) buffer ChunkBuffer {
+    ChunkConnectivityData chunkData[];
+};
+layout(std430, binding = 2) buffer OutputVoxelBuffer {
+    float voxelPressureOut[];
+};
+layout(std430, binding = 3) buffer OutputChunkBuffer {
+	uint maxPressureDiffChunk[];
+};
+
+void main(){
+	uint x = gl_GlobalInvocationID.x;
+    uint y = gl_GlobalInvocationID.y;
+    uint c = gl_GlobalInvocationID.z;
+
+    uint localX = x % CHUNK_SIZE;
+    uint localY = y % CHUNK_SIZE;
+
+	uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
+
+	// if solid, return
+	if((voxelPressures[index].id & (0x1 << 31)) != 0){
+		voxelPressureOut[index] = voxelPressures[index].pressure;
+		return;
+	}
+
+	uint numberOfChunks = NumberOfVoxels / CHUNK_SIZE_SQUARED;
+
+	float sum = 0.0;
+
+	ivec2 pos = ivec2(x, y);
+    ivec2 localPos = ivec2(localX, localY);
+
+	uint NumOfValidDirections = 0;
+	for(int i = 0; i < DIRECTION_COUNT; ++i){
+		ivec2 testPos = localPos + directions[i];
+        ivec2 nPos = pos + directions[i];
+        uint nIndex;
+
+        // forbid diagonal heat transfer
+        if((testPos.x < 0 || testPos.x >= CHUNK_SIZE) && (testPos.y < 0 || testPos.y >= CHUNK_SIZE))
+            continue;
+
+		// if out of bounds from current chunk
+        if(testPos.x < 0 || testPos.x >= CHUNK_SIZE || testPos.y < 0 || testPos.y >= CHUNK_SIZE) {
+            if(testPos.x < 0){ // right
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkRight == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + CHUNK_SIZE + (nPos.x - CHUNK_SIZE);
+                ++NumOfValidDirections;
+            }else if (testPos.x >= CHUNK_SIZE){ // left
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkLeft == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - nPos.x);
+                ++NumOfValidDirections;
+            }
+            if(testPos.y >= CHUNK_SIZE){ // up
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkUp == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - nPos.y) * CHUNK_SIZE + nPos.x;
+                ++NumOfValidDirections;
+            }else if(testPos.y < 0){ // down
+                uint nC;
+                for(int i = 0; i < numberOfChunks; ++i){
+                    if(chunkData[i].chunkDown == c){
+                        nC = chunkData[i].chunk;
+                        break;
+                    }
+                }
+                if(nC == -1) continue;
+                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE + nPos.y) * CHUNK_SIZE + nPos.x;
+                ++NumOfValidDirections;
+            }
+        }else{ // if in bounds
+            nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
+            ++NumOfValidDirections;
+        }
+
+		if(voxelPressures[index].id == voxelPressures[nIndex].id){
+			float pressureDiff = voxelPressures[index].pressure - voxelPressures[nIndex].pressure;
+			float pressureTransfer = pressureDiff / PRESSURE_TRANSITION_SPEED;
+			sum += pressureTransfer;
+
+			// Update pressure value for the chunk
+        	atomicMax(maxPressureDiffChunk[c], uint(pressureDiff*1000));
+		}else
+			--NumOfValidDirections;
+	}
+
+	if(NumOfValidDirections == 0) NumOfValidDirections = 1;
+    
+    voxelPressureOut[index] = voxelPressures[index].pressure - (sum / NumOfValidDirections);
+}
+)";
+
 VoxelElement::VoxelElement()
 	:id("Oxygen")
 {
@@ -14,8 +162,8 @@ VoxelElement::VoxelElement()
 	this->temperature = Temperature(21);
 }
 
-VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperature)
-	:id(id), position(position)
+VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperature, float amount)
+	:id(id), position(position), amount(amount)
 {
 	this->properties = VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;
@@ -45,6 +193,7 @@ bool VoxelElement::CheckTransitionTemps(ChunkMatrix& matrix) {
     		return true;
     	}
 	}
+
 	if(this->properties->CooledChange.has_value()){
 		if (this->temperature.GetCelsius() < 
 			this->properties->CooledChange.value().TemperatureAt.GetCelsius() - Volume::TEMP_TRANSITION_THRESHOLD)
@@ -89,7 +238,7 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::string id)
 {
     //matrix.VirtualSetAt(replacement);
-	matrix.PlaceVoxelAt(this->position, id, this->temperature, false);
+	matrix.PlaceVoxelAt(this->position, id, this->temperature, false, this->amount);
 }
 
 bool Volume::VoxelElement::IsMoveableSolid()
@@ -131,11 +280,11 @@ bool Volume::VoxelElement::IsStateAboveDensity(State state, float density) const
 }
 
 VoxelParticle::VoxelParticle()
-	: VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21)), fPosition(Vec2f(0,0)), angle(0), speed(0),
+	: VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21), 1), fPosition(Vec2f(0,0)), angle(0), speed(0),
 	m_dPosition(0,0) { }
 
-VoxelParticle::VoxelParticle(std::string id, const Vec2i &position, Temperature temp, float angle, float speed)
-	: VoxelElement(id, position, temp), fPosition(Vec2f(position)), angle(angle), speed(speed),
+VoxelParticle::VoxelParticle(std::string id, const Vec2i &position, float amount, Temperature temp, float angle, float speed)
+	: VoxelElement(id, position, temp, amount), fPosition(Vec2f(position)), angle(angle), speed(speed),
 	m_dPosition(speed* cos(angle), speed* sin(angle)) { }
 
 bool VoxelParticle::Step(ChunkMatrix *matrix)
@@ -165,7 +314,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     		return true;
     	}
 
-		matrix->PlaceVoxelAt(this->position, this->id, this->temperature, false);
+		matrix->PlaceVoxelAt(this->position, this->id, this->temperature, false, this->amount);
     	return true;
     }
 
@@ -407,6 +556,11 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	}
     }
     return LastValidPosition;
+}
+
+Volume::VoxelGas::VoxelGas(std::string id, Vec2i position, Temperature temp, float amount)
+: VoxelElement(id, position, temp, amount)
+{
 }
 
 bool VoxelGas::Step(ChunkMatrix *matrix)

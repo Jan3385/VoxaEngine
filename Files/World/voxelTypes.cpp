@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Volume::FireVoxel::FireVoxel(Vec2i position, Temperature temp) : VoxelGas("Fire", position, temp){ }
+Volume::FireVoxel::FireVoxel(Vec2i position, Temperature temp, float pressure) : VoxelGas("Fire", position, temp, pressure){ }
 
 bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
 {

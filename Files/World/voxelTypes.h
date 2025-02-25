@@ -6,7 +6,7 @@ namespace Volume {
 	class FireVoxel : public VoxelGas
 	{
 	public:
-		FireVoxel(Vec2i position, Temperature temp);
+		FireVoxel(Vec2i position, Temperature temp, float pressure);
 		bool Step(ChunkMatrix* matrix) override;
 	private:
 		uint8_t forcedLifetimeTime = 20;

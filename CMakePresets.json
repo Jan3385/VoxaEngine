@@ -2,6 +2,19 @@
     "version": 3,
     "configurePresets": [
         {
+            "name": "memory-sanitized",
+            "hidden": false,
+            "description": "Debug configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wno-unused-parameter -fsanitize=address -fsanitize=leak -fsanitize=undefined",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g"
+            }
+        },
+        {
             "name": "debug",
             "hidden": false,
             "description": "Debug configuration",

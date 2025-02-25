@@ -29,16 +29,17 @@ private:
 namespace Volume
 {
 	struct ChunkConnectivityData{
-		uint32_t chunk;
-		uint32_t chunkUp = -1;
-		uint32_t chunkDown = -1;
-		uint32_t chunkLeft = -1;
-		uint32_t chunkRight = -1;
+		int32_t chunk;
+		int32_t chunkUp;
+		int32_t chunkDown;
+		int32_t chunkLeft;
+		int32_t chunkRight;
 	};
     class Chunk {
     public:
     	static const unsigned short int RENDER_VOXEL_SIZE = 5; // 5
     	static const unsigned short int CHUNK_SIZE = 64; // 64
+		static const unsigned short int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE; // 4096
     	//VoxelElement*** voxels;
     	std::array<std::array<VoxelElement*, CHUNK_SIZE>, CHUNK_SIZE> voxels;
 
@@ -47,10 +48,15 @@ namespace Volume
 
 		bool ShouldChunkDelete(AABB &Camera) const;
 		bool ShouldChunkCalculateHeat() const;
+		bool ShouldChunkCalculatePressure() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
 
-    	void GetHeatMap(ChunkMatrix *matrix, bool offsetCalculations, 
+    	void GetHeatMap(ChunkMatrix *matrix,
 			Volume::VoxelHeatData HeatDataArray[],  // flattened arrays
+			int chunkNumber);
+
+		void GetPressureMap(ChunkMatrix *matrix,
+			Volume::VoxelPressureData PressureDataArray[],  // flattened arrays
 			int chunkNumber);
 
     	void ResetVoxelUpdateData();
@@ -60,6 +66,7 @@ namespace Volume
 
 		uint8_t lastCheckedCountDown = 20;
 		bool forceHeatUpdate = true;
+		bool forcePressureUpdate = true;
 		bool dirtyRender = true;
 		DirtyRect dirtyRect = DirtyRect();
 
@@ -94,7 +101,6 @@ public:
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
 
 	void PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp);
-	void PlaceParticleAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, float angle, float speed);
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 
@@ -102,6 +108,7 @@ public:
 	void DeleteChunk(const Vec2i& pos);
 
 	void UpdateGridHeat(bool oddHeatUpdatePass);
+	void UpdateGridPressure(bool oddPressureUpdatePass);
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
@@ -110,7 +117,7 @@ public:
 	void VirtualSetAt(Volume::VoxelElement *voxel);
 	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel);
 
-	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids);
+	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids, float amount);
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
 	void GetVoxelsInCubeAtWorldPosition(const Vec2f& start, const Vec2f& end);
@@ -122,7 +129,7 @@ public:
 
 	//particle functions
 	void UpdateParticles();
-	void AddParticle(std::string id, const Vec2i &position, Volume::Temperature temp, float angle, float speed);
+	void AddParticle(std::string id, const Vec2i &position, Volume::Temperature temp, float amount, float angle, float speed);
 	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions
