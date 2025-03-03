@@ -238,7 +238,7 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::string id)
 {
     //matrix.VirtualSetAt(replacement);
-	matrix.PlaceVoxelAt(this->position, id, this->temperature, false, this->amount);
+	matrix.PlaceVoxelAt(this->position, id, this->temperature, false, this->amount, true);
 }
 
 bool Volume::VoxelElement::IsMoveableSolid()
@@ -314,7 +314,7 @@ bool VoxelParticle::Step(ChunkMatrix *matrix)
     		return true;
     	}
 
-		matrix->PlaceVoxelAt(this->position, this->id, this->temperature, false, this->amount);
+		matrix->PlaceVoxelAt(this->position, this->id, this->temperature, false, this->amount, false);
     	return true;
     }
 
@@ -464,10 +464,31 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     	Acceleration += 1;
     	return true;
     }
-    else if (IsFalling) {
+    else if (IsFalling) { //On the frame of the impact (stops falling)
     	IsFalling = false;
     	Acceleration = 1;
     }
+
+	VoxelElement* above = matrix->VirtualGetAt(this->position + Vec2i(0, -1));
+	VoxelElement* below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
+	if(below && below->GetState() == State::Liquid && below->properties == this->properties){
+		if(below->amount < VoxelLiquid::DesiredDensity){
+			float missingAmount = VoxelLiquid::DesiredDensity - below->amount;
+			float transferAmount = std::min(missingAmount, this->amount);
+			below->amount += transferAmount;
+			this->amount -= transferAmount;
+
+			if(this->amount <= 0){
+				if(above->GetState() == State::Gas){
+					DieAndReplace(*matrix, above->id);
+				}else{
+					//TODO: nothing to place but place can't be empty
+					DieAndReplace(*matrix, "Oxygen");
+				}
+				return true;
+			}
+		}
+	}
 
     //If the voxel below is a solid, try to move to the bottom left and bottom right
     VoxelElement* left = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
@@ -484,7 +505,6 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     }
 
     //if there is the same liquid voxel above, skip
-    VoxelElement* above = matrix->VirtualGetAt(this->position + Vec2i(0, -1));
     VoxelElement* moreAbove = matrix->VirtualGetAt(this->position + Vec2i(0, -2));
     if (above && above->properties == this->properties && moreAbove && moreAbove->properties == this->properties)
     	return false;

@@ -509,7 +509,7 @@ void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, V
     {
         for (int y = -size; y <= size; y++)
         {
-            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, GameEngine::placeUnmovableSolidVoxels, GameEngine::placeVoxelAmount);
+            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, GameEngine::placeUnmovableSolidVoxels, GameEngine::placeVoxelAmount, false);
         }
     }
 }
@@ -521,7 +521,7 @@ void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    PlaceVoxelAt(MouseWorldPosI, "Oxygen", Temperature(21), false, 1);
+    PlaceVoxelAt(MouseWorldPosI, "Oxygen", Temperature(21), false, 1, true);
 }
 
 void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec2f offset)
@@ -1020,7 +1020,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 }
 
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids, float amount)
+void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids, float amount, bool destructive)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
     Volume::VoxelElement *voxel;
@@ -1038,6 +1038,18 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
             voxel = new Volume::VoxelSolid(id, pos, temp, placeUnmovableSolids, amount);
         }
     } 
+
+    if(!destructive){
+        Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(pos);
+
+        //still remain destructive if the voxel its trying to move is unmovable
+        if(replacedVoxel->IsUnmoveableSolid()){
+            VirtualSetAt(voxel);
+            return;
+        }
+        
+        //TODO: move the voxel previously occupying this spot
+    }
         
     VirtualSetAt(voxel);
 }
@@ -1084,15 +1096,15 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.2f) {
-                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 4.0f);
+                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 4.0f, true);
             }
             else {
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 4.0f);
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 4.0f, false);
                 else {
     				AddParticle(voxel->id, Vec2i(currentPos), voxel->temperature, voxel->amount, static_cast<float>(angle), (radius*1.1f - j)*0.7f);
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 4.0f);
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 4.0f, true);
                 }
             }
     	}
