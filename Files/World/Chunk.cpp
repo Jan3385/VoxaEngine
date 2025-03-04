@@ -1039,6 +1039,13 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
         }
     } 
 
+    static const Vec2i dirs[4] = {
+        Vec2i(0, -1),
+        Vec2i(0, 1),
+        Vec2i(-1, 0),
+        Vec2i(1, 0)
+    };
+
     if(!destructive){
         Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(pos);
 
@@ -1047,8 +1054,54 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
             VirtualSetAt(voxel);
             return;
         }
+
+        //look for the same voxel around this one
+        for(Vec2i dir : dirs){
+            Volume::VoxelElement* neighbour = this->VirtualGetAt_NoLoad(pos + dir);
+            if(neighbour->properties == replacedVoxel->properties){
+                neighbour->amount += replacedVoxel->amount;
+
+                neighbour->temperature.SetCelsius(
+                    (neighbour->temperature.GetCelsius() * neighbour->amount + 
+                    replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
+                     / (neighbour->amount + replacedVoxel->amount));
+
+                VirtualSetAt(voxel);
+                return;
+            }
+        }
+
+        //just look up for a while if you find anything to merge to or to push away
+        for(uint8_t i = 2; i < 10; i++){
+            Vec2i dir = replacedVoxel->position + Vec2i(0, -i);
+            VoxelElement* neighbour = this->VirtualGetAt_NoLoad(dir);
+
+            if(!neighbour){
+                VirtualSetAt(voxel);
+                return;
+            }
+
+            //merge into any voxel thats the same type
+            if(neighbour->properties == replacedVoxel->properties){
+                neighbour->amount += replacedVoxel->amount;
+
+                neighbour->temperature.SetCelsius(
+                    (neighbour->temperature.GetCelsius() * neighbour->amount + 
+                    replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
+                     / (neighbour->amount + replacedVoxel->amount));
+
+                VirtualSetAt(voxel);
+                return;
+            }
+
+            //push away elements with the same state
+            if(neighbour->GetState() == replacedVoxel->GetState()){
+                PlaceVoxelAt(dir, replacedVoxel->id, replacedVoxel->temperature, replacedVoxel->IsUnmoveableSolid(), replacedVoxel->amount, false);
+                VirtualSetAt(voxel);
+                return;
+            }
+        }
         
-        //TODO: move the voxel previously occupying this spot
     }
         
     VirtualSetAt(voxel);
