@@ -42,3 +42,51 @@ public:
     bool operator!=(const Vec2i& other) const;
     bool operator==(const Vec2i& other) const;
 };
+
+namespace vector{
+    const Vec2i AROUND8[8] = {
+        Vec2i(1, 0),
+        Vec2i(1, 1),
+        Vec2i(0, 1),
+        Vec2i(-1, 1),
+        Vec2i(-1, 0),
+        Vec2i(-1, -1),
+        Vec2i(0, -1),
+        Vec2i(1, -1)
+    };
+    const Vec2i AROUND4[4] = {
+        Vec2i(1, 0),
+        Vec2i(0, 1),
+        Vec2i(-1, 0),
+        Vec2i(0, -1)
+    };
+    const Vec2i AROUND4C[4] = {
+        Vec2i(1, 0),
+        Vec2i(0, 1),
+        Vec2i(-1, 0),
+        Vec2i(0, -1)
+    };
+    const Vec2i AROUND4PLUS1[5] = {
+        Vec2i(1, 0),
+        Vec2i(0, 1),
+        Vec2i(-1, 0),
+        Vec2i(0, -1),
+        Vec2i(0, 0)
+    };
+    const Vec2i AROUND8PLUS1[9] = {
+        Vec2i(1, 0),
+        Vec2i(1, 1),
+        Vec2i(0, 1),
+        Vec2i(-1, 1),
+        Vec2i(-1, 0),
+        Vec2i(-1, -1),
+        Vec2i(0, -1),
+        Vec2i(1, -1),
+        Vec2i(0, 0)
+    };
+    const Vec2i UP = Vec2i(0, -1);
+    const Vec2i DOWN = Vec2i(0, 1);
+    const Vec2i LEFT = Vec2i(-1, 0);
+    const Vec2i RIGHT = Vec2i(1, 0);
+    const Vec2i ZERO = Vec2i(0, 0);
+};

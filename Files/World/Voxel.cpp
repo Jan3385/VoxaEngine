@@ -158,7 +158,7 @@ VoxelElement::VoxelElement()
 	:id("Oxygen")
 {
 	this->properties = VoxelRegistry::GetProperties("Oxygen");
-	this->position = Vec2i(0, 0);
+	this->position = vector::ZERO;
 	this->temperature = Temperature(21);
 }
 
@@ -280,7 +280,7 @@ bool Volume::VoxelElement::IsStateAboveDensity(State state, float density) const
 }
 
 VoxelParticle::VoxelParticle()
-	: VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21), 1), fPosition(Vec2f(0,0)), angle(0), speed(0),
+	: VoxelElement("Oxygen", vector::ZERO, Temperature(21), 1), fPosition(Vec2f(0,0)), angle(0), speed(0),
 	m_dPosition(0,0) { }
 
 VoxelParticle::VoxelParticle(std::string id, const Vec2i &position, float amount, Temperature temp, float angle, float speed)
@@ -340,7 +340,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     //Fall below and if not falling try to move to the sides
 
     //falling down + acceleration + setting isFalling to near voxel handling
-    if (StepAlongDirection(matrix, Vec2i(0, 1), Acceleration)) { //if is able to fall down
+    if (StepAlongDirection(matrix, vector::DOWN, Acceleration)) { //if is able to fall down
     	IsFalling = true;
     	Acceleration += 1;
 
@@ -378,17 +378,17 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
 			TryToMoveVoxelBelow(matrix);
 			return true;
 		}
-    	if (StepAlongDirection(matrix, Vec2i(-1, 0), XVelocity)){
+    	if (StepAlongDirection(matrix, vector::LEFT, XVelocity)){
 			TryToMoveVoxelBelow(matrix);
 			return true;
 		}
-    	if (StepAlongDirection(matrix, Vec2i(1, 0), XVelocity)){
+    	if (StepAlongDirection(matrix, vector::RIGHT, XVelocity)){
 			TryToMoveVoxelBelow(matrix);
 			return true;
 		}
 
 
-		VoxelElement *below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
+		VoxelElement *below = matrix->VirtualGetAt(this->position + vector::DOWN);
     	if (below && below->IsMoveableSolid())
     	{
     		VoxelSolid *belowMovable = dynamic_cast<VoxelSolid*>(below);
@@ -431,7 +431,7 @@ bool VoxelSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short 
 void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
 {
 	//try to set isFalling to true on voxel below - simulates inertia
-    VoxelElement* below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
+    VoxelElement* below = matrix->VirtualGetAt(this->position + vector::DOWN);
     if (below && below->IsMoveableSolid())
     {
     	VoxelSolid* belowMovable = dynamic_cast<VoxelSolid*>(below);
@@ -451,7 +451,6 @@ void VoxelSolid::StopFalling()
 
 bool VoxelLiquid::Step(ChunkMatrix *matrix)
 {
-	//TODO: make water only move when theres water above or below it
     //lazy hack to make the chunk its in update in the next cycle
     if (updatedThisFrame) {
     	return true;
@@ -459,7 +458,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     updatedThisFrame = true;
 
     //falling down + acceleration
-    if (StepAlongDirection(matrix, Vec2i(0, 1), Acceleration)) {
+    if (StepAlongDirection(matrix, vector::DOWN, Acceleration)) {
     	IsFalling = true;
     	Acceleration += 1;
     	return true;
@@ -484,8 +483,8 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     }
 
     //if there is the same liquid voxel above, skip
-    VoxelElement* above = matrix->VirtualGetAt(this->position + Vec2i(0, -1));
-    VoxelElement* moreAbove = matrix->VirtualGetAt(this->position + Vec2i(0, -2));
+    VoxelElement* above = matrix->VirtualGetAt(this->position + vector::UP);
+    VoxelElement* moreAbove = matrix->VirtualGetAt(this->position + (vector::UP * 2));
     if (above && above->properties == this->properties && moreAbove && moreAbove->properties == this->properties)
     	return false;
 
@@ -531,7 +530,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     //try to move to the sides
     for (short int i = 0; i < length; ++i)
     {
-    	CurrentPosition += Vec2i(-1, 0);
+    	CurrentPosition += vector::LEFT;
     	VoxelElement* side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
 		
@@ -545,7 +544,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     CurrentPosition = StartPosition;
     for (short int i = 0; i < length; ++i)
     {
-    	CurrentPosition += Vec2i(1, 0);
+    	CurrentPosition += vector::RIGHT;
     	VoxelElement* side = matrix.VirtualGetAt(CurrentPosition);
     	if (!side) break;
 		
@@ -571,11 +570,26 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     }
     updatedThisFrame = true;
 
+	//update surrounding pressure calculation
+	this->surroundingPressure = 0;
+	uint8_t surroundingCount = 0;
+	for(Vec2i dir : vector::AROUND8){
+		VoxelElement* next = matrix->VirtualGetAt(this->position + dir);
+		if(next && next->GetState() == State::Gas){
+			this->surroundingPressure += next->amount;
+			++surroundingCount;
+		}
+	}
+	if(surroundingCount > 0)
+		this->surroundingPressure /= surroundingCount;
+	else	
+		this->surroundingPressure = this->amount;
+
 	//try to move up
-	if (MoveInDirection(matrix, Vec2i(0, -1)))
+	if (MoveInDirection(matrix, vector::UP))
 		return true;
 	//try to fall down
-	if (MoveInDirection(matrix, Vec2i(0, 1)))
+	if (MoveInDirection(matrix, vector::DOWN))
 		return true;
 	//try to randomly move to the sides
 	bool positiveX = rand() % 2;
@@ -608,7 +622,6 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 		}
 	}else{
 		// sides
-		//this->Swap(next->position, *matrix);
 		this->StepAlongSide(matrix, direction.getX() > 0, this->properties->FluidDispursionRate);
 		return true;
 	}
@@ -618,7 +631,7 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 
 bool Volume::VoxelGas::StepAlongSide(ChunkMatrix *matrix, bool positiveX, short int length)
 {
-	Vec2i direction = positiveX ? Vec2i(1, 0) : Vec2i(-1, 0);
+	Vec2i direction = positiveX ? vector::RIGHT : vector::LEFT;
     VoxelElement* next = matrix->VirtualGetAt(this->position + direction);
     if (next && next->GetState() == State::Gas && next->properties != this->properties)
     {

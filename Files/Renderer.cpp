@@ -104,7 +104,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
             for (auto& chunk : chunkMatrix.GridSegmented[i]) {
                 if(chunk->GetAABB().Overlaps(cameraAABB)){
                     // wierd hack to fix seams between chunks
-                    Vec2i padding = Vec2i(0, 0);
+                    Vec2i padding = vector::ZERO;
                     if(chunk->GetAABB().corner.getX() <= cameraAABB.corner.getX()+1) padding.x(1);
                     if (chunk->GetAABB().corner.getY() <= cameraAABB.corner.getY()+1) padding.y(1);
 

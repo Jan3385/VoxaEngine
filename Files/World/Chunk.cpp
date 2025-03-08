@@ -670,10 +670,10 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
             d.chunkRight = -1;
 
             Vec2i pos = this->Grid[i]->GetPos();
-            Vec2i posUp = pos + Vec2i(0, -1);
-            Vec2i posDown = pos + Vec2i(0, 1);
-            Vec2i posLeft = pos + Vec2i(-1, 0);
-            Vec2i posRight = pos + Vec2i(1, 0);
+            Vec2i posUp = pos + vector::UP;
+            Vec2i posDown = pos + vector::DOWN;
+            Vec2i posLeft = pos + vector::LEFT;
+            Vec2i posRight = pos + vector::RIGHT;
             for(uint32_t j = 0; j < static_cast<uint32_t>(this->Grid.size()); ++j){
                 if(this->Grid[j]->GetPos() == posUp)
                     d.chunkUp = j;
@@ -740,10 +740,10 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
             //also force heat update on neighbours
             Vec2i pos = chunksToUpdate[i]->GetPos();
             Vec2i positions[4] = {
-                pos + Vec2i(0, -1),
-                pos + Vec2i(0, 1),
-                pos + Vec2i(-1, 0),
-                pos + Vec2i(1, 0)
+                pos + vector::UP,
+                pos + vector::DOWN,
+                pos + vector::LEFT,
+                pos + vector::RIGHT
             };
 
             for(auto& p : positions){
@@ -820,10 +820,10 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
             d.chunkRight = -1;
 
             Vec2i pos = this->Grid[i]->GetPos();
-            Vec2i posUp = pos + Vec2i(0, -1);
-            Vec2i posDown = pos + Vec2i(0, 1);
-            Vec2i posLeft = pos + Vec2i(-1, 0);
-            Vec2i posRight = pos + Vec2i(1, 0);
+            Vec2i posUp = pos + vector::UP;
+            Vec2i posDown = pos + vector::DOWN;
+            Vec2i posLeft = pos + vector::LEFT;
+            Vec2i posRight = pos + vector::RIGHT;
             for(uint32_t j = 0; j < static_cast<uint32_t>(this->Grid.size()); ++j){
                 if(this->Grid[j]->GetPos() == posUp)
                     d.chunkUp = j;
@@ -886,10 +886,10 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
             //also force pressure update on neighbours
             Vec2i pos = chunksToUpdate[i]->GetPos();
             Vec2i positions[4] = {
-                pos + Vec2i(0, -1),
-                pos + Vec2i(0, 1),
-                pos + Vec2i(-1, 0),
-                pos + Vec2i(1, 0)
+                pos + vector::UP,
+                pos + vector::DOWN,
+                pos + vector::LEFT,
+                pos + vector::RIGHT
             };
 
             for(auto& p : positions){

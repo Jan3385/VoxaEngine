@@ -91,7 +91,7 @@ namespace Volume {
 	//Solid Voxels -> inherit from base voxel class
 	class VoxelSolid : public VoxelElement, public IGravity {
 	public:
-		VoxelSolid() : VoxelElement("Dirt" , Vec2i(0, 0), Temperature(21), 1) {};
+		VoxelSolid() : VoxelElement("Dirt" , vector::ZERO, Temperature(21), 1) {};
 		VoxelSolid(std::string id, Vec2i position, Temperature temp, bool isStatic, float amount) : VoxelElement(id, position, temp, amount), isStatic(isStatic) {};
 		~VoxelSolid() {};
 
@@ -108,7 +108,7 @@ namespace Volume {
 	//liquid voxels -> inherit from base voxel class
 	class VoxelLiquid : public VoxelElement, public IGravity {
 	public:
-		VoxelLiquid() : VoxelElement("Water", Vec2i(0, 0), Temperature(21), 1) {};
+		VoxelLiquid() : VoxelElement("Water", vector::ZERO, Temperature(21), 1) {};
 		VoxelLiquid(std::string id, Vec2i position, Temperature temp, float amount) : VoxelElement(id, position, temp, amount) {};
 		~VoxelLiquid() {};
 
@@ -120,9 +120,11 @@ namespace Volume {
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
 	public:
-		VoxelGas() : VoxelElement("Oxygen", Vec2i(0, 0), Temperature(21), 1) {};
+		VoxelGas() : VoxelElement("Oxygen", vector::ZERO, Temperature(21), 1) {};
 		VoxelGas(std::string id, Vec2i position, Temperature temp, float amount);
 		~VoxelGas() {};
+
+		float surroundingPressure = -1;
 
 		State GetState() const override { return State::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
