@@ -256,7 +256,7 @@ void Volume::Chunk::GetPressureMap(ChunkMatrix *matrix,
             int index = chunkNumber * ChunkSizeSquared + y * Chunk::CHUNK_SIZE + x;
             PressureDataArray[index].pressure = this->voxels[x][y]->amount;
             PressureDataArray[index].id = this->voxels[x][y]->properties->id | 
-                (this->voxels[x][y]->GetState() == State::Solid)  << 31 | 
+                (this->voxels[x][y]->GetState() != State::Gas)  << 31 | 
                 (this->voxels[x][y]->GetState() == State::Liquid) << 30;
         }
     }

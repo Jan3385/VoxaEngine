@@ -11,7 +11,7 @@ const char* VoxelElement::computeShaderPressure = R"(#version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 // bigger number = slower
-#define PRESSURE_TRANSITION_SPEED 1
+#define PRESSURE_TRANSITION_SPEED 1.1
 
 #define CHUNK_SIZE 64
 #define CHUNK_SIZE_SQUARED 4096
@@ -61,7 +61,7 @@ void main(){
 
 	uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
-	// if solid, return
+	// if not gas, return
 	if((voxelPressures[index].id & (0x1 << 31)) != 0){
 		voxelPressureOut[index] = voxelPressures[index].pressure;
 		return;
@@ -468,7 +468,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     	Acceleration = 1;
     }
 
-	VoxelElement* above = matrix->VirtualGetAt(this->position + Vec2i(0, -1));
+	VoxelElement* above = matrix->VirtualGetAt(this->position + vector::UP);
 	VoxelElement* below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
 	if(below && below->GetState() == State::Liquid && below->properties == this->properties){
 		if(below->amount < VoxelLiquid::DesiredDensity){
@@ -484,8 +484,10 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 					//TODO: nothing to place but place can't be empty
 					DieAndReplace(*matrix, "Oxygen");
 				}
-				return true;
 			}
+			Vec2i localPos = Vec2i(this->position.getX() % Chunk::CHUNK_SIZE, this->position.getY() % Chunk::CHUNK_SIZE);
+			matrix->GetChunkAtWorldPosition(this->position)->dirtyRect.Include(localPos);
+			return true;
 		}
 	}
 
@@ -504,7 +506,6 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     }
 
     //if there is the same liquid voxel above, skip
-    VoxelElement* above = matrix->VirtualGetAt(this->position + vector::UP);
     VoxelElement* moreAbove = matrix->VirtualGetAt(this->position + (vector::UP * 2));
     if (above && above->properties == this->properties && moreAbove && moreAbove->properties == this->properties)
     	return false;
