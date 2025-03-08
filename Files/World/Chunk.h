@@ -117,7 +117,7 @@ public:
 	void VirtualSetAt(Volume::VoxelElement *voxel);
 	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel);
 
-	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids, float amount);
+	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive);
 
 	void GetVoxelsInChunkAtWorldPosition(const Vec2f& pos);
 	void GetVoxelsInCubeAtWorldPosition(const Vec2f& start, const Vec2f& end);

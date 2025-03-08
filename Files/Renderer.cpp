@@ -278,7 +278,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     }
     ImGui::SliderInt("Placement Radius", &GameEngine::instance->placementRadius, 1, 10);
     ImGui::DragFloat("Placement Temperature", &GameEngine::instance->placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
-    ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 1, 1, 100);
+    ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 10, 1, 2000);
     ImGui::Checkbox("Place Unmovable Solid Voxels", &GameEngine::instance->placeUnmovableSolidVoxels);
     if(ImGui::Button("Toggle Debug Rendering")) ToggleDebugRendering();
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
