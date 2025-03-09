@@ -39,6 +39,7 @@ namespace Volume {
 
 		const std::string id;
 		const VoxelProperty* properties = nullptr;
+		// worlds space position
 		Vec2i position;
 		RGBA color;
 		Temperature temperature;

@@ -469,6 +469,27 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     }
 
 	VoxelElement* above = matrix->VirtualGetAt(this->position + vector::UP);
+	
+	// if the liquid is above its avalible density, expand
+	if(this->amount > VoxelLiquid::DesiredDensity){
+		if(above && above->GetState() == State::Gas){
+			matrix->PlaceVoxelAt(this->position+vector::UP, this->id, this->temperature, false, this->amount/2, false);
+			this->amount /= 2;
+			return true;
+		}else if(above && above->properties == this->properties){
+			float missingAmount = std::max(VoxelLiquid::DesiredDensity - above->amount, 0.0f);
+			float transferAmount = std::min(missingAmount, this->amount);
+			above->amount += transferAmount;
+			this->amount -= transferAmount;
+
+			if(missingAmount > 0.0f){
+				Vec2i localPos = Vec2i(this->position.getX() % Chunk::CHUNK_SIZE, this->position.getY() % Chunk::CHUNK_SIZE);
+				matrix->GetChunkAtWorldPosition(this->position)->dirtyRect.Include(localPos);
+				return true;
+			}
+		}
+	}
+
 	VoxelElement* below = matrix->VirtualGetAt(this->position + Vec2i(0, 1));
 	if(below && below->GetState() == State::Liquid && below->properties == this->properties){
 		if(below->amount < VoxelLiquid::DesiredDensity){
