@@ -628,6 +628,19 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 	else	
 		this->surroundingPressure = this->amount;
 
+	//look around and try to spread based on pressure
+	for(Vec2i dir : vector::AROUND4){
+		VoxelElement* next = matrix->VirtualGetAt(this->position + dir);
+		if(next && next->GetState() == State::Gas && this->properties != next->properties){
+			if(this->amount - next->amount > 0.1f){
+				//TODO: currently deletes gasses
+				matrix->PlaceVoxelAt(this->position+dir, this->id, this->temperature, false, this->amount/2, false);
+				this->amount /= 2;
+				break;
+			}
+		}
+	}
+
 	//try to move up
 	if (MoveInDirection(matrix, vector::UP))
 		return true;

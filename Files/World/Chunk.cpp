@@ -881,7 +881,7 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
     }
 
     for(uint16_t i = 0; i < NumberOfChunks; ++i){
-        if((pressureDiff[i]/1000.0f) > 0.2f){
+        if((pressureDiff[i]/1000.0f) > 0.01f){
             chunksToUpdate[i]->forcePressureUpdate = true;
             //also force pressure update on neighbours
             Vec2i pos = chunksToUpdate[i]->GetPos();
