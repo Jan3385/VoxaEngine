@@ -165,9 +165,9 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 Volume::Chunk::~Chunk()
 {
 
-    if (font != nullptr) {
-        TTF_CloseFont(font);
-        font = nullptr;
+    if (this->font != nullptr) {
+        TTF_CloseFont(this->font);
+        this->font = nullptr;
     }
     SDL_FreeSurface(this->chunkSurface);
 
@@ -408,15 +408,17 @@ ChunkMatrix::~ChunkMatrix()
 void ChunkMatrix::cleanup()
 {
     if(cleaned) return;
+    cleaned = true;
 
     for(uint8_t i = 0; i < 4; ++i)
     {
-        for(int64_t j = GridSegmented[i].size() - 1; j >= 0; --j)
-        {
-            delete GridSegmented[i][j];
-        }
         GridSegmented[i].clear();
     }
+    for(int16_t i = Grid.size() - 1; i >= 0; --i)
+    {
+        delete Grid[i];
+    }
+    Grid.clear();
     
     for (auto& particle : particles) {
     	delete particle;
@@ -427,8 +429,6 @@ void ChunkMatrix::cleanup()
         delete particle;
     }
     newParticles.clear();
-    
-    cleaned = true;
 }
 
 Vec2i ChunkMatrix::WorldToChunkPosition(const Vec2f &pos)
@@ -576,10 +576,12 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     uint8_t AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
+
+    this->gridMutex.lock();
     this->GridSegmented[AssignedGridPass].push_back(chunk);
 
-    //TODO: fix sometimes crash here? (deallocation issue?)
     this->Grid.push_back(chunk);
+    this->gridMutex.unlock();
 
     return chunk;
 }
@@ -1051,7 +1053,7 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
         //look for the same voxel around this one
         for(Vec2i dir : vector::AROUND4){
             Volume::VoxelElement* neighbour = this->VirtualGetAt_NoLoad(pos + dir);
-            if(neighbour->properties == replacedVoxel->properties){
+            if(neighbour && neighbour->properties == replacedVoxel->properties){
                 neighbour->amount += replacedVoxel->amount;
 
                 if(replacedVoxel->amount != 0 || replacedVoxel->amount != 0){

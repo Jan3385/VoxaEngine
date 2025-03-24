@@ -89,6 +89,7 @@ public:
 	void cleanup();
 
 	//grid storage logic
+	std::mutex gridMutex;
 	//not precomputed array of chunks
 	std::vector<Volume::Chunk*> Grid;
 	//precomputed grids for simulation passing - 0 - 3 passees
