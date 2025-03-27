@@ -1024,22 +1024,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
 
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids, float amount, bool destructive)
 {
-    Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
-    Volume::VoxelElement *voxel;
-
-    VoxelProperty* prop = VoxelRegistry::GetProperties(id);    
-
-    if(id == "Fire")
-        voxel = new Volume::FireVoxel(pos, temp, amount);
-    else{
-        if(prop->state == State::Gas)
-            voxel = new Volume::VoxelGas(id, pos, temp, amount);
-        else if(prop->state == State::Liquid)
-            voxel = new Volume::VoxelLiquid(id, pos, temp, amount);
-        else{
-            voxel = new Volume::VoxelSolid(id, pos, temp, placeUnmovableSolids, amount);
-        }
-    } 
+    Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
 
     if(!destructive){
         Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(pos);
@@ -1058,8 +1043,7 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
 
                 if(replacedVoxel->amount != 0 || replacedVoxel->amount != 0){
                     neighbour->temperature.SetCelsius(
-                        (neighbour->temperature.GetCelsius() * neighbour->amount + 
-                        replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
+                        (neighbour->temperature.GetCelsius() * neighbour->amount + replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
                          / (neighbour->amount + replacedVoxel->amount));
                 }
                 //whem amount is 0, set temperature to 21
@@ -1105,6 +1089,26 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
     }
         
     VirtualSetAt(voxel);
+}
+
+bool ChunkMatrix::TryToDisplaceGas(const Vec2i &pos, std::string id, Volume::Temperature temp, float amount, bool placeUnmovableSolids)
+{
+    Volume::VoxelElement *displacedGas = this->VirtualGetAt(pos);
+    if(!displacedGas || displacedGas->GetState() != State::Gas) return false;
+
+    Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
+
+    for(Vec2i dir : vector::AROUND4){
+        Volume::VoxelElement* neighbour = this->VirtualGetAt_NoLoad(pos + dir);
+        if(neighbour && neighbour->properties == displacedGas->properties){
+            neighbour->amount += displacedGas->amount;
+            this->VirtualSetAt(voxel);
+            return true;
+        }
+    }
+
+    delete voxel;
+    return false;
 }
 
 void ChunkMatrix::GetVoxelsInChunkAtWorldPosition(const Vec2f &pos)

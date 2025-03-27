@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include "../World/voxelTypes.h"
+
 using namespace Volume;
 // Initialize the voxel properties
 
@@ -168,7 +170,8 @@ void VoxelRegistry::RegisterVoxels()
 		"Carbon_Dioxide",
 		VoxelBuilder(State::Gas, 850, 0.016, 1.98)
 			.SetName("Carbon Dioxide")
-			.SetColor(RGBA(4, 4, 4, 50))
+			//.SetColor(RGBA(4, 4, 4, 50))
+			.SetColor(RGBA(255, 4, 4, 200))
 			.PhaseDown("Liquid_Carbon_Dioxide", -56.6)
 			.SetFluidDispursionRate(3)
 			.Build()
@@ -320,4 +323,25 @@ Volume::VoxelProperty VoxelBuilder::Build()
 		0,
 		10
 	};
+}
+
+Volume::VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids)
+{
+	Volume::VoxelElement *voxel;
+
+	VoxelProperty* prop = VoxelRegistry::GetProperties(id);   
+
+    if(id == "Fire")
+        voxel = new Volume::FireVoxel(position, temp, amount);
+    else{
+        if(prop->state == State::Gas)
+            voxel = new Volume::VoxelGas(id, position, temp, amount);
+        else if(prop->state == State::Liquid)
+            voxel = new Volume::VoxelLiquid(id, position, temp, amount);
+        else{
+            voxel = new Volume::VoxelSolid(id, position, temp, placeUnmovableSolids, amount);
+        }
+    } 
+	
+	return voxel;
 }

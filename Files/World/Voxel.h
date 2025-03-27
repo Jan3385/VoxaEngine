@@ -127,8 +127,6 @@ namespace Volume {
 		VoxelGas(std::string id, Vec2i position, Temperature temp, float amount);
 		~VoxelGas() {};
 
-		float surroundingPressure = -1;
-
 		State GetState() const override { return State::Gas; };
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongSide(ChunkMatrix *matrix, bool positiveX, short int length);

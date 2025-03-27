@@ -613,30 +613,17 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     }
     updatedThisFrame = true;
 
-	//update surrounding pressure calculation
-	this->surroundingPressure = 0;
-	uint8_t surroundingCount = 0;
-	for(Vec2i dir : vector::AROUND8){
-		VoxelElement* next = matrix->VirtualGetAt(this->position + dir);
-		if(next && next->GetState() == State::Gas){
-			this->surroundingPressure += next->amount;
-			++surroundingCount;
-		}
-	}
-	if(surroundingCount > 0)
-		this->surroundingPressure /= surroundingCount;
-	else	
-		this->surroundingPressure = this->amount;
-
 	//look around and try to spread based on pressure
 	for(Vec2i dir : vector::AROUND4){
 		VoxelElement* next = matrix->VirtualGetAt(this->position + dir);
 		if(next && next->GetState() == State::Gas && this->properties != next->properties){
-			if(this->amount - next->amount > 0.1f){
-				//TODO: currently deletes gasses
-				matrix->PlaceVoxelAt(this->position+dir, this->id, this->temperature, false, this->amount/2, false);
-				this->amount /= 2;
-				break;
+			float nextAmount = next->amount;
+			if(this->amount - nextAmount > 0.3f){
+				// small amount of gas deletion happens.. no idea why
+				if(matrix->TryToDisplaceGas(this->position + dir, this->id, this->temperature, this->amount - nextAmount, false)){
+					this->amount = nextAmount;
+					break;
+				}
 			}
 		}
 	}

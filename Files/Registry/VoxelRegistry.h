@@ -5,6 +5,7 @@
 #include <optional>
 #include "../Math/Color.h"
 #include "../Math/Temperature.h"
+#include "../Math/Vector.h"
 
 struct PhaseChange{
 		Volume::Temperature TemperatureAt;
@@ -12,6 +13,8 @@ struct PhaseChange{
 };
 
 namespace Volume{
+	class VoxelElement;
+	
     static constexpr float TEMP_TRANSITION_THRESHOLD = 1.5f;
 	enum class State {
 		Gas,
@@ -33,6 +36,8 @@ namespace Volume{
 		uint32_t id = 0;
 	};
 }
+
+Volume::VoxelElement* CreateVoxelElement(std::string id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids);
 
 class VoxelBuilder{
 public:
