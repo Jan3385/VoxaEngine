@@ -51,7 +51,7 @@ public:
     
 
     bool runHeatSimulation = true;
-    bool runPressureSimulation = false;
+    bool runPressureSimulation = true;
 
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;

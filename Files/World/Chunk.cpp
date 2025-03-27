@@ -1153,15 +1153,15 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.2f) {
-                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 4.0f, true);
+                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 5.0f, true);
             }
             else {
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 4.0f, false);
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false);
                 else {
     				AddParticle(voxel->id, Vec2i(currentPos), voxel->temperature, voxel->amount, static_cast<float>(angle), (radius*1.1f - j)*0.7f);
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 4.0f, true);
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, true);
                 }
             }
     	}
