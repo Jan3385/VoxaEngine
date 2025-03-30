@@ -11,7 +11,7 @@
 using namespace Volume; 
 
 GLuint Volume::Chunk::computeShaderHeat_Program = 0;
-const char* Chunk::computeShaderHeat = R"(#version 460 core
+const char* Chunk::computeShaderHeat = R"glsl(#version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 #define TEMPERATURE_TRANSITION_SPEED 80
@@ -151,7 +151,7 @@ void main(){
     
     voxelTempsOut[index] = voxelTemps[index].temperature + (sum / NumOfValidDirections);
 }
-)";
+)glsl";
 
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
@@ -203,6 +203,9 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
         {
             if(x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE) continue;
     		if (voxels[x][y]->Step(matrix)) {
+                //add to dirty rect
+                dirtyRect.Include(Vec2i(x, y));
+
                 //if voxel is at the edge of chunk, update neighbour chunk
     			if (x == 0) { // left
                     Chunk* c = matrix->GetChunkAtChunkPosition(Vec2i(m_x - 1, m_y));

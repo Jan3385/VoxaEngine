@@ -7,7 +7,7 @@
 using namespace Volume;
 
 GLuint VoxelElement::computeShaderPressure_Program = 0;
-const char* VoxelElement::computeShaderPressure = R"(#version 460 core
+const char* VoxelElement::computeShaderPressure = R"glsl(#version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 // bigger number = slower
@@ -152,7 +152,7 @@ void main(){
     
     voxelPressureOut[index] = voxelPressures[index].pressure - (sum / NumOfValidDirections);
 }
-)";
+)glsl";
 
 VoxelElement::VoxelElement()
 	:id("Oxygen")
@@ -237,7 +237,6 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 
 void VoxelElement::DieAndReplace(ChunkMatrix &matrix, std::string id)
 {
-    //matrix.VirtualSetAt(replacement);
 	matrix.PlaceVoxelAt(this->position, id, this->temperature, false, this->amount, true);
 }
 

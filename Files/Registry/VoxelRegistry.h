@@ -25,13 +25,16 @@ namespace Volume{
 		std::string name;
 		State state;
 		RGBA pColor;
-		float Density; // g/L or kg/m^3
-		float HeatCapacity; // J/kg*K
-		float HeatConductivity; // W/m*K
+		float Density;              //g/L or kg/m^3
+		float HeatCapacity;         //J/kg*K
+		float HeatConductivity;     // W/m*K
+
 		std::optional<PhaseChange> CooledChange;
 		std::optional<PhaseChange> HeatedChange;
 		float SolidInertiaResistance;
 		uint8_t FluidDispursionRate;
+
+		uint8_t Flamability = 0; // 0 - 255
 
 		uint32_t id = 0;
 	};
@@ -48,18 +51,20 @@ public:
 	VoxelBuilder& PhaseDown(std::string To, float Temperature);
 	VoxelBuilder& SetSolidInertiaResistance(float resistance);
 	VoxelBuilder& SetFluidDispursionRate(uint8_t rate);
+	VoxelBuilder& SetFlamability(uint8_t flamability);
 	Volume::VoxelProperty Build();
 private:
 	Volume::State State;
 	std::string Name = "NONAME";
 	RGBA Color;
-	float Density;
-	float HeatCapacity;
-	float HeatConductivity;
+	float Density;					//Controls the elevation of the voxel (heavy carbon deoxide will sink below light oxygen)
+	float HeatCapacity;				//Controls the ability to hold temperature 
+	float HeatConductivity;			//Controls the ability to transfer temperature to other voxels
 	std::optional<PhaseChange> CooledChange;
 	std::optional<PhaseChange> HeatedChange;
-	float SolidInertiaResistance; // 0 - 1
-	uint8_t FluidDispursionRate; // 0 - 255
+	float SolidInertiaResistance; 	// 0 - 1 (0 being no resistance and 1 being full resistance)
+	uint8_t FluidDispursionRate; 	// 0 - 255; how well does the fluid move from side to side (0 being no dispersion and 255 being full dispersion)
+	uint8_t Flamability = 0;		// 0 - 255 (0 being no flamability and 255 being full flamability)
 };
 
 class VoxelRegistry {

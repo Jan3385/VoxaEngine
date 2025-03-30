@@ -32,7 +32,6 @@ void VoxelRegistry::RegisterVoxels()
 		"Oxygen",
 		VoxelBuilder(State::Gas, 919, 0.026, 1.429)
 			.SetName("Oxygen")
-			//.SetColor(RGBA(15, 15, 15, 50))
 			.SetColor(RGBA(15, 15, 15, 50))
 			.PhaseDown("Liquid_Oxygen", -182.96)
 			.SetFluidDispursionRate(3)
@@ -110,6 +109,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetColor(RGBA(34, 139, 34, 255))
 			.PhaseUp("Dirt", 200)
 			.SetSolidInertiaResistance(0.5)
+			.SetFlamability(70)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -158,6 +158,24 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
+		"Fire_Solid",
+		VoxelBuilder(State::Solid, 100, 0.4, 1)
+			.SetName("Fire")
+			.SetColor(RGBA(255, 87, 34, 210))
+			.PhaseDown("Carbon_Dioxide", 100)
+			.SetSolidInertiaResistance(0.1)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Fire_Liquid",
+		VoxelBuilder(State::Liquid, 100, 0.4, 1)
+			.SetName("Fire")
+			.SetColor(RGBA(255, 87, 34, 210))
+			.PhaseDown("Carbon_Dioxide", 100)
+			.SetFluidDispursionRate(2)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
 		"Plasma",
 		VoxelBuilder(State::Gas, 500, 2.0, 1)
 			.SetName("Plasma")
@@ -170,8 +188,8 @@ void VoxelRegistry::RegisterVoxels()
 		"Carbon_Dioxide",
 		VoxelBuilder(State::Gas, 850, 0.016, 1.98)
 			.SetName("Carbon Dioxide")
-			//.SetColor(RGBA(4, 4, 4, 50))
-			.SetColor(RGBA(255, 4, 4, 200))
+			.SetColor(RGBA(4, 4, 4, 50))
+			//.SetColor(RGBA(255, 4, 4, 200))
 			.PhaseDown("Liquid_Carbon_Dioxide", -56.6)
 			.SetFluidDispursionRate(3)
 			.Build()
@@ -222,6 +240,25 @@ void VoxelRegistry::RegisterVoxels()
 			.SetSolidInertiaResistance(0.5)
 			.Build()
 	);
+	VoxelRegistry::RegisterVoxel(
+		"Wood",
+		VoxelBuilder(State::Solid, 2000, 0.7, 700)
+			.SetName("Wood")
+			.SetColor(RGBA(139, 69, 19, 255))
+			.PhaseUp("Charcoal", 350)
+			.SetSolidInertiaResistance(0.5)
+			.SetFlamability(170)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Charcoal",
+		VoxelBuilder(State::Solid, 1100, 0.4, 1000)
+			.SetName("Charcoal")
+			.SetColor(RGBA(54, 69, 79, 255))
+			.SetSolidInertiaResistance(0.5)
+			.SetFlamability(200)
+			.Build()
+	);
 
 	registriesClosed = true;
 	std::cout << "[ OK ]" << std::endl;
@@ -239,9 +276,11 @@ VoxelProperty* VoxelRegistry::GetProperties(std::string id)
 Volume::VoxelProperty *VoxelRegistry::GetProperties(uint32_t id)
 {
     auto it = VoxelRegistry::idRegistry.find(id);
+
 	if(it == VoxelRegistry::idRegistry.end()){
 		throw std::runtime_error("Voxel property not found for numeric id: " + id);
 	}
+
 	return it->second;
 }
 
@@ -297,8 +336,12 @@ VoxelBuilder &VoxelBuilder::PhaseDown(std::string To, float Temperature)
 	return *this;
 }
 
+// Between 0 and 1, 0 being no resistance and 1 being full resistance
 VoxelBuilder &VoxelBuilder::SetSolidInertiaResistance(float resistance)
 {
+	if(resistance < 0 || resistance > 1)
+		throw std::runtime_error("Solid Inertia Resistance must be between 0 and 1\nMaterial name: " + this->Name);
+
 	this->SolidInertiaResistance = resistance;
 	return *this;
 }
@@ -309,9 +352,15 @@ VoxelBuilder &VoxelBuilder::SetFluidDispursionRate(uint8_t rate)
 	return *this;
 }
 
+VoxelBuilder &VoxelBuilder::SetFlamability(uint8_t flamability)
+{
+	this->Flamability = flamability;
+	return *this;
+}
+
 Volume::VoxelProperty VoxelBuilder::Build()
 {
-    return {
+    return Volume::VoxelProperty{
 		this->Name,
 		this->State,
 		this->Color,
@@ -321,7 +370,8 @@ Volume::VoxelProperty VoxelBuilder::Build()
 		this->CooledChange,
 		this->HeatedChange,
 		0,
-		10
+		10,
+		this->Flamability
 	};
 }
 
@@ -333,6 +383,10 @@ Volume::VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float a
 
     if(id == "Fire")
         voxel = new Volume::FireVoxel(position, temp, amount);
+	else if(id == "Fire_Liquid")
+		voxel = new Volume::FireLiquidVoxel(position, temp, amount);
+	else if(id == "Fire_Solid")
+		voxel = new Volume::FireSolidVoxel(position, temp, amount, placeUnmovableSolids);
     else{
         if(prop->state == State::Gas)
             voxel = new Volume::VoxelGas(id, position, temp, amount);
