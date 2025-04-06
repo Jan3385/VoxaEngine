@@ -1,9 +1,11 @@
 # **VoxaEngine**
 > a small sand falling engine build with SDL2 and ImGui in C++
 
-VoxaEngine is currently capable of making sand falling simulations and heat transfer simulations
+VoxaEngine is currently capable of making sand falling simulations, heat transfer & pressure simulations.
 
 Uses **SDL2** with **SDL_TTF** library and **Dear ImGui**. Engine is entirely programmed in C++.
+
+Features basic OpenGL compute shaders using **GLEW** for faster computing.
 
 ### Sand Falling simulation
 Utilizes Dirty Rect's and multithreading for maximum performance.
@@ -17,11 +19,18 @@ Capable of trasfering heat between voxels and changing voxel states based on tem
 
 Utilizes multithreading, sectioning and flagging chunks needing to compute heat for extra performance.
 
+Parts of the heat transfer is done on the GPU for extra performace
+
 Simulation includes heat capacity and heat conductivity for each voxel for more realistic transfers.
 
-## How To Run:
+### Pressure Transfer simulation
+Capable of simulating gas and liquid "pressures" and is able to compress or stretch those fluids in avalible space.
 
-### Windows 10/11
+A small part of the pressure simulation is done on the GPU for faster speeds
+
+# How To Run:
+
+## Windows 10/11
 
 Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. 
 
@@ -29,7 +38,7 @@ To compile simply run `cmake --preset release` and follow with `cmake --build bu
 
 After that, run `VoxaEngine.exe` inside the build folder.
 
-### UNIX Linux
+## UNIX Linux
 
 Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. 
 
