@@ -40,12 +40,16 @@ bool Volume::FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxe
                 }
                 //20% chance to ignite if there is no oxygen around
                 if(nextHasOxygen || rand() % 100 < 20){
+                    Temperature temp = FireVoxel->temperature;
+                    if(temp.GetCelsius() < 250) 
+                        temp.SetCelsius(250);
+
                     if(next->GetState() == State::Gas)
-                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire", FireVoxel->temperature, true, next->amount, true);
+                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire", temp, true, next->amount, true);
                     else if(next->GetState() == State::Liquid)
-                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire_Liquid", FireVoxel->temperature, true, next->amount, true);
+                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire_Liquid", temp, true, next->amount, true);
                     else
-                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire_Solid", FireVoxel->temperature, true, next->amount, dynamic_cast<VoxelSolid*>(next)->isStatic);
+                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire_Solid", temp, true, next->amount, true);
                 }
             }
         }
@@ -80,6 +84,7 @@ bool Volume::FireVoxel::Step(ChunkMatrix *matrix)
 
     //set random fire color
     this->color = fireColors[rand() % fireColorCount];
+    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
     //15% chance to dissapear
     if (rand() % 100 < 15 || forcedLifetimeTime <= 0 || this->amount <= 0)
@@ -107,33 +112,39 @@ bool Volume::FireLiquidVoxel::Step(ChunkMatrix *matrix)
     //check for oxygen and spread
     bool isAroundOxygen = Volume::FireVoxel::Spread(matrix, this);
 
-    //flame burns faster without oxygen
+    //flame burns faster with oxygen
     float amountChange;
-    if(isAroundOxygen){
-        amountChange = (this->amount * 0.0005f) + 1;
-    }
-    else{
-        amountChange = (this->amount * 0.001f) + 0.5;
-    }
+    if(isAroundOxygen)
+        amountChange = (this->amount * 0.0001f) + 0.5;
+    else
+        amountChange = (this->amount * 0.00005f) + 1;
+
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
     this->amount -= amountChange;
 
-    float temperatureChangePercent;
+    float temperatureChangePercent = 0;
     if(this->amount > 0 && amountChange > 0.5f)
         temperatureChangePercent = (amountChange / this->amount);
-    else
-        temperatureChangePercent = 0.2f;
+    
+    if(temperatureChangePercent < 0.15f)
+        temperatureChangePercent = 0.15f;
     
     this->temperature = Temperature(std::max(this->temperature.GetCelsius(), temperatureChangePercent * 1000));
 
     //set random fire color
     this->color = Volume::FireVoxel::fireColors[rand() % Volume::FireVoxel::fireColorCount];
+    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
-    if (this->amount <= 0)
+    if (this->amount <= 5)
     {
-        this->amount = 0.1f;
-    	this->DieAndReplace(*matrix, "Fire");
+        this->amount = std::max(this->amount, 0.1f);
+
+    	if(rand() % 100 < 10) // 10% chance to turn into ash
+            this->DieAndReplace(*matrix, "Ash");
+        else
+            this->DieAndReplace(*matrix, "Carbon_Dioxide");
+
         return true;
     }
     VoxelLiquid::Step(matrix);
@@ -150,33 +161,39 @@ bool Volume::FireSolidVoxel::Step(ChunkMatrix *matrix)
     //check for oxygen and spread
     bool isAroundOxygen = Volume::FireVoxel::Spread(matrix, this);
 
-    //flame burns faster without oxygen
+    //flame burns faster with oxygen
     float amountChange;
-    if(isAroundOxygen){
-        amountChange = (this->amount * 0.0005f) + 1;
-    }
-    else{
-        amountChange = (this->amount * 0.001f) + 0.5;
-    }
+    if(isAroundOxygen)
+        amountChange = (this->amount * 0.0001f) + 0.5;
+    else
+        amountChange = (this->amount * 0.00005f) + 1;
+
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
     this->amount -= amountChange;
 
-    float temperatureChangePercent;
+    float temperatureChangePercent = 0;
     if(this->amount > 0 && amountChange > 0.5f)
         temperatureChangePercent = (amountChange / this->amount);
-    else
-        temperatureChangePercent = 0.2f;
+    
+    if(temperatureChangePercent < 0.15f)
+        temperatureChangePercent = 0.15f;
     
     this->temperature = Temperature(std::max(this->temperature.GetCelsius(), temperatureChangePercent * 1000));
 
     //set random fire color
     this->color = Volume::FireVoxel::fireColors[rand() % Volume::FireVoxel::fireColorCount];
+    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
-    if (this->amount <= 0)
+    if (this->amount <= 5)
     {
-        this->amount = 0.1f;
-    	this->DieAndReplace(*matrix, "Fire");
+        this->amount = std::max(this->amount, 0.1f);
+
+        if(rand() % 100 < 10) // 10% chance to turn into ash
+            this->DieAndReplace(*matrix, "Ash");
+        else
+            this->DieAndReplace(*matrix, "Carbon_Dioxide");
+
         return true;
     }
     VoxelSolid::Step(matrix);

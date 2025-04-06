@@ -7,6 +7,8 @@
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_sdlrenderer2.h>
 
+#include <list>
+
 #include "Renderer.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
@@ -47,7 +49,10 @@ public:
 
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
+
     float FPS = 60;
+    float avgFPS = 60;
+    std::list<float> FPSHistory = {};
     
 
     bool runHeatSimulation = true;

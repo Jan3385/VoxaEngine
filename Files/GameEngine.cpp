@@ -1,6 +1,5 @@
 #include "GameEngine.h"
 #include <iostream>
-#include <thread>
 #include <mutex>
 #include <future>
 #include <cstring>
@@ -52,6 +51,16 @@ void GameEngine::EndFrame()
 
     this->deltaTime = FrameTime;
     this->FPS = 1.0f / FrameTime;
+
+    if(this->FPSHistory.size() >= 15)
+        this->FPSHistory.pop_back();
+
+    this->FPSHistory.push_front(this->FPS);
+
+    this->avgFPS = 0;
+    for(auto& fps : this->FPSHistory)
+        this->avgFPS += fps;
+    this->avgFPS /= this->FPSHistory.size();
 }
 
 void GameEngine::Update()
@@ -62,6 +71,7 @@ void GameEngine::Update()
     //Update Player
     this->Player.Update(this->chunkMatrix, this->deltaTime);
 
+    //TODO: run simulation in parallel
     fixedUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
@@ -81,17 +91,13 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         }
     }
 
-    std::vector<std::thread> threads;
-    for (auto& chunk : chunkMatrix.GridSegmented[pass]) {
-        threads.push_back(std::thread([&]() {
-            if (!chunk->dirtyRect.IsEmpty()){
-                chunk->UpdateVoxels(&this->chunkMatrix);
-            }
-            chunk->dirtyRect.Update();
-        }));
-    }
-    for (auto& thread : threads) {
-        thread.join();
+    #pragma omp parallel for
+    for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
+        auto& chunk = chunkMatrix.GridSegmented[pass][i];
+        if (!chunk->dirtyRect.IsEmpty()) {
+            chunk->UpdateVoxels(&this->chunkMatrix);
+        }
+        chunk->dirtyRect.Update();
     }
 }
 void GameEngine::m_FixedUpdate()

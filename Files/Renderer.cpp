@@ -3,7 +3,6 @@
 #include "GameEngine.h"
 
 #include <iostream>
-#include <thread>
 #include <vector>
 #include <mutex>
 #include <math.h>
@@ -92,43 +91,38 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     player.Render(r_renderer);
 
     //chunk rendering
-    std::vector<std::thread> threads;
     std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
     std::mutex renderDataMutex;
 
     AABB cameraAABB = player.Camera.Expand(1);
+
+    #pragma omp parallel for
     for(uint8_t i = 0; i < 4; ++i)
     {
-        threads.push_back(std::thread([&, i]{
-            std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
-            for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-                if(chunk->GetAABB().Overlaps(cameraAABB)){
-                    // wierd hack to fix seams between chunks
-                    Vec2i padding = vector::ZERO;
-                    if(chunk->GetAABB().corner.getX() <= cameraAABB.corner.getX()+1) padding.x(1);
-                    if (chunk->GetAABB().corner.getY() <= cameraAABB.corner.getY()+1) padding.y(1);
+        std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
+        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+            if(chunk->GetAABB().Overlaps(cameraAABB)){
+                // wierd hack to fix seams between chunks
+                Vec2i padding = vector::ZERO;
+                if(chunk->GetAABB().corner.getX() <= cameraAABB.corner.getX()+1) padding.x(1);
+                if (chunk->GetAABB().corner.getY() <= cameraAABB.corner.getY()+1) padding.y(1);
 
-                    SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
+                SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
 
-                    SDL_Rect rect = {
-                        static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                            (player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getX(),
-                        static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                            (player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getY(),
-                        Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
-                        Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
-                    };
+                SDL_Rect rect = {
+                    static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
+                        (player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getX(),
+                    static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
+                        (player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getY(),
+                    Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
+                    Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
+                };
 
-                    localData.push_back({chunkSurface, rect});
-                }
+                localData.push_back({chunkSurface, rect});
             }
-            std::lock_guard<std::mutex> lock(renderDataMutex);
-            renderData.insert(renderData.end(), localData.begin(), localData.end());
-        }));
-    }
-    // Wait for all threads to finish
-    for (auto& thread : threads) {
-        thread.join();
+        }
+        std::lock_guard<std::mutex> lock(renderDataMutex);
+        renderData.insert(renderData.end(), localData.begin(), localData.end());
     }
 
     for(auto& data : renderData){
@@ -246,6 +240,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::Begin("VoxaEngine Debug Panel");
 
     ImGui::Text("FPS: %lf", GameEngine::instance->FPS);
+    ImGui::Text("15 FPS AVG: %lf", GameEngine::instance->avgFPS);
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",

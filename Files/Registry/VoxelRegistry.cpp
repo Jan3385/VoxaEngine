@@ -159,7 +159,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire_Solid",
-		VoxelBuilder(State::Solid, 100, 0.4, 1)
+		VoxelBuilder(State::Solid, 100, 0.1, 1)
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", 100)
@@ -168,11 +168,20 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire_Liquid",
-		VoxelBuilder(State::Liquid, 100, 0.4, 1)
+		VoxelBuilder(State::Liquid, 100, 0.1, 1)
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", 100)
 			.SetFluidDispursionRate(2)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Ash",
+		VoxelBuilder(State::Solid, 100, 0.4, 540)
+			.SetName("Ash")
+			.SetColor(RGBA(189, 189, 189, 255))
+			.PhaseUp("Charcoal", 600)
+			.SetSolidInertiaResistance(0.1)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(

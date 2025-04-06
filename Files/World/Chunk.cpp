@@ -279,11 +279,10 @@ void Volume::Chunk::ResetVoxelUpdateData()
 
 SDL_Surface* Volume::Chunk::Render(bool debugRender)
 {
-    // Calculate the chunk coordinates
-    int x1 = 0;
-    int y1 = 0;
-    int x2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
-    int y2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
+    uint8_t x1 = 0;
+    uint8_t y1 = 0;
+    uint16_t x2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
+    uint16_t y2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
 
     if(this->chunkSurface == nullptr) {
         this->chunkSurface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
@@ -296,11 +295,6 @@ SDL_Surface* Volume::Chunk::Render(bool debugRender)
         for (int y = 0; y < CHUNK_SIZE; ++y) {
             for (int x = 0; x < CHUNK_SIZE; ++x) {
                 RGBA& color = voxels[x][y]->color;
-                //color.r = SDL_clamp(color.r, 0, 255);
-                //color.g = 0;
-                //color.b = SDL_clamp(255 - voxels[x][y]->temperature.GetCelsius(), 0, 255);
-                //const RGB& color = RGB(voxels[x][y].get()->position.getX() / 2, 0, voxels[x][y].get()->position.getY() / 2);
-
                 SDL_Rect rect = {
                     x*RENDER_VOXEL_SIZE,
                     y*RENDER_VOXEL_SIZE,
@@ -334,6 +328,7 @@ SDL_Surface* Volume::Chunk::Render(bool debugRender)
     Uint32 borderColor = SDL_MapRGBA(this->chunkSurface->format, 255, 0, 0, 255);
 
     // Draw border (manual pixel manipulation for lines)
+    
     SDL_Rect topLine = {x1, y1, x2 - x1, 1};           // Top
     SDL_Rect bottomLine = {x1, y2 - 1, x2 - x1, 1};    // Bottom
     SDL_Rect leftLine = {x1, y1, 1, y2 - y1};          // Left
