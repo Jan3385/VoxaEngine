@@ -23,23 +23,20 @@ bool Volume::FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxe
     bool isAroundOxygen = false;
     for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(FireVoxel->position + dir);
+        if(next && next->id == "Oxygen"){
+            isAroundOxygen = true;
+            break;
+        }
+    }
+
+    for(Vec2i dir : vector::AROUND8){
+        VoxelElement* next = matrix->VirtualGetAt_NoLoad(FireVoxel->position + dir);
         if(next){
-            if(next->id == "Oxygen"){
-                isAroundOxygen = true;
-                break;
-            }
             //ignite based on Flamability
             if((rand()%256) - next->properties->Flamability < 0){
-                bool nextHasOxygen = false;
-                for(Vec2i dir2 : vector::AROUND8){
-                    VoxelElement* next2 = matrix->VirtualGetAt_NoLoad(FireVoxel->position + dir + dir2);
-                    if(next2 && next2->id == "Oxygen"){
-                        nextHasOxygen = true;
-                        break;
-                    }
-                }
+
                 //20% chance to ignite if there is no oxygen around
-                if(nextHasOxygen || rand() % 100 < 20){
+                if(isAroundOxygen || rand() % 100 < 20){
                     Temperature temp = FireVoxel->temperature;
                     if(temp.GetCelsius() < 250) 
                         temp.SetCelsius(250);
@@ -164,9 +161,9 @@ bool Volume::FireSolidVoxel::Step(ChunkMatrix *matrix)
     //flame burns faster with oxygen
     float amountChange;
     if(isAroundOxygen)
-        amountChange = (this->amount * 0.0001f) + 0.5;
+        amountChange = (this->amount * 0.00005f) + 0.5f;
     else
-        amountChange = (this->amount * 0.00005f) + 1;
+        amountChange = (this->amount * 0.000025f) + 0.5f;
 
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
