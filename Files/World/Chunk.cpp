@@ -1024,8 +1024,14 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
 {
     Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
 
+    PlaceVoxelAt(voxel, destructive);
+}
+void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive)
+{
+    if(!voxel) return; // Check for null pointer
+
     if(!destructive){
-        Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(pos);
+        Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(voxel->position);
 
         //still remain destructive if the voxel its trying to move is unmovable
         if(replacedVoxel->IsUnmoveableSolid()){
@@ -1035,7 +1041,7 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
 
         //look for the same voxel around this one
         for(Vec2i dir : vector::AROUND4){
-            Volume::VoxelElement* neighbour = this->VirtualGetAt_NoLoad(pos + dir);
+            Volume::VoxelElement* neighbour = this->VirtualGetAt_NoLoad(voxel->position + dir);
             if(neighbour && neighbour->properties == replacedVoxel->properties){
                 neighbour->amount += replacedVoxel->amount;
 
@@ -1087,6 +1093,38 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
     }
         
     VirtualSetAt(voxel);
+}
+void ChunkMatrix::SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp)
+{
+    VoxelElement *ingitedVoxel = this->VirtualGetAt(pos);
+    if(!ingitedVoxel) return;
+
+    std::string fireId;
+    if(ingitedVoxel->GetState() == State::Solid)
+        fireId = "Fire_Solid";
+    else if(ingitedVoxel->GetState() == State::Liquid)
+        fireId = "Fire_Liquid";
+    else
+        fireId = "Fire";
+    
+    if(temp == std::nullopt){
+        temp = ingitedVoxel->temperature;
+
+        if(temp->GetCelsius() < 250)
+            temp->SetCelsius(250);
+    }
+
+    bool placeAsUnmovableSolid = ingitedVoxel->IsUnmoveableSolid();
+    if(placeAsUnmovableSolid){
+        // 15% chance of fire becoming movable
+        if(rand() % 100 < 15){
+            placeAsUnmovableSolid = false;
+        }
+    }
+
+    // Create a new fire voxel element
+    Volume::VoxelElement *fireVoxel = CreateVoxelElement(fireId, pos, ingitedVoxel->amount, *temp, placeAsUnmovableSolid);
+    this->PlaceVoxelAt(fireVoxel, true);
 }
 
 bool ChunkMatrix::TryToDisplaceGas(const Vec2i &pos, std::string id, Volume::Temperature temp, float amount, bool placeUnmovableSolids)

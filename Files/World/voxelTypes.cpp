@@ -37,16 +37,7 @@ bool Volume::FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxe
 
                 //20% chance to ignite if there is no oxygen around
                 if(isAroundOxygen || rand() % 100 < 20){
-                    Temperature temp = FireVoxel->temperature;
-                    if(temp.GetCelsius() < 250) 
-                        temp.SetCelsius(250);
-
-                    if(next->GetState() == State::Gas)
-                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire", temp, true, next->amount, true);
-                    else if(next->GetState() == State::Liquid)
-                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire_Liquid", temp, true, next->amount, true);
-                    else
-                        matrix->PlaceVoxelAt(FireVoxel->position + dir, "Fire_Solid", temp, true, next->amount, true);
+                    matrix->SetFireAt(FireVoxel->position + dir);
                 }
             }
         }

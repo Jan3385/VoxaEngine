@@ -119,6 +119,8 @@ public:
 	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel);
 
 	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive);
+	void PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive);
+	void SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp = std::nullopt);
 	// returns true if the gas was displaced. False if no change accured
 	bool TryToDisplaceGas(const Vec2i& pos, std::string id, Volume::Temperature temp, float amount, bool placeUnmovableSolids);
 
