@@ -35,9 +35,10 @@ bool Volume::FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxe
             //ignite based on Flamability
             if((rand()%256) - next->properties->Flamability < 0){
 
-                //20% chance to ignite if there is no oxygen around
-                if(isAroundOxygen || rand() % 100 < 20){
-                    matrix->SetFireAt(FireVoxel->position + dir);
+                // only 20% chance to ignite if there is no oxygen around, 0% for solids
+                bool randomIgniteChance = next->GetState() != State::Solid && (rand() % 100 < 20);
+                if(isAroundOxygen || randomIgniteChance){
+                    matrix->SetFireAt(next->position);
                 }
             }
         }
@@ -173,7 +174,7 @@ bool Volume::FireSolidVoxel::Step(ChunkMatrix *matrix)
     this->color = Volume::FireVoxel::fireColors[rand() % Volume::FireVoxel::fireColorCount];
     matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
-    if (this->amount <= 5)
+    if (this->amount <= 5)  
     {
         this->amount = std::max(this->amount, 0.1f);
 
