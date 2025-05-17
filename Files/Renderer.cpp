@@ -80,8 +80,6 @@ GameRenderer::~GameRenderer()
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 {
-    
-
     //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
     SDL_SetRenderDrawColor(r_renderer, 26, 198, 255, 255 );
     SDL_RenderClear( r_renderer ); // Clear the screen to solid white
@@ -240,7 +238,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::Begin("VoxaEngine Debug Panel");
 
     ImGui::Text("FPS: %lf", GameEngine::instance->FPS);
-    ImGui::Text("15 FPS AVG: %lf", GameEngine::instance->avgFPS);
+    ImGui::Text("LAST 15 FPS AVG: %lf", GameEngine::instance->avgFPS);
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
@@ -282,6 +280,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
     ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
     ImGui::DragFloat("Fixed Update speed", &GameEngine::instance->fixedDeltaTime, 0.05f, 1/30.0, 4);
+    ImGui::DragFloat("Simulation Update speed", &GameEngine::instance->simulationFixedDeltaTime, 0.05f, 1/30.0, 4);
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
 

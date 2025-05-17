@@ -59,7 +59,7 @@ namespace Volume
 			Volume::VoxelPressureData PressureDataArray[],  // flattened arrays
 			int chunkNumber);
 
-    	void ResetVoxelUpdateData();
+    	void SIM_ResetVoxelUpdateData();
     	SDL_Surface* Render(bool debugRender);
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
@@ -87,12 +87,12 @@ public:
 
 	// cleans the chunkMatrix, so that its safe to invoke TFF_CloseFont
 	void cleanup();
-
-	//grid storage logic
-	std::mutex gridMutex;
+	
+	//mutex for changing the voxels, mainly handeled by the simulation thread
+	std::mutex voxelMutex;
 	//not precomputed array of chunks
 	std::vector<Volume::Chunk*> Grid;
-	//precomputed grids for simulation passing - 0 - 3 passees
+	//precomputed grids for simulation passing -> 0 - 3 passees
 	std::vector<Volume::Chunk*> GridSegmented[4];
 
 	std::vector<Volume::VoxelParticle*> newParticles;

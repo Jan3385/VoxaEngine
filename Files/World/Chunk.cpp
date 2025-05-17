@@ -265,7 +265,8 @@ void Volume::Chunk::GetPressureMap(ChunkMatrix *matrix,
     }
 }
 
-void Volume::Chunk::ResetVoxelUpdateData()
+// resets voxel update data, DO NOT CALL WITHOUT LOCKING THE VOXELMUTEX, main use for simulation thread
+void Volume::Chunk::SIM_ResetVoxelUpdateData()
 {
     #pragma omp parallel for collapse(2)
     for (int y = 0; y < CHUNK_SIZE; ++y)
@@ -532,6 +533,7 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
     this->ExplodeAt(MouseWorldPosI, radius);
 }
 
+// Generates a chunk and inputs it into the grid, returns a pointer to it
 Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 {
     Chunk *chunk = new Chunk(pos);
@@ -575,11 +577,9 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
     if (pos.getY() % 2 != 0) AssignedGridPass += 2;
 
-    this->gridMutex.lock();
     this->GridSegmented[AssignedGridPass].push_back(chunk);
 
     this->Grid.push_back(chunk);
-    this->gridMutex.unlock();
 
     return chunk;
 }
@@ -613,6 +613,8 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 
 void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
 {
+    std::lock_guard<std::mutex> lock(this->voxelMutex);
+
     std::vector<Volume::VoxelHeatData> VoxelHeatArray(0);
 
     // doesnt create critical section, because the passes dont overlap
@@ -764,6 +766,8 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
 
 void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
 {
+    std::lock_guard<std::mutex> lock(this->voxelMutex);
+
     std::vector<Volume::VoxelPressureData> VoxelPressureArray(0);
 
     uint16_t chunkIndex = 0;
@@ -1206,6 +1210,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 
 void ChunkMatrix::UpdateParticles()
 {
+    std::lock_guard<std::mutex> lock(this->voxelMutex);
     if (particles.empty() && newParticles.empty()) return;
 
     // Merge new particles into the main vector before processing

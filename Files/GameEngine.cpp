@@ -25,6 +25,9 @@ GameEngine::GameEngine()
 
     Player = Game::Player();
     Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
+
+    //Start simulation thread
+    this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
 }
 
 GameEngine::~GameEngine()
@@ -71,8 +74,8 @@ void GameEngine::Update()
     //Update Player
     this->Player.Update(this->chunkMatrix, this->deltaTime);
 
-    //TODO: run simulation in parallel
     fixedUpdateTimer += deltaTime;
+    simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
         m_FixedUpdate();
@@ -82,6 +85,7 @@ void GameEngine::Update()
 
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
+    chunkMatrix.voxelMutex.lock();
     //delete all chunks marked for deletion
     for(int32_t i = static_cast<int32_t>(chunkMatrix.GridSegmented[pass].size()) - 1; i >= 0; --i){
         if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player.Camera))
@@ -90,7 +94,9 @@ void GameEngine::m_UpdateGridVoxel(int pass)
             continue;
         }
     }
+    chunkMatrix.voxelMutex.unlock();
 
+    chunkMatrix.voxelMutex.lock();
     #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
         auto& chunk = chunkMatrix.GridSegmented[pass][i];
@@ -99,34 +105,54 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         }
         chunk->dirtyRect.Update();
     }
+    chunkMatrix.voxelMutex.unlock();
+}
+void GameEngine::m_SimulationThread()
+{
+    while (this->running)
+    {
+        if (simulationUpdateTimer < simulationFixedDeltaTime) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Sleep for a bit to avoid busy waiting
+            continue;
+        }
+            
+
+        simulationUpdateTimer -= simulationFixedDeltaTime;
+
+        //TODO: make thread safe
+
+        //Reset voxels to default pre-simulation state
+        chunkMatrix.voxelMutex.lock();
+        #pragma omp parallel for
+        for(uint8_t i = 0; i < 4; ++i)
+        {
+            for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+                // decrease lastCheckedCountDown, this slowly kills unused chunks
+                if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
+
+                if (!chunk->dirtyRect.IsEmpty())
+                    chunk->SIM_ResetVoxelUpdateData();
+            }
+        }
+        chunkMatrix.voxelMutex.unlock();
+
+        //Voxel update logic
+        for(uint8_t i = 0; i < 4; ++i)
+        {
+            m_UpdateGridVoxel(i);
+        }
+
+        chunkMatrix.UpdateParticles();
+    }
 }
 void GameEngine::m_FixedUpdate()
 {
-    //Reset voxels to default pre-simulation state
-    #pragma omp parallel for
-    for(uint8_t i = 0; i < 4; ++i)
-    {
-        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
-            if (!chunk->dirtyRect.IsEmpty())
-                chunk->ResetVoxelUpdateData();
-        }
-    }
-
-    //Voxel update logic
-    for(uint8_t i = 0; i < 4; ++i)
-    {
-        m_UpdateGridVoxel(i);
-    }
-
     //Heat update logic
     if(runHeatSimulation) chunkMatrix.UpdateGridHeat(oddUpdatePass);
 
     //Pressure update logic
     if(runPressureSimulation) chunkMatrix.UpdateGridPressure(oddUpdatePass);
     oddUpdatePass = !oddUpdatePass;
-
-    chunkMatrix.UpdateParticles();
 }
 
 void GameEngine::PollEvents()
@@ -214,8 +240,10 @@ void GameEngine::PollEvents()
 
 void GameEngine::Render()
 {
+    chunkMatrix.voxelMutex.lock();
     //Render
     renderer->Render(chunkMatrix, this->mousePos);
+    chunkMatrix.voxelMutex.unlock();
 }
 
 GLuint GameEngine::m_compileComputeShader(const char *shader)
@@ -264,6 +292,7 @@ void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
+    chunkMatrix.voxelMutex.lock();
     Vec2f offset = this->Player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
     switch (event.button)
     {
@@ -273,4 +302,5 @@ void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
     case SDL_BUTTON_RIGHT:
         this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, offset);
     }
+    chunkMatrix.voxelMutex.unlock();
 }

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <thread>
+#include <mutex>
+#include <atomic>
+
 #include <glew.h>
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -23,14 +27,23 @@ private:
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
 
-    bool oddUpdatePass = false;
+    std::thread simulationThread;
 
+    bool oddUpdatePass = false;
     float fixedUpdateTimer = 0;
+    std::atomic<float> simulationUpdateTimer = 0;
 
     void m_OnKeyboardInput(SDL_KeyboardEvent event);
     void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
-    void m_FixedUpdate();
+
+    //Deletes old chunks and updates steps for voxel celluar automata simulation
     void m_UpdateGridVoxel(int pass);
+
+    //Fixed update, Handles heat and pressure simulation
+    void m_FixedUpdate();
+
+    //Simulation thread, handles voxel simulation
+    void m_SimulationThread();
 
     GLuint m_compileComputeShader(const char* shader);
 public:
@@ -38,6 +51,7 @@ public:
 
     static constexpr int MAX_FRAME_RATE = 60;
     float fixedDeltaTime = 1/30.0;
+    float simulationFixedDeltaTime = 1/30.0;
 
     static bool placeUnmovableSolidVoxels;
     static int placeVoxelAmount;

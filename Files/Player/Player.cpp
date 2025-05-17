@@ -26,6 +26,7 @@ Game::Player::~Player()
 
 void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
 {
+    chunkMatrix.voxelMutex.lock();
     this->onGround = this->isOnGround(chunkMatrix);
 
     // Apply gravity
@@ -40,9 +41,7 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
     }else{
         this->acceleration = 0;
     }
-
-    //std::cout << "Acceleration: " << this->acceleration << std::endl;
-    //std::cout << "OnGround: " << this->onGround << std::endl;
+    
     std::vector<Volume::VoxelElement*> verticalVoxels = this->GetVoxelsVerticalSlice(chunkMatrix);
     int LiquidPercentile = Volume::GetLiquidVoxelPercentile(verticalVoxels);
     if(this->NoClip) LiquidPercentile = 0;
@@ -86,6 +85,7 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
 
     // Move the player downwards
     if(acceleration != 0) MovePlayerBy(Vec2f(0, this->acceleration), chunkMatrix);
+    chunkMatrix.voxelMutex.unlock();
 }
 
 void Game::Player::Render(SDL_Renderer* renderer)
