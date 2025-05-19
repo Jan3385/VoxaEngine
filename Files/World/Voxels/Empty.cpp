@@ -1,4 +1,4 @@
-#include "../voxelTypes.h"
+#include "Empty.h"
 #include "../Chunk.h"
 
 using namespace Volume;

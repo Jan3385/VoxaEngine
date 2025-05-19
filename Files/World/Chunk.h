@@ -6,9 +6,9 @@
 #include <mutex>
 #include <vector>
 #include <SDL_ttf.h>
-#include "Voxel.h"
-#include "../Math/Vector.h"
-#include "../Math/AABB.h"
+#include "World/Voxel.h"
+#include "Math/Vector.h"
+#include "Math/AABB.h"
 
 class DirtyRect{
 public:

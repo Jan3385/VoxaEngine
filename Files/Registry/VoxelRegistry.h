@@ -3,9 +3,9 @@
 #include <unordered_map>
 #include <string>
 #include <optional>
-#include "../Math/Color.h"
-#include "../Math/Temperature.h"
-#include "../Math/Vector.h"
+#include "Math/Color.h"
+#include "Math/Temperature.h"
+#include "Math/Vector.h"
 
 struct PhaseChange{
 		Volume::Temperature TemperatureAt;

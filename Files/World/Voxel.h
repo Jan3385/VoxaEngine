@@ -4,8 +4,8 @@
 #include <vector>
 #include <memory>
 #include <glew.h>
-#include "../Math/Vector.h"
-#include "../Registry/VoxelRegistry.h"
+#include "Math/Vector.h"
+#include "Registry/VoxelRegistry.h"
 
 // Forward declaration of ChunkMatrix
 class ChunkMatrix;

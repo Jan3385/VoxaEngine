@@ -62,6 +62,9 @@ elseif (UNIX)
     target_link_libraries(VoxaEngine ${SDL2_LIBRARIES} SDL2_ttf)
 endif()
 
+# Link project libraries
+target_include_directories(VoxaEngine PRIVATE ${PROJECT_SOURCE_DIR}/Files)
+
 set_property(TARGET VoxaEngine PROPERTY CXX_STANDARD 20)
 
 # set_target_properties(VoxaEngine PROPERTIES LINK_FLAGS "-mwindows")

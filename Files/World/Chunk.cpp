@@ -349,6 +349,12 @@ SDL_Surface* Volume::Chunk::Render(bool debugRender)
         SDL_FillRect(this->chunkSurface, &box, SDL_MapRGBA(this->chunkSurface->format, 0, 0, 255, 255));
     }
 
+    //draws a red box at the corner of the chunk if the pressure updated on the chunk
+    if(ShouldChunkCalculatePressure()){
+        SDL_Rect box = {x1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, y1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 25, 10, 10};
+        SDL_FillRect(this->chunkSurface, &box, SDL_MapRGBA(this->chunkSurface->format, 255, 0, 0, 255));
+    }
+
     //draws the dirty rect borders
     if(!this->dirtyRect.IsEmpty()){
         SDL_Rect dirtyRect = {
@@ -888,7 +894,7 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
     }
 
     for(uint16_t i = 0; i < NumberOfChunks; ++i){
-        if((pressureDiff[i]/1000.0f) > 0.01f){
+        if((pressureDiff[i]/1000.0f) > 0.001f){
             chunksToUpdate[i]->forcePressureUpdate = true;
             //also force pressure update on neighbours
             Vec2i pos = chunksToUpdate[i]->GetPos();

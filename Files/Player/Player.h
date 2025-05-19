@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Math/Vector.h"
-#include "../Math/AABB.h"
-#include "../World/Chunk.h"
+#include "Math/Vector.h"
+#include "Math/AABB.h"
+#include "World/Chunk.h"
 
 namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
