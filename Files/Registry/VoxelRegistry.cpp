@@ -29,6 +29,14 @@ void VoxelRegistry::RegisterVoxels()
 	std::cout << "Registering voxels ";
 	using namespace Volume;
 	VoxelRegistry::RegisterVoxel(
+		"Empty",
+		VoxelBuilder(State::Gas, 0, 0, 0)
+			.SetName("Vacuum")
+			.SetColor(RGBA(0, 0, 0, 0))
+			.SetFluidDispursionRate(0)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
 		"Oxygen",
 		VoxelBuilder(State::Gas, 919, 0.026, 1.429)
 			.SetName("Oxygen")
@@ -390,7 +398,9 @@ Volume::VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float a
 
 	VoxelProperty* prop = VoxelRegistry::GetProperties(id);   
 
-    if(id == "Fire")
+	if(id == "Empty")
+		voxel = new Volume::EmptyVoxel(position);
+    else if(id == "Fire")
         voxel = new Volume::FireVoxel(position, temp, amount);
 	else if(id == "Fire_Liquid")
 		voxel = new Volume::FireLiquidVoxel(position, temp, amount);

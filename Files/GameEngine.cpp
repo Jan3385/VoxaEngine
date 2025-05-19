@@ -55,7 +55,7 @@ void GameEngine::EndFrame()
     this->deltaTime = FrameTime;
     this->FPS = 1.0f / FrameTime;
 
-    if(this->FPSHistory.size() >= 15)
+    if(this->FPSHistory.size() >= AVG_FPS_SIZE_COUNT)
         this->FPSHistory.pop_back();
 
     this->FPSHistory.push_front(this->FPS);
@@ -82,7 +82,6 @@ void GameEngine::Update()
         fixedUpdateTimer -= fixedDeltaTime;
     }
 }
-
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
     chunkMatrix.voxelMutex.lock();

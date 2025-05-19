@@ -220,8 +220,11 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 		-maxHeatTransfer,
 		maxHeatTransfer
 	);
-	this->temperature.SetCelsius(this->temperature.GetCelsius() - heatTransfer / this->properties->HeatCapacity);
-	swapVoxel->temperature.SetCelsius(swapVoxel->temperature.GetCelsius() + heatTransfer / swapVoxel->properties->HeatCapacity);
+
+	bool anyHeatCapacityZero = this->properties->HeatCapacity == 0 || swapVoxel->properties->HeatCapacity == 0;
+		this->temperature.SetCelsius(this->temperature.GetCelsius() - heatTransfer / this->properties->HeatCapacity);
+		swapVoxel->temperature.SetCelsius(swapVoxel->temperature.GetCelsius() + heatTransfer / swapVoxel->properties->HeatCapacity);
+	if(!anyHeatCapacityZero){}
 
     // Get the position of the current voxel
     Vec2i tempPos = this->position;
@@ -501,8 +504,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 				if(above->GetState() == State::Gas){
 					DieAndReplace(*matrix, above->id);
 				}else{
-					//TODO: nothing to place but place can't be empty
-					DieAndReplace(*matrix, "Oxygen");
+					DieAndReplace(*matrix, "Empty");
 				}
 			}
 			Vec2i localPos = Vec2i(this->position.getX() % Chunk::CHUNK_SIZE, this->position.getY() % Chunk::CHUNK_SIZE);
@@ -611,6 +613,12 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     	return true;
     }
     updatedThisFrame = true;
+
+	// Create vacuum in low enough amounts
+	if(this->amount < 0.0000001f){
+		this->DieAndReplace(*matrix, "Empty");
+		return true;
+	}
 
 	//look around and try to spread based on pressure
 	for(Vec2i dir : vector::AROUND4){

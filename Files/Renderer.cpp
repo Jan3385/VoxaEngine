@@ -238,11 +238,11 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::Begin("VoxaEngine Debug Panel");
 
     ImGui::Text("FPS: %lf", GameEngine::instance->FPS);
-    ImGui::Text("LAST 15 FPS AVG: %lf", GameEngine::instance->avgFPS);
+    ImGui::Text("LAST %d FPS AVG: %lf", AVG_FPS_SIZE_COUNT, GameEngine::instance->avgFPS);
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
-        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron", "Rust", "Wood"
+        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron", "Rust", "Wood", "Empty",
     };
     // Find the index of placeVoxelType in voxelTypeNames
     static int current_item = 0;

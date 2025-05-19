@@ -141,6 +141,9 @@ void main(){
         float heatDiff = voxelTemps[nIndex].temperature - voxelTemps[index].temperature;
         float heatTrans = heatDiff * voxelTemps[nIndex].conductivity / heatCapacity;
 
+        if(heatCapacity <= 0.0f)
+            heatTrans = 0.0f;
+
         sum += heatTrans;
 
         // Update heat value for the chunk

@@ -10,6 +10,7 @@ namespace Game{
     public:
         static bool NoClip;
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 4;
+        static constexpr int SPEED = 60;
         Player();
         void SetPlayerTexture(SDL_Texture* texture);
         ~Player();

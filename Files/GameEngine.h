@@ -19,6 +19,8 @@
 #include "World/Chunk.h"
 #include "Player/Player.h"
 
+#define AVG_FPS_SIZE_COUNT 25
+
 class GameEngine
 {
 private:

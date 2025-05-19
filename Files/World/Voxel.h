@@ -49,7 +49,7 @@ namespace Volume {
 
 		// Functions
 		//return the state of the element
-		virtual State GetState() const { return State::Solid; };
+		virtual State GetState() const { return State::Gas; };
 		//returm true if the voxel moved
 		virtual bool Step(ChunkMatrix* matrix) { updatedThisFrame = true; return false; };
 		//return true if the voxel acted on another voxel

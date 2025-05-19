@@ -3,6 +3,7 @@
 #include "../Math/Vector.h"
 
 namespace Volume {
+	// Fire Types ----------------------------------------------------
 	class FireVoxel : public VoxelGas
 	{
 	public:
@@ -30,4 +31,13 @@ namespace Volume {
 		FireSolidVoxel(Vec2i position, Temperature temp, float amount, bool isStatic);
 		bool Step(ChunkMatrix* matrix) override;
 	};
+	// ---------------------------------------------------------------
+	// Empty Voxel
+	class EmptyVoxel : public VoxelElement
+	{
+	public:
+		EmptyVoxel(Vec2i position);
+		bool Step(ChunkMatrix* matrix) override;
+	};
+	// ---------------------------------------------------------------
 }

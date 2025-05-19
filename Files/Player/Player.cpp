@@ -75,10 +75,16 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
         }
     }
     if (GameEngine::MovementKeysHeld[2]){ // A
-        this->MovePlayerBy(Vec2f(-100 * deltaTime, 0), chunkMatrix);
+        if(this->NoClip)
+            this->MovePlayerBy(Vec2f(-100 * deltaTime,0), chunkMatrix);
+        else
+            this->MovePlayerBy(Vec2f(-Player::SPEED * deltaTime, 0), chunkMatrix);
     }
     if (GameEngine::MovementKeysHeld[3]){ // D
-        this->MovePlayerBy(Vec2f(100 * deltaTime, 0), chunkMatrix);
+        if(this->NoClip)
+            this->MovePlayerBy(Vec2f(100 * deltaTime,0), chunkMatrix);
+        else
+            this->MovePlayerBy(Vec2f(Player::SPEED * deltaTime, 0), chunkMatrix);
     }
 
     this->MoveCameraTowards(Vec2f(this->position), chunkMatrix);
