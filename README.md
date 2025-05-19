@@ -28,6 +28,9 @@ Capable of simulating gas and liquid "pressures" and is able to compress or stre
 
 A small part of the pressure simulation is done on the GPU for faster speeds
 
+### Fire simulation
+Utilizing flamability and flame propagation with oxygen!
+
 # How To Run:
 
 ## Windows 10/11
