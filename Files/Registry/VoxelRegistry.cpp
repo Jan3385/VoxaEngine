@@ -5,14 +5,16 @@
 #include "../World/voxelTypes.h"
 
 using namespace Volume;
+using namespace Registry;
+
 // Initialize the voxel properties
 
-std::unordered_map<std::string, Volume::VoxelProperty> VoxelRegistry::registry = {};
-std::unordered_map<uint32_t, Volume::VoxelProperty*> VoxelRegistry::idRegistry = {};
+std::unordered_map<std::string, VoxelProperty> VoxelRegistry::registry = {};
+std::unordered_map<uint32_t, VoxelProperty*> VoxelRegistry::idRegistry = {};
 uint32_t VoxelRegistry::idCounter = 1;
 bool VoxelRegistry::registriesClosed = false;
 
-void VoxelRegistry::RegisterVoxel(const std::string &name, Volume::VoxelProperty property)
+void VoxelRegistry::RegisterVoxel(const std::string &name, VoxelProperty property)
 {
 	if(registriesClosed) 
 		throw std::runtime_error("Voxel registered after designated time window: " + name);
@@ -30,7 +32,7 @@ void VoxelRegistry::RegisterVoxels()
 	using namespace Volume;
 	VoxelRegistry::RegisterVoxel(
 		"Empty",
-		VoxelBuilder(State::Gas, 0, 0, 0)
+		VoxelBuilder(DefaultVoxelConstructor::Custom, 0, 0, 0)
 			.SetName("Vacuum")
 			.SetColor(RGBA(0, 0, 0, 0))
 			.SetFluidDispursionRate(0)
@@ -38,7 +40,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Oxygen",
-		VoxelBuilder(State::Gas, 919, 0.026, 1.429)
+		VoxelBuilder(DefaultVoxelConstructor::GasVoxel, 919, 0.026, 1.429)
 			.SetName("Oxygen")
 			.SetColor(RGBA(15, 15, 15, 50))
 			.PhaseDown("Liquid_Oxygen", -182.96)
@@ -47,7 +49,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Liquid_Oxygen",
-		VoxelBuilder(State::Liquid, 919, 0.026, 1.429)
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 919, 0.026, 1.429)
 			.SetName("Liquid Oxygen")
 			.SetColor(RGBA(50, 50, 50, 122))
 			.PhaseUp("Oxygen", -182.96)
@@ -57,7 +59,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Solid_Oxygen",
-		VoxelBuilder(State::Solid, 919, 0.026, 1.429)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 919, 0.026, 1.429)
 			.SetName("Solid Oxygen")
 			.SetColor(RGBA(70, 70, 70, 200))
 			.PhaseUp("Liquid_Oxygen", -218.79)
@@ -66,7 +68,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Water",
-		VoxelBuilder(State::Liquid, 4186, 0.6f, 2)
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 4186, 0.6f, 2)
 			.SetName("Water")
 			.SetColor(RGBA(3, 169, 244, 200))
 			.PhaseDown("Ice", 0)
@@ -76,7 +78,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Ice",
-		VoxelBuilder(State::Solid, 4186, 0.6f, 2)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 4186, 0.6f, 2)
 			.SetName("Ice")
 			.SetColor(RGBA(3, 169, 244, 220))
 			.PhaseUp("Water", 0)
@@ -85,7 +87,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Steam",
-		VoxelBuilder(State::Gas, 4186, 0.6f, 1)
+		VoxelBuilder(DefaultVoxelConstructor::GasVoxel, 4186, 0.6f, 1)
 			.SetName("Steam")
 			.SetColor(RGBA(101, 193, 235, 180))
 			.PhaseDown("Water", 99.98)
@@ -94,7 +96,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Stone",
-		VoxelBuilder(State::Solid, 800, 2.5, 200)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 800, 2.5, 200)
 			.SetName("Stone")
 			.SetColor(RGBA(128, 128, 128, 255))
 			.PhaseUp("Magma", 1200)
@@ -103,7 +105,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Magma",
-		VoxelBuilder(State::Liquid, 800, 2.5, 200)
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 800, 2.5, 200)
 			.SetName("Magma")
 			.SetColor(RGBA(161, 56, 14, 230))
 			.PhaseDown("Stone", 1200)
@@ -112,7 +114,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Grass",
-		VoxelBuilder(State::Solid, 1100, 0.06, 200)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 1100, 0.06, 200)
 			.SetName("Grass")
 			.SetColor(RGBA(34, 139, 34, 255))
 			.PhaseUp("Dirt", 200)
@@ -122,7 +124,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Dirt",
-		VoxelBuilder(State::Solid, 1000, 0.3, 200)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 1000, 0.3, 200)
 			.SetName("Dirt")
 			.SetColor(RGBA(121, 85, 72, 255))
 			.PhaseUp("Magma", 1400)
@@ -131,7 +133,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Sand",
-		VoxelBuilder(State::Solid, 830, 0.25, 190)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 830, 0.25, 190)
 			.SetName("Sand")
 			.SetColor(RGBA(255, 193, 7, 255))
 			.PhaseUp("Liquid_Glass", 1000)
@@ -140,7 +142,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Liquid_Glass",
-		VoxelBuilder(State::Liquid, 830, 0.25, 190)
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 830, 0.25, 190)
 			.SetName("Glass")
 			.SetColor(RGBA(255, 219, 176, 100))
 			.PhaseDown("Glass", 1000)
@@ -149,7 +151,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Glass",
-		VoxelBuilder(State::Solid, 830, 0.25, 190)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 830, 0.25, 190)
 			.SetName("Glass")
 			.SetColor(RGBA(255, 255, 255, 80))
 			.PhaseUp("Liquid_Glass", 1000)
@@ -158,7 +160,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire",
-		VoxelBuilder(State::Gas, 100, 0.4, 1)
+		VoxelBuilder(DefaultVoxelConstructor::Custom, 100, 0.4, 1)
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", 200)
@@ -167,7 +169,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire_Solid",
-		VoxelBuilder(State::Solid, 100, 0.1, 1)
+		VoxelBuilder(DefaultVoxelConstructor::Custom, 100, 0.1, 1)
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", 100)
@@ -176,7 +178,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire_Liquid",
-		VoxelBuilder(State::Liquid, 100, 0.1, 1)
+		VoxelBuilder(DefaultVoxelConstructor::Custom, 100, 0.1, 1)
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", 100)
@@ -185,7 +187,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Ash",
-		VoxelBuilder(State::Solid, 100, 0.4, 540)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 100, 0.4, 540)
 			.SetName("Ash")
 			.SetColor(RGBA(159, 159, 159, 255))
 			.PhaseUp("Charcoal", 600)
@@ -194,7 +196,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Plasma",
-		VoxelBuilder(State::Gas, 500, 2.0, 1)
+		VoxelBuilder(DefaultVoxelConstructor::GasVoxel, 500, 2.0, 1)
 			.SetName("Plasma")
 			.SetColor(RGBA(156, 39, 176, 160))
 			.PhaseDown("Fire", 1000)
@@ -203,7 +205,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Carbon_Dioxide",
-		VoxelBuilder(State::Gas, 850, 0.016, 1.98)
+		VoxelBuilder(DefaultVoxelConstructor::GasVoxel, 850, 0.016, 1.98)
 			.SetName("Carbon Dioxide")
 			//.SetColor(RGBA(4, 4, 4, 50))
 			.SetColor(RGBA(4, 4, 4, 70))
@@ -213,7 +215,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Liquid_Carbon_Dioxide",
-		VoxelBuilder(State::Liquid, 850, 0.016, 1.98)
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 850, 0.016, 1.98)
 			.SetName("Liquid Carbon Dioxide")
 			.SetColor(RGBA(4, 4, 4, 150))
 			.PhaseDown("Solid_Carbon_Dioxide", -78.5)
@@ -223,7 +225,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Solid_Carbon_Dioxide",
-		VoxelBuilder(State::Solid, 850, 0.016, 1.98)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 850, 0.016, 1.98)
 			.SetName("Solid Carbon Dioxide")
 			.SetColor(RGBA(4, 4, 4, 130))
 			.PhaseUp("Liquid_Carbon_Dioxide", -78.5)
@@ -232,7 +234,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Iron",
-		VoxelBuilder(State::Solid, 450, 5, 7874)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 450, 5, 7874)
 			.SetName("Iron")
 			.SetColor(RGBA(130, 130, 130, 255))
 			.PhaseUp("Molten_Iron", 1538)
@@ -241,7 +243,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Molten_Iron",
-		VoxelBuilder(State::Liquid, 450, 5, 7874)
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 450, 5, 7874)
 			.SetName("Molten Iron")
 			.SetColor(RGBA(130, 130, 130, 240))
 			.PhaseDown("Iron", 1538)
@@ -250,7 +252,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Rust",
-		VoxelBuilder(State::Solid, 450, 5, 7874)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 450, 5, 7874)
 			.SetName("Rust")
 			.SetColor(RGBA(219, 139, 48, 255))
 			.PhaseUp("Molten_Iron", 1538)
@@ -259,7 +261,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Wood",
-		VoxelBuilder(State::Solid, 2000, 0.7, 700)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 2000, 0.7, 700)
 			.SetName("Wood")
 			.SetColor(RGBA(139, 69, 19, 255))
 			.PhaseUp("Charcoal", 350)
@@ -269,7 +271,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Charcoal",
-		VoxelBuilder(State::Solid, 1100, 0.4, 1000)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 1100, 0.4, 1000)
 			.SetName("Charcoal")
 			.SetColor(RGBA(54, 69, 79, 255))
 			.SetSolidInertiaResistance(0.5)
@@ -290,7 +292,7 @@ VoxelProperty* VoxelRegistry::GetProperties(std::string id)
 	return &it->second;
 }
 
-Volume::VoxelProperty *VoxelRegistry::GetProperties(uint32_t id)
+VoxelProperty *VoxelRegistry::GetProperties(uint32_t id)
 {
     auto it = VoxelRegistry::idRegistry.find(id);
 
@@ -301,7 +303,7 @@ Volume::VoxelProperty *VoxelRegistry::GetProperties(uint32_t id)
 	return it->second;
 }
 
-bool VoxelRegistry::CanGetMovedByExplosion(Volume::State state)
+bool VoxelRegistry::CanGetMovedByExplosion(State state)
 {
     return state == State::Liquid || state == State::Solid;
 }
@@ -321,9 +323,9 @@ bool VoxelRegistry::CanBeMovedByLiquid(State state)
     return state == State::Gas;
 }
 
-VoxelBuilder::VoxelBuilder(Volume::State State, float tCapacity, float tConductivity, float Density)
+VoxelBuilder::VoxelBuilder(DefaultVoxelConstructor State, float tCapacity, float tConductivity, float Density)
 {
-	this->State = State;
+	this->Constructor = State;
 	this->HeatCapacity = tCapacity;
 	this->HeatConductivity = tConductivity;
 	this->Density = Density;
@@ -375,11 +377,11 @@ VoxelBuilder &VoxelBuilder::SetFlamability(uint8_t flamability)
 	return *this;
 }
 
-Volume::VoxelProperty VoxelBuilder::Build()
+VoxelProperty VoxelBuilder::Build()
 {
-    return Volume::VoxelProperty{
+    return VoxelProperty{
 		this->Name,
-		this->State,
+		this->Constructor,
 		this->Color,
 		this->Density,
 		this->HeatCapacity,
@@ -392,29 +394,34 @@ Volume::VoxelProperty VoxelBuilder::Build()
 	};
 }
 
-Volume::VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids)
+VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float amount, Temperature temp, bool placeUnmovableSolids)
 {
-	Volume::VoxelElement *voxel;
+	VoxelElement *voxel;
 
 	VoxelProperty* prop = VoxelRegistry::GetProperties(id);   
 
-	if(id == "Empty")
-		voxel = new Volume::EmptyVoxel(position);
-    else if(id == "Fire")
-        voxel = new Volume::FireVoxel(position, temp, amount);
-	else if(id == "Fire_Liquid")
-		voxel = new Volume::FireLiquidVoxel(position, temp, amount);
-	else if(id == "Fire_Solid")
-		voxel = new Volume::FireSolidVoxel(position, temp, amount, placeUnmovableSolids);
-    else{
-        if(prop->state == State::Gas)
-            voxel = new Volume::VoxelGas(id, position, temp, amount);
-        else if(prop->state == State::Liquid)
-            voxel = new Volume::VoxelLiquid(id, position, temp, amount);
-        else{
-            voxel = new Volume::VoxelSolid(id, position, temp, placeUnmovableSolids, amount);
-        }
-    } 
+	if(prop->Constructor == DefaultVoxelConstructor::Custom){
+		if(id == "Empty")
+			voxel = new EmptyVoxel(position);
+		else if(id == "Fire")
+			voxel = new FireVoxel(position, temp, amount);
+		else if(id == "Fire_Liquid")
+			voxel = new FireLiquidVoxel(position, temp, amount);
+		else if(id == "Fire_Solid")
+			voxel = new FireSolidVoxel(position, temp, amount, placeUnmovableSolids);
+		else{
+			throw std::runtime_error("Called a custom voxel constructor with unset constructor: " + id);
+		}
+
+		return voxel;
+	}
+	if(prop->Constructor == DefaultVoxelConstructor::GasVoxel)
+		voxel = new VoxelGas(id, position, temp, amount);
+	else if(prop->Constructor == DefaultVoxelConstructor::LiquidVoxel)
+		voxel = new VoxelLiquid(id, position, temp, amount);
+	else{
+		voxel = new VoxelSolid(id, position, temp, placeUnmovableSolids, amount);
+	}
 	
 	return voxel;
 }

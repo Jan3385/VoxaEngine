@@ -157,7 +157,7 @@ void main(){
 VoxelElement::VoxelElement()
 	:id("Oxygen")
 {
-	this->properties = VoxelRegistry::GetProperties("Oxygen");
+	this->properties = Registry::VoxelRegistry::GetProperties("Oxygen");
 	this->position = vector::ZERO;
 	this->temperature = Temperature(21);
 }
@@ -165,7 +165,7 @@ VoxelElement::VoxelElement()
 VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperature, float amount)
 	:id(id), position(position), amount(amount)
 {
-	this->properties = VoxelRegistry::GetProperties(id);
+	this->properties = Registry::VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;
 
 	srand(position.getX() + position.getY() * rand()); // temp fix
@@ -410,7 +410,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
 bool VoxelSolid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short int length)
 {
     VoxelElement* side = matrix->VirtualGetAt(this->position + direction);
-    if (side && VoxelRegistry::CanBeMovedBySolid(side->GetState()))
+    if (side && Registry::VoxelRegistry::CanBeMovedBySolid(side->GetState()))
     {
     	Vec2i sidePos = side->position;
     	for (short int i = 0; i < length; ++i)
@@ -516,12 +516,12 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     //If the voxel below is a solid, try to move to the bottom left and bottom right
     VoxelElement* left = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
     VoxelElement* right = matrix->VirtualGetAt(this->position + Vec2i(1, 1));
-    if (left && (VoxelRegistry::CanBeMovedByLiquid(left->GetState()) || left->IsStateBelowDensity(this->GetState(), this->properties->Density)))
+    if (left && (Registry::VoxelRegistry::CanBeMovedByLiquid(left->GetState()) || left->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     {
     	this->Swap(left->position, *matrix);
     	return true;
     }
-    else if (right && (VoxelRegistry::CanBeMovedByLiquid(right->GetState()) || right->IsStateBelowDensity(this->GetState(), this->properties->Density)))
+    else if (right && (Registry::VoxelRegistry::CanBeMovedByLiquid(right->GetState()) || right->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     {
     	this->Swap(right->position, *matrix);
     	return true;
@@ -544,7 +544,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 bool VoxelLiquid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short int length)
 {
     VoxelElement* next = matrix->VirtualGetAt(this->position + direction);
-    if (next && (VoxelRegistry::CanBeMovedByLiquid(next->GetState()) || next->IsStateBelowDensity(this->GetState(), this->properties->Density)))
+    if (next && (Registry::VoxelRegistry::CanBeMovedByLiquid(next->GetState()) || next->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     {
     	Vec2i nextPos = next->position;
     	for (short int i = 0; i < length; ++i)
@@ -552,7 +552,7 @@ bool VoxelLiquid::StepAlongDirection(ChunkMatrix *matrix, Vec2i direction, short
     		nextPos += direction;
     		next = matrix->VirtualGetAt(nextPos);
 			//if the next voxel is a solid, stop
-    		if (!next || !(VoxelRegistry::CanBeMovedByLiquid(next->GetState()) || next->IsStateBelowDensity(this->GetState(), this->properties->Density)))
+    		if (!next || !(Registry::VoxelRegistry::CanBeMovedByLiquid(next->GetState()) || next->IsStateBelowDensity(this->GetState(), this->properties->Density)))
     		{
     			nextPos -= direction;
     			this->Swap(nextPos, *matrix);
@@ -579,7 +579,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	if (!side) break;
 		
 		if (side->GetState() == State::Solid) break;
-    	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
+    	if (Registry::VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
 		{
 			LastValidPosition = CurrentPosition;
 		}
@@ -593,7 +593,7 @@ Vec2i VoxelLiquid::GetValidSideSwapPosition(ChunkMatrix &matrix, short int lengt
     	if (!side) break;
 		
     	if (side->GetState() == State::Solid) break;
-    	if (VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
+    	if (Registry::VoxelRegistry::CanBeMovedByLiquid(side->GetState()) || side->IsStateBelowDensity(this->GetState(), this->properties->Density))
     	{
     		LastValidPosition = CurrentPosition;
     	}

@@ -95,7 +95,7 @@ namespace Volume {
 		VoxelSolid() : VoxelElement("Dirt" , vector::ZERO, Temperature(21), 1) {};
 		VoxelSolid(std::string id, Vec2i position, Temperature temp, bool isStatic, float amount) : VoxelElement(id, position, temp, amount), isStatic(isStatic) {};
 		~VoxelSolid() {};
-
+		
 		bool isStatic;
 		short unsigned int XVelocity = 0;     // 0 - short unsigned int max
 
@@ -118,7 +118,7 @@ namespace Volume {
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		Vec2i GetValidSideSwapPosition(ChunkMatrix& matrix, short int length);
 	private:
-		static constexpr uint16_t DesiredDensity = 1000;
+		static constexpr uint16_t DesiredDensity = 20;
 	};
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {

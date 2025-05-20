@@ -15,7 +15,7 @@ GameEngine* GameEngine::instance = nullptr;
 GameEngine::GameEngine()
 {
     GameEngine::instance = this;
-    VoxelRegistry::RegisterVoxels();
+    Registry::VoxelRegistry::RegisterVoxels();
 
     this->renderer = new GameRenderer(&glContext);
 
