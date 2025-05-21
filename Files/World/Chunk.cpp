@@ -1,6 +1,6 @@
 #include "Chunk.h"
 #include "Voxel.h"
-#include "voxelTypes.h"	
+#include "VoxelTypes.h"	
 #include <math.h>
 #include <cmath>
 #include <iostream>
