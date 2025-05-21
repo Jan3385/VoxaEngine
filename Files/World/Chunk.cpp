@@ -1143,7 +1143,7 @@ void ChunkMatrix::SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature>
 bool ChunkMatrix::TryToDisplaceGas(const Vec2i &pos, std::string id, Volume::Temperature temp, float amount, bool placeUnmovableSolids)
 {
     Volume::VoxelElement *displacedGas = this->VirtualGetAt(pos);
-    if(!displacedGas || displacedGas->GetState() != State::Gas) return false;
+    if(!displacedGas || displacedGas->GetState() != State::Gas || displacedGas->id == "Empty") return false;
 
     Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
 

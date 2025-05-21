@@ -1,6 +1,8 @@
 #include "Empty.h"
 #include "../Chunk.h"
 
+#include <iostream>
+
 using namespace Volume;
 
 EmptyVoxel::EmptyVoxel(Vec2i position)
@@ -8,13 +10,12 @@ EmptyVoxel::EmptyVoxel(Vec2i position)
 
 bool EmptyVoxel::Step(ChunkMatrix* matrix){
     // Search for nearby voxels to fill the empty space
-    for(Vec2i dir : vector::AROUND4){
+    for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(this->position + dir);
-        if(next && next->GetState() == State::Gas && next->id != "Empty"){
+        if(next && next->GetState() == State::Gas && next->properties != this->properties){
             // Fill the empty space with the found voxel
-            int amount = next->amount;
-            matrix->PlaceVoxelAt(this->position, next->id, next->temperature, false, amount/10.0f, true);
-            next->amount -= amount/10.0f;
+            matrix->PlaceVoxelAt(this->position, next->id, next->temperature, false, next->amount/2.0f, true);
+            next->amount -= next->amount/2.0f;
             return true;
         }
     }

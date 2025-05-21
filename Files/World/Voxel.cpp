@@ -210,7 +210,7 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
     // Get the pointer to the voxel at the swap position
     VoxelElement *swapVoxel = matrix.VirtualGetAt(toSwapPos);
 
-    if (!swapVoxel) return;
+    if (!swapVoxel || swapVoxel->id == "Empty") return;
 
 	//transfer heat between the two voxels
 	float heatDifference = this->temperature.GetCelsius() - swapVoxel->temperature.GetCelsius();
@@ -222,9 +222,11 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 	);
 
 	bool anyHeatCapacityZero = this->properties->HeatCapacity == 0 || swapVoxel->properties->HeatCapacity == 0;
+	
+	if(!anyHeatCapacityZero){
 		this->temperature.SetCelsius(this->temperature.GetCelsius() - heatTransfer / this->properties->HeatCapacity);
 		swapVoxel->temperature.SetCelsius(swapVoxel->temperature.GetCelsius() + heatTransfer / swapVoxel->properties->HeatCapacity);
-	if(!anyHeatCapacityZero){}
+	}
 
     // Get the position of the current voxel
     Vec2i tempPos = this->position;
