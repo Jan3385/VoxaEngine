@@ -617,7 +617,7 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
     updatedThisFrame = true;
 
 	// Create vacuum in low enough amounts
-	if(this->amount < 0.0000001f){
+	if(this->amount < VoxelGas::MinimumGasAmount){
 		this->DieAndReplace(*matrix, "Empty");
 		return true;
 	}

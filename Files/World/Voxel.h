@@ -123,6 +123,8 @@ namespace Volume {
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
 	public:
+		static constexpr double MinimumGasAmount = 0.0000001f;
+
 		VoxelGas() : VoxelElement("Oxygen", vector::ZERO, Temperature(21), 1) {};
 		VoxelGas(std::string id, Vec2i position, Temperature temp, float amount);
 		~VoxelGas() {};
