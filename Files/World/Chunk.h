@@ -9,6 +9,7 @@
 #include "World/Voxel.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
+#include "World/Particle.h"
 
 class DirtyRect{
 public:
@@ -95,8 +96,8 @@ public:
 	//precomputed grids for simulation passing -> 0 - 3 passees
 	std::vector<Volume::Chunk*> GridSegmented[4];
 
-	std::vector<Volume::VoxelParticle*> newParticles;
-	std::vector<Volume::VoxelParticle*> particles;
+	std::vector<Particle::VoxelParticle*> newParticles;
+	std::vector<Particle::VoxelParticle*> particles;
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
@@ -134,7 +135,6 @@ public:
 
 	//particle functions
 	void UpdateParticles();
-	void AddParticle(std::string id, const Vec2i &position, Volume::Temperature temp, float amount, float angle, float speed);
 	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions

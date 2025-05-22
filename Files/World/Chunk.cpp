@@ -6,7 +6,9 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
-#include "../GameEngine.h"
+#include "GameEngine.h"
+#include "World/Particles/SolidFallingParticle.h"
+
 
 using namespace Volume; 
 
@@ -397,9 +399,10 @@ void ChunkMatrix::RenderParticles(SDL_Renderer &renderer, Vec2f offset) const
 
         SDL_SetRenderDrawColor(&renderer, color.r, color.g, color.b, 255);
 
+        Vec2f particlePos = particle->GetPosition();
         SDL_Rect rect = {
-            static_cast<int>((particle->position.getX()) * Chunk::RENDER_VOXEL_SIZE + offset.getX()),
-            static_cast<int>((particle->position.getY()) * Chunk::RENDER_VOXEL_SIZE + offset.getY()),
+            static_cast<int>((particlePos.getX()) * Chunk::RENDER_VOXEL_SIZE + offset.getX()),
+            static_cast<int>((particlePos.getY()) * Chunk::RENDER_VOXEL_SIZE + offset.getY()),
             Chunk::RENDER_VOXEL_SIZE,
             Chunk::RENDER_VOXEL_SIZE
         };
@@ -1200,7 +1203,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     	{
     		currentPos.x(currentPos.getX() + dx);
     		currentPos.y(currentPos.getY() + dy);
-            Volume::VoxelElement *voxel = VirtualGetAt(Vec2i(currentPos));
+            Volume::VoxelElement *voxel = VirtualGetAt(currentPos);
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.2f) {
@@ -1211,8 +1214,10 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
                     PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false);
                 else {
-    				AddParticle(voxel->id, Vec2i(currentPos), voxel->temperature, voxel->amount, static_cast<float>(angle), (radius*1.1f - j)*0.7f);
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, true);
+                    Particle::AddSolidFallingParticle(this,voxel ,static_cast<float>(angle), (radius*1.1f - j)*0.7f);
+                    
+                    VoxelElement *fireVoxel = CreateVoxelElement("Fire", currentPos, 1.3f, Temperature(radius * 100), false);
+                    VirtualSetAt_NoDelete(fireVoxel);
                 }
             }
     	}
@@ -1234,11 +1239,6 @@ void ChunkMatrix::UpdateParticles()
             particles.erase(particles.begin() + i);
         }
     }
-}
-
-void ChunkMatrix::AddParticle(std::string id, const Vec2i &position, Temperature temp, float amount, float angle, float speed)
-{
-    this->newParticles.push_back(new VoxelParticle(id, position, amount, temp, angle, speed));
 }
 
 void DirtyRect::Include(Vec2i pos)

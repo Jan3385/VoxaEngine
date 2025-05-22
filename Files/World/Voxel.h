@@ -71,24 +71,6 @@ namespace Volume {
 		static GLuint computeShaderPressure_Program;
 	};
 
-	class VoxelParticle : public VoxelElement {
-	public:
-		VoxelParticle();
-		VoxelParticle(std::string id,const Vec2i& position, float amount, Temperature temp, float angle, float speed);
-
-		Vec2f fPosition;
-
-		//Angle in radians
-		float angle = 0;
-		float speed = 0;
-		short int particleIterations = 50;
-		
-		bool Step(ChunkMatrix* matrix) override;
-	private: 
-		//Particle variables
-		Vec2f m_dPosition;
-	};
-
 	//Solid Voxels -> inherit from base voxel class
 	class VoxelSolid : public VoxelElement, public IGravity {
 	public:

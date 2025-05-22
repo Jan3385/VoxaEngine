@@ -283,51 +283,6 @@ bool Volume::VoxelElement::IsStateAboveDensity(State state, float density) const
 	return false;
 }
 
-VoxelParticle::VoxelParticle()
-	: VoxelElement("Oxygen", vector::ZERO, Temperature(21), 1), fPosition(Vec2f(0,0)), angle(0), speed(0),
-	m_dPosition(0,0) { }
-
-VoxelParticle::VoxelParticle(std::string id, const Vec2i &position, float amount, Temperature temp, float angle, float speed)
-	: VoxelElement(id, position, temp, amount), fPosition(Vec2f(position)), angle(angle), speed(speed),
-	m_dPosition(speed* cos(angle), speed* sin(angle)) { }
-
-bool VoxelParticle::Step(ChunkMatrix *matrix)
-{
-    updatedThisFrame = true;
-
-    //new position variables
-    this->fPosition += m_dPosition;
-    Vec2i newPos = Vec2i(fPosition);
-
-    //Adjust position according to gravity
-    m_dPosition = m_dPosition + Vec2f(0, 0.4f);
-
-    Vec2i futurePos = Vec2i(
-    	static_cast<int>(fPosition.getX() + m_dPosition.getX()), 
-    	static_cast<int>(fPosition.getY() + m_dPosition.getY())
-    );
-
-    VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
-    if (!futureVoxel || futureVoxel->GetState() == State::Solid || particleIterations <= 0)
-    {
-    	this->position = newPos;
-
-    	//check if the position for the particle exists
-    	if (!matrix->IsValidWorldPosition(this->position))
-    	{
-    		return true;
-    	}
-
-		matrix->PlaceVoxelAt(this->position, this->id, this->temperature, false, this->amount, false);
-    	return true;
-    }
-
-    this->particleIterations--;
-    this->position = newPos;
-
-    return false;
-}
-
 bool VoxelSolid::Step(ChunkMatrix *matrix)
 {
 	if(isStatic){
