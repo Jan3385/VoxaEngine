@@ -1214,7 +1214,9 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
                     PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false);
                 else {
-                    Particle::AddSolidFallingParticle(this,voxel ,static_cast<float>(angle), (radius*1.1f - j)*0.7f);
+                    // +- 0.05 degrees radian
+                    double smallAngleDeviation = ((rand() % 1000) / 10000.0f - 0.05f);
+                    Particle::AddSolidFallingParticle(this,voxel ,angle + smallAngleDeviation, (radius*1.1f - j)*0.7f);
                     
                     VoxelElement *fireVoxel = CreateVoxelElement("Fire", currentPos, 1.3f, Temperature(radius * 100), false);
                     VirtualSetAt_NoDelete(fireVoxel);
