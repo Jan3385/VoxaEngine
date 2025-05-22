@@ -195,7 +195,9 @@ bool Volume::Chunk::ShouldChunkCalculateHeat() const
 }
 bool Volume::Chunk::ShouldChunkCalculatePressure() const
 {
-    return forcePressureUpdate;
+    return true;
+    //TODO: fix when the vibe is right
+    //return forcePressureUpdate;
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
@@ -707,7 +709,7 @@ void ChunkMatrix::UpdateGridHeat(bool oddHeatUpdatePass)
     // Output Buffer
     glGenBuffers(1, &outputVoxelSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputVoxelSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(Volume::VoxelHeatData), nullptr, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(float), nullptr, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, outputVoxelSSBO); // Binding = 2
 
     glGenBuffers(1, &outputChunkSSBO);
@@ -859,7 +861,7 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
     // Output Buffer
     glGenBuffers(1, &outputVoxelSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputVoxelSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(Volume::VoxelHeatData), nullptr, GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, NumberOfVoxels * sizeof(float), nullptr, GL_DYNAMIC_COPY);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, outputVoxelSSBO); // Binding = 2
 
     glGenBuffers(1, &outputChunkSSBO);
@@ -878,7 +880,7 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
 
     // Read back the data
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputVoxelSSBO);
-    float* VoxelHeatData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
+    float* VoxelPressureData = (float*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfVoxels * sizeof(float), GL_MAP_READ_BIT);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputChunkSSBO);
     uint32_t* pressureDiff = (uint32_t*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, NumberOfChunks * sizeof(uint32_t), GL_MAP_READ_BIT);
 
@@ -890,11 +892,11 @@ void ChunkMatrix::UpdateGridPressure(bool oddPressureUpdatePass)
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
         auto& chunk = chunksToUpdate[chunkIndex];
-        chunk->voxels[x][y]->amount = VoxelHeatData[i];
+        chunk->voxels[x][y]->amount = VoxelPressureData[i];
     }
 
     for(uint16_t i = 0; i < NumberOfChunks; ++i){
-        if((pressureDiff[i]/1000.0f) > 0.001f){
+        if((pressureDiff[i]/1000.0f) > 0.0001f){
             chunksToUpdate[i]->forcePressureUpdate = true;
             //also force pressure update on neighbours
             Vec2i pos = chunksToUpdate[i]->GetPos();

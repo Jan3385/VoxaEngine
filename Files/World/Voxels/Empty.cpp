@@ -13,9 +13,10 @@ bool EmptyVoxel::Step(ChunkMatrix* matrix){
     for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(this->position + dir);
         if(next && next->GetState() == State::Gas && next->properties != this->properties && next->amount > VoxelGas::MinimumGasAmount){
-            // Fill the empty space with the found voxel
-            matrix->PlaceVoxelAt(this->position, next->id, next->temperature, false, next->amount/2.0f, true);
-            next->amount -= next->amount/2.0f;
+            // Fill the empty space with the found voxel)
+            float movedAmount = next->amount / 4.0f;
+            matrix->PlaceVoxelAt(this->position, next->id, next->temperature, false, movedAmount, true);
+            next->amount -= movedAmount;
             return true;
         }
     }
