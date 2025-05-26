@@ -48,7 +48,7 @@ void Particle::LaserParticleGenerator::TickParticles()
 
         // random alpha value from 70 - 180
         int alpha = rand() % 111 + 70; // 70 to 180
-        Particle::AddParticle(matrix, RGBA(255, 0, 0, alpha+alphaOffset), startPos, 1);
+        Particle::AddParticle(matrix, RGBA(249, 56, 39, alpha+alphaOffset), startPos, 1);
         // --------------------------
 
         if (startPos == endPosition) break;
