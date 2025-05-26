@@ -8,6 +8,7 @@
 #include <cstring>
 #include "GameEngine.h"
 #include "World/Particles/SolidFallingParticle.h"
+#include "World/ParticleGenerators/LaserParticleGenerator.h"
 
 
 using namespace Volume; 
@@ -394,10 +395,11 @@ AABB Volume::Chunk::GetAABB() const
 }
 void ChunkMatrix::RenderParticles(SDL_Renderer &renderer, Vec2f offset) const
 {
+    SDL_SetRenderDrawBlendMode(&renderer, SDL_BLENDMODE_BLEND);
     for (auto& particle : particles) {
-        const RGB& color = particle->color;
+        const RGBA& color = particle->color;
 
-        SDL_SetRenderDrawColor(&renderer, color.r, color.g, color.b, 255);
+        SDL_SetRenderDrawColor(&renderer, color.r, color.g, color.b, color.a);
 
         Vec2f particlePos = particle->GetPosition();
         SDL_Rect rect = {
@@ -411,6 +413,14 @@ void ChunkMatrix::RenderParticles(SDL_Renderer &renderer, Vec2f offset) const
 }
 ChunkMatrix::ChunkMatrix()
 {
+    this->particleGenerators.reserve(15);
+    this->particles.reserve(200);
+
+    Particle::LaserParticleGenerator* laserGenerator = new Particle::LaserParticleGenerator(this);
+    this->particleGenerators.push_back(laserGenerator);
+    laserGenerator->length = 20;
+    laserGenerator->angle = M_PI * 2;
+    laserGenerator->position = Vec2f(5, 5);
 }
 
 ChunkMatrix::~ChunkMatrix()
@@ -1229,6 +1239,12 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 void ChunkMatrix::UpdateParticles()
 {
     std::lock_guard<std::mutex> lock(this->voxelMutex);
+    // Process particle generators
+    for (auto& generator : particleGenerators) {
+        generator->TickParticles();
+        generator->position = GameEngine::instance->Player.GetCameraPos();
+    }
+
     if (particles.empty() && newParticles.empty()) return;
 
     // Merge new particles into the main vector before processing

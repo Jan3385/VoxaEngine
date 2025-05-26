@@ -10,6 +10,8 @@
 #include "Math/AABB.h"
 #include "Player/Player.h"
 
+#include "World/ParticleGenerators/LaserParticleGenerator.h"
+
 GameRenderer::GameRenderer()
 {
 }
@@ -283,6 +285,12 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::DragFloat("Simulation Update speed", &GameEngine::instance->simulationFixedDeltaTime, 0.05f, 1/30.0, 4);
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
+
+    Particle::LaserParticleGenerator* laserGenerator = dynamic_cast<Particle::LaserParticleGenerator*>(chunkMatrix.particleGenerators[0]);
+    if (laserGenerator) {
+        ImGui::DragInt("Laser Length", &laserGenerator->length, 0.1f, 0.0f, 100.0f);
+        ImGui::DragFloat("Laser Angle", &laserGenerator->angle, 0.01f, 0.0f, M_PI * 5);
+    }
 
     ImGui::End();
 

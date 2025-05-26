@@ -10,6 +10,7 @@
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Particle.h"
+#include "World/ParticleGenerator.h"
 
 class DirtyRect{
 public:
@@ -98,6 +99,7 @@ public:
 
 	std::vector<Particle::VoxelParticle*> newParticles;
 	std::vector<Particle::VoxelParticle*> particles;
+	std::vector<Particle::ParticleGenerator*> particleGenerators;
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
