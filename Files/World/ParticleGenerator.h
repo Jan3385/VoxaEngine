@@ -14,6 +14,7 @@ namespace Particle{
         virtual void TickParticles() = 0;
 
         Vec2f position = Vec2f(0, 0);
+        bool enabled = true;
     protected:
         ChunkMatrix* matrix = nullptr;
     };

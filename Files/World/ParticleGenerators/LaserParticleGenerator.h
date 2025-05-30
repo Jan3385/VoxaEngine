@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "World/ParticleGenerator.h"
 
 namespace Particle {
@@ -9,7 +7,7 @@ namespace Particle {
     public:
         LaserParticleGenerator() : ParticleGenerator() {};
         LaserParticleGenerator(ChunkMatrix* matrix) : ParticleGenerator(matrix) {};
-        ~LaserParticleGenerator(){};
+        virtual ~LaserParticleGenerator() = default;
 
         void TickParticles() override;
 

@@ -13,22 +13,6 @@ void Particle::LaserParticleGenerator::TickParticles()
         position.getX() + length * cos(angle),
         position.getY() + length * sin(angle)
     );
-
-    // make a laser line based on Bresenham's line algorithm
-    //int mNew = 2*(endPosition.getY() - position.getY());
-    //int slopeErrorNew = mNew - (endPosition.getX() - position.getX());
-//
-    //for(Vec2i p = position; p.getX() <= endPosition.getX(); p.x(p.getX() + 1))
-    //{
-    //    Particle::AddParticle(matrix, RGBA(255, 0, 0, 255), p, 1);
-    //    
-    //    slopeErrorNew += mNew;
-    //    if (slopeErrorNew >= 0)
-    //    {
-    //        p.y(p.getY() + 1);
-    //        slopeErrorNew -= (endPosition.getX() - position.getX());
-    //    }
-    //}
     
     int dx = abs(endPosition.getX() - startPos.getX()), sx = startPos.getX() < endPosition.getX() ? 1 : -1;
     int dy = -abs(endPosition.getY() - startPos.getY()), sy = startPos.getY() < endPosition.getY() ? 1 : -1;
@@ -47,8 +31,10 @@ void Particle::LaserParticleGenerator::TickParticles()
         }
 
         // random alpha value from 70 - 180
-        int alpha = rand() % 111 + 70; // 70 to 180
-        Particle::AddParticle(matrix, RGBA(249, 56, 39, alpha+alphaOffset), startPos, 1);
+        int alpha = rand() % 111 + 70;
+        // 10% chance to increase lifetime by one simulation tick
+        bool increaseLifetime = rand() % 10 == 0;
+        Particle::AddParticle(matrix, RGBA(249, 56, 39, alpha+alphaOffset), startPos, 1+increaseLifetime);
         // --------------------------
 
         if (startPos == endPosition) break;

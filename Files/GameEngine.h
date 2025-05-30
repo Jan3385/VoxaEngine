@@ -77,6 +77,7 @@ public:
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;
     
+    // Mouse position in screen coordinates
     Vec2f mousePos;
 
     ChunkMatrix chunkMatrix;

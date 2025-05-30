@@ -87,14 +87,14 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     SDL_RenderClear( r_renderer ); // Clear the screen to solid white
 
     //Player rendering
-    Game::Player player = GameEngine::instance->Player;
-    player.Render(r_renderer);
+    Game::Player *player = &GameEngine::instance->Player;
+    player->Render(r_renderer);
 
     //chunk rendering
     std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
     std::mutex renderDataMutex;
 
-    AABB cameraAABB = player.Camera.Expand(1);
+    AABB cameraAABB = player->Camera.Expand(1);
 
     #pragma omp parallel for
     for(uint8_t i = 0; i < 4; ++i)
@@ -111,9 +111,9 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
                 SDL_Rect rect = {
                     static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                        (player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getX(),
+                        (player->Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getX(),
                     static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                        (player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getY(),
+                        (player->Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getY(),
                     Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
                     Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
                 };
@@ -135,11 +135,11 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     }
 
     //rendering particles
-    chunkMatrix.RenderParticles(*this->r_renderer, player.Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
+    chunkMatrix.RenderParticles(*this->r_renderer, player->Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
 
     if(showHeatAroundCursor){
         SDL_SetRenderDrawBlendMode( r_renderer, SDL_BLENDMODE_BLEND );
-        Vec2f offset = player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+        Vec2f offset = player->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
         Vec2f voxelPos = ChunkMatrix::MousePosToWorldPos(mousePos, offset);
 
         constexpr int radius = 16;
@@ -158,11 +158,11 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                     SDL_Rect rect = {
                         static_cast<int>(localPos.getX() * Volume::Chunk::RENDER_VOXEL_SIZE + 
                             (chunkPos.getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                                (player.Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
+                                (player->Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
 
                         static_cast<int>(localPos.getY() * Volume::Chunk::RENDER_VOXEL_SIZE + 
                             (chunkPos.getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                                (player.Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
+                                (player->Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
                         Volume::Chunk::RENDER_VOXEL_SIZE,
                         Volume::Chunk::RENDER_VOXEL_SIZE
                     };
@@ -194,9 +194,9 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         SDL_DestroyTexture(texture);
     
         //info about the voxel under the mouse
-        Vec2f offset = player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+        Vec2f offset = player->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
         Vec2f mouseWorldPos = ChunkMatrix::MousePosToWorldPos(mousePos, offset);
-        auto voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
+        Volume::VoxelElement* voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
         if(voxel){
             SDL_Surface* surface = TTF_RenderText_Solid(basicFont, (std::to_string(voxel->temperature.GetCelsius()) + "deg C").c_str(), color);
             SDL_Texture* texture = SDL_CreateTextureFromSurface(r_renderer, surface);
@@ -231,7 +231,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 }
 void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 {
-    Game::Player player = GameEngine::instance->Player;
+    Game::Player *player = &GameEngine::instance->Player;
 
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
@@ -278,7 +278,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     if(ImGui::Button("Toggle Debug Rendering")) ToggleDebugRendering();
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
-    ImGui::Checkbox("No Clip", &player.NoClip);
+    ImGui::Checkbox("No Clip", &player->NoClip);
     ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
     ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
     ImGui::DragFloat("Fixed Update speed", &GameEngine::instance->fixedDeltaTime, 0.05f, 1/30.0, 4);
@@ -286,11 +286,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
 
-    Particle::LaserParticleGenerator* laserGenerator = dynamic_cast<Particle::LaserParticleGenerator*>(chunkMatrix.particleGenerators[0]);
-    if (laserGenerator) {
-        ImGui::DragInt("Laser Length", &laserGenerator->length, 0.1f, 0.0f, 100.0f);
-        ImGui::DragFloat("Laser Angle", &laserGenerator->angle, 0.01f, 0.0f, M_PI * 5);
-    }
+    ImGui::Checkbox("Player laser", &player->gunLaserParticleGenerator->enabled);
 
     ImGui::End();
 

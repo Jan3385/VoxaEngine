@@ -23,7 +23,7 @@ GameEngine::GameEngine()
     Volume::Chunk::computeShaderHeat_Program = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
     Volume::VoxelElement::computeShaderPressure_Program = m_compileComputeShader(Volume::VoxelElement::computeShaderPressure);
 
-    Player = Game::Player();
+    Player = Game::Player(&this->chunkMatrix);
     Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
 
     //Start simulation thread
@@ -123,8 +123,6 @@ void GameEngine::m_SimulationThread()
             
 
         simulationUpdateTimer -= simulationFixedDeltaTime;
-
-        //TODO: make thread safe
 
         //Reset voxels to default pre-simulation state
         chunkMatrix.voxelMutex.lock();

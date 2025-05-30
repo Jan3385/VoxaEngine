@@ -9,10 +9,19 @@ bool Game::Player::NoClip = true;
 
 Game::Player::Player()
 {
+    
+}
+
+Game::Player::Player(ChunkMatrix *matrix)
+{
     this->position = Vec2i(100, 0);
     this->Camera = AABB(
         Vec2f((800.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2, (600.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2), 
         Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE));
+
+    this->gunLaserParticleGenerator = new Particle::LaserParticleGenerator(matrix);
+    this->gunLaserParticleGenerator->length = 30;
+    this->gunLaserParticleGenerator->enabled = false;
 }
 
 void Game::Player::SetPlayerTexture(SDL_Texture *texture)
@@ -22,6 +31,10 @@ void Game::Player::SetPlayerTexture(SDL_Texture *texture)
 
 Game::Player::~Player()
 {
+    if(this->playerTexture){
+        SDL_DestroyTexture(this->playerTexture);
+        this->playerTexture = nullptr;
+    }
 }
 
 void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
@@ -91,6 +104,14 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
 
     // Move the player downwards
     if(acceleration != 0) MovePlayerBy(Vec2f(0, this->acceleration), chunkMatrix);
+
+    //update player laser
+    this->gunLaserParticleGenerator->position = Vec2f(this->position);
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, vector::ZERO) + Camera.corner;
+    Vec2f direction = mousePos - this->position;
+    float angle = std::atan2(direction.getY(), direction.getX());
+    this->gunLaserParticleGenerator->angle = angle;
+
     chunkMatrix.voxelMutex.unlock();
 }
 

@@ -415,12 +415,6 @@ ChunkMatrix::ChunkMatrix()
 {
     this->particleGenerators.reserve(15);
     this->particles.reserve(200);
-
-    Particle::LaserParticleGenerator* laserGenerator = new Particle::LaserParticleGenerator(this);
-    this->particleGenerators.push_back(laserGenerator);
-    laserGenerator->length = 20;
-    laserGenerator->angle = M_PI * 2;
-    laserGenerator->position = Vec2f(5, 5);
 }
 
 ChunkMatrix::~ChunkMatrix()
@@ -1241,8 +1235,8 @@ void ChunkMatrix::UpdateParticles()
     std::lock_guard<std::mutex> lock(this->voxelMutex);
     // Process particle generators
     for (auto& generator : particleGenerators) {
-        generator->TickParticles();
-        generator->position = GameEngine::instance->Player.GetCameraPos();
+        if(generator->enabled)
+            generator->TickParticles();
     }
 
     if (particles.empty() && newParticles.empty()) return;

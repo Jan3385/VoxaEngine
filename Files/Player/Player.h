@@ -3,6 +3,7 @@
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
+#include "World/ParticleGenerators/LaserParticleGenerator.h"
 
 namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
@@ -12,6 +13,7 @@ namespace Game{
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 4;
         static constexpr int SPEED = 60;
         Player();
+        Player(ChunkMatrix *matrix);
         void SetPlayerTexture(SDL_Texture* texture);
         ~Player();
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
@@ -19,6 +21,8 @@ namespace Game{
 
         Vec2f GetCameraPos() const;
         bool onGround = false;
+
+        Particle::LaserParticleGenerator *gunLaserParticleGenerator;
 
         std::vector<Volume::VoxelElement*> GetVoxelsUnder(ChunkMatrix& chunkMatrix);
         std::vector<Volume::VoxelElement*> GetVoxelsAbove(ChunkMatrix& chunkMatrix);
@@ -32,7 +36,7 @@ namespace Game{
         static constexpr int PLAYER_WIDTH = 8;
         static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;
         static constexpr int WAIST_HEIGHT = PLAYER_HEIGHT / 2;
-        static constexpr int STEP_HEIGHT = 2;
+        static constexpr int STEP_HEIGHT = 3;
         static constexpr float JUMP_ACCELERATION = 1.4;
 
         float acceleration = 0;
