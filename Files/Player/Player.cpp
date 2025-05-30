@@ -20,7 +20,7 @@ Game::Player::Player(ChunkMatrix *matrix)
         Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE));
 
     this->gunLaserParticleGenerator = new Particle::LaserParticleGenerator(matrix);
-    this->gunLaserParticleGenerator->length = 30;
+    this->gunLaserParticleGenerator->length = 50;
     this->gunLaserParticleGenerator->enabled = false;
 }
 
