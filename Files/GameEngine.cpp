@@ -4,6 +4,8 @@
 #include <future>
 #include <cstring>
 
+#include "Shader/ChunkShader.h"
+
 using namespace std;
 
 bool GameEngine::placeUnmovableSolidVoxels = false;
@@ -19,9 +21,8 @@ GameEngine::GameEngine()
 
     this->renderer = new GameRenderer(&glContext);
 
-    //compile compute shaders
-    Volume::Chunk::computeShaderHeat_Program = m_compileComputeShader(Volume::Chunk::computeShaderHeat);
-    Volume::VoxelElement::computeShaderPressure_Program = m_compileComputeShader(Volume::VoxelElement::computeShaderPressure);
+    Shader::InitializeBuffers();
+    Shader::InitializeComputeShaders();
 
     Player = Game::Player(&this->chunkMatrix);
     Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
@@ -150,12 +151,9 @@ void GameEngine::m_SimulationThread()
 }
 void GameEngine::m_FixedUpdate()
 {
-    //Heat update logic
-    if(runHeatSimulation) chunkMatrix.UpdateGridHeat(oddUpdatePass);
-
-    //Pressure update logic
-    if(runPressureSimulation) chunkMatrix.UpdateGridPressure(oddUpdatePass);
-    oddUpdatePass = !oddUpdatePass;
+    std::lock_guard<std::mutex> lock(this->chunkMatrix.voxelMutex);
+    // Run heat and pressure simulation
+    Shader::RunChunkShaders(chunkMatrix);
 }
 
 void GameEngine::PollEvents()
@@ -247,36 +245,6 @@ void GameEngine::Render()
     //Render
     renderer->Render(chunkMatrix, this->mousePos);
     chunkMatrix.voxelMutex.unlock();
-}
-
-GLuint GameEngine::m_compileComputeShader(const char *shader)
-{
-    GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(computeShader, 1, &shader, NULL);
-    glCompileShader(computeShader);
-
-    GLint success;
-    glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetShaderInfoLog(computeShader, 512, NULL, infoLog);
-        std::cerr << "Error compiling compute shader: " << infoLog << std::endl;
-    }
-
-    GLuint program = glCreateProgram();
-    glAttachShader(program, computeShader);
-    glLinkProgram(program);
-
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cerr << "Error linking compute shader program: " << infoLog << std::endl;
-    }
-
-    glDeleteShader(computeShader);
-
-    return program;
 }
 
 void GameEngine::LoadChunkInView(Vec2i pos)

@@ -31,7 +31,6 @@ private:
 
     std::thread simulationThread;
 
-    bool oddUpdatePass = false;
     float fixedUpdateTimer = 0;
     std::atomic<float> simulationUpdateTimer = 0;
 
@@ -46,8 +45,6 @@ private:
 
     //Simulation thread, handles voxel simulation
     void m_SimulationThread();
-
-    GLuint m_compileComputeShader(const char* shader);
 public:
     static GameEngine* instance;
 

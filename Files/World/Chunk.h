@@ -53,13 +53,15 @@ namespace Volume
 		bool ShouldChunkCalculatePressure() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
 
-    	void GetHeatMap(ChunkMatrix *matrix,
-			Volume::VoxelHeatData HeatDataArray[],  // flattened arrays
-			int chunkNumber);
+		void GetShadersData(
+			float temperatureBuffer[],
+			float heatCapacityBuffer[],
+			float heatConductivityBuffer[],
+			float pressureBuffer[],
+			uint32_t idBuffer[],
+			int chunkNumber
+		) const;
 
-		void GetPressureMap(ChunkMatrix *matrix,
-			Volume::VoxelPressureData PressureDataArray[],  // flattened arrays
-			int chunkNumber);
 
     	void SIM_ResetVoxelUpdateData();
     	SDL_Surface* Render(bool debugRender);
@@ -110,9 +112,6 @@ public:
 
 	Volume::Chunk* GenerateChunk(const Vec2i& pos);
 	void DeleteChunk(const Vec2i& pos);
-
-	void UpdateGridHeat(bool oddHeatUpdatePass);
-	void UpdateGridPressure(bool oddPressureUpdatePass);
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
