@@ -20,7 +20,7 @@ GameEngine::GameEngine()
     Registry::VoxelRegistry::RegisterVoxels();
 
     this->renderer = new GameRenderer(&glContext);
-
+    
     Shader::InitializeBuffers();
     Shader::InitializeComputeShaders();
 
@@ -33,6 +33,10 @@ GameEngine::GameEngine()
 
 GameEngine::~GameEngine()
 {
+    this->running = false;
+    if (simulationThread.joinable())
+        simulationThread.join();
+
     SDL_GL_DeleteContext(glContext);
 
     delete this->renderer;
