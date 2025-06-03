@@ -16,16 +16,20 @@ GameEngine* GameEngine::instance = nullptr;
 
 GameEngine::GameEngine()
 {
+    // 100% serious, without this the game crashes ffor me immediately on startup. Literally no idea why.
+    int PLS_STOP_CRASHING = 0;
+
     GameEngine::instance = this;
     Registry::VoxelRegistry::RegisterVoxels();
-
+    
     this->renderer = new GameRenderer(&glContext);
     
     Shader::InitializeBuffers();
     Shader::InitializeComputeShaders();
-
+    
     Player = Game::Player(&this->chunkMatrix);
     Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
+
 }
 
 GameEngine::~GameEngine()
@@ -250,9 +254,7 @@ void GameEngine::Render()
 
 void GameEngine::StartSimulationThread()
 {
-    std::cout << "A" << std::endl;
     this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
-    std::cout << "B" << std::endl;
 }
 
 void GameEngine::LoadChunkInView(Vec2i pos)

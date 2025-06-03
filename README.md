@@ -47,7 +47,7 @@ Make sure you have at least *CMake v3.10* installed and functional. Ensure you h
 
 You need to install these packages before compiling:
 - `glew` or `libglew-dev`
-- `sdl2`
+- `sdl2` or `libsdl2-dev`
 - `sdl2_ttf`
 
 To compile simply run `cmake --preset release` and follow with `cmake --build build` in the project folder.
