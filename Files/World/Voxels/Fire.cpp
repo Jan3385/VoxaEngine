@@ -1,5 +1,5 @@
-#include "Fire.h"
-#include "../Chunk.h"
+#include "World/Voxels/Fire.h"
+#include "World/Chunk.h"
 
 using namespace Volume;
 

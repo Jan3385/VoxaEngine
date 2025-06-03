@@ -1,5 +1,5 @@
-#include "Voxel.h"
-#include "Chunk.h"
+#include "World/Voxel.h"
+#include "World/Chunk.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>

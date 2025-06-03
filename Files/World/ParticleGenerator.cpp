@@ -1,4 +1,4 @@
-#include "ParticleGenerator.h"
+#include "World/ParticleGenerator.h"
 
 #include "World/Chunk.h"
 #include <algorithm>

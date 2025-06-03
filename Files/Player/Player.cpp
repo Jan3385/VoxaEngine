@@ -1,5 +1,5 @@
-#include "Player.h"
-#include "../GameEngine.h"
+#include "Player/Player.h"
+#include "GameEngine.h"
 
 #include <future>
 #include <iostream>

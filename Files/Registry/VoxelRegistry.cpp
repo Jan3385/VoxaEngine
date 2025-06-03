@@ -1,8 +1,8 @@
-#include "VoxelRegistry.h"
+#include "Registry/VoxelRegistry.h"
 #include <stdexcept>
 #include <iostream>
 
-#include "../World/voxelTypes.h"
+#include "World/voxelTypes.h"
 
 using namespace Volume;
 using namespace Registry;

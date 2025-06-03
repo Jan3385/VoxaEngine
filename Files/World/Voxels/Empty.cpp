@@ -1,5 +1,5 @@
-#include "Empty.h"
-#include "../Chunk.h"
+#include "World/Voxels/Empty.h"
+#include "World/Chunk.h"
 
 #include <iostream>
 
