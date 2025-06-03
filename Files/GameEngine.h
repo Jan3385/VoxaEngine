@@ -3,21 +3,26 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <list>
 
 #include <glew.h>
+
 #include <SDL.h>
 #include <SDL_ttf.h>
+
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_sdlrenderer2.h>
 
-#include <list>
+#include <box2d/box2d.h>
+#include <box2d/types.h>
 
 #include "Renderer.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
 #include "Player/Player.h"
+#include "Physics/Physics.h"
 
 #define AVG_FPS_SIZE_COUNT 25
 
@@ -25,7 +30,6 @@ class GameEngine
 {
 private:
     SDL_GLContext glContext;
-    GameRenderer* renderer;
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
 
@@ -46,6 +50,8 @@ private:
     //Simulation thread, handles voxel simulation
     void m_SimulationThread();
 public:
+    GameRenderer* renderer;
+    GamePhysics* physics;
     static GameEngine* instance;
 
     static constexpr int MAX_FRAME_RATE = 60;

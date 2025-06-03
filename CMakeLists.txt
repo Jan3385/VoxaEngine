@@ -3,9 +3,10 @@ set(CMAKE_GENERATOR "Ninja")
 cmake_minimum_required(VERSION 3.10)
 
 # Set compiler
+set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
-project(VoxaEngine VERSION 0.2.1 LANGUAGES CXX)
+project(VoxaEngine VERSION 0.2.1 LANGUAGES C CXX)
 
 # SDL2 paths
 set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/SDL2")
@@ -30,7 +31,9 @@ set(TEXTURES_FOLDER "${CMAKE_SOURCE_DIR}/Textures")
 
 # Box2D integration
 set(BOX2D_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/box2D/include")
-file(GLOB_RECURSE BOX2D_SOURCES "${CMAKE_SOURCE_DIR}/box2D/src/*.cpp")
+file(GLOB_RECURSE BOX2D_SOURCES "${CMAKE_SOURCE_DIR}/box2D/src/*.c")
+
+set_source_files_properties(${BOX2D_SOURCES} PROPERTIES LANGUAGE C)
 
 # Add include directories for SDL2
 include_directories(${SDL2_INCLUDE_DIR} ${IMGUI_INCLUDE_HEADER_DIR} ${GLEW_INCLUDE} ${BOX2D_INCLUDE_DIR})

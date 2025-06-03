@@ -34,6 +34,9 @@ int WinMain(int argc, char* argv[]){
     std::srand(static_cast<unsigned>(time(NULL)));
 
     GameEngine gEngine;
+    GameEngine::instance = &gEngine;
+    gEngine.Player = Game::Player(&gEngine.chunkMatrix);
+    gEngine.Player.SetPlayerTexture(gEngine.renderer->LoadTexture("Textures/Player.bmp"));
 
     //Start simulation thread
     gEngine.StartSimulationThread();
