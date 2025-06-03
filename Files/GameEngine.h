@@ -87,5 +87,7 @@ public:
     void PollEvents();
     void Render();
 
+    void StartSimulationThread();
+
     void LoadChunkInView(Vec2i pos);
 };

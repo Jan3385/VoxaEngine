@@ -1,12 +1,16 @@
 #include "GameEngine.h"
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 int main(int argc, char* argv[]){
     //init srand
     std::srand(static_cast<unsigned>(time(NULL)));
 
     GameEngine gEngine;
+
+    //Start simulation thread
+    gEngine.StartSimulationThread();
 
     //Game Loop
     while (gEngine.running)
@@ -30,6 +34,9 @@ int WinMain(int argc, char* argv[]){
     std::srand(static_cast<unsigned>(time(NULL)));
 
     GameEngine gEngine;
+
+    //Start simulation thread
+    gEngine.StartSimulationThread();
 
     //Game Loop
     while (gEngine.running)

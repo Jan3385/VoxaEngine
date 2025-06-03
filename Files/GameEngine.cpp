@@ -26,9 +26,6 @@ GameEngine::GameEngine()
 
     Player = Game::Player(&this->chunkMatrix);
     Player.SetPlayerTexture(this->renderer->LoadTexture("Textures/Player.bmp"));
-
-    //Start simulation thread
-    this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
 }
 
 GameEngine::~GameEngine()
@@ -249,6 +246,13 @@ void GameEngine::Render()
     //Render
     renderer->Render(chunkMatrix, this->mousePos);
     chunkMatrix.voxelMutex.unlock();
+}
+
+void GameEngine::StartSimulationThread()
+{
+    std::cout << "A" << std::endl;
+    this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
+    std::cout << "B" << std::endl;
 }
 
 void GameEngine::LoadChunkInView(Vec2i pos)
