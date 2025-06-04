@@ -1,7 +1,7 @@
 #include "LaserParticleGenerator.h"
 
 #include "Math/Vector.h"
-#include "World/Chunk.h"
+#include "World/ChunkMatrix.h"
 #include <cmath>
 #include <iostream>
 

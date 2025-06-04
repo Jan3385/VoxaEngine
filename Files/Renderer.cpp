@@ -8,7 +8,7 @@
 #include <math.h>
 
 #include "Math/AABB.h"
-#include "Player/Player.h"
+#include "GameObject/Player.h"
 
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
 
@@ -87,8 +87,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     SDL_RenderClear( r_renderer ); // Clear the screen to solid white
 
     //Player rendering
-    Game::Player *player = &GameEngine::instance->Player;
-    player->Render(r_renderer);
+    Game::Player *player = GameEngine::instance->Player;
+    player->Render(r_renderer, player->Camera.corner);
 
     //chunk rendering
     std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
@@ -133,6 +133,9 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     
         SDL_DestroyTexture(chunkTexture);
     }
+
+    //rendering game objects
+    chunkMatrix.RenderObjects(*this->r_renderer, player->Camera.corner);
 
     //rendering particles
     chunkMatrix.RenderParticles(*this->r_renderer, player->Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
@@ -231,7 +234,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 }
 void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 {
-    Game::Player *player = &GameEngine::instance->Player;
+    Game::Player *player = GameEngine::instance->Player;
 
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();

@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "Shader/ChunkShader.h"
+#include "Registry/GameObjectRegistry.h"
 
 using namespace std;
 
@@ -34,6 +35,10 @@ GameEngine::~GameEngine()
     SDL_GL_DeleteContext(glContext);
 
     delete this->renderer;
+
+    delete this->physics;
+
+    delete this->Player;
 
     chunkMatrix.cleanup();
 }
@@ -71,7 +76,7 @@ void GameEngine::Update()
     this->PollEvents();
 
     //Update Player
-    this->Player.Update(this->chunkMatrix, this->deltaTime);
+    this->Player->Update(this->chunkMatrix, this->deltaTime);
 
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
@@ -92,7 +97,7 @@ void GameEngine::m_UpdateGridVoxel(int pass)
     chunkMatrix.voxelMutex.lock();
     //delete all chunks marked for deletion
     for(int32_t i = static_cast<int32_t>(chunkMatrix.GridSegmented[pass].size()) - 1; i >= 0; --i){
-        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player.Camera))
+        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player->Camera))
         {
             chunkMatrix.DeleteChunk(chunkMatrix.GridSegmented[pass][i]->GetPos());
             continue;
@@ -210,7 +215,7 @@ void GameEngine::PollEvents()
             switch (this->windowEvent.window.event)
             {
                 case SDL_WINDOWEVENT_RESIZED:
-                    this->Player.Camera.size = Vec2f(
+                    this->Player->Camera.size = Vec2f(
                         this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
                         this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
                 break;
@@ -230,6 +235,12 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_d:
                 MovementKeysHeld[3] = false;
+                break;
+            case SDLK_t:
+                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
+                Registry::CreateGameObject(&chunkMatrix, renderer->LoadTexture("Textures/Barrel.bmp"),
+                    worldMousePos
+                );
                 break;
             }
             break;
@@ -267,7 +278,7 @@ void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
     chunkMatrix.voxelMutex.lock();
-    Vec2f offset = this->Player.Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+    Vec2f offset = this->Player->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:

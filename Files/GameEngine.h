@@ -21,7 +21,7 @@
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
-#include "Player/Player.h"
+#include "GameObject/Player.h"
 #include "Physics/Physics.h"
 
 #define AVG_FPS_SIZE_COUNT 25
@@ -64,7 +64,7 @@ public:
 
     static bool MovementKeysHeld[4]; //W, S, A, D
 
-    Game::Player Player;
+    Game::Player *Player;
 
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds

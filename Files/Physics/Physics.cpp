@@ -19,5 +19,5 @@ GamePhysics::~GamePhysics()
 
 void GamePhysics::Step(float deltaTime)
 {
-    //b2World_Step(worldId, deltaTime, this->SIMULATION_STEP_COUNT);
+    b2World_Step(worldId, deltaTime, this->SIMULATION_STEP_COUNT);
 }

@@ -1,23 +1,24 @@
 #pragma once
 
+#include "GameObject/GameObject.h"
+
 #include "Math/Vector.h"
 #include "Math/AABB.h"
-#include "World/Chunk.h"
+#include "World/ChunkMatrix.h"
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
 
 namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
-    class Player{
+    class Player  : public GameObject {
     public:
         static bool NoClip;
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 4;
         static constexpr int SPEED = 60;
         Player();
-        Player(ChunkMatrix *matrix);
-        void SetPlayerTexture(SDL_Texture* texture);
+        Player(ChunkMatrix *matrix, SDL_Texture* texture);
         ~Player();
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
-        void Render(SDL_Renderer* renderer);
+        void Render(SDL_Renderer* renderer, const Vec2f &offset) override;
 
         Vec2f GetCameraPos() const;
         bool onGround = false;
@@ -58,7 +59,5 @@ namespace Game{
         void MovePlayerBy(Vec2f pos, ChunkMatrix& chunkMatrix);
         void MoveCamera(Vec2f pos, ChunkMatrix& chunkMatrix);
         void MoveCameraTowards(Vec2f to, ChunkMatrix& chunkMatrix);
-        Vec2f position;
-        SDL_Texture* playerTexture;
     };
 }

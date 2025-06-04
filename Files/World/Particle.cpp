@@ -1,7 +1,7 @@
 #include "World/Particle.h"
 #include "Particle.h"
 
-#include "World/Chunk.h"
+#include "World/ChunkMatrix.h"
 
 using namespace Particle;
 

@@ -1,6 +1,6 @@
 #include "World/Particles/SolidFallingParticle.h"
 #include "SolidFallingParticle.h"
-#include "World/Chunk.h"
+#include "World/ChunkMatrix.h"
 
 #include <cmath>
 

@@ -1,6 +1,6 @@
 #include "World/ParticleGenerator.h"
 
-#include "World/Chunk.h"
+#include "World/ChunkMatrix.h"
 #include <algorithm>
 
 Particle::ParticleGenerator::ParticleGenerator()
