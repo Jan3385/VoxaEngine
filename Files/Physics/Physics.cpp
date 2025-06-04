@@ -14,6 +14,7 @@ GamePhysics::GamePhysics()
 
 GamePhysics::~GamePhysics()
 {
+    b2DestroyWorld(worldId);
 }
 
 void GamePhysics::Step(float deltaTime)
