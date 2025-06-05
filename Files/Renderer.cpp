@@ -289,7 +289,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
 
-    ImGui::Checkbox("Player laser", &player->gunLaserParticleGenerator->enabled);
+    ImGui::Checkbox("Player Gun", &player->gunEnabled);
 
     ImGui::End();
 

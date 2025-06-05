@@ -282,7 +282,10 @@ void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:
-        this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, offset, Volume::Temperature(this->placeVoxelTemperature));
+        if(this->Player->gunEnabled)
+            this->Player->FireGun(this->chunkMatrix);
+        else
+            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, offset, Volume::Temperature(this->placeVoxelTemperature));
         break;
     case SDL_BUTTON_RIGHT:
         this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, offset);

@@ -20,10 +20,11 @@ namespace Game{
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
         void Render(SDL_Renderer* renderer, const Vec2f &offset) override;
 
+        void FireGun(ChunkMatrix& chunkMatrix);
+
         Vec2f GetCameraPos() const;
         bool onGround = false;
-
-        Particle::LaserParticleGenerator *gunLaserParticleGenerator;
+        bool gunEnabled = false;
 
         std::vector<Volume::VoxelElement*> GetVoxelsUnder(ChunkMatrix& chunkMatrix);
         std::vector<Volume::VoxelElement*> GetVoxelsAbove(ChunkMatrix& chunkMatrix);
@@ -39,6 +40,8 @@ namespace Game{
         static constexpr int WAIST_HEIGHT = PLAYER_HEIGHT / 2;
         static constexpr int STEP_HEIGHT = 3;
         static constexpr float JUMP_ACCELERATION = 1.4;
+
+        Particle::LaserParticleGenerator *gunLaserParticleGenerator;
 
         float acceleration = 0;
 

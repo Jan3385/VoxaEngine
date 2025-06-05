@@ -16,10 +16,13 @@ namespace Particle{
 		SolidFallingParticle(Volume::VoxelElement *voxel, float angle, float speed);
         ~SolidFallingParticle();
 
+        bool precision = false;
+
 		
 		bool Step(ChunkMatrix* matrix) override;
+        void SetNextValidPosition(ChunkMatrix *matrix);
         Vec2f GetPosition() const;
 	};
     
-    void AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed);
+    void AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed, bool precision = false);
 }

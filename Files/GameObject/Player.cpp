@@ -1,9 +1,12 @@
 #include "GameObject/Player.h"
 #include "GameEngine.h"
 
+#include "World/Particles/SolidFallingParticle.h"
+
 #include <future>
 #include <iostream>
 #include <cmath>
+#include "Player.h"
 
 bool Game::Player::NoClip = true;
 
@@ -34,6 +37,8 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
 {
     chunkMatrix.voxelMutex.lock();
     this->onGround = this->isOnGround(chunkMatrix);
+
+    this->gunLaserParticleGenerator->enabled = this->gunEnabled;
 
     // Apply gravity
     if(!this->NoClip){
@@ -114,6 +119,23 @@ void Game::Player::Render(SDL_Renderer* renderer, const Vec2f &offset)
     GameObject::Render(renderer, offset);   
 }
 
+void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
+{
+    if(!this->gunEnabled) return;
+
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, this->Camera.corner * Volume::Chunk::RENDER_VOXEL_SIZE);
+    Vec2f playerPos = Vec2f(this->position) + Vec2f(PLAYER_WIDTH/2, PLAYER_HEIGHT/2);
+    
+    Vec2f direction = mousePos - playerPos;
+    
+    Particle::AddSolidFallingParticle(
+        &chunkMatrix,
+        CreateVoxelElement("Iron", playerPos, 1.0f, Volume::Temperature(20.0f), false),
+        std::atan2(direction.getY(), direction.getX()),
+        25.0f,
+        true
+    );
+}
 Vec2f Game::Player::GetCameraPos() const
 {
     return Vec2f(Camera.corner + Vec2f(Camera.size.getX()/2, Camera.size.getY()/2));

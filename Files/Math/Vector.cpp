@@ -1,4 +1,6 @@
 #include "Math/Vector.h"
+#include "Vector.h"
+#include <iostream>
 
 float Vec2f::getX() const
 {
@@ -65,6 +67,16 @@ Vec2f Vec2f::operator*(const int &other) const
     );
 }
 
+Vec2f Vec2f::operator/(const float &other) const
+{
+    if (other == 0.0f) {
+        throw std::runtime_error("Division by zero in Vec2f::operator/");
+    }
+    return Vec2f(
+        this->getX() / other,
+        this->getY() / other
+    );
+}
 int Vec2i::getX() const
 {
     return m_x;
