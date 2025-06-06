@@ -91,12 +91,14 @@ Vec2f Particle::SolidFallingParticle::GetPosition() const
 }
 
 // No need to delete voxel pointer, done automatically
-void Particle::AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed, bool precision)
+Particle::SolidFallingParticle *Particle::AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed, bool precision)
 {
-    if (voxel == nullptr) return; // Check for null pointer
+    if (voxel == nullptr) return nullptr; // Check for null pointer
 
     SolidFallingParticle *particle = new SolidFallingParticle(voxel, angle, speed);
     particle->precision = precision;
 
     matrix->newParticles.push_back(particle);
+
+    return particle;
 }

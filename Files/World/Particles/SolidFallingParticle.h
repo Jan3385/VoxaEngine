@@ -3,8 +3,6 @@
 #include "World/Particle.h"
 
 namespace Particle{
-    constexpr float GRAVITY = 0.4f;
-
     class SolidFallingParticle : public Particle::VoxelParticle {
 	private:
         Vec2f m_dPosition;
@@ -24,5 +22,5 @@ namespace Particle{
         Vec2f GetPosition() const;
 	};
     
-    void AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed, bool precision = false);
+    Particle::SolidFallingParticle *AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed, bool precision = false);
 }

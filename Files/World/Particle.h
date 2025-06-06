@@ -5,6 +5,7 @@
 class ChunkMatrix;
 
 namespace Particle{
+    constexpr float GRAVITY = 0.4f;
     class VoxelParticle{
 	public:
 		VoxelParticle();

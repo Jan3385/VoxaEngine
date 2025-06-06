@@ -1,7 +1,7 @@
 #include "GameObject/Player.h"
 #include "GameEngine.h"
 
-#include "World/Particles/SolidFallingParticle.h"
+#include "World/Particles/BulletParticle.h"
 
 #include <future>
 #include <iostream>
@@ -128,12 +128,12 @@ void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
     
     Vec2f direction = mousePos - playerPos;
     
-    Particle::AddSolidFallingParticle(
+    Particle::AddBulletParticle(
         &chunkMatrix,
-        CreateVoxelElement("Iron", playerPos, 1.0f, Volume::Temperature(20.0f), false),
         std::atan2(direction.getY(), direction.getX()),
-        25.0f,
-        true
+        20.0f,
+        3.0f,
+        playerPos
     );
 }
 Vec2f Game::Player::GetCameraPos() const

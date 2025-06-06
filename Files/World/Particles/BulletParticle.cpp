@@ -1,0 +1,88 @@
+#include "World/Particles/BulletParticle.h"
+#include "World/Particles/FallingParticle.h"
+#include "World/ChunkMatrix.h"
+#include "BulletParticle.h"
+#include "Math/Temperature.h"
+
+#include <cmath>
+
+using namespace Particle;
+Particle::BulletParticle::BulletParticle()
+{
+    this->particleLifeTime = 600; 
+    this->color = RGBA(255, 255, 0, 255);
+    this->m_dPosition = Vec2f(0, 0);
+    this->isTimeImmortal = false;
+}
+
+Particle::BulletParticle::BulletParticle(Vec2f position, float angle, float speed, float damage) :
+    Particle::VoxelParticle(),
+    m_dPosition(speed * std::cos(angle), speed * std::sin(angle)),
+    damage(damage)
+{
+    this->particleLifeTime = 600; 
+    this->color = RGBA(255, 255, 0, 255);
+    this->fPosition = position;
+}
+
+Particle::BulletParticle::~BulletParticle()
+{
+}
+bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
+    //new position variables
+    this->fPosition += m_dPosition;
+
+    //Adjust position according to gravity
+    m_dPosition = m_dPosition + Vec2f(0, Particle::GRAVITY * this->gravityMultiplier); // Apply gravity
+
+    Vec2f futurePos = fPosition + m_dPosition;
+
+    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
+    if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
+    {
+        //check if the position for the particle exists
+        if (!matrix->IsValidWorldPosition(this->fPosition))
+        {
+            return true;
+        }
+
+        this->SetNextValidPosition(matrix);
+        
+        matrix->PlaceVoxelAt(this->fPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true);
+
+        return true;
+    }
+
+    if(!isTimeImmortal)
+        this->particleLifeTime--;
+
+    return false;
+}
+Vec2f Particle::BulletParticle::GetPosition() const {
+    return Vec2f((Vec2i)this->fPosition);
+}
+Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,
+    float angle, float speed, float damage, Vec2f position)
+{
+    BulletParticle *particle = new BulletParticle(position, angle, speed, damage);
+    matrix->newParticles.push_back(particle);
+
+    return particle;
+}
+void Particle::BulletParticle::SetNextValidPosition(ChunkMatrix *matrix){
+    int iteration = 0;
+
+    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.getX()), std::abs(m_dPosition.getY())); // Normalize the velocity vector
+
+    Vec2f futurePos = fPosition + m_dPosition;
+    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
+
+    while(futureVoxel && futureVoxel->GetState() != Volume::State::Solid && iteration < 5000)
+    {
+        // Move the particle in the direction of the velocity vector until we hit a solid voxel
+        this->fPosition = futurePos;
+        futurePos = fPosition + m_dPosition;
+        futureVoxel = matrix->VirtualGetAt(futurePos);
+        iteration++;
+    }
+}
