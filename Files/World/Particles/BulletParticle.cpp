@@ -6,6 +6,10 @@
 
 #include <cmath>
 
+int variation(int max){
+    return rand() % (2 * max + 1) - max; // Returns a random number in the range [-max, max]
+}
+
 using namespace Particle;
 Particle::BulletParticle::BulletParticle()
 {
@@ -37,6 +41,31 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
 
     Vec2f futurePos = fPosition + m_dPosition;
 
+    //40% chance to create a falling particle in opposite direction
+    if (rand() % 100 < 40)
+    {
+        Particle::AddFallingParticle(matrix, 
+            RGBA(240+variation(10), 240+variation(10), 240+variation(10), 100+variation(15)),
+            std::atan2(m_dPosition.getY(), m_dPosition.getX()) + M_PI + variation(60)/100.0f,
+            1.0f + variation(5)/10.0f,
+            0.3f,
+            fPosition,
+            40 + variation(20)
+        );
+    }
+
+    // 20% chance to create a random red falling particle
+    if (rand() % 100 < 20){
+        Particle::AddFallingParticle(matrix, 
+            RGBA(240+variation(15), 90+variation(40), 2+variation(2), 205+variation(15)),
+            rand() % 360 * M_PI / 180.0f,
+            1.3f + variation(5)/10.0f,
+            0.1f,
+            fPosition,
+            35 + variation(25)
+        );
+    }
+
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
     if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
     {
@@ -47,6 +76,8 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
         }
 
         this->SetNextValidPosition(matrix);
+
+        matrix->ExplodeAt(fPosition, 2+(rand()%2-1));
         
         matrix->PlaceVoxelAt(this->fPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true);
 

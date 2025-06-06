@@ -6,7 +6,6 @@ namespace Particle{
     class FallingParticle : public Particle::VoxelParticle {
 	private:
         Vec2f m_dPosition;
-        RGBA color;
         float gravityMultiplier = 1.0f;
     public:
 

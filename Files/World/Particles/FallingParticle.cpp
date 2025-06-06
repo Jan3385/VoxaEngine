@@ -5,19 +5,19 @@
 
 Particle::FallingParticle::FallingParticle() :
     VoxelParticle(),
-    m_dPosition(0, 0),
-    color(RGBA(255, 255, 255, 255))
+    m_dPosition(0, 0)
 {
     this->fPosition = Vec2f(0, 0);
+    this->color = RGBA(255, 255, 255, 255);
 }
 
 Particle::FallingParticle::FallingParticle(Vec2f position, RGBA color, float angle, float speed, float gravityMultiplier) :
     VoxelParticle(),
     m_dPosition(speed * cos(angle), speed * sin(angle)),
-    color(color),
     gravityMultiplier(gravityMultiplier)
 {
     this->fPosition = position;
+    this->color = color;
 }
 
 Particle::FallingParticle::~FallingParticle()
