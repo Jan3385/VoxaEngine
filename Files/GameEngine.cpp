@@ -22,8 +22,8 @@ GameEngine::GameEngine()
     Registry::VoxelRegistry::RegisterVoxels();
     this->renderer = new GameRenderer(&glContext);
     
-    Shader::InitializeBuffers();
-    Shader::InitializeComputeShaders();
+    ChunkShader::InitializeBuffers();
+    ChunkShader::InitializeComputeShaders();
 }
 
 GameEngine::~GameEngine()
@@ -156,7 +156,7 @@ void GameEngine::m_FixedUpdate()
 {
     std::lock_guard<std::mutex> lock(this->chunkMatrix.voxelMutex);
     // Run heat and pressure simulation
-    Shader::RunChunkShaders(chunkMatrix);
+    ChunkShader::RunChunkShaders(chunkMatrix);
 }
 
 void GameEngine::PollEvents()

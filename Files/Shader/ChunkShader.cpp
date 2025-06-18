@@ -5,28 +5,28 @@
 
 #include "GameEngine.h"
 
-using namespace Shader;
+using namespace ChunkShader;
 
 // Buffer for storing temperature in FLOAT as Celsius
-GLuint Shader::voxelTemperatureBuffer;
+GLuint ChunkShader::voxelTemperatureBuffer;
 // Buffer for storing heat capacity in FLOAT
-GLuint Shader::voxelHeatCapacityBuffer;
+GLuint ChunkShader::voxelHeatCapacityBuffer;
 // Buffer for storing heat conductivity in FLOAT
-GLuint Shader::voxelConductivityBuffer;
+GLuint ChunkShader::voxelConductivityBuffer;
 // Buffer for storing pressure in FLOAT
-GLuint Shader::voxelPressureBuffer;
+GLuint ChunkShader::voxelPressureBuffer;
 // Buffer for storing voxel IDs in UINT
-GLuint Shader::voxelIdBuffer;
+GLuint ChunkShader::voxelIdBuffer;
 // Output buffer for any output
-GLuint Shader::outputDataBuffer;
+GLuint ChunkShader::outputDataBuffer;
 
 // Chunk connectivity buffer
-GLuint Shader::chunkConnectivityBuffer;
+GLuint ChunkShader::chunkConnectivityBuffer;
 
-GLuint  Shader::pressureComputeShaderProgram, 
-        Shader::heatComputeShaderProgram;
+GLuint  ChunkShader::pressureComputeShaderProgram, 
+        ChunkShader::heatComputeShaderProgram;
 
-GLuint Shader::CompileComputeShader(const char* shaderSource)
+GLuint ChunkShader::CompileComputeShader(const char* shaderSource)
 {
     GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
     glShaderSource(computeShader, 1, &shaderSource, NULL);
@@ -56,7 +56,7 @@ GLuint Shader::CompileComputeShader(const char* shaderSource)
     return program;
 }
 
-void Shader::InitializeBuffers()
+void ChunkShader::InitializeBuffers()
 {
     glGenBuffers(1, &voxelTemperatureBuffer);
     glGenBuffers(1, &voxelHeatCapacityBuffer);
@@ -67,13 +67,13 @@ void Shader::InitializeBuffers()
     glGenBuffers(1, &chunkConnectivityBuffer);
 }
 
-void Shader::InitializeComputeShaders()
+void ChunkShader::InitializeComputeShaders()
 {
     heatComputeShaderProgram = CompileComputeShader(computeShaderHeat);
     pressureComputeShaderProgram = CompileComputeShader(computeShaderPressure);
 }
 
-void Shader::RunChunkShaders(ChunkMatrix &chunkMatrix)
+void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
 {
     uint16_t chunkCount = static_cast<uint16_t>(chunkMatrix.Grid.size());
     uint32_t NumberOfVoxels = chunkCount * Volume::Chunk::CHUNK_SIZE_SQUARED;
@@ -90,10 +90,15 @@ void Shader::RunChunkShaders(ChunkMatrix &chunkMatrix)
     std::vector<Volume::Chunk*> chunksToUpdate;
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
         chunkMatrix.Grid[i]->GetShadersData(
-            temperatureBuffer.data(), heatCapacityBuffer.data(), heatConductivityBuffer.data(), pressureBuffer.data(), idBuffer.data(), chunkIndex++
+            temperatureBuffer.data(), 
+            heatCapacityBuffer.data(), 
+            heatConductivityBuffer.data(), 
+            pressureBuffer.data(), 
+            idBuffer.data(), 
+            chunkIndex++
         );
 
-        Shader::ChunkConnectivityData *data = &connectivityDataBuffer[i];
+        ChunkShader::ChunkConnectivityData *data = &connectivityDataBuffer[i];
         data->chunk = i;
         data->chunkUp = -1;
         data->chunkDown = -1;
@@ -151,14 +156,14 @@ void Shader::RunChunkShaders(ChunkMatrix &chunkMatrix)
 
 // Uploads data to a buffer of type T.
 template<typename T>
-void Shader::UploadDataToBuffer(GLuint buffer, const T* data, size_t amount){
+void ChunkShader::UploadDataToBuffer(GLuint buffer, const T* data, size_t amount){
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, amount * sizeof(T), data, GL_STATIC_DRAW); 
 }
 
 // Uploads data to a Uniform Buffer Object (UBO) of type T.
 template<typename T>
-void Shader::UploadDataToUBO(GLuint UBO, const T* data, size_t amount){
+void ChunkShader::UploadDataToUBO(GLuint UBO, const T* data, size_t amount){
     glBindBuffer(GL_UNIFORM_BUFFER, UBO);
     glBufferData(GL_UNIFORM_BUFFER, amount * sizeof(T), data, GL_STATIC_DRAW); 
 }
@@ -170,7 +175,7 @@ void Shader::UploadDataToUBO(GLuint UBO, const T* data, size_t amount){
  * @return A pointer to an array of type T containing the data read from the output buffer.
  */
 template <typename T>
-T *Shader::ReadDataFromOutputBuffer(size_t VoxelAmount)
+T *ChunkShader::ReadDataFromOutputBuffer(size_t VoxelAmount)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputDataBuffer);
     T* data = static_cast<T*>(glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY));
@@ -185,7 +190,7 @@ T *Shader::ReadDataFromOutputBuffer(size_t VoxelAmount)
 }
 
 // Needs set voxelIdBuffer, voxelPressureBuffer, chunkConnectivityUniformBuffer.. Sets outputDataBuffer (FLOAT)
-void Shader::RunChunkPressureShader(size_t NumberOfChunks){
+void ChunkShader::RunChunkPressureShader(size_t NumberOfChunks){
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, outputDataBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, voxelIdBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, voxelPressureBuffer);
@@ -203,7 +208,7 @@ void Shader::RunChunkPressureShader(size_t NumberOfChunks){
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 // Needs set voxelTemperatureBuffer, voxelHeatCapacityBuffer, voxelConductivityBuffer, chunkConnectivityUniformBuffer.. Sets outputDataBuffer (FLOAT)
-void Shader::RunChunkHeatShader(size_t NumberOfChunks) {
+void ChunkShader::RunChunkHeatShader(size_t NumberOfChunks) {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, outputDataBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, voxelTemperatureBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, voxelHeatCapacityBuffer);
@@ -223,14 +228,14 @@ void Shader::RunChunkHeatShader(size_t NumberOfChunks) {
     
 }
 
-void Shader::ClearOutputBuffer(size_t VoxelAmount)
+void ChunkShader::ClearOutputBuffer(size_t VoxelAmount)
 {
     std::vector<float> zeros(VoxelAmount, 0.0f);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputDataBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, VoxelAmount * sizeof(float), zeros.data(), GL_DYNAMIC_COPY);
 }
 
-const char* Shader::computeShaderHeat = R"glsl(#version 460 core
+const char* ChunkShader::computeShaderHeat = R"glsl(#version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 #define TEMPERATURE_TRANSITION_SPEED 80
@@ -374,7 +379,7 @@ void main(){
 }
 )glsl";
 
-const char* Shader::computeShaderPressure = R"glsl(#version 460 core
+const char* ChunkShader::computeShaderPressure = R"glsl(#version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
 // bigger number = slower

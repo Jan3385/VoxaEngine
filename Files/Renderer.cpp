@@ -29,21 +29,26 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     
     this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
 
-    if(SDL_CreateWindowAndRenderer(800, 600, SDL_WindowFlags::SDL_WINDOW_RESIZABLE | SDL_WindowFlags::SDL_WINDOW_OPENGL, &r_window, &r_renderer) != 0){
+    if(SDL_CreateWindow(800, 600, SDL_WindowFlags::SDL_WINDOW_RESIZABLE | SDL_WindowFlags::SDL_WINDOW_OPENGL, &r_window) != 0){
         std::cout << "Error with window creation: " << SDL_GetError() << std::endl;
         exit(1);
     }
+
+    *glContext = SDL_GL_CreateContext(r_window);
+    if (!glContext) {
+        std::cerr << "Error creating OpenGL context: " << SDL_GetError() << std::endl;
+        exit(1);
+    }
+    r_GLContext = glContext;
 
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
 
-    ImGui_ImplSDL2_InitForSDLRenderer(
+    ImGui_ImplSDL2_InitForOpenGL(
         r_window,
-        r_renderer
+        *glContext
     );
-
-    ImGui_ImplSDLRenderer2_Init(r_renderer);
 
     SDL_SetWindowTitle(r_window, "VoxaEngine");
 
@@ -51,19 +56,32 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    *glContext = SDL_GL_CreateContext(r_window);
-    if (!glContext) {
-        std::cerr << "Error creating OpenGL context: " << SDL_GetError() << std::endl;
-        exit(1);
-    }
-
     //Initialize GLEW
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (err != GLEW_OK) {
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
-}
+
+    this->voxelRenderProgram(
+        Shader::RenderingShader::voxelArraySimulationVertexShader,
+        Shader::RenderingShader::voxelArraySimulationFragmentShader
+    );
+
+    glGenVertexArrays(1, &voxelArrayVAO);
+    glBindVertexArray(voxelArrayVAO);
+
+    glGenBuffers(1, &voxelArrayVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, voxelArrayVBO);
+    
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 6, NULL, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Position
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float))); // Color
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
 GameRenderer::~GameRenderer()
 {
@@ -74,7 +92,6 @@ GameRenderer::~GameRenderer()
     TTF_CloseFont(this->basicFont);
 
     SDL_DestroyWindow(r_window);
-    SDL_DestroyRenderer(r_renderer);
 
     TTF_Quit();
     SDL_Quit();
@@ -82,6 +99,17 @@ GameRenderer::~GameRenderer()
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 {
+    // Enables Alpha Blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    this->voxelRenderProgram.Use();
+    
+
+    /*
     //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
     SDL_SetRenderDrawColor(r_renderer, 26, 198, 255, 255 );
     SDL_RenderClear( r_renderer ); // Clear the screen to solid white
@@ -230,8 +258,9 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), r_renderer);
 
     // Update window
-    SDL_RenderPresent( r_renderer );
+    SDL_RenderPresent( r_renderer ); */
 }
+/*
 void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 {
     Game::Player *player = GameEngine::instance->Player;
@@ -294,31 +323,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::End();
 
     ImGui::Render();
-}
-
-SDL_Texture *GameRenderer::LoadTexture(const char *path)
-{
-    SDL_Surface *surface = LoadSurface(path);
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(r_renderer, surface);
-    SDL_FreeSurface(surface);
-
-    if(texture == nullptr){
-        std::cerr << "Error loading texture: " << SDL_GetError() << std::endl;
-    }
-
-    return texture;
-}
-
-SDL_Surface *GameRenderer::LoadSurface(const char *path)
-{
-    SDL_Surface *surface = SDL_LoadBMP(path);
-
-    if(surface == nullptr){
-        std::cerr << "Error loading surface: " << SDL_GetError() << std::endl;
-    }
-
-    return surface;
-}
+} */
 
 void GameRenderer::ToggleDebugRendering()
 {

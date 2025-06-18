@@ -5,7 +5,7 @@
 
 class ChunkMatrix; // Forward declaration
 
-namespace Shader{
+namespace ChunkShader{
        GLuint CompileComputeShader(const char* shaderSource);
 
        struct ChunkConnectivityData{
