@@ -16,8 +16,8 @@ Game::Player::Player()
     
 }
 
-Game::Player::Player(ChunkMatrix *matrix, SDL_Texture* texture)
-    : GameObject(texture, Vec2f(100.0f, 0.0f))
+Game::Player::Player(ChunkMatrix *matrix)
+    : GameObject(Vec2f(100.0f, 0.0f))
 {
     this->Camera = AABB(
         Vec2f((800.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2, (600.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2), 

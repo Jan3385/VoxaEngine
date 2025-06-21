@@ -7,6 +7,8 @@
 #include <mutex>
 #include <math.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "Math/AABB.h"
 #include "GameObject/Player.h"
 
@@ -22,18 +24,15 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
         std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
     }
-    if (TTF_Init() == -1) {
-        std::cerr << "Error initializing SDL_ttf: " << TTF_GetError() << std::endl;
-    }
 
     IMGUI_CHECKVERSION();
-    
-    this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
 
     r_window = SDL_CreateWindow("VoxaEngine",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         800, 600,
-        SDL_WindowFlags::SDL_WINDOW_RESIZABLE | SDL_WindowFlags::SDL_WINDOW_OPENGL);
+        SDL_WindowFlags::SDL_WINDOW_OPENGL// | SDL_WindowFlags::SDL_WINDOW_RESIZABLE
+    );
+    glViewport(0, 0, 800, 600);
 
     if(r_window == nullptr) {
         std::cout << "Error with window creation: " << SDL_GetError() << std::endl;
@@ -55,6 +54,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         r_window,
         *glContext
     );
+    ImGui_ImplOpenGL3_Init("#version 460");
 
     SDL_SetWindowTitle(r_window, "VoxaEngine");
 
@@ -73,34 +73,16 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         Shader::voxelArraySimulationVertexShader,
         Shader::voxelArraySimulationFragmentShader
     );
-
-    glGenVertexArrays(1, &voxelArrayVAO);
-    glBindVertexArray(voxelArrayVAO);
-
-    glGenBuffers(1, &voxelArrayVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, voxelArrayVBO);
-    
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * 6, NULL, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); // Position
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(2 * sizeof(float))); // Color
-
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }
 
 GameRenderer::~GameRenderer()
 {
-    ImGui_ImplSDLRenderer2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext();
 
-    TTF_CloseFont(this->basicFont);
-
     SDL_DestroyWindow(r_window);
-
-    TTF_Quit();
+    
     SDL_Quit();
 }
 
@@ -110,11 +92,42 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Disables Depth Testing
+    glDisable(GL_DEPTH_TEST);
+
     glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    Game::Player *player = GameEngine::instance->Player;
+
+    glm::mat4 proj = glm::ortho(
+        player->Camera.corner.getX(), player->Camera.corner.getX() + player->Camera.size.getX(), 
+        player->Camera.corner.getY() + player->Camera.size.getY(), player->Camera.corner.getY(),
+        -1.0f, 1.0f
+    );
+
+
     this->voxelRenderProgram.Use();
+    this->voxelRenderProgram.SetMat4("projection", proj);
     
+    for (auto& chunk : chunkMatrix.Grid) {
+        if(chunk->GetAABB().Overlaps(player->Camera)){
+            this->voxelRenderProgram.Use();
+            glBindVertexArray(chunk->VAO);
+            glDrawArraysInstanced(
+                GL_TRIANGLES, 0, 6, 
+                Volume::Chunk::CHUNK_SIZE_SQUARED
+            );
+        }
+    }
+
+    this->RenderIMGUI(chunkMatrix);
+
+    SDL_GL_SwapWindow(r_window);
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "GL error: " << err << std::endl;
+    }
 
     /*
     //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
@@ -267,13 +280,13 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     // Update window
     SDL_RenderPresent( r_renderer ); */
 }
-/*
+
 void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 {
     Game::Player *player = GameEngine::instance->Player;
 
-    ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
     ImGui::Begin("VoxaEngine Debug Panel");
@@ -330,14 +343,10 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::End();
 
     ImGui::Render();
-} */
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
 
 void GameRenderer::ToggleDebugRendering()
 {
     this->debugRendering = !this->debugRendering;
-
-    //redraw all chunks
-    for (auto& chunk : GameEngine::instance->chunkMatrix.Grid) {
-        chunk->dirtyRender = true;
-    }
 }

@@ -4,7 +4,10 @@
 #include <array>
 #include <mutex>
 #include <vector>
-#include <SDL_ttf.h>
+#include <glew.h>
+
+#include <glm/glm.hpp>
+
 #include "World/Voxel.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
@@ -29,6 +32,10 @@ private:
 
 namespace Volume
 {
+	struct ChunkVoxelRenderData{
+		glm::vec2 position; // position in chunk
+		glm::vec4 color; 	// RGBA color
+	};
 	struct ChunkConnectivityData{
 		int32_t chunk;
 		int32_t chunkUp;
@@ -47,6 +54,8 @@ namespace Volume
     	Chunk(const Vec2i& pos);
     	~Chunk();
 
+		void SetQuadVBO();
+
 		bool ShouldChunkDelete(AABB &Camera) const;
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;
@@ -63,22 +72,23 @@ namespace Volume
 
 
     	void SIM_ResetVoxelUpdateData();
-    	SDL_Surface* Render(bool debugRender);
+    	void Render(bool debugRender);
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
 		uint8_t lastCheckedCountDown = 20;
 		bool forceHeatUpdate = true;
 		bool forcePressureUpdate = true;
-		bool dirtyRender = true;
 		DirtyRect dirtyRect = DirtyRect();
 
-		static const char* computeShaderHeat;
-		static GLuint computeShaderHeat_Program;
+		// connectivity data
+		GLuint VAO;
     private:
     	short int m_x;
     	short int m_y;	
-		TTF_Font* font = nullptr;
-		SDL_Surface* chunkSurface = nullptr;
+		// rendering data
+		ChunkVoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
+		static GLuint quadVBO;		// Predefined quad buffer
+		GLuint instanceVBO;
     };
 }

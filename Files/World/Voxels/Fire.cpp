@@ -73,7 +73,6 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
 
     //set random fire color
     this->color = fireColors[rand() % fireColorCount];
-    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
     //15% chance to dissapear
     if (rand() % 100 < 15 || forcedLifetimeTime <= 0 || this->amount <= 0)
@@ -123,7 +122,6 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
 
     //set random fire color
     this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
-    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
     if (this->amount <= 5)
     {
@@ -172,7 +170,6 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
 
     //set random fire color
     this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
-    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
 
     if (this->amount <= 5)  
     {

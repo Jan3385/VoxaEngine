@@ -15,7 +15,7 @@ namespace Game{
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 4;
         static constexpr int SPEED = 60;
         Player();
-        Player(ChunkMatrix *matrix, SDL_Texture* texture);
+        Player(ChunkMatrix *matrix);
         ~Player();
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
         void Render(SDL_Renderer* renderer, const Vec2f &offset) override;

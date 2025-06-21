@@ -13,10 +13,6 @@ private:
     SDL_GLContext *r_GLContext = nullptr;
 
     Shader::Shader voxelRenderProgram;    
-    GLuint voxelArrayVAO = 0;
-    GLuint voxelArrayVBO = 0;
-
-    TTF_Font* basicFont;
 
     void ToggleDebugRendering();
 public:
@@ -28,6 +24,6 @@ public:
     bool debugRendering = false;
 
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos);
-    //void RenderIMGUI(ChunkMatrix &chunkMatrix);
+    void RenderIMGUI(ChunkMatrix &chunkMatrix);
 
 };

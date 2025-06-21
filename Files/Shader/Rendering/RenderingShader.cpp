@@ -1,5 +1,7 @@
 #include "RenderingShader.h"
 
+#include <iostream>
+
 Shader::Shader::Shader(const char* vertexCode, const char* fragmentCode)
 {
     int success;
@@ -46,7 +48,7 @@ void Shader::Shader::Use() const
 /***
  * Gets the location of a uniform variable with cacheing.
  */
-GLint Shader::Shader::GetUniformLocation(const std::string &name) const
+GLint Shader::Shader::GetUniformLocation(const std::string &name)
 {
     // Return uniform if cached
     auto it = uniformLocationCache.find(name);
@@ -63,17 +65,22 @@ GLint Shader::Shader::GetUniformLocation(const std::string &name) const
     return location;
 }
 
-void Shader::Shader::SetBool(const std::string &name, bool value) const
+void Shader::Shader::SetBool(const std::string &name, bool value)
 {
     glUniform1i(this->GetUniformLocation(name.c_str()), (int)value);
 }
 
-void Shader::Shader::SetInt(const std::string &name, int value) const
+void Shader::Shader::SetInt(const std::string &name, int value)
 {
     glUniform1i(this->GetUniformLocation(name.c_str()), value);
 }
 
-void Shader::Shader::SetFloat(const std::string &name, float value) const
+void Shader::Shader::SetFloat(const std::string &name, float value)
 {
     glUniform1f(this->GetUniformLocation(name.c_str()), value);
+}
+
+void Shader::Shader::SetMat4(const std::string &name, glm::mat4 value)
+{
+    glUniformMatrix4fv(this->GetUniformLocation(name.c_str()), 1, GL_FALSE, &value[0][0]);
 }

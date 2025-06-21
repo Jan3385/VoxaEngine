@@ -3,12 +3,12 @@
 namespace Shader {
 const char* voxelArraySimulationFragmentShader = R"glsl(
 #version 460 core
+in vec4 vertexColor;    // input color from vertex shader
 out vec4 FragColor;     // output color
-in vec3 vertexColor;    // input color from vertex shader
 
 void main()
 {
-    FragColor = vec4(vertexColor, 1.0);
+    FragColor = vertexColor;
 }
 )glsl";
 }

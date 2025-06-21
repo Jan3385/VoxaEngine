@@ -2,17 +2,8 @@
 
 #include <iostream>
 
-GameObject::GameObject(SDL_Texture *texture, Vec2f position)
+GameObject::GameObject(Vec2f position)
 {
-    if(!texture) {
-        std::cerr << "Error: GameObject texture is null!" << std::endl;
-        return;
-    }
-
-    this->texture = texture;
-
-    SDL_QueryTexture(this->texture, NULL, NULL, &this->width, &this->height);
-
     this->position = position;
 }
 

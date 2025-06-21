@@ -326,7 +326,6 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
-    chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 }
 // Same as VirtualSetAt but does not delete the old voxel
 void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
@@ -357,7 +356,6 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
-    chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 }
 
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids, float amount, bool destructive)

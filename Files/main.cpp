@@ -10,7 +10,7 @@ int main(int argc, char* argv[]){
     GameEngine gEngine;
     
     GameEngine::instance = &gEngine;
-    gEngine.Player = new Game::Player(&gEngine.chunkMatrix, gEngine.renderer->LoadTexture("Textures/Player.bmp"));
+    gEngine.Player = new Game::Player(&gEngine.chunkMatrix);
     
     //Start simulation thread
     gEngine.StartSimulationThread();
@@ -38,7 +38,7 @@ int WinMain(int argc, char* argv[]){
 
     GameEngine gEngine;
     GameEngine::instance = &gEngine;
-    gEngine.Player = new Game::Player(&gEngine.chunkMatrix, gEngine.renderer->LoadTexture("Textures/Player.bmp"));
+    gEngine.Player = new Game::Player(&gEngine.chunkMatrix);
     
     //Start simulation thread
     gEngine.StartSimulationThread();

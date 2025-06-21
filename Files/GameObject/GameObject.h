@@ -7,7 +7,7 @@
 class GameObject{
 public:
     GameObject() = default;
-    GameObject(SDL_Texture* texture, Vec2f position);
+    GameObject(Vec2f position);
     virtual ~GameObject();
 
     // Disable copy and move semantics

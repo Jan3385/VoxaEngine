@@ -38,6 +38,16 @@ set_source_files_properties(${BOX2D_SOURCES} PROPERTIES LANGUAGE C)
 # Add include directories for SDL2
 include_directories(${SDL2_INCLUDE_DIR} ${IMGUI_INCLUDE_HEADER_DIR} ${GLEW_INCLUDE} ${BOX2D_INCLUDE_DIR})
 
+include(FetchContent)
+
+# Add GLM (OpenGL Mathematics) library
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 1.0.1
+)
+FetchContent_MakeAvailable(glm)
+
 # Automatically include all .cpp files in the Files folder
 file(GLOB_RECURSE SOURCES "Files/*.cpp")
 file(GLOB_RECURSE IMGUI_SOURCES "${IMGUI_INCLUDE_CPP_DIR}/*.cpp")
@@ -47,16 +57,17 @@ add_executable(VoxaEngine ${SOURCES} ${IMGUI_SOURCES} ${BOX2D_SOURCES})
 # OpenMP support (pragma omp)
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(VoxaEngine OpenMP::OpenMP_CXX)
+    target_link_libraries(VoxaEngine PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
 # Link GLEW library
+find_package(OpenGL REQUIRED)
 if(WIN32)
     set(GLEW_LIBRARY "${CMAKE_SOURCE_DIR}/GLEW/lib/Release/x64/glew32.lib")
-    target_link_libraries(VoxaEngine ${GLEW_LIBRARY})
+    target_link_libraries(VoxaEngine PRIVATE ${GLEW_LIBRARY} OpenGL::GL)
 elseif(UNIX)
     find_package(GLEW REQUIRED)
-    target_link_libraries(VoxaEngine ${GLEW_LIBRARIES} GL)
+    target_link_libraries(VoxaEngine PRIVATE ${GLEW_LIBRARIES} OpenGL::GL)
 endif()
 
 # Link SDL2 libraries
@@ -64,13 +75,17 @@ if (WIN32)
     set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
     set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
     set(SDL2_LIBRARY_TFF "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2_ttf.dll.a")
-    target_link_libraries(VoxaEngine ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
+    target_link_libraries(VoxaEngine PRIVATE ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
 elseif (UNIX)
     find_package(SDL2 REQUIRED)
     find_package(SDL2_ttf REQUIRED)
     target_include_directories(VoxaEngine PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_libraries(VoxaEngine ${SDL2_LIBRARIES} SDL2_ttf)
+    target_link_libraries(VoxaEngine PRIVATE ${SDL2_LIBRARIES} SDL2_ttf)
 endif()
+
+# Link GLM library
+target_link_libraries(VoxaEngine PRIVATE glm)
+message(STATUS "GLM source dir: ${glm_SOURCE_DIR}")
 
 # Link project libraries
 target_include_directories(VoxaEngine PRIVATE ${PROJECT_SOURCE_DIR}/Files)

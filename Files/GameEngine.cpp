@@ -238,9 +238,10 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_t:
                 Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
-                Registry::CreateGameObject(&chunkMatrix, renderer->LoadTexture("Textures/Barrel.bmp"),
-                    worldMousePos
-                );
+                //TODO:
+                //Registry::CreateGameObject(&chunkMatrix, renderer->LoadTexture("Textures/Barrel.bmp"),
+                //    worldMousePos
+                //);
                 break;
             }
             break;
