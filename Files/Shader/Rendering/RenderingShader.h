@@ -7,6 +7,7 @@ namespace Shader{
     class Shader{
     public:
         GLuint ID;
+        Shader() = default;
         Shader(const char* vertexCode, const char* fragmentCode);
 
         void Use() const;
@@ -20,5 +21,5 @@ namespace Shader{
 
     private:
         std::unordered_map<std::string, GLint> uniformLocationCache;
-    }
+    };
 }

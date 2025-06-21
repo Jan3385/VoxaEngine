@@ -14,6 +14,7 @@
 
 GameRenderer::GameRenderer()
 {
+    
 }
 
 GameRenderer::GameRenderer(SDL_GLContext *glContext)
@@ -29,7 +30,12 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     
     this->basicFont = TTF_OpenFont("Fonts/RobotoFont.ttf", 24);
 
-    if(SDL_CreateWindow(800, 600, SDL_WindowFlags::SDL_WINDOW_RESIZABLE | SDL_WindowFlags::SDL_WINDOW_OPENGL, &r_window) != 0){
+    r_window = SDL_CreateWindow("VoxaEngine",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        800, 600,
+        SDL_WindowFlags::SDL_WINDOW_RESIZABLE | SDL_WindowFlags::SDL_WINDOW_OPENGL);
+
+    if(r_window == nullptr) {
         std::cout << "Error with window creation: " << SDL_GetError() << std::endl;
         exit(1);
     }
@@ -63,9 +69,9 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
 
-    this->voxelRenderProgram(
-        Shader::RenderingShader::voxelArraySimulationVertexShader,
-        Shader::RenderingShader::voxelArraySimulationFragmentShader
+    this->voxelRenderProgram = Shader::Shader(
+        Shader::voxelArraySimulationVertexShader,
+        Shader::voxelArraySimulationFragmentShader
     );
 
     glGenVertexArrays(1, &voxelArrayVAO);
@@ -82,6 +88,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
 
 GameRenderer::~GameRenderer()
 {
