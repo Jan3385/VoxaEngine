@@ -46,6 +46,8 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     }
     r_GLContext = glContext;
 
+    SDL_GL_SetSwapInterval(0); // Disable VSync
+
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
@@ -112,7 +114,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){
-            this->voxelRenderProgram.Use();
+            chunk->Render(false);
+
             glBindVertexArray(chunk->VAO);
             glDrawArraysInstanced(
                 GL_TRIANGLES, 0, 6, 

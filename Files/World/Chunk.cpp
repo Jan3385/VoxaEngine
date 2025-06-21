@@ -40,6 +40,52 @@ bool DirtyRect::IsEmpty() const
 
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
+    Vec2i chunkWorldPos = Vec2i(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE);
+    for(uint8_t x = 0; x < CHUNK_SIZE; x++){
+        for(uint8_t y = 0; y < CHUNK_SIZE; y++){
+            renderData[x][y].position = glm::vec2(
+                (chunkWorldPos.getX() + x), //* RENDER_VOXEL_SIZE,
+                (chunkWorldPos.getY() + y) //* RENDER_VOXEL_SIZE
+            );
+            renderData[x][y].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
+        }
+    }
+}
+
+Volume::Chunk::~Chunk()
+{
+    for (uint8_t i = 0; i < static_cast<uint8_t>(voxels.size()); i++)
+    {
+        for (uint8_t j = 0; j < static_cast<uint8_t>(voxels[i].size()); j++)
+        {
+            delete voxels[i][j];
+        }
+    }
+
+    // Delete OpenGL resources
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &instanceVBO);
+}
+// Run before generating the first chunk
+void Volume::Chunk::SetQuadVBO()
+{
+    if(Chunk::quadVBO != 0) return; // already set
+
+    float quad[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f
+    };
+    glGenBuffers(1, &Chunk::quadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, Chunk::quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+void Volume::Chunk::SetVBOData()
+{
     Chunk::SetQuadVBO(); // ensure quad VBO is set
 
     glGenBuffers(1, &instanceVBO);
@@ -63,54 +109,9 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
     glVertexAttribDivisor(2, 1);
     // --------------
 
-    Vec2i chunkWorldPos = Vec2i(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE);
-    for(uint8_t x = 0; x < CHUNK_SIZE; x++){
-        for(uint8_t y = 0; y < CHUNK_SIZE; y++){
-            renderData[x][y].position = glm::vec2(
-                (chunkWorldPos.getX() + x), //* RENDER_VOXEL_SIZE,
-                (chunkWorldPos.getY() + y) //* RENDER_VOXEL_SIZE
-            );
-        }
-    }
-
-    for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
-        for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
-            renderData[x][y].color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // default color white
-        }
-    }
-
     // Update the instance VBO with the new render data
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, renderData);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-Volume::Chunk::~Chunk()
-{
-    for (uint8_t i = 0; i < static_cast<uint8_t>(voxels.size()); i++)
-    {
-        for (uint8_t j = 0; j < static_cast<uint8_t>(voxels[i].size()); j++)
-        {
-            delete voxels[i][j];
-        }
-    }
-}
-// Run before generating the first chunk
-void Volume::Chunk::SetQuadVBO()
-{
-    if(Chunk::quadVBO != 0) return; // already set
-
-    float quad[] = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f
-    };
-    glGenBuffers(1, &Chunk::quadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, Chunk::quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
@@ -162,12 +163,6 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
     		}
 
         }
-    }
-
-    // Update instanceVBO if dirty rect is not empty TODO:
-    //if (!dirtyRect.IsEmpty()) {
-    if (true) {
-        this->Render(false);
     }
 }
 
@@ -225,7 +220,7 @@ void Volume::Chunk::Render(bool debugRender)
 
     // Update the instance VBO with the new render data
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, renderData);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, &renderData[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 Vec2i Volume::Chunk::GetPos() const

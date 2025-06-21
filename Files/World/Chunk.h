@@ -55,6 +55,7 @@ namespace Volume
     	~Chunk();
 
 		void SetQuadVBO();
+		void SetVBOData();
 
 		bool ShouldChunkDelete(AABB &Camera) const;
 		bool ShouldChunkCalculateHeat() const;

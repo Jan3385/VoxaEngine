@@ -14,8 +14,7 @@ out vec4 vertexColor;                       // output color to fragment shader
 
 void main()
 {
-    vec2 scaledPos = aPos * vec2(4.0); // 4x4px voxel
-    gl_Position = projection * vec4(instancePos + scaledPos, 0.0, 1.0);
+    gl_Position = projection * vec4(instancePos + aPos, 0.0, 1.0);
     vertexColor = instanceColor;
 }
 )glsl";

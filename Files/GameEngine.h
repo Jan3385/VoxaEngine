@@ -95,5 +95,5 @@ public:
 
     void StartSimulationThread();
 
-    void LoadChunkInView(Vec2i pos);
+    Volume::Chunk* LoadChunkInView(Vec2i pos);
 };

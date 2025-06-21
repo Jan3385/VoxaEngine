@@ -47,7 +47,7 @@ void GameEngine::StartFrame()
 {
     this->FrameStartTime = SDL_GetPerformanceCounter();
 
-    SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
+    //SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
 }
 
 void GameEngine::EndFrame()
@@ -262,13 +262,13 @@ void GameEngine::StartSimulationThread()
     this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
 }
 
-void GameEngine::LoadChunkInView(Vec2i pos)
+Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
 {
-    if(!chunkMatrix.IsValidChunkPosition(pos)) return;
-    if(chunkMatrix.GetChunkAtChunkPosition(pos)) return;
+    if(!chunkMatrix.IsValidChunkPosition(pos)) return nullptr;
+    if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;
 
-    chunkMatrix.GenerateChunk(pos);
-    return;
+    Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
+    return chunk;
 }
 
 void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
