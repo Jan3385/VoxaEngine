@@ -86,10 +86,10 @@ void GameEngine::Update()
         fixedUpdateTimer -= fixedDeltaTime;
     }
 
-    if(fixedUpdateTimer > fixedDeltaTime*2)
+    if(fixedUpdateTimer > fixedDeltaTime*2.5f)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
     
-    if(simulationUpdateTimer > simulationFixedDeltaTime*2)
+    if(simulationUpdateTimer > simulationFixedDeltaTime*2.5f)
         std::cout << "Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
 }
 void GameEngine::m_UpdateGridVoxel(int pass)
