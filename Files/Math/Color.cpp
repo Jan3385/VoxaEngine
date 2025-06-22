@@ -1,5 +1,4 @@
 #include "Math/Color.h"
-#include "Color.h"
 
 RGB::RGB() : r(0), g(0), b(0) { }
 RGB::RGB(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}

@@ -47,6 +47,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
             );
             renderData[x][y].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
         }
+        this->UpdateRenderBufferRanges[x] = Math::Range(0, CHUNK_SIZE - 1);
     }
 }
 
@@ -79,7 +80,7 @@ void Volume::Chunk::SetVBOData()
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ChunkVoxelRenderData), (void*)0);
+    glVertexAttribIPointer(1, 2, GL_INT, sizeof(ChunkVoxelRenderData), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribDivisor(1, 1); // instance attribute
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(ChunkVoxelRenderData), (void*)(sizeof(glm::vec2)));
@@ -191,14 +192,26 @@ void Volume::Chunk::SIM_ResetVoxelUpdateData()
 void Volume::Chunk::Render(bool debugRender)
 {
     for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
-        for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
+        if(this->UpdateRenderBufferRanges[x].IsEmpty()) continue;
+        for(uint8_t y = this->UpdateRenderBufferRanges[x].Start(); y <= this->UpdateRenderBufferRanges[x].End(); ++y) {
             renderData[x][y].color = voxels[x][y]->color.getGLMVec4();
         }
     }
 
     // Update the instance VBO with the new render data
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, &renderData[0][0]);
+    for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
+        if(this->UpdateRenderBufferRanges[x].IsEmpty()) continue;
+
+        glBufferSubData(GL_ARRAY_BUFFER,
+            sizeof(ChunkVoxelRenderData) * (CHUNK_SIZE * x + this->UpdateRenderBufferRanges[x].Start()), 
+            sizeof(ChunkVoxelRenderData) * (this->UpdateRenderBufferRanges[x].End() - this->UpdateRenderBufferRanges[x].Start() + 1), 
+            &renderData[x][this->UpdateRenderBufferRanges[x].Start()]
+        );
+
+        this->UpdateRenderBufferRanges[x].Reset();
+    }
+    //glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, &renderData[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 Vec2i Volume::Chunk::GetPos() const

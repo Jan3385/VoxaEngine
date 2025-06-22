@@ -325,6 +325,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
 
     chunk->dirtyRect.Include(localPos);
+    chunk->UpdateRenderBufferRanges[localPos.getX()].AddValue(localPos.getY());
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
@@ -356,6 +357,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
 
     chunk->dirtyRect.Include(localPos);
+    chunk->UpdateRenderBufferRanges[localPos.getX()].AddValue(localPos.getY());
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;

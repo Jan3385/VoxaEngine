@@ -8,9 +8,9 @@
 
 #include <glm/glm.hpp>
 
+#include "Math/Math.h"
+
 #include "World/Voxel.h"
-#include "Math/Vector.h"
-#include "Math/AABB.h"
 #include "World/Particle.h"
 #include "World/ParticleGenerator.h"
 
@@ -54,7 +54,6 @@ namespace Volume
     	Chunk(const Vec2i& pos);
     	~Chunk();
 
-		void SetQuadVBO();
 		void SetVBOData();
 
 		bool ShouldChunkDelete(AABB &Camera) const;
@@ -84,9 +83,12 @@ namespace Volume
 
 		// connectivity data
 		GLuint VAO;
+		// knows where to update render for chunk
+		Math::Range UpdateRenderBufferRanges[CHUNK_SIZE]; 
     private:
     	short int m_x;
     	short int m_y;	
+
 		// rendering data
 		ChunkVoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
 		GLuint instanceVBO;
