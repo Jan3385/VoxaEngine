@@ -12,6 +12,7 @@
 #include "Math/AABB.h"
 #include "GameObject/Player.h"
 
+#include "World/Particle.h"
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
 
 GameRenderer::GameRenderer()
@@ -71,14 +72,59 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
 
-    this->voxelRenderProgram = Shader::Shader(
+    this->chunkRenderProgram = Shader::Shader(
         Shader::voxelArraySimulationVertexShader,
         Shader::voxelArraySimulationFragmentShader
     );
+    this->particleRenderProgram = Shader::Shader(
+        Shader::voxelParticleVertexShader,
+        Shader::voxelParticleFragmentShader
+    );
+
+    // Quad VBO setup ----
+    float quad[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f
+    };
+    glGenBuffers(1, &this->quadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // --------------------
+
+    glGenBuffers(1, &this->particleVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+    // VAO setup ----
+    glGenVertexArrays(1, &particleVAO);
+    glBindVertexArray(particleVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Particle::ParticleRenderData), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribDivisor(1, 1); // instance attribute
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Particle::ParticleRenderData), (void*)(sizeof(glm::vec2)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+    // --------------
 }
 
 GameRenderer::~GameRenderer()
 {
+    // Cleanup OpenGL resources
+    glDeleteVertexArrays(1, &particleVAO);
+    glDeleteBuffers(1, &particleVBO);
+    glDeleteBuffers(1, &quadVBO);
+
     ImGui_ImplSDL2_Shutdown();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui::DestroyContext();
@@ -109,9 +155,9 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     );
 
 
-    this->voxelRenderProgram.Use();
-    this->voxelRenderProgram.SetMat4("projection", proj);
-    this->voxelRenderProgram.SetBool("isDebugRendering", this->debugRendering);
+    this->chunkRenderProgram.Use();
+    this->chunkRenderProgram.SetMat4("projection", proj);
+    this->chunkRenderProgram.SetBool("isDebugRendering", this->debugRendering);
     
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){
@@ -123,6 +169,17 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                 Volume::Chunk::CHUNK_SIZE_SQUARED
             );
         }
+    }
+
+    if(chunkMatrix.particles.size() > 0){
+        this->UpdateParticleVBO(chunkMatrix);
+        this->particleRenderProgram.Use();
+        this->particleRenderProgram.SetMat4("projection", proj);
+        glBindVertexArray(this->particleVAO);
+        glDrawArraysInstanced(
+            GL_TRIANGLES, 0, 6, 
+            static_cast<GLsizei>(chunkMatrix.particles.size())
+        );
     }
 
     this->RenderIMGUI(chunkMatrix);
@@ -353,4 +410,18 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 void GameRenderer::ToggleDebugRendering()
 {
     this->debugRendering = !this->debugRendering;
+}
+
+void GameRenderer::UpdateParticleVBO(ChunkMatrix &chunkMatrix)
+{
+    std::vector<Particle::ParticleRenderData> particleData;
+    for (Particle::VoxelParticle* particle : chunkMatrix.particles) {
+        particleData.push_back({
+            .position = glm::vec2(particle->GetPosition().getX(), particle->GetPosition().getY()),
+            .color = particle->color.getGLMVec4()
+        });
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
+    glBufferData(GL_ARRAY_BUFFER, particleData.size() * sizeof(Particle::ParticleRenderData), particleData.data(), GL_DYNAMIC_DRAW);
 }

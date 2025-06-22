@@ -1,6 +1,9 @@
 #include "Shader/Rendering/fragmentShaderLibrary.h"
 
 namespace Shader {
+// ---------------------------------------------
+// Fragment shaders for rendering entire chunks
+// ---------------------------------------------
 const char* voxelArraySimulationFragmentShader = R"glsl(
 #version 460 core
 in vec4 vertexColor;    // input color from vertex shader
@@ -27,4 +30,20 @@ void main()
     FragColor = baseColor;
 }
 )glsl";
+
+// ---------------------------------------------
+// Fragment shaders for rendering particles
+// ---------------------------------------------
+const char* voxelParticleFragmentShader = R"glsl(
+#version 460 core
+in vec4 vertexColor;    // input color from vertex shader
+
+out vec4 FragColor;     // output color
+
+void main()
+{
+    FragColor = vertexColor;
+}
+)glsl";
+
 }

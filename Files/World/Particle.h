@@ -1,10 +1,15 @@
 #pragma once
 
 #include "World/Voxel.h"
+#include <glm/glm.hpp>
 
 class ChunkMatrix;
 
 namespace Particle{
+    struct ParticleRenderData{
+        glm::vec2 position; // position in world space
+        glm::vec4 color;    // RGBA color
+    };
     constexpr float GRAVITY = 0.4f;
     class VoxelParticle{
 	public:

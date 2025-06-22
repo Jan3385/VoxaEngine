@@ -12,9 +12,15 @@ private:
     // Borrowed from Engine class
     SDL_GLContext *r_GLContext = nullptr;
 
-    Shader::Shader voxelRenderProgram;    
+    Shader::Shader chunkRenderProgram;    
+    Shader::Shader particleRenderProgram;    
 
     void ToggleDebugRendering();
+
+    void UpdateParticleVBO(ChunkMatrix &chunkMatrix);
+
+    GLuint particleVAO = 0;
+    GLuint particleVBO = 0;
 public:
     GameRenderer();
     GameRenderer(SDL_GLContext *glContext);
@@ -26,4 +32,5 @@ public:
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos);
     void RenderIMGUI(ChunkMatrix &chunkMatrix);
 
+    GLuint quadVBO;		// Predefined quad buffer
 };

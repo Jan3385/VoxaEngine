@@ -14,8 +14,6 @@
 
 using namespace Volume; 
 
-GLuint Volume::Chunk::quadVBO = 0;
-
 void DirtyRect::Include(Vec2i pos)
 {
     m_startW.x(std::min(m_startW.getX(), pos.getX()));
@@ -66,28 +64,8 @@ Volume::Chunk::~Chunk()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &instanceVBO);
 }
-// Run before generating the first chunk
-void Volume::Chunk::SetQuadVBO()
-{
-    if(Chunk::quadVBO != 0) return; // already set
-
-    float quad[] = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f
-    };
-    glGenBuffers(1, &Chunk::quadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, Chunk::quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
 void Volume::Chunk::SetVBOData()
 {
-    Chunk::SetQuadVBO(); // ensure quad VBO is set
-
     glGenBuffers(1, &instanceVBO);
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
@@ -96,7 +74,7 @@ void Volume::Chunk::SetVBOData()
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::instance->renderer->quadVBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 

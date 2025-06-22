@@ -10,7 +10,7 @@ public:
 	ChunkMatrix();
 	~ChunkMatrix();
 
-	// cleans the chunkMatrix, so that its safe to invoke TFF_CloseFont
+	// cleans the chunkMatrix
 	void cleanup();
 	
 	//mutex for changing the voxels, mainly handeled by the simulation thread

@@ -89,7 +89,6 @@ namespace Volume
     	short int m_y;	
 		// rendering data
 		ChunkVoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
-		static GLuint quadVBO;		// Predefined quad buffer
 		GLuint instanceVBO;
     };
 }
