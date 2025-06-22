@@ -218,6 +218,10 @@ void GameEngine::PollEvents()
                     this->Player->Camera.size = Vec2f(
                         this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
                         this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
+                    glViewport(0, 0, 
+                        this->windowEvent.window.data1, 
+                        this->windowEvent.window.data2
+                    );
                 break;
             }
             break;
