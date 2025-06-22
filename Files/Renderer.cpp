@@ -154,12 +154,15 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         -1.0f, 1.0f
     );
 
+    for(auto& chunk : this->chunkCreateBuffer) {
+        chunk->SetVBOData();
+    }
+    this->chunkCreateBuffer.clear();
 
     this->chunkRenderProgram.Use();
     this->chunkRenderProgram.SetMat4("projection", proj);
     this->chunkRenderProgram.SetBool("isDebugRendering", this->debugRendering);
     
-    //TODO: problems when chunk is created and not rendered immediately
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){
             chunk->Render(false);

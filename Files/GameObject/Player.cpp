@@ -366,8 +366,7 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 
     // Wait for all chunks to finish loading
     for (auto& future : futures) {
-        Chunk* chunk = future.get();
-        if (chunk) chunk->SetVBOData();
+        future.get();
     }
 }
 

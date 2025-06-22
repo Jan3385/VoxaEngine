@@ -32,5 +32,8 @@ public:
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos);
     void RenderIMGUI(ChunkMatrix &chunkMatrix);
 
+    // Chunks which dont have any VBO & VAO yet
+    std::vector<Volume::Chunk*> chunkCreateBuffer;
+
     GLuint quadVBO;		// Predefined quad buffer
 };

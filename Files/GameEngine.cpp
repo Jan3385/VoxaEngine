@@ -268,6 +268,7 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
     if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;
 
     Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
+    GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
     return chunk;
 }
 
