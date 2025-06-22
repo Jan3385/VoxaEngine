@@ -111,6 +111,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
     this->voxelRenderProgram.Use();
     this->voxelRenderProgram.SetMat4("projection", proj);
+    this->voxelRenderProgram.SetBool("isDebugRendering", this->debugRendering);
     
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){

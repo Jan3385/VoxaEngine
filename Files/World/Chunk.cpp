@@ -43,7 +43,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
     Vec2i chunkWorldPos = Vec2i(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE);
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
         for(uint8_t y = 0; y < CHUNK_SIZE; y++){
-            renderData[x][y].position = glm::vec2(
+            renderData[x][y].position = glm::ivec2(
                 (chunkWorldPos.getX() + x), //* RENDER_VOXEL_SIZE,
                 (chunkWorldPos.getY() + y) //* RENDER_VOXEL_SIZE
             );

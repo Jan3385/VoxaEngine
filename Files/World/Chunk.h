@@ -33,7 +33,7 @@ private:
 namespace Volume
 {
 	struct ChunkVoxelRenderData{
-		glm::vec2 position; // position in chunk
+		glm::ivec2 position; // position in chunk
 		glm::vec4 color; 	// RGBA color
 	};
 	struct ChunkConnectivityData{
