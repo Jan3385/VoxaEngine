@@ -38,6 +38,8 @@ Most of the gas pressure simulation is done on the GPU for faster speeds
 
 ### Fire simulation
 
+![Fire GIF](/Promotional-stuff/fire.gif)
+
 Utilizing flamability and flame propagation with oxygen
 
 ### OpenGL rendering

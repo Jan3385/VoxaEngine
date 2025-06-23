@@ -23,12 +23,20 @@ bool FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxel)
 {
     //check for oxygen and spread
     bool isAroundOxygen = false;
+    bool isAroundGas = false;
     for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(FireVoxel->position + dir);
         if(next && next->id == "Oxygen"){
             isAroundOxygen = true;
             break;
         }
+        if(next && next->GetState() == State::Gas){
+            isAroundGas = true;
+        }
+    }
+    if(FireVoxel->GetState() == State::Solid && !isAroundGas){
+        // if the fire is solid and there is no gas around, it will not spread
+        return false;
     }
 
     for(Vec2i dir : vector::AROUND8){
@@ -37,8 +45,8 @@ bool FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxel)
             //ignite based on Flamability
             if((rand()%256) - next->properties->Flamability < 0){
 
-                // only 20% chance to ignite if there is no oxygen around, 0% for solids
-                bool randomIgniteChance = next->GetState() != State::Solid && (rand() % 100 < 20);
+                // only 15% chance to ignite if there is no oxygen around
+                bool randomIgniteChance = rand() % 100 < 15;
                 if(isAroundOxygen || randomIgniteChance){
                     matrix->SetFireAt(next->position);
                 }
@@ -118,9 +126,9 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
     //flame burns faster with oxygen
     float amountChange;
     if(isAroundOxygen)
-        amountChange = (this->amount * 0.0001f) + 0.5;
+        amountChange = (this->amount * 0.0001f) + 0.05f;
     else
-        amountChange = (this->amount * 0.00005f) + 1;
+        amountChange = (this->amount * 0.00005f) + 0.1f;
 
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
@@ -172,9 +180,9 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
     //flame burns faster with oxygen
     float amountChange;
     if(isAroundOxygen)
-        amountChange = (this->amount * 0.00005f) + 0.5f;
+        amountChange = (this->amount * 0.00005f) + 0.05f;
     else
-        amountChange = (this->amount * 0.000025f) + 0.5f;
+        amountChange = (this->amount * 0.000025f) + 0.05f;
 
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
