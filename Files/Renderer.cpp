@@ -86,8 +86,6 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         0.0f, 0.0f,
         1.0f, 0.0f,
         1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, 1.0f,
         0.0f, 1.0f
     };
     glGenBuffers(1, &this->quadVBO);
@@ -169,7 +167,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
             glBindVertexArray(chunk->VAO);
             glDrawArraysInstanced(
-                GL_TRIANGLES, 0, 6, 
+                GL_TRIANGLE_FAN, 0, 4, 
                 Volume::Chunk::CHUNK_SIZE_SQUARED
             );
         }
@@ -181,7 +179,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         this->particleRenderProgram.SetMat4("projection", proj);
         glBindVertexArray(this->particleVAO);
         glDrawArraysInstanced(
-            GL_TRIANGLES, 0, 6, 
+            GL_TRIANGLE_FAN, 0, 4, 
             static_cast<GLsizei>(chunkMatrix.particles.size())
         );
     }
