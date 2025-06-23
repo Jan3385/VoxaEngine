@@ -103,9 +103,7 @@ void GameEngine::m_UpdateGridVoxel(int pass)
             continue;
         }
     }
-    chunkMatrix.voxelMutex.unlock();
-
-    chunkMatrix.voxelMutex.lock();
+    
     #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
         auto& chunk = chunkMatrix.GridSegmented[pass][i];

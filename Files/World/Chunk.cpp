@@ -203,6 +203,14 @@ void Volume::Chunk::Render(bool debugRender)
     for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
         if(this->UpdateRenderBufferRanges[x].IsEmpty()) continue;
 
+        if(this->UpdateRenderBufferRanges[x].Start() < 0 || 
+           this->UpdateRenderBufferRanges[x].End() >= CHUNK_SIZE) {
+            std::cerr << "Chunk " << m_x << ", " << m_y << " has invalid render range: "
+                      << this->UpdateRenderBufferRanges[x].Start() << " - "
+                      << this->UpdateRenderBufferRanges[x].End() << std::endl;
+            continue;
+        }
+
         glBufferSubData(GL_ARRAY_BUFFER,
             sizeof(ChunkVoxelRenderData) * (CHUNK_SIZE * x + this->UpdateRenderBufferRanges[x].Start()), 
             sizeof(ChunkVoxelRenderData) * (this->UpdateRenderBufferRanges[x].End() - this->UpdateRenderBufferRanges[x].Start() + 1), 
@@ -211,7 +219,6 @@ void Volume::Chunk::Render(bool debugRender)
 
         this->UpdateRenderBufferRanges[x].Reset();
     }
-    //glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, &renderData[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 Vec2i Volume::Chunk::GetPos() const
