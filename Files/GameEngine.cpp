@@ -94,7 +94,6 @@ void GameEngine::Update()
 }
 void GameEngine::m_UpdateGridVoxel(int pass)
 {
-    chunkMatrix.voxelMutex.lock();
     //delete all chunks marked for deletion
     for(int32_t i = static_cast<int32_t>(chunkMatrix.GridSegmented[pass].size()) - 1; i >= 0; --i){
         if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player->Camera))
@@ -111,7 +110,6 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         }
         chunk->dirtyRect.Update();
     }
-    chunkMatrix.voxelMutex.unlock();
 }
 void GameEngine::m_SimulationThread()
 {
@@ -138,7 +136,6 @@ void GameEngine::m_SimulationThread()
                     chunk->SIM_ResetVoxelUpdateData();
             }
         }
-        chunkMatrix.voxelMutex.unlock();
 
         //Voxel update logic
         #pragma omp parallel for
@@ -146,6 +143,8 @@ void GameEngine::m_SimulationThread()
         {
             m_UpdateGridVoxel(i);
         }
+
+        chunkMatrix.voxelMutex.unlock();
 
         chunkMatrix.UpdateParticles();
     }
