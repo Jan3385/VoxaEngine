@@ -64,6 +64,8 @@ Volume::Chunk::~Chunk()
     // Delete OpenGL resources
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &instanceVBO);
+    VAO = 0;
+    instanceVBO = 0;
 }
 void Volume::Chunk::SetVBOData()
 {

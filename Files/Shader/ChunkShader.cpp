@@ -76,6 +76,9 @@ void ChunkShader::InitializeComputeShaders()
 void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
 {
     uint16_t chunkCount = static_cast<uint16_t>(chunkMatrix.Grid.size());
+
+    if(chunkCount == 0) return; // No chunks to process
+
     uint32_t NumberOfVoxels = chunkCount * Volume::Chunk::CHUNK_SIZE_SQUARED;
 
     std::vector<float> temperatureBuffer(NumberOfVoxels);
