@@ -104,7 +104,6 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         }
     }
     
-    #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
         auto& chunk = chunkMatrix.GridSegmented[pass][i];
         if (!chunk->dirtyRect.IsEmpty()) {
@@ -142,6 +141,7 @@ void GameEngine::m_SimulationThread()
         chunkMatrix.voxelMutex.unlock();
 
         //Voxel update logic
+        #pragma omp parallel for
         for(uint8_t i = 0; i < 4; ++i)
         {
             m_UpdateGridVoxel(i);
