@@ -45,7 +45,7 @@ namespace Volume
 	};
     class Chunk {
     public:
-    	static const unsigned short int RENDER_VOXEL_SIZE = 5; // 5
+    	static const unsigned short int RENDER_VOXEL_SIZE = 4; // 4
     	static const unsigned short int CHUNK_SIZE = 64; // 64
 		static const unsigned short int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE; // 4096
     	//VoxelElement*** voxels;
