@@ -11,7 +11,7 @@ using namespace std;
 
 bool GameEngine::placeUnmovableSolidVoxels = false;
 int GameEngine::placementRadius = 5;
-int GameEngine::placeVoxelAmount = 1;
+int GameEngine::placeVoxelAmount = 20;
 bool GameEngine::MovementKeysHeld[4] = {false, false, false, false};
 GameEngine* GameEngine::instance = nullptr;
 
