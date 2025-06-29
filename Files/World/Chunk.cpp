@@ -25,7 +25,12 @@ void DirtyRect::Include(Vec2i pos)
 void DirtyRect::Update()
 {
     this->start = m_startW-Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);  
-    this->end = m_endW+Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);
+    this->end = m_endW+Vec2i(DIRTY_RECT_PADDING*2, DIRTY_RECT_PADDING*2);
+
+    this->start.x(std::max(this->start.getX(), 0));
+    this->start.y(std::max(this->start.getY(), 0));
+    this->end.x(std::min(this->end.getX(), static_cast<int>(Chunk::CHUNK_SIZE)));
+    this->end.y(std::min(this->end.getY(), static_cast<int>(Chunk::CHUNK_SIZE)));
 
     m_startW = Vec2i(INT_MAX, INT_MAX);
     m_endW = Vec2i(INT_MIN, INT_MIN);

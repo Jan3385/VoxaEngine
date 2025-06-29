@@ -3,4 +3,5 @@
 namespace Shader{
     extern const char* voxelArraySimulationFragmentShader;
     extern const char* voxelParticleFragmentShader;
+    extern const char* closedShapeDrawFragmentShader;
 }

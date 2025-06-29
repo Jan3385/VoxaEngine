@@ -376,6 +376,12 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive)
     if(!destructive){
         Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(voxel->position);
 
+        if(!replacedVoxel){
+            // if no voxel to replace, a problem must have happened. Stop
+            delete voxel;
+            return;
+        }
+
         //still remain destructive if the voxel its trying to move is unmovable
         if(replacedVoxel->IsUnmoveableSolid()){
             VirtualSetAt(voxel);

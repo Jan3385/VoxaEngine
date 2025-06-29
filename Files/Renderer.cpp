@@ -80,6 +80,10 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         Shader::voxelParticleVertexShader,
         Shader::voxelParticleFragmentShader
     );
+    this->closedShapeRenderProgram = Shader::Shader(
+        Shader::closedShapeDrawVertexShader,
+        Shader::closedShapeDrawFragmentShader
+    );
 
     // Quad VBO setup ----
     float quad[] = {
@@ -98,7 +102,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
-    // VAO setup ----
+    //Particle VAO setup ----
     glGenVertexArrays(1, &particleVAO);
     glBindVertexArray(particleVAO);
 
@@ -114,6 +118,18 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
     // --------------
+
+    // Closed shape VAO setup ----
+    glGenVertexArrays(1, &closedShapeVAO);
+    glGenBuffers(1, &closedShapeVBO);
+    
+    glBindVertexArray(closedShapeVAO);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, closedShapeVBO);
+    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
 }
 
 GameRenderer::~GameRenderer()
@@ -159,7 +175,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
     this->chunkRenderProgram.Use();
     this->chunkRenderProgram.SetMat4("projection", proj);
-    this->chunkRenderProgram.SetBool("isDebugRendering", this->debugRendering);
     
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){
@@ -184,6 +199,52 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         );
     }
 
+    if (this->debugRendering) {
+        glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+        glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        for (auto& chunk : chunkMatrix.Grid) {
+            // draw chunk AABBs
+            if(chunk->GetAABB().Overlaps(player->Camera)) {
+                glm::vec2 start = {
+                    chunk->GetAABB().corner.getX(),
+                    chunk->GetAABB().corner.getY()
+                };
+                glm::vec2 end = {
+                    chunk->GetAABB().corner.getX() + chunk->GetAABB().size.getX(),
+                    chunk->GetAABB().corner.getY() + chunk->GetAABB().size.getY()
+                };
+
+                std::vector<glm::vec2> points = {
+                    start,
+                    {end.x, start.y},
+                    end,
+                    {start.x, end.y}
+                };
+                this->DrawClosedShape(points, red, proj, 2.0f);
+            }
+
+            //draw dirty rects
+            if(chunk->dirtyRect.IsEmpty()) continue;
+
+            glm::vec2 dirtyStart = {
+                chunk->dirtyRect.start.getX() + chunk->GetAABB().corner.getX(),
+                chunk->dirtyRect.start.getY() + chunk->GetAABB().corner.getY()
+            };
+            glm::vec2 dirtyEnd = {
+                chunk->dirtyRect.end.getX() - chunk->dirtyRect.start.getX() + dirtyStart.x,
+                chunk->dirtyRect.end.getY() - chunk->dirtyRect.start.getY() + dirtyStart.y
+            };
+
+            std::vector<glm::vec2> points = {
+                dirtyStart,
+                {dirtyEnd.x, dirtyStart.y},
+                dirtyEnd,
+                {dirtyStart.x, dirtyEnd.y}
+            };
+            this->DrawClosedShape(points, green, proj, 1.0f);
+        }
+    }
+
     this->RenderIMGUI(chunkMatrix);
 
     SDL_GL_SwapWindow(r_window);
@@ -191,157 +252,47 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     while ((err = glGetError()) != GL_NO_ERROR) {
         std::cerr << "GL error: " << err << std::endl;
     }
+}
 
-    /*
-    //SDL_SetRenderDrawBlendMode( renderer, SDL_BLENDMODE_ADD ); // Switch to additive 
-    SDL_SetRenderDrawColor(r_renderer, 26, 198, 255, 255 );
-    SDL_RenderClear( r_renderer ); // Clear the screen to solid white
-
-    //Player rendering
-    Game::Player *player = GameEngine::instance->Player;
-    player->Render(r_renderer, player->Camera.corner);
-
-    //chunk rendering
-    std::vector<std::pair<SDL_Surface*, SDL_Rect>> renderData;
-    std::mutex renderDataMutex;
-
-    AABB cameraAABB = player->Camera.Expand(1);
-
-    #pragma omp parallel for
-    for(uint8_t i = 0; i < 4; ++i)
-    {
-        std::vector<std::pair<SDL_Surface*, SDL_Rect>> localData;
-        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-            if(chunk->GetAABB().Overlaps(cameraAABB)){
-                // wierd hack to fix seams between chunks
-                Vec2i padding = vector::ZERO;
-                if(chunk->GetAABB().corner.getX() <= cameraAABB.corner.getX()+1) padding.x(1);
-                if (chunk->GetAABB().corner.getY() <= cameraAABB.corner.getY()+1) padding.y(1);
-
-                SDL_Surface *chunkSurface = chunk->Render(this->debugRendering);
-
-                SDL_Rect rect = {
-                    static_cast<int>(chunk->GetPos().getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                        (player->Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getX(),
-                    static_cast<int>(chunk->GetPos().getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                        (player->Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))-padding.getY(),
-                    Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE,
-                    Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE
-                };
-
-                localData.push_back({chunkSurface, rect});
-            }
-        }
-        std::lock_guard<std::mutex> lock(renderDataMutex);
-        renderData.insert(renderData.end(), localData.begin(), localData.end());
+void GameRenderer::DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, 
+    glm::mat4 projection, float lineWidth)
+{
+    if(points.size() < 3) {
+        std::cerr << "Error: Cannot draw closed shape with less than 3 points." << std::endl;
+        return;
     }
 
-    for(auto& data : renderData){
-        SDL_Surface* chunkSurface = data.first;
-        SDL_Texture* chunkTexture = SDL_CreateTextureFromSurface(r_renderer, chunkSurface);
-    
-        SDL_RenderCopy(r_renderer, chunkTexture, NULL, &data.second);
-    
-        SDL_DestroyTexture(chunkTexture);
+    closedShapeRenderProgram.Use();
+    closedShapeRenderProgram.SetVec4("uColor", color);
+    closedShapeRenderProgram.SetMat4("uProjection", projection);
+
+    glBindBuffer(GL_ARRAY_BUFFER, closedShapeVBO);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec2), points.data(), GL_DYNAMIC_DRAW);
+
+    glBindVertexArray(closedShapeVAO);
+
+    glLineWidth(lineWidth);
+
+    glDrawArrays(GL_LINE_LOOP, 0, static_cast<GLsizei>(points.size()));
+}
+
+void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const glm::vec4 &color, 
+    glm::mat4 projection, float lineWidth)
+{
+    if(size < 3) {
+        std::cerr << "Error: Cannot draw closed shape with less than 3 points." << std::endl;
+        return;
     }
 
-    //rendering game objects
-    chunkMatrix.RenderObjects(*this->r_renderer, player->Camera.corner);
+    closedShapeRenderProgram.Use();
+    closedShapeRenderProgram.SetVec4("uColor", color);
+    closedShapeRenderProgram.SetMat4("uProjection", projection);
 
-    //rendering particles
-    chunkMatrix.RenderParticles(*this->r_renderer, player->Camera.corner*(-1*Volume::Chunk::RENDER_VOXEL_SIZE));	
+    glBindVertexArray(VAO);
 
-    if(showHeatAroundCursor){
-        SDL_SetRenderDrawBlendMode( r_renderer, SDL_BLENDMODE_BLEND );
-        Vec2f offset = player->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
-        Vec2f voxelPos = ChunkMatrix::MousePosToWorldPos(mousePos, offset);
+    glLineWidth(lineWidth);
 
-        constexpr int radius = 16;
-        for(int x = -radius; x <= radius; ++x){
-            for(int y = -radius; y <= radius; ++y){
-                //render a circle around the cursor
-                int distance = SDL_sqrtf(x*x + y*y);
-                if(distance > radius) continue;
-
-                Vec2i pos = voxelPos + Vec2i(x, y);
-                if(!chunkMatrix.IsValidWorldPosition(pos)) continue;
-                Vec2i chunkPos = chunkMatrix.WorldToChunkPosition(Vec2f(pos));
-                Volume::Chunk* chunk = chunkMatrix.GetChunkAtChunkPosition(chunkPos);
-                if(chunk){
-                    Vec2i localPos = pos - chunkPos*Volume::Chunk::CHUNK_SIZE;
-                    SDL_Rect rect = {
-                        static_cast<int>(localPos.getX() * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                            (chunkPos.getX() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                                (player->Camera.corner.getX() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
-
-                        static_cast<int>(localPos.getY() * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                            (chunkPos.getY() * Volume::Chunk::CHUNK_SIZE * Volume::Chunk::RENDER_VOXEL_SIZE + 
-                                (player->Camera.corner.getY() * Volume::Chunk::RENDER_VOXEL_SIZE * -1))),
-                        Volume::Chunk::RENDER_VOXEL_SIZE,
-                        Volume::Chunk::RENDER_VOXEL_SIZE
-                    };
-                    float temperature = chunk->voxels[localPos.getX()][localPos.getY()]->temperature.GetCelsius();
-                    // show temperature from -20 to 235 degrees (255 range)
-                    if(temperature > 200) temperature = 200;
-                    if(temperature < -20) temperature = -20;
-
-                    temperature += 20;
-                    RGB color = RGB(temperature, 0, 255 - temperature);
-                    uint8_t alpha = distance < radius/1.4 ? 180 : 180 - (distance - radius/1.4) * 180 / (radius - radius/1.4);
-                    SDL_SetRenderDrawColor(r_renderer, 
-                        color.r, 0, color.b, alpha);
-                    SDL_RenderFillRect(r_renderer, &rect);
-                }
-            }
-        }
-        SDL_SetRenderDrawBlendMode( r_renderer, SDL_BLENDMODE_NONE );
-    }
-
-    if(debugRendering) {
-        //fps counter
-        SDL_Color color = { 255, 255, 255, 255 };
-        SDL_Surface* surface = TTF_RenderText_Solid(basicFont, std::to_string(GameEngine::instance->FPS).c_str(), color);
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(r_renderer, surface);
-        SDL_Rect rect = { 0, 0, surface->w, surface->h };
-        SDL_RenderCopy(r_renderer, texture, NULL, &rect);
-        SDL_FreeSurface(surface);
-        SDL_DestroyTexture(texture);
-    
-        //info about the voxel under the mouse
-        Vec2f offset = player->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
-        Vec2f mouseWorldPos = ChunkMatrix::MousePosToWorldPos(mousePos, offset);
-        Volume::VoxelElement* voxel = chunkMatrix.VirtualGetAt(mouseWorldPos);
-        if(voxel){
-            SDL_Surface* surface = TTF_RenderText_Solid(basicFont, (std::to_string(voxel->temperature.GetCelsius()) + "deg C").c_str(), color);
-            SDL_Texture* texture = SDL_CreateTextureFromSurface(r_renderer, surface);
-            SDL_Rect rect = { 0, 20, surface->w, surface->h };
-            SDL_RenderCopy(r_renderer, texture, NULL, &rect);
-            SDL_FreeSurface(surface);
-            SDL_DestroyTexture(texture);
-
-            surface = TTF_RenderText_Solid(basicFont, voxel->id.c_str(), color);
-            texture = SDL_CreateTextureFromSurface(r_renderer, surface);
-            rect = { 0, 40, surface->w, surface->h };
-            SDL_RenderCopy(r_renderer, texture, NULL, &rect);
-            SDL_FreeSurface(surface);
-            SDL_DestroyTexture(texture);
-
-            surface = TTF_RenderText_Solid(basicFont, (std::to_string(voxel->amount) + " amout").c_str(), color);
-            texture = SDL_CreateTextureFromSurface(r_renderer, surface);
-            rect = { 0, 65, surface->w, surface->h };
-            SDL_RenderCopy(r_renderer, texture, NULL, &rect);
-            SDL_FreeSurface(surface);
-            SDL_DestroyTexture(texture);
-        }
-    }
-
-    //ImGui
-    RenderIMGUI(chunkMatrix);
-
-    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), r_renderer);
-
-    // Update window
-    SDL_RenderPresent( r_renderer ); */
+    glDrawArrays(GL_LINE_LOOP, 0, size);
 }
 
 void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
