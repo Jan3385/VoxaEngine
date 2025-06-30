@@ -175,7 +175,6 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 {
     Chunk *chunk = new Chunk(pos);
     // Fill the voxels array with Voxel objects
-    #pragma omp parallel for collapse(2)
     for (int x = 0; x < Chunk::CHUNK_SIZE; ++x) {
         for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
     		//Create voxel determining on its position

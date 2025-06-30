@@ -47,4 +47,21 @@ void main()
 }
 )glsl";
 
+// ---------------------------------------------
+// Fragment shaders for rendering text
+// ---------------------------------------------
+const char* textRenderFragmentShader = R"glsl(
+#version 460 core
+in vec2 TexCoords;
+out vec4 FragColor;
+
+uniform sampler2D text; // Texture containing the character glyph
+uniform vec3 textColor; // RGB color for the text
+void main()
+{
+    float alpha = texture(text, TexCoords).r;
+    FragColor = texture(text, TexCoords) + vec4(0.0, 0.0, 0.0, 1.0);
+}
+)glsl";
+
 }

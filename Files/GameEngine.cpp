@@ -219,6 +219,8 @@ void GameEngine::PollEvents()
                         this->windowEvent.window.data1, 
                         this->windowEvent.window.data2
                     );
+                    this->WindowSize.x(this->windowEvent.window.data1);
+                    this->WindowSize.y(this->windowEvent.window.data2);
                 break;
             }
             break;

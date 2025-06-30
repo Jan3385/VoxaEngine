@@ -5,17 +5,21 @@
 #include "Shader/Rendering/RenderingShader.h"
 #include "Shader/Rendering/vertexShaderLibrary.h"
 #include "Shader/Rendering/fragmentShaderLibrary.h"
+#include "Rendering/FontRenderer.h"
 
 class GameRenderer{
 private:
+    FontRenderer fontRenderer;
+
     SDL_Window *r_window = nullptr;
+
     // Borrowed from Engine class
     SDL_GLContext *r_GLContext = nullptr;
 
     Shader::Shader chunkRenderProgram;    
     Shader::Shader particleRenderProgram;    
     Shader::Shader closedShapeRenderProgram;
-
+    
     void ToggleDebugRendering();
 
     void UpdateParticleVBO(ChunkMatrix &chunkMatrix);

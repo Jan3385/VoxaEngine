@@ -359,14 +359,8 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
         }
     }
 
-    std::vector<std::future<Chunk*>> futures;
     for (const auto& chunkPos : chunksToLoad) {
-        futures.emplace_back(std::async(std::launch::async, &GameEngine::LoadChunkInView, GameEngine::instance, chunkPos));
-    }
-
-    // Wait for all chunks to finish loading
-    for (auto& future : futures) {
-        future.get();
+        GameEngine::instance->LoadChunkInView(chunkPos);
     }
 }
 

@@ -17,7 +17,7 @@
 #include <box2d/box2d.h>
 #include <box2d/types.h>
 
-#include "Renderer.h"
+#include "Rendering/Renderer.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
@@ -72,7 +72,8 @@ public:
     float FPS = 60;
     float avgFPS = 60;
     std::list<float> FPSHistory = {};
-    
+
+    Vec2i WindowSize = {800, 600};    
 
     bool runHeatSimulation = true;
     bool runPressureSimulation = true;

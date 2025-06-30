@@ -6,7 +6,7 @@
 
 VoxaEngine is currently capable of making sand falling simulations, fire simulations, heat transfer & pressure simulations.
 
-Uses **SDL2** library and **Dear ImGui**. Engine is programmed in **C++** and rendered using **OpenGL**.
+Uses **SDL2**, **FreeType** library and **Dear ImGui**. Engine is programmed in **C++** and rendered using **OpenGL**.
 
 Features *OpenGL* compute shaders using **GLEW** for faster simulation passes.
 

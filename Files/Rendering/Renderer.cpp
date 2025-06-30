@@ -130,6 +130,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
+    this->fontRenderer.Initialize();
 }
 
 GameRenderer::~GameRenderer()
@@ -162,9 +163,14 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
     Game::Player *player = GameEngine::instance->Player;
 
-    glm::mat4 proj = glm::ortho(
+    glm::mat4 voxelProj = glm::ortho(
         player->Camera.corner.getX(), player->Camera.corner.getX() + player->Camera.size.getX(), 
         player->Camera.corner.getY() + player->Camera.size.getY(), player->Camera.corner.getY(),
+        -1.0f, 1.0f
+    );
+    glm::mat4 screenProj = glm::ortho(
+        0.0f, static_cast<float>(GameEngine::instance->WindowSize.getX()), 
+        static_cast<float>(GameEngine::instance->WindowSize.getY()), 0.0f,
         -1.0f, 1.0f
     );
 
@@ -174,7 +180,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     this->chunkCreateBuffer.clear();
 
     this->chunkRenderProgram.Use();
-    this->chunkRenderProgram.SetMat4("projection", proj);
+    this->chunkRenderProgram.SetMat4("projection", voxelProj);
     
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){
@@ -191,7 +197,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     if(chunkMatrix.particles.size() > 0){
         this->UpdateParticleVBO(chunkMatrix);
         this->particleRenderProgram.Use();
-        this->particleRenderProgram.SetMat4("projection", proj);
+        this->particleRenderProgram.SetMat4("projection", voxelProj);
         glBindVertexArray(this->particleVAO);
         glDrawArraysInstanced(
             GL_TRIANGLE_FAN, 0, 4, 
@@ -220,7 +226,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                     end,
                     {start.x, end.y}
                 };
-                this->DrawClosedShape(points, red, proj, 2.0f);
+                this->DrawClosedShape(points, red, voxelProj, 2.0f);
             }
 
             //draw dirty rects
@@ -241,9 +247,16 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                 dirtyEnd,
                 {dirtyStart.x, dirtyEnd.y}
             };
-            this->DrawClosedShape(points, green, proj, 1.0f);
+            this->DrawClosedShape(points, green, voxelProj, 1.0f);
         }
     }
+    fontRenderer.RenderText(
+        "VoxAEngine",
+        Vec2f(100, 100),
+        1.0f,
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        screenProj
+    );
 
     this->RenderIMGUI(chunkMatrix);
 
