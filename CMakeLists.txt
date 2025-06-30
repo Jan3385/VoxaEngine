@@ -14,10 +14,6 @@ set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
 set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
 set(SDL2_DLL "${CMAKE_SOURCE_DIR}/SDL2/SDL2.dll")
 
-set(SDL2_LIBRARY_TFF "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2_ttf.dll.a")
-set(SDL2_TTF_DLL "${CMAKE_SOURCE_DIR}/SDL2/SDL2_ttf.dll")
-
-
 set(IMGUI_INCLUDE_HEADER_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/imgui")
 set(IMGUI_INCLUDE_CPP_DIR "${CMAKE_SOURCE_DIR}/imgui")
 
@@ -48,6 +44,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(glm)
 
+# Add FreeType library
+FetchContent_Declare(
+    freetype
+    GIT_REPOSITORY https://github.com/freetype/freetype.git
+    GIT_TAG VER-2-13-2
+)
+FetchContent_MakeAvailable(freetype)
+
 # Automatically include all .cpp files in the Files folder
 file(GLOB_RECURSE SOURCES "Files/*.cpp")
 file(GLOB_RECURSE IMGUI_SOURCES "${IMGUI_INCLUDE_CPP_DIR}/*.cpp")
@@ -74,18 +78,18 @@ endif()
 if (WIN32)
     set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
     set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
-    set(SDL2_LIBRARY_TFF "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2_ttf.dll.a")
-    target_link_libraries(VoxaEngine PRIVATE ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY} ${SDL2_LIBRARY_TFF})
+    target_link_libraries(VoxaEngine PRIVATE ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY})
 elseif (UNIX)
     find_package(SDL2 REQUIRED)
-    find_package(SDL2_ttf REQUIRED)
     target_include_directories(VoxaEngine PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_libraries(VoxaEngine PRIVATE ${SDL2_LIBRARIES} SDL2_ttf)
 endif()
 
 # Link GLM library
 target_link_libraries(VoxaEngine PRIVATE glm)
 message(STATUS "GLM source dir: ${glm_SOURCE_DIR}")
+
+# Link FreeType library
+target_link_libraries(VoxaEngine PRIVATE freetype)
 
 # Link project libraries
 target_include_directories(VoxaEngine PRIVATE ${PROJECT_SOURCE_DIR}/Files)
@@ -94,7 +98,6 @@ set_property(TARGET VoxaEngine PROPERTY CXX_STANDARD 20)
 
 add_custom_command(TARGET VoxaEngine POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_DLL} $<TARGET_FILE_DIR:VoxaEngine>
-    COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_TTF_DLL} $<TARGET_FILE_DIR:VoxaEngine>
 
     COMMAND ${CMAKE_COMMAND} -E copy ${GLEW_DLL} $<TARGET_FILE_DIR:VoxaEngine>
 
