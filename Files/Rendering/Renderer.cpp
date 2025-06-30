@@ -22,6 +22,10 @@ GameRenderer::GameRenderer()
 
 GameRenderer::GameRenderer(SDL_GLContext *glContext)
 {
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
         std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
     }
@@ -60,10 +64,6 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     ImGui_ImplOpenGL3_Init("#version 460");
 
     SDL_SetWindowTitle(r_window, "VoxaEngine");
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     //Initialize GLEW
     glewExperimental = GL_TRUE;

@@ -59,8 +59,8 @@ uniform sampler2D text; // Texture containing the character glyph
 uniform vec3 textColor; // RGB color for the text
 void main()
 {
-    float alpha = texture(text, TexCoords).r;
-    FragColor = texture(text, TexCoords) + vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 sampled = vec4(textColor, texture(text, TexCoords).r);
+    FragColor = sampled;
 }
 )glsl";
 

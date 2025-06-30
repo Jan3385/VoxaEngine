@@ -35,13 +35,14 @@ void FontRenderer::Initialize()
         throw std::runtime_error("Could not init FreeType Library");
     }
 
-    this->pixelFont = Font("Fonts/fff-forward/FFFFORWA.TTF", ft);
+    this->pixelFont = new Font("Fonts/fff-forward/FFFFORWA.TTF", ft);
 
     FT_Done_FreeType(ft);
 }
 
 FontRenderer::~FontRenderer()
 {
+    delete this->pixelFont;
     glDeleteVertexArrays(1, &this->VAO);
     glDeleteBuffers(1, &this->VBO);
 }
@@ -52,13 +53,13 @@ void FontRenderer::RenderText(const std::string &text, Vec2f pos,
     this->textRenderProgram.Use();
     this->textRenderProgram.SetVec3("textColor", color);
     this->textRenderProgram.SetMat4("projection", projection);
-    //this->textRenderProgram.SetInt("text", 0); // sampler2D is set to texture unit 0
+    this->textRenderProgram.SetInt("text", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->VAO);
 
     std::string::const_iterator c;
     for(c = text.begin(); c != text.end(); c++) {
-        Character ch = this->pixelFont.characters[*c];
+        Character ch = this->pixelFont->characters[*c];
 
         float xpos = pos.getX() + ch.Bearing.x * scale;
         float ypos = pos.getY() + (ch.Size.y - ch.Bearing.y) * scale;
@@ -101,7 +102,7 @@ Font::Font(const char* fontPath, FT_Library ft)
     if (FT_New_Face(ft, fontPath, 0, &face)) {
         throw std::runtime_error("Could not load font face");
     }
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, 12);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
 

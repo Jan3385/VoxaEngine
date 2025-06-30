@@ -25,6 +25,12 @@ public:
     Font(const char* fontPath, FT_Library ft);
     ~Font();
 
+    // Make class uncopyable
+    Font(const Font&) = delete;
+    Font& operator=(const Font&) = delete;
+    Font(Font&&) = delete;
+    Font& operator=(Font&&) = delete;
+
     std::map<char, Character> characters;
 };
 
@@ -33,12 +39,18 @@ public:
     FontRenderer();
     ~FontRenderer();
 
+    // Make class uncopyable
+    FontRenderer(const FontRenderer&) = delete;
+    FontRenderer& operator=(const FontRenderer&) = delete;
+    FontRenderer(FontRenderer&&) = delete;
+    FontRenderer& operator=(FontRenderer&&) = delete;
+
     void Initialize();
 
     void RenderText(const std::string &text, Vec2f pos, 
         float scale, const glm::vec3 &color, glm::mat4 projection);
 
-    Font pixelFont;
+    Font* pixelFont;
 private:
     Shader::Shader textRenderProgram;
     GLuint VAO, VBO;
