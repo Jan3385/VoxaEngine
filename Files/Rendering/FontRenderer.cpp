@@ -35,7 +35,7 @@ void FontRenderer::Initialize()
         throw std::runtime_error("Could not init FreeType Library");
     }
 
-    this->pixelFont = new Font("Fonts/fff-forward/FFFFORWA.TTF", ft);
+    this->pixelFont = new Font("Fonts/pixel-gaming-font/PixelGamingRegular.ttf", ft);
 
     FT_Done_FreeType(ft);
 }
@@ -102,7 +102,7 @@ Font::Font(const char* fontPath, FT_Library ft)
     if (FT_New_Face(ft, fontPath, 0, &face)) {
         throw std::runtime_error("Could not load font face");
     }
-    FT_Set_Pixel_Sizes(face, 0, 12);
+    FT_Set_Pixel_Sizes(face, 0, 8);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // Disable byte-alignment restriction
 
@@ -130,8 +130,8 @@ Font::Font(const char* fontPath, FT_Library ft)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         Character character = {
             texture,
