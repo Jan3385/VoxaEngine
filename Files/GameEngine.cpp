@@ -93,16 +93,8 @@ void GameEngine::Update()
         std::cout << "Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
 }
 void GameEngine::m_UpdateGridVoxel(int pass)
-{
-    //delete all chunks marked for deletion
-    for(int32_t i = static_cast<int32_t>(chunkMatrix.GridSegmented[pass].size()) - 1; i >= 0; --i){
-        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player->Camera))
-        {
-            chunkMatrix.DeleteChunk(chunkMatrix.GridSegmented[pass][i]->GetPos());
-            continue;
-        }
-    }
-    
+{    
+    #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
         auto& chunk = chunkMatrix.GridSegmented[pass][i];
         if (!chunk->dirtyRect.IsEmpty()) {
@@ -137,8 +129,15 @@ void GameEngine::m_SimulationThread()
             }
         }
 
+        //delete all chunks marked for deletion
+        for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
+            if(chunkMatrix.Grid[i]->ShouldChunkDelete(this->Player->Camera))
+            {
+                chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
+            }
+        }
+
         //Voxel update logic
-        #pragma omp parallel for
         for(uint8_t i = 0; i < 4; ++i)
         {
             m_UpdateGridVoxel(i);
@@ -270,8 +269,10 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
     if(!chunkMatrix.IsValidChunkPosition(pos)) return nullptr;
     if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;
 
+    chunkMatrix.chunkCreationMutex.lock();
     Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
     GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+    chunkMatrix.chunkCreationMutex.unlock();
     return chunk;
 }
 

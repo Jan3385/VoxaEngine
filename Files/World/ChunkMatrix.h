@@ -15,6 +15,7 @@ public:
 	
 	//mutex for changing the voxels, mainly handeled by the simulation thread
 	std::mutex voxelMutex;
+	std::mutex chunkCreationMutex;
 	//not precomputed array of chunks
 	std::vector<Volume::Chunk*> Grid;
 	//precomputed grids for simulation passing -> 0 - 3 passees

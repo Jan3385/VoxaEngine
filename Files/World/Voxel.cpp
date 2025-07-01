@@ -466,6 +466,7 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 	if(next == nullptr) return false; // if the next voxel is null, stop
 
 	if(next->properties == this->properties) return false; // if the next voxel is the same, stop
+	
 	if(next->GetState() != State::Gas) return false; // if the next voxel is not gas, stop
 	
 	if(direction.getY() > 0){

@@ -256,8 +256,10 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
 
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
     if(!chunk){
+        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
         GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        chunkCreationMutex.unlock();
     }
 
     Volume::VoxelElement *voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
@@ -312,8 +314,10 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
+        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
         GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        chunkCreationMutex.unlock();
     }
 
     //delete the old voxel if it exists
@@ -349,8 +353,10 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
+        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
         GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        chunkCreationMutex.unlock();
     }
 
     // Set the new voxel and mark for update

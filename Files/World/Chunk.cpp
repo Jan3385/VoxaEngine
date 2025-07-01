@@ -54,7 +54,6 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
         }
         this->UpdateRenderBufferRanges[x] = Math::Range(0, CHUNK_SIZE - 1);
     }
-    std::cout << "Creating chunk at " << m_x << ", " << m_y << std::endl;
 }
 
 Volume::Chunk::~Chunk()

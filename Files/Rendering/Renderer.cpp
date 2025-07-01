@@ -262,15 +262,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         }
     }
 
-    fontRenderer.RenderText(
-        "VoxaEngine - Text Test",
-        fontRenderer.pixelFont,
-        Vec2f(100, 100),
-        1.0f,
-        glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        voxelProj
-    );
-
     this->RenderIMGUI(chunkMatrix);
 
     SDL_GL_SwapWindow(r_window);
