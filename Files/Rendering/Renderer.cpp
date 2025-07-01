@@ -238,27 +238,27 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                     glm::vec4(0.3f, 0.3f, 0.3f, 0.6f),
                     voxelProj
                 );
+                
+                //draw dirty rects
+                if(chunk->dirtyRect.IsEmpty()) continue;
+
+                glm::vec2 dirtyStart = {
+                    chunk->dirtyRect.start.getX() + chunk->GetAABB().corner.getX(),
+                    chunk->dirtyRect.start.getY() + chunk->GetAABB().corner.getY()
+                };
+                glm::vec2 dirtyEnd = {
+                    chunk->dirtyRect.end.getX() - chunk->dirtyRect.start.getX() + dirtyStart.x,
+                    chunk->dirtyRect.end.getY() - chunk->dirtyRect.start.getY() + dirtyStart.y
+                };
+
+                std::vector<glm::vec2> dirtyRectPoints = {
+                    dirtyStart,
+                    {dirtyEnd.x, dirtyStart.y},
+                    dirtyEnd,
+                    {dirtyStart.x, dirtyEnd.y}
+                };
+                this->DrawClosedShape(dirtyRectPoints, green, voxelProj, 1.0f);
             }
-
-            //draw dirty rects
-            if(chunk->dirtyRect.IsEmpty()) continue;
-
-            glm::vec2 dirtyStart = {
-                chunk->dirtyRect.start.getX() + chunk->GetAABB().corner.getX(),
-                chunk->dirtyRect.start.getY() + chunk->GetAABB().corner.getY()
-            };
-            glm::vec2 dirtyEnd = {
-                chunk->dirtyRect.end.getX() - chunk->dirtyRect.start.getX() + dirtyStart.x,
-                chunk->dirtyRect.end.getY() - chunk->dirtyRect.start.getY() + dirtyStart.y
-            };
-
-            std::vector<glm::vec2> points = {
-                dirtyStart,
-                {dirtyEnd.x, dirtyStart.y},
-                dirtyEnd,
-                {dirtyStart.x, dirtyEnd.y}
-            };
-            this->DrawClosedShape(points, green, voxelProj, 1.0f);
         }
     }
 
