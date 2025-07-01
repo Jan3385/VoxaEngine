@@ -54,6 +54,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
         }
         this->UpdateRenderBufferRanges[x] = Math::Range(0, CHUNK_SIZE - 1);
     }
+    std::cout << "Creating chunk at " << m_x << ", " << m_y << std::endl;
 }
 
 Volume::Chunk::~Chunk()
@@ -104,6 +105,7 @@ bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;
+    if(Camera.Expand(Chunk::CHUNK_SIZE/2).Overlaps(this->GetAABB())) return false;
 
     return true;
 }

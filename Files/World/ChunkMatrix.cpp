@@ -208,6 +208,7 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		}
         }
     }
+    chunk->lastCheckedCountDown = 20;
 
     uint8_t AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;

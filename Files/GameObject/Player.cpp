@@ -337,25 +337,22 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 
     Camera.corner = (pos-Vec2f(Camera.size.getX()/2, Camera.size.getY()/2));
 
-    //Spawn chunks that are in the view but don´t exits
-    Vec2i cameraChunkPos = chunkMatrix.WorldToChunkPosition(Camera.corner - Vec2f(Game::CAMERA_CHUNK_PADDING/2, Game::CAMERA_CHUNK_PADDING/2));
+    Vec2f cameraMin = Camera.corner;
+    Vec2f cameraMax = Camera.corner + Camera.size;
 
-    int ChunksHorizontal = ceil((Camera.size.getX() + Game::CAMERA_CHUNK_PADDING*2) 
-                                    / Chunk::CHUNK_SIZE)+1;
-    
-    int ChunksVertical =   ceil((Camera.size.getY() + Game::CAMERA_CHUNK_PADDING*2) 
-                                    / Chunk::CHUNK_SIZE)+1;
+    float halfChunk = Chunk::CHUNK_SIZE / 2.0f;
+    Vec2f adjustedMin = cameraMin - Vec2f(halfChunk, halfChunk);
+    Vec2f adjustedMax = cameraMax + Vec2f(halfChunk, halfChunk);
+
+    Vec2i chunkMin = chunkMatrix.WorldToChunkPosition(adjustedMin);
+    Vec2i chunkMax = chunkMatrix.WorldToChunkPosition(adjustedMax);
 
     std::vector<Vec2i> chunksToLoad;
-    for (int x = 0; x < ChunksHorizontal; ++x) {
-        for (int y = 0; y < ChunksVertical; ++y) {
-            Vec2i chunkPos = cameraChunkPos + Vec2i(x, y);
-            Chunk* chunk = chunkMatrix.GetChunkAtChunkPosition(chunkPos);
-            if (!chunk) {
-                chunksToLoad.push_back(chunkPos);
-            }else{
-                chunk->lastCheckedCountDown = 20;
-            }
+    for (int x = chunkMin.getX(); x <= chunkMax.getX(); ++x) {
+        for (int y = chunkMin.getY(); y <= chunkMax.getY(); ++y) {
+            if(!chunkMatrix.IsValidChunkPosition(Vec2i(x, y))) continue;    // Skip invalid chunk positions
+            if(chunkMatrix.GetChunkAtChunkPosition(Vec2i(x, y))) continue;  // If the chunk already exists, skip it
+            chunksToLoad.push_back(Vec2i(x, y));
         }
     }
 
