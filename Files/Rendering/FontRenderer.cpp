@@ -47,7 +47,7 @@ FontRenderer::~FontRenderer()
     glDeleteBuffers(1, &this->VBO);
 }
 
-void FontRenderer::RenderText(const std::string &text, Vec2f pos, 
+void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos, 
     float scale, const glm::vec4 &color, glm::mat4 projection)
 {
     this->textRenderProgram.Use();
@@ -59,7 +59,7 @@ void FontRenderer::RenderText(const std::string &text, Vec2f pos,
 
     std::string::const_iterator c;
     for(c = text.begin(); c != text.end(); c++) {
-        Character ch = this->pixelFont->characters[*c];
+        Character ch = font->characters[*c];
 
         float xpos = pos.getX() + ch.Bearing.x * scale;
         float ypos = pos.getY() + (ch.Size.y - ch.Bearing.y) * scale;

@@ -232,6 +232,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                     std::to_string(chunk->GetPos().getX()) + 
                         ", " + 
                         std::to_string(chunk->GetPos().getY()),
+                    fontRenderer.pixelFont,
                     Vec2f(chunk->GetAABB().corner.getX()+2, chunk->GetAABB().corner.getY()+chunk->GetAABB().size.getY()-1),
                     1.0f,
                     glm::vec4(0.3f, 0.3f, 0.3f, 0.6f),
@@ -263,6 +264,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
     fontRenderer.RenderText(
         "VoxaEngine - Text Test",
+        fontRenderer.pixelFont,
         Vec2f(100, 100),
         1.0f,
         glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
