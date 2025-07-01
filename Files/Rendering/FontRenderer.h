@@ -48,7 +48,7 @@ public:
     void Initialize();
 
     void RenderText(const std::string &text, Vec2f pos, 
-        float scale, const glm::vec3 &color, glm::mat4 projection);
+        float scale, const glm::vec4 &color, glm::mat4 projection);
 
     Font* pixelFont;
 private:

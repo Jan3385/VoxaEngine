@@ -48,10 +48,10 @@ FontRenderer::~FontRenderer()
 }
 
 void FontRenderer::RenderText(const std::string &text, Vec2f pos, 
-    float scale, const glm::vec3 &color, glm::mat4 projection)
+    float scale, const glm::vec4 &color, glm::mat4 projection)
 {
     this->textRenderProgram.Use();
-    this->textRenderProgram.SetVec3("textColor", color);
+    this->textRenderProgram.SetVec4("textColor", color);
     this->textRenderProgram.SetMat4("projection", projection);
     this->textRenderProgram.SetInt("text", 0);
     glActiveTexture(GL_TEXTURE0);

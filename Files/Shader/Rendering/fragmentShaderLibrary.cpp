@@ -56,11 +56,12 @@ in vec2 TexCoords;
 out vec4 FragColor;
 
 uniform sampler2D text; // Texture containing the character glyph
-uniform vec3 textColor; // RGB color for the text
+uniform vec4 textColor; // RGBA color for the text
 void main()
 {
-    vec4 sampled = vec4(textColor, texture(text, TexCoords).r);
-    FragColor = sampled;
+    float alpha = texture(text, TexCoords).r;
+    alpha = alpha * textColor.a;
+    FragColor = vec4(textColor.rgb, alpha);
 }
 )glsl";
 
