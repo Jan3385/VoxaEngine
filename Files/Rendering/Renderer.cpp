@@ -169,8 +169,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         -1.0f, 1.0f
     );
     glm::mat4 screenProj = glm::ortho(
-        0.0f, static_cast<float>(GameEngine::instance->WindowSize.getX()), 
-        static_cast<float>(GameEngine::instance->WindowSize.getY()), 0.0f,
+        0.0f, player->Camera.size.getX(), 
+        player->Camera.size.getY(), 0.0f,
         -1.0f, 1.0f
     );
 
@@ -259,6 +259,41 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                 };
                 this->DrawClosedShape(dirtyRectPoints, green, voxelProj, 1.0f);
             }
+        }
+
+        // show voxel name, temperature and amount at mouse position
+        Volume::VoxelElement* voxelAtMousePos = chunkMatrix.VirtualGetAt(
+            Vec2i(
+                static_cast<int>(mousePos.getX()/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getX()),
+                static_cast<int>(mousePos.getY()/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getY())
+            )
+        );
+        glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
+        if(voxelAtMousePos != nullptr){
+            fontRenderer.RenderText(
+                "Voxel: " + voxelAtMousePos->properties->name,
+                fontRenderer.pixelFont,
+                Vec2f(5, 10),
+                1.0f,
+                fontColor,
+                screenProj
+            );
+            fontRenderer.RenderText(
+                "Temperature: " + std::to_string(static_cast<int>(voxelAtMousePos->temperature.GetCelsius())) + "C",
+                fontRenderer.pixelFont,
+                Vec2f(5, 20),
+                1.0f,
+                fontColor,
+                screenProj
+            );
+            fontRenderer.RenderText(
+                "Amount: " + std::to_string(static_cast<int>(voxelAtMousePos->amount)),
+                fontRenderer.pixelFont,
+                Vec2f(5, 30),
+                1.0f,
+                fontColor,
+                screenProj
+            );
         }
     }
 

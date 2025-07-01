@@ -35,7 +35,7 @@ void FontRenderer::Initialize()
         throw std::runtime_error("Could not init FreeType Library");
     }
 
-    this->pixelFont = new Font("Fonts/pixel-gaming-font/PixelGamingRegular.ttf", ft);
+    this->pixelFont = new Font("Fonts/Tiny5/Tiny5-Regular.ttf", ft);
 
     FT_Done_FreeType(ft);
 }
