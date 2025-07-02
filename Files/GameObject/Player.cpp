@@ -17,7 +17,7 @@ Game::Player::Player()
 }
 
 Game::Player::Player(ChunkMatrix *matrix)
-    : GameObject(Vec2f(100.0f, 0.0f))
+    : GameObject(Vec2f(100.0f, 0.0f), "Textures/Player.bmp")
 {
     this->Camera = AABB(
         Vec2f((800.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2, (600.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2), 
@@ -111,12 +111,6 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
     this->gunLaserParticleGenerator->angle = angle;
 
     chunkMatrix.voxelMutex.unlock();
-}
-
-void Game::Player::Render(SDL_Renderer* renderer, const Vec2f &offset)
-{
-    if(this->NoClip) return;
-    GameObject::Render(renderer, offset);   
 }
 
 void Game::Player::FireGun(ChunkMatrix &chunkMatrix)

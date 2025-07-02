@@ -18,7 +18,6 @@ namespace Game{
         Player(ChunkMatrix *matrix);
         ~Player();
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
-        void Render(SDL_Renderer* renderer, const Vec2f &offset) override;
 
         void FireGun(ChunkMatrix& chunkMatrix);
 

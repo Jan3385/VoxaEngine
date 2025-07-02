@@ -60,8 +60,6 @@ public:
 
 	//particle functions
 	void UpdateParticles();
-	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
-	void RenderObjects(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions
 	static Vec2i WorldToChunkPosition(const Vec2f& pos);

@@ -6,10 +6,12 @@
 #include "Shader/Rendering/vertexShaderLibrary.h"
 #include "Shader/Rendering/fragmentShaderLibrary.h"
 #include "Rendering/FontRenderer.h"
+#include "Rendering/SpriteRenderer.h"
 
 class GameRenderer{
 private:
     FontRenderer fontRenderer;
+    SpriteRenderer spriteRenderer;
 
     SDL_Window *r_window = nullptr;
 

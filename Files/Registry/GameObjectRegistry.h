@@ -7,5 +7,5 @@
 
 namespace Registry
 {
-    void CreateGameObject(ChunkMatrix *matrix, Vec2f position);
+    void CreateGameObject(ChunkMatrix *matrix, Vec2f position, std::string texturePath);
 }

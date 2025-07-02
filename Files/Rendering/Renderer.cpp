@@ -131,6 +131,14 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     this->fontRenderer.Initialize();
+    this->spriteRenderer.Initialize();
+
+    // Enables Alpha Blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Disables Depth Testing
+    glDisable(GL_DEPTH_TEST);
 }
 
 GameRenderer::~GameRenderer()
@@ -151,13 +159,6 @@ GameRenderer::~GameRenderer()
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 {
-    // Enables Alpha Blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Disables Depth Testing
-    glDisable(GL_DEPTH_TEST);
-
     glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -173,6 +174,17 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         player->Camera.size.getY(), 0.0f,
         -1.0f, 1.0f
     );
+
+    //render objects
+    for (GameObject* object : chunkMatrix.gameObjects) {
+        if(object == nullptr) continue;
+        this->spriteRenderer.RenderSprite(
+            object,
+            0.0f,
+            glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+            voxelProj
+        );
+    }
 
     for(auto& chunk : this->chunkCreateBuffer) {
         chunk->SetVBOData();

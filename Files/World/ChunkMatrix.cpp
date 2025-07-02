@@ -4,32 +4,6 @@
 #include "ChunkMatrix.h"
 
 using namespace Volume;
-
-void ChunkMatrix::RenderParticles(SDL_Renderer &renderer, Vec2f offset) const
-{
-    SDL_SetRenderDrawBlendMode(&renderer, SDL_BLENDMODE_BLEND);
-    for (auto& particle : particles) {
-        const RGBA& color = particle->color;
-
-        SDL_SetRenderDrawColor(&renderer, color.r, color.g, color.b, color.a);
-
-        Vec2f particlePos = particle->GetPosition();
-        SDL_Rect rect = {
-            static_cast<int>((particlePos.getX()) * Chunk::RENDER_VOXEL_SIZE + offset.getX()),
-            static_cast<int>((particlePos.getY()) * Chunk::RENDER_VOXEL_SIZE + offset.getY()),
-            Chunk::RENDER_VOXEL_SIZE,
-            Chunk::RENDER_VOXEL_SIZE
-        };
-        SDL_RenderFillRect(&renderer, &rect);
-    }
-}
-void ChunkMatrix::RenderObjects(SDL_Renderer &renderer, Vec2f offset) const
-{
-    SDL_SetRenderDrawBlendMode(&renderer, SDL_BLENDMODE_BLEND);
-    for (const auto& gameObject : gameObjects) {
-        gameObject->Render(&renderer, offset);
-    }
-}
 ChunkMatrix::ChunkMatrix()
 {
     this->particleGenerators.reserve(15);

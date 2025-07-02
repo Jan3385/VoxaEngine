@@ -55,14 +55,33 @@ const char* textRenderFragmentShader = R"glsl(
 in vec2 TexCoords;
 out vec4 FragColor;
 
-uniform sampler2D text; // Texture containing the character glyph
+uniform sampler2D textureID; // Texture containing the character glyph
 uniform vec4 textColor; // RGBA color for the text
 void main()
 {
-    float alpha = texture(text, TexCoords).r;
+    float alpha = texture(textureID, TexCoords).r;
     alpha = alpha * textColor.a;
     FragColor = vec4(textColor.rgb, alpha);
 }
+)glsl";
+
+// ---------------------------------------------
+// Fragment shaders for rendering sprites
+// ---------------------------------------------
+const char* spriteRenderFragmentShader = R"glsl(
+#version 460 core
+in vec2 TexCoords;
+out vec4 FragColor;
+
+uniform sampler2D textureID;
+uniform vec4 tint;
+
+void main()
+{
+    FragColor = texture(textureID, TexCoords);
+    FragColor *= tint; // Apply tint to the texture color
+}
+
 )glsl";
 
 }

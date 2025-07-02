@@ -14,6 +14,9 @@ FontRenderer::FontRenderer()
 
 void FontRenderer::Initialize()
 {
+    if (initialized)
+        return;
+
     this->textRenderProgram = Shader::Shader(
         Shader::textRenderVertexShader,
         Shader::textRenderFragmentShader
@@ -38,13 +41,19 @@ void FontRenderer::Initialize()
     this->pixelFont = new Font("Fonts/Tiny5/Tiny5-Regular.ttf", ft);
 
     FT_Done_FreeType(ft);
+
+    initialized = true;
 }
 
 FontRenderer::~FontRenderer()
 {
+    if (!initialized)
+        return;
+
     delete this->pixelFont;
     glDeleteVertexArrays(1, &this->VAO);
     glDeleteBuffers(1, &this->VBO);
+    initialized = false;
 }
 
 void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos, 
@@ -53,7 +62,7 @@ void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos,
     this->textRenderProgram.Use();
     this->textRenderProgram.SetVec4("textColor", color);
     this->textRenderProgram.SetMat4("projection", projection);
-    this->textRenderProgram.SetInt("text", 0);
+    this->textRenderProgram.SetInt("textureID", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->VAO);
 
