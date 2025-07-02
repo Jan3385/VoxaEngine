@@ -21,6 +21,8 @@ public:
 
     virtual void Update(ChunkMatrix& chunkMatrix, float deltaTime) {};
 
+    virtual bool ShouldRender() const { return true; };
+
     Vec2f GetPosition() const {
         return position;
     }

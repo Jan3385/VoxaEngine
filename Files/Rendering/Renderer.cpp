@@ -178,8 +178,20 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     //render objects
     for (GameObject* object : chunkMatrix.gameObjects) {
         if(object == nullptr) continue;
+        if(!object->ShouldRender()) continue;
+
         this->spriteRenderer.RenderSprite(
             object,
+            0.0f,
+            glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+            voxelProj
+        );
+    }
+
+    //render player
+    if(player->ShouldRender()) {
+        this->spriteRenderer.RenderSprite(
+            player,
             0.0f,
             glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
             voxelProj

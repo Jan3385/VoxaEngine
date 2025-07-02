@@ -61,7 +61,7 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
 
     if(isInWater){
         this->acceleration -= (1+(LiquidPercentile*0.01f)) * GRAVITY * deltaTime; // 1 - 2 times gravity
-        this->acceleration /= 1.025f;
+        this->acceleration /= (1.001f * (1 + deltaTime));
     }
 
     if (GameEngine::MovementKeysHeld[0]) // W
@@ -78,7 +78,7 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
     }
     if (GameEngine::MovementKeysHeld[1]){ // S
         if(isInWater){
-            this->acceleration += (1+(LiquidPercentile*0.005f)) * GRAVITY * deltaTime;
+            this->acceleration += (1+(LiquidPercentile*0.01f)) * GRAVITY * deltaTime;
         }
 
         if(this->NoClip){
@@ -98,15 +98,15 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
             this->MovePlayerBy(Vec2f(Player::SPEED * deltaTime, 0), chunkMatrix);
     }
 
-    this->MoveCameraTowards(Vec2f(this->position) + Vec2f(PLAYER_WIDTH/2, PLAYER_HEIGHT/2), chunkMatrix);
+    this->MoveCameraTowards(Vec2f(this->position), chunkMatrix);
 
     // Move the player downwards
-    if(acceleration != 0) MovePlayerBy(Vec2f(0, this->acceleration), chunkMatrix);
+    if(acceleration != 0) MovePlayerBy(Vec2f(0, this->acceleration * deltaTime), chunkMatrix);
 
     //update player laser
-    this->gunLaserParticleGenerator->position = Vec2f(this->position) + Vec2f(PLAYER_WIDTH/2, PLAYER_HEIGHT/2);
+    this->gunLaserParticleGenerator->position = Vec2f(this->position);
     Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, vector::ZERO) + Camera.corner;
-    Vec2f direction = mousePos - (this->position + Vec2f(PLAYER_WIDTH/2, PLAYER_HEIGHT/2));
+    Vec2f direction = mousePos - (this->position);
     float angle = std::atan2(direction.getY(), direction.getX());
     this->gunLaserParticleGenerator->angle = angle;
 
@@ -118,17 +118,20 @@ void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
     if(!this->gunEnabled) return;
 
     Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, this->Camera.corner * Volume::Chunk::RENDER_VOXEL_SIZE);
-    Vec2f playerPos = Vec2f(this->position) + Vec2f(PLAYER_WIDTH/2, PLAYER_HEIGHT/2);
     
-    Vec2f direction = mousePos - playerPos;
+    Vec2f direction = mousePos - this->position;
     
     Particle::AddBulletParticle(
         &chunkMatrix,
         std::atan2(direction.getY(), direction.getX()),
         20.0f,
         3.0f,
-        playerPos
+        this->position
     );
+}
+bool Game::Player::ShouldRender() const
+{
+    return !NoClip;
 }
 Vec2f Game::Player::GetCameraPos() const
 {
@@ -138,8 +141,8 @@ Vec2f Game::Player::GetCameraPos() const
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsUnder(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int x = 1; x < PLAYER_WIDTH; ++x) {
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT));
+    for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT/2));
         if (voxel) {
             voxels.push_back(voxel);
         }
@@ -150,8 +153,8 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsUnder(ChunkMatrix &chu
 std::vector<Volume::VoxelElement *> Game::Player::GetVoxelsAbove(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int x = 1; x < PLAYER_WIDTH; ++x) {
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, -PLAYER_HEIGHT));
+    for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, -PLAYER_HEIGHT/2));
         if (voxel) {
             voxels.push_back(voxel);
         }
@@ -162,8 +165,8 @@ std::vector<Volume::VoxelElement *> Game::Player::GetVoxelsAbove(ChunkMatrix &ch
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsLeft(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int y = 1; y < PLAYER_HEIGHT; ++y) {
-        Vec2f localPos = Vec2i(this->position) + Vec2i(0, y);
+    for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
+        Vec2f localPos = Vec2i(this->position) + Vec2i(-PLAYER_WIDTH/2, y);
         auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.getX()), floor(localPos.getY())));
         if (voxel) {
             voxels.push_back(voxel);
@@ -175,8 +178,8 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsLeft(ChunkMatrix &chun
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsRight(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int y = 1; y < PLAYER_HEIGHT; ++y) {
-        Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH, y);
+    for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
+        Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH/2, y);
         auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.getX()), floor(localPos.getY())));
         if (voxel) {
             voxels.push_back(voxel);
@@ -188,8 +191,8 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsRight(ChunkMatrix &chu
 std::vector<Volume::VoxelElement *> Game::Player::GetVoxelsAtWaist(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int x = 1; x < PLAYER_WIDTH; ++x) {
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x,  WAIST_HEIGHT/2));
+    for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, 0));
         if (voxel) {
             voxels.push_back(voxel);
         }
@@ -200,8 +203,8 @@ std::vector<Volume::VoxelElement *> Game::Player::GetVoxelsAtWaist(ChunkMatrix &
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsVerticalSlice(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int y = 0; y < PLAYER_HEIGHT; ++y) {
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(PLAYER_WIDTH/2, y));
+    for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(0, y));
         if (voxel) {
             voxels.push_back(voxel);
         }
