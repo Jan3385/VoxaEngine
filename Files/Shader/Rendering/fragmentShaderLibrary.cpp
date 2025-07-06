@@ -27,7 +27,7 @@ out vec4 FragColor;     // output color
 
 void main()
 {
-    FragColor = vertexColor; // This will be a shade of gray based on heat
+    FragColor = vertexColor;
 }
 
 )glsl";

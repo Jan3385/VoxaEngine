@@ -1,6 +1,6 @@
 #include "World/Chunk.h"
 #include "World/Voxel.h"
-#include "World/VoxelTypes.h"	
+#include "World/voxelTypes.h"	
 #include <math.h>
 #include <cmath>
 #include <iostream>
