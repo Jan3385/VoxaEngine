@@ -76,6 +76,10 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         Shader::voxelArraySimulationVertexShader,
         Shader::voxelArraySimulationFragmentShader
     );
+    this->temperatureRenderProgram = Shader::Shader(
+        Shader::temperatureVoxelVertexShader,
+        Shader::temperatureVoxelFragmentShader
+    );
     this->particleRenderProgram = Shader::Shader(
         Shader::voxelParticleVertexShader,
         Shader::voxelParticleFragmentShader
@@ -210,7 +214,27 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         if(chunk->GetAABB().Overlaps(player->Camera)){
             chunk->Render(false);
 
-            glBindVertexArray(chunk->VAO);
+            glBindVertexArray(chunk->renderVoxelVAO);
+            glDrawArraysInstanced(
+                GL_TRIANGLE_FAN, 0, 4, 
+                Volume::Chunk::CHUNK_SIZE_SQUARED
+            );
+        }
+    }
+
+    this->temperatureRenderProgram.Use();
+    this->temperatureRenderProgram.SetMat4("projection", voxelProj);
+    this->temperatureRenderProgram.SetBool("showHeatAroundCursor", this->showHeatAroundCursor);
+    this->temperatureRenderProgram.SetVec2("cursorPosition", 
+        glm::vec2(
+            mousePos.getX() / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getX(),
+            mousePos.getY() / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getY()
+        )
+    );
+    
+    for (auto& chunk : chunkMatrix.Grid) {
+        if(chunk->GetAABB().Overlaps(player->Camera)) {
+            glBindVertexArray(chunk->heatRenderingVAO);
             glDrawArraysInstanced(
                 GL_TRIANGLE_FAN, 0, 4, 
                 Volume::Chunk::CHUNK_SIZE_SQUARED

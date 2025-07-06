@@ -58,6 +58,7 @@ void SpriteRenderer::Initialize()
     initialized = true;
 }
 
+// rotation in degrees
 void SpriteRenderer::RenderSprite(GameObject *object, float rotation, const glm::vec4 &tint, glm::mat4 projection)
 {
     if(!initialized)

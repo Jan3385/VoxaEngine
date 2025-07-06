@@ -67,36 +67,72 @@ Volume::Chunk::~Chunk()
     }
 
     // Delete OpenGL resources
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &instanceVBO);
-    VAO = 0;
-    instanceVBO = 0;
+    glDeleteVertexArrays(1, &renderVoxelVAO);
+    glDeleteBuffers(1, &renderVBO);
+    renderVoxelVAO = 0;
+    renderVBO = 0;
+
+    glDeleteVertexArrays(1, &heatRenderingVAO);
+    glDeleteBuffers(1, &temperatureVBO);
+    heatRenderingVAO = 0;
+    temperatureVBO = 0;
 }
 void Volume::Chunk::SetVBOData()
 {
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glGenBuffers(1, &renderVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
 
-    // VAO setup ----
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    glGenBuffers(1, &temperatureVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
+
+    // voxel rendering VAO setup ----
+    glGenVertexArrays(1, &renderVoxelVAO);
+    glBindVertexArray(renderVoxelVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, GameEngine::instance->renderer->quadVBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
     glVertexAttribIPointer(1, 2, GL_INT, sizeof(ChunkVoxelRenderData), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribDivisor(1, 1); // instance attribute
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(ChunkVoxelRenderData), (void*)(sizeof(glm::vec2)));
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
+
+    glBindVertexArray(0);
+    // --------------
+
+    // heat rendering VAO setup ----
+    glGenVertexArrays(1, &heatRenderingVAO);
+    glBindVertexArray(heatRenderingVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::instance->renderer->quadVBO);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0); // location 0
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
+    glVertexAttribIPointer(1, 2, GL_INT, sizeof(ChunkVoxelRenderData), (void*)0); // location 1
+    glEnableVertexAttribArray(1);
+    glVertexAttribDivisor(1, 1);
+
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(ChunkVoxelRenderData), (void*)(sizeof(glm::vec2))); // location 2
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0); // location 3: heat
+    glEnableVertexAttribArray(3);
+    glVertexAttribDivisor(3, 1);
+
+    glBindVertexArray(0);
     // --------------
 
     // Update the instance VBO with the new render data
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, renderData);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -156,6 +192,7 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 /**
  * Fills the provided buffers with data for compute shaders.
  * provides flattened arrays of voxel data for shaders
+ * Updates the internal temperature OpenGL buffer for the chunk
  */
 void Volume::Chunk::GetShadersData(
     float temperatureBuffer[], 
@@ -163,9 +200,10 @@ void Volume::Chunk::GetShadersData(
     float heatConductivityBuffer[], 
     float pressureBuffer[], 
     uint32_t idBuffer[], 
-    int chunkNumber) const
+    int chunkNumber)
 {
-    #pragma omp parallel for collapse(2)
+    float temperatureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+    #pragma omp parallel for
     for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
         for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
             int index = chunkNumber * Chunk::CHUNK_SIZE_SQUARED + y * Chunk::CHUNK_SIZE + x;
@@ -173,7 +211,9 @@ void Volume::Chunk::GetShadersData(
             Volume::VoxelElement* voxel = this->voxels[x][y];
             const Volume::VoxelProperty* props = voxel->properties;
 
-            temperatureBuffer[index] = voxel->temperature.GetCelsius();
+            temperatureVBOBuffer[x][y] = voxel->temperature.GetCelsius();
+            temperatureBuffer[index] = temperatureVBOBuffer[x][y];
+
             heatCapacityBuffer[index] = props->HeatCapacity;
             heatConductivityBuffer[index] = props->HeatConductivity;
             pressureBuffer[index] = voxel->amount;
@@ -182,6 +222,10 @@ void Volume::Chunk::GetShadersData(
                 (static_cast<uint32_t>(voxel->GetState() == State::Liquid) << 30);
         }
     }
+    // Update the temperature VBO with the new data
+    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * CHUNK_SIZE_SQUARED, temperatureVBOBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // resets voxel update data, DO NOT CALL WITHOUT LOCKING THE VOXELMUTEX, main use for simulation thread
@@ -207,7 +251,7 @@ void Volume::Chunk::Render(bool debugRender)
     }
 
     // Update the instance VBO with the new render data
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
     for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
         if(this->UpdateRenderBufferRanges[x].IsEmpty()) continue;
 

@@ -17,6 +17,22 @@ void main()
 )glsl";
 
 // ---------------------------------------------
+// Fragment shaders for rendering temperature
+// ---------------------------------------------
+const char* temperatureVoxelFragmentShader = R"glsl(
+#version 460 core
+in vec4 vertexColor;    // input color from vertex shader
+
+out vec4 FragColor;     // output color
+
+void main()
+{
+    FragColor = vertexColor; // This will be a shade of gray based on heat
+}
+
+)glsl";
+
+// ---------------------------------------------
 // Fragment shaders for rendering particles
 // ---------------------------------------------
 const char* voxelParticleFragmentShader = R"glsl(

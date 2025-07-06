@@ -68,7 +68,7 @@ namespace Volume
 			float pressureBuffer[],
 			uint32_t idBuffer[],
 			int chunkNumber
-		) const;
+		);
 
 
     	void SIM_ResetVoxelUpdateData();
@@ -82,7 +82,8 @@ namespace Volume
 		DirtyRect dirtyRect = DirtyRect();
 
 		// connectivity data
-		GLuint VAO;
+		GLuint renderVoxelVAO;
+		GLuint heatRenderingVAO;
 		// knows where to update render for chunk
 		Math::Range UpdateRenderBufferRanges[CHUNK_SIZE]; 
     private:
@@ -91,6 +92,8 @@ namespace Volume
 
 		// rendering data
 		ChunkVoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
-		GLuint instanceVBO;
+		GLuint renderVBO;
+
+		GLuint temperatureVBO;
     };
 }
