@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include "Voxel.h"
 
 using namespace Volume;
 
@@ -151,9 +152,9 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     //Fall below and if not falling try to move to the sides
 
     //falling down + acceleration + setting isFalling to near voxel handling
-    if (StepAlongDirection(matrix, vector::DOWN, Acceleration)) { //if is able to fall down
+    if (StepAlongDirection(matrix, vector::DOWN, GetAcceleration())) { //if is able to fall down
     	IsFalling = true;
-    	Acceleration += 1;
+    	IncrementAcceleration(1);
 
     	//try to set isFalling to true on adjasent voxels - simulates inertia
     	VoxelElement *left = matrix->VirtualGetAt(this->position + Vec2i(-1, 1));
@@ -255,9 +256,9 @@ void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
 
 void VoxelSolid::StopFalling()
 {
-    XVelocity = ((Acceleration / 6) / (rand()%2 + 1)) + 1;
+    XVelocity = ((GetAcceleration() / 6) / (rand()%2 + 1)) + 1;
     IsFalling = false;
-    Acceleration = 1;
+    SetAcceleration(1);
 }
 
 bool VoxelLiquid::Step(ChunkMatrix *matrix)
@@ -269,14 +270,14 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     updatedThisFrame = true;
 
     //falling down + acceleration
-    if (StepAlongDirection(matrix, vector::DOWN, Acceleration)) {
+    if (StepAlongDirection(matrix, vector::DOWN, GetAcceleration())) {
     	IsFalling = true;
-    	Acceleration += 1;
+		IncrementAcceleration(1);
     	return true;
     }
     else if (IsFalling) { //On the frame of the impact (stops falling)
     	IsFalling = false;
-    	Acceleration = 1;
+		SetAcceleration(1);
     }
 
 	VoxelElement* above = matrix->VirtualGetAt(this->position + vector::UP);
@@ -465,6 +466,7 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 	if(next == nullptr) return false; // if the next voxel is null, stop
 
 	if(next->properties == this->properties) return false; // if the next voxel is the same, stop
+	
 	if(next->GetState() != State::Gas) return false; // if the next voxel is not gas, stop
 	
 	if(direction.getY() > 0){
@@ -523,4 +525,20 @@ int Volume::GetLiquidVoxelPercentile(std::vector<VoxelElement *> voxels)
 			liquidCount++;
 	}
 	return (liquidCount * 100) / voxels.size();
+}
+
+void Volume::IGravity::SetAcceleration(short int acceleration)
+{
+	this->Acceleration = acceleration;
+	if (this->Acceleration > MAX_ACCELERATION) {
+		this->Acceleration = MAX_ACCELERATION; // prevent too high acceleration
+	}
+}
+
+void Volume::IGravity::IncrementAcceleration(short int amount)
+{
+	this->Acceleration += amount;
+	if (this->Acceleration > MAX_ACCELERATION) {
+		this->Acceleration = MAX_ACCELERATION; // prevent too high acceleration
+	}
 }

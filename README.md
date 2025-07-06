@@ -1,35 +1,50 @@
 # **VoxaEngine**
-> a small sand falling engine build with SDL2 and ImGui in C++
 
-VoxaEngine is currently capable of making sand falling simulations, heat transfer & pressure simulations.
+![Game Image](/Promotional-stuff/banner.png)
 
-Uses **SDL2** with **SDL_TTF** library and **Dear ImGui**. Engine is entirely programmed in C++.
+> #### **Disclaimer**: The definiton of a voxel was slightly bended when making this engine. A voxel here represents a set 3D **OR 2D** volume as a square/cube which is generally incorrect but so is pixel and calling them squares doesn't sound nice. 
 
-Features basic OpenGL compute shaders using **GLEW** for faster computing.
+VoxaEngine is currently capable of making sand falling simulations, fire simulations, heat transfer & pressure simulations.
+
+Uses **SDL2**, **FreeType** library and **Dear ImGui**. Engine is programmed in **C++** and rendered using **OpenGL**.
+
+Features *OpenGL* compute shaders using **GLEW** for faster simulation passes.
 
 ### Sand Falling simulation
+
+![Sand simulation Gif](/Promotional-stuff/sand-simulation.gif)
+
 Utilizes Dirty Rect's and multithreading for maximum performance.
 
 It is capable of simulating solids, liquids and gasses all interacting with each other.
 
-Each voxel has a density that changes the simulation's outcome.
+Each voxel has a density, which affects the outcome of the simulation.
 
 ### Heat Transfer simulation
+
 Capable of trasfering heat between voxels and changing voxel states based on temperature.
 
-Utilizes multithreading, sectioning and flagging chunks needing to compute heat for extra performance.
+Utilizes multithreading and sectioning for extra performance.
 
-Parts of the heat transfer is done on the GPU for extra performace
+Most of the heat transfer is done on the GPU for extra performace
 
 Simulation includes heat capacity and heat conductivity for each voxel for more realistic transfers.
 
 ### Pressure Transfer simulation
-Capable of simulating gas and liquid "pressures" and is able to compress or stretch those fluids in avalible space.
 
-A small part of the pressure simulation is done on the GPU for faster speeds
+Capable of simulating gas and liquid "pressures" and their ability to compress or stretch in avalible space.
+
+Most of the gas pressure simulation is done on the GPU for faster speeds
 
 ### Fire simulation
-Utilizing flamability and flame propagation with oxygen!
+
+![Fire GIF](/Promotional-stuff/fire.gif)
+
+Utilizing flamability and flame propagation with oxygen
+
+### OpenGL rendering
+
+SDL2 renderer and most of other renderers are not made with this kind of "voxel" rendering in mind. This is why this project runs on custom render shaders to provide maximum performance that wouldn't be possible without it
 
 # How To Run:
 
@@ -48,7 +63,6 @@ Make sure you have at least *CMake v3.10* installed and functional. Ensure you h
 You need to install these packages before compiling:
 - `glew` or `libglew-dev`
 - `sdl2` or `libsdl2-dev`
-- `sdl2_ttf`
 
 To compile simply run `cmake --preset release` and follow with `cmake --build build` in the project folder.
 

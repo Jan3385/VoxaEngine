@@ -11,7 +11,7 @@ using namespace std;
 
 bool GameEngine::placeUnmovableSolidVoxels = false;
 int GameEngine::placementRadius = 5;
-int GameEngine::placeVoxelAmount = 1;
+int GameEngine::placeVoxelAmount = 20;
 bool GameEngine::MovementKeysHeld[4] = {false, false, false, false};
 GameEngine* GameEngine::instance = nullptr;
 
@@ -22,8 +22,8 @@ GameEngine::GameEngine()
     Registry::VoxelRegistry::RegisterVoxels();
     this->renderer = new GameRenderer(&glContext);
     
-    Shader::InitializeBuffers();
-    Shader::InitializeComputeShaders();
+    ChunkShader::InitializeBuffers();
+    ChunkShader::InitializeComputeShaders();
 }
 
 GameEngine::~GameEngine()
@@ -47,7 +47,7 @@ void GameEngine::StartFrame()
 {
     this->FrameStartTime = SDL_GetPerformanceCounter();
 
-    SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
+    //SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
 }
 
 void GameEngine::EndFrame()
@@ -86,26 +86,14 @@ void GameEngine::Update()
         fixedUpdateTimer -= fixedDeltaTime;
     }
 
-    if(fixedUpdateTimer > fixedDeltaTime*2)
+    if(fixedUpdateTimer > fixedDeltaTime*2.5f)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
     
-    if(simulationUpdateTimer > simulationFixedDeltaTime*2)
+    if(simulationUpdateTimer > simulationFixedDeltaTime*2.5f)
         std::cout << "Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
 }
 void GameEngine::m_UpdateGridVoxel(int pass)
-{
-    chunkMatrix.voxelMutex.lock();
-    //delete all chunks marked for deletion
-    for(int32_t i = static_cast<int32_t>(chunkMatrix.GridSegmented[pass].size()) - 1; i >= 0; --i){
-        if(chunkMatrix.GridSegmented[pass][i]->ShouldChunkDelete(this->Player->Camera))
-        {
-            chunkMatrix.DeleteChunk(chunkMatrix.GridSegmented[pass][i]->GetPos());
-            continue;
-        }
-    }
-    chunkMatrix.voxelMutex.unlock();
-
-    chunkMatrix.voxelMutex.lock();
+{    
     #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
         auto& chunk = chunkMatrix.GridSegmented[pass][i];
@@ -114,7 +102,6 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         }
         chunk->dirtyRect.Update();
     }
-    chunkMatrix.voxelMutex.unlock();
 }
 void GameEngine::m_SimulationThread()
 {
@@ -141,13 +128,22 @@ void GameEngine::m_SimulationThread()
                     chunk->SIM_ResetVoxelUpdateData();
             }
         }
-        chunkMatrix.voxelMutex.unlock();
+
+        //delete all chunks marked for deletion
+        for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
+            if(chunkMatrix.Grid[i]->ShouldChunkDelete(this->Player->Camera))
+            {
+                chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
+            }
+        }
 
         //Voxel update logic
         for(uint8_t i = 0; i < 4; ++i)
         {
             m_UpdateGridVoxel(i);
         }
+
+        chunkMatrix.voxelMutex.unlock();
 
         chunkMatrix.UpdateParticles();
     }
@@ -156,7 +152,7 @@ void GameEngine::m_FixedUpdate()
 {
     std::lock_guard<std::mutex> lock(this->chunkMatrix.voxelMutex);
     // Run heat and pressure simulation
-    Shader::RunChunkShaders(chunkMatrix);
+    ChunkShader::RunChunkShaders(chunkMatrix);
 }
 
 void GameEngine::PollEvents()
@@ -218,6 +214,12 @@ void GameEngine::PollEvents()
                     this->Player->Camera.size = Vec2f(
                         this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
                         this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
+                    glViewport(0, 0, 
+                        this->windowEvent.window.data1, 
+                        this->windowEvent.window.data2
+                    );
+                    this->WindowSize.x(this->windowEvent.window.data1);
+                    this->WindowSize.y(this->windowEvent.window.data2);
                 break;
             }
             break;
@@ -238,9 +240,7 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_t:
                 Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
-                Registry::CreateGameObject(&chunkMatrix, renderer->LoadTexture("Textures/Barrel.bmp"),
-                    worldMousePos
-                );
+                Registry::CreateGameObject(&chunkMatrix, worldMousePos, "Textures/Barrel.bmp");
                 break;
             }
             break;
@@ -261,13 +261,16 @@ void GameEngine::StartSimulationThread()
     this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
 }
 
-void GameEngine::LoadChunkInView(Vec2i pos)
+Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
 {
-    if(!chunkMatrix.IsValidChunkPosition(pos)) return;
-    if(chunkMatrix.GetChunkAtChunkPosition(pos)) return;
+    if(!chunkMatrix.IsValidChunkPosition(pos)) return nullptr;
+    if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;
 
-    chunkMatrix.GenerateChunk(pos);
-    return;
+    chunkMatrix.chunkCreationMutex.lock();
+    Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
+    GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+    chunkMatrix.chunkCreationMutex.unlock();
+    return chunk;
 }
 
 void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)

@@ -26,8 +26,13 @@ namespace Volume {
 	class IGravity {
 	public:
 		virtual ~IGravity(){ };
-		short int Acceleration = 1;
+		short int GetAcceleration() const { return Acceleration; };
+		void SetAcceleration(short int acceleration);
+		void IncrementAcceleration(short int amount);
 		bool IsFalling = false;
+	private:
+		short int Acceleration = 1;
+		static constexpr short int MAX_ACCELERATION = 10;
 	};
 	//Base class for all voxel elements
 	class VoxelElement

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <glm/glm.hpp>
 
 class RGBA;
 
@@ -20,6 +21,7 @@ public:
     uint8_t a;
     RGBA();
     RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    glm::vec4 getGLMVec4() const;
     ~RGBA();
 };
 

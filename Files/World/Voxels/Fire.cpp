@@ -1,6 +1,8 @@
 #include "World/Voxels/Fire.h"
 #include "World/ChunkMatrix.h"
 
+#include <iostream>
+
 using namespace Volume;
 
 const RGBA FireVoxel::fireColors[8] = {
@@ -21,12 +23,20 @@ bool FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxel)
 {
     //check for oxygen and spread
     bool isAroundOxygen = false;
+    bool isAroundGas = false;
     for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(FireVoxel->position + dir);
         if(next && next->id == "Oxygen"){
             isAroundOxygen = true;
             break;
         }
+        if(next && next->GetState() == State::Gas){
+            isAroundGas = true;
+        }
+    }
+    if(FireVoxel->GetState() == State::Solid && !isAroundGas){
+        // if the fire is solid and there is no gas around, it will not spread
+        return false;
     }
 
     for(Vec2i dir : vector::AROUND8){
@@ -35,8 +45,8 @@ bool FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxel)
             //ignite based on Flamability
             if((rand()%256) - next->properties->Flamability < 0){
 
-                // only 20% chance to ignite if there is no oxygen around, 0% for solids
-                bool randomIgniteChance = next->GetState() != State::Solid && (rand() % 100 < 20);
+                // only 15% chance to ignite if there is no oxygen around
+                bool randomIgniteChance = rand() % 100 < 15;
                 if(isAroundOxygen || randomIgniteChance){
                     matrix->SetFireAt(next->position);
                 }
@@ -48,6 +58,10 @@ bool FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxel)
 
 bool FireVoxel::Step(ChunkMatrix *matrix)
 {
+    if(updatedThisFrame) {
+        return true; // already updated this frame
+    }
+
     //check for oxygen and spread
     bool isAroundOxygen = FireVoxel::Spread(matrix, this);
 
@@ -71,10 +85,6 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
         }
     }
 
-    //set random fire color
-    this->color = fireColors[rand() % fireColorCount];
-    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
-
     //15% chance to dissapear
     if (rand() % 100 < 15 || forcedLifetimeTime <= 0 || this->amount <= 0)
     {
@@ -88,6 +98,15 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
         return true;
     }
     VoxelGas::Step(matrix);
+
+    //set random fire color
+    this->color = FireVoxel::fireColors[rand() % fireColorCount];
+
+    //update the render buffer for chunk
+    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
+    if(chunk)
+        chunk->UpdateRenderBufferRanges[this->position.getX()%Chunk::CHUNK_SIZE].AddValue(this->position.getY()%Chunk::CHUNK_SIZE);
+
     return true;
 }
 
@@ -98,15 +117,18 @@ FireLiquidVoxel::FireLiquidVoxel(Vec2i position, Temperature temp, float amount)
 
 bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
 {
+    if(updatedThisFrame) {
+        return true; // already updated this frame
+    }
     //check for oxygen and spread
     bool isAroundOxygen = FireVoxel::Spread(matrix, this);
 
     //flame burns faster with oxygen
     float amountChange;
     if(isAroundOxygen)
-        amountChange = (this->amount * 0.0001f) + 0.5;
+        amountChange = (this->amount * 0.0001f) + 0.05f;
     else
-        amountChange = (this->amount * 0.00005f) + 1;
+        amountChange = (this->amount * 0.00005f) + 0.1f;
 
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
@@ -121,22 +143,24 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
     
     this->temperature = Temperature(std::max(this->temperature.GetCelsius(), temperatureChangePercent * 1000));
 
-    //set random fire color
-    this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
-    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
-
-    if (this->amount <= 5)
+    if (this->amount <= 1)
     {
         this->amount = std::max(this->amount, 0.1f);
 
-    	if(rand() % 100 < 10) // 10% chance to turn into ash
-            this->DieAndReplace(*matrix, "Ash");
-        else
-            this->DieAndReplace(*matrix, "Carbon_Dioxide");
+    	this->DieAndReplace(*matrix, "Carbon_Dioxide");
 
         return true;
     }
     VoxelLiquid::Step(matrix);
+
+    //set random fire color
+    this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
+
+    //update the render buffer for chunk
+    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
+    if(chunk)
+        chunk->UpdateRenderBufferRanges[this->position.getX()%Chunk::CHUNK_SIZE].AddValue(this->position.getY()%Chunk::CHUNK_SIZE);
+
     return true;
 }
 
@@ -147,15 +171,18 @@ FireSolidVoxel::FireSolidVoxel(Vec2i position, Temperature temp, float amount, b
 
 bool FireSolidVoxel::Step(ChunkMatrix *matrix)
 {
+    if(updatedThisFrame) {
+        return true; // already updated this frame
+    }
     //check for oxygen and spread
     bool isAroundOxygen = FireVoxel::Spread(matrix, this);
 
     //flame burns faster with oxygen
     float amountChange;
     if(isAroundOxygen)
-        amountChange = (this->amount * 0.00005f) + 0.5f;
+        amountChange = (this->amount * 0.00005f) + 0.05f;
     else
-        amountChange = (this->amount * 0.000025f) + 0.5f;
+        amountChange = (this->amount * 0.000025f) + 0.05f;
 
     amountChange = std::min(amountChange, this->amount); // prevent negative amount
 
@@ -170,11 +197,7 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
     
     this->temperature = Temperature(std::max(this->temperature.GetCelsius(), temperatureChangePercent * 1000));
 
-    //set random fire color
-    this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
-    matrix->GetChunkAtWorldPosition(this->position)->dirtyRender = true;
-
-    if (this->amount <= 5)  
+    if (this->amount <= 1)  
     {
         this->amount = std::max(this->amount, 0.1f);
 
@@ -185,6 +208,16 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
 
         return true;
     }
+
     VoxelSolid::Step(matrix);
+
+    //set random fire color
+    this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
+
+    //update the render buffer for chunk
+    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
+    if(chunk)
+        chunk->UpdateRenderBufferRanges[this->position.getX()%Chunk::CHUNK_SIZE].AddValue(this->position.getY()%Chunk::CHUNK_SIZE);
+
     return true;
 }

@@ -4,32 +4,6 @@
 #include "ChunkMatrix.h"
 
 using namespace Volume;
-
-void ChunkMatrix::RenderParticles(SDL_Renderer &renderer, Vec2f offset) const
-{
-    SDL_SetRenderDrawBlendMode(&renderer, SDL_BLENDMODE_BLEND);
-    for (auto& particle : particles) {
-        const RGBA& color = particle->color;
-
-        SDL_SetRenderDrawColor(&renderer, color.r, color.g, color.b, color.a);
-
-        Vec2f particlePos = particle->GetPosition();
-        SDL_Rect rect = {
-            static_cast<int>((particlePos.getX()) * Chunk::RENDER_VOXEL_SIZE + offset.getX()),
-            static_cast<int>((particlePos.getY()) * Chunk::RENDER_VOXEL_SIZE + offset.getY()),
-            Chunk::RENDER_VOXEL_SIZE,
-            Chunk::RENDER_VOXEL_SIZE
-        };
-        SDL_RenderFillRect(&renderer, &rect);
-    }
-}
-void ChunkMatrix::RenderObjects(SDL_Renderer &renderer, Vec2f offset) const
-{
-    SDL_SetRenderDrawBlendMode(&renderer, SDL_BLENDMODE_BLEND);
-    for (const auto& gameObject : gameObjects) {
-        gameObject->Render(&renderer, offset);
-    }
-}
 ChunkMatrix::ChunkMatrix()
 {
     this->particleGenerators.reserve(15);
@@ -175,7 +149,6 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 {
     Chunk *chunk = new Chunk(pos);
     // Fill the voxels array with Voxel objects
-    #pragma omp parallel for collapse(2)
     for (int x = 0; x < Chunk::CHUNK_SIZE; ++x) {
         for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
     		//Create voxel determining on its position
@@ -209,6 +182,7 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		}
         }
     }
+    chunk->lastCheckedCountDown = 20;
 
     uint8_t AssignedGridPass = 0;
     if (pos.getX() % 2 != 0) AssignedGridPass += 1;
@@ -256,7 +230,10 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
 
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
     if(!chunk){
+        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
+        GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        chunkCreationMutex.unlock();
     }
 
     Volume::VoxelElement *voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
@@ -311,7 +288,10 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
+        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
+        GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        chunkCreationMutex.unlock();
     }
 
     //delete the old voxel if it exists
@@ -323,10 +303,10 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
 
     chunk->dirtyRect.Include(localPos);
+    chunk->UpdateRenderBufferRanges[localPos.getX()].AddValue(localPos.getY());
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
-    chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 }
 // Same as VirtualSetAt but does not delete the old voxel
 void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
@@ -347,17 +327,20 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
+        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
+        GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        chunkCreationMutex.unlock();
     }
 
     // Set the new voxel and mark for update
     chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
 
     chunk->dirtyRect.Include(localPos);
+    chunk->UpdateRenderBufferRanges[localPos.getX()].AddValue(localPos.getY());
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
-    chunk->dirtyRender = true; // Mark the chunk as dirty for rendering
 }
 
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids, float amount, bool destructive)
@@ -372,6 +355,12 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive)
 
     if(!destructive){
         Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(voxel->position);
+
+        if(!replacedVoxel){
+            // if no voxel to replace, a problem must have happened. Stop
+            delete voxel;
+            return;
+        }
 
         //still remain destructive if the voxel its trying to move is unmovable
         if(replacedVoxel->IsUnmoveableSolid()){

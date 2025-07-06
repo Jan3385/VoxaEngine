@@ -10,11 +10,12 @@ public:
 	ChunkMatrix();
 	~ChunkMatrix();
 
-	// cleans the chunkMatrix, so that its safe to invoke TFF_CloseFont
+	// cleans the chunkMatrix
 	void cleanup();
 	
 	//mutex for changing the voxels, mainly handeled by the simulation thread
 	std::mutex voxelMutex;
+	std::mutex chunkCreationMutex;
 	//not precomputed array of chunks
 	std::vector<Volume::Chunk*> Grid;
 	//precomputed grids for simulation passing -> 0 - 3 passees
@@ -59,8 +60,6 @@ public:
 
 	//particle functions
 	void UpdateParticles();
-	void RenderParticles(SDL_Renderer& renderer, Vec2f offset) const;
-	void RenderObjects(SDL_Renderer& renderer, Vec2f offset) const;
 
 	//Static functions
 	static Vec2i WorldToChunkPosition(const Vec2f& pos);

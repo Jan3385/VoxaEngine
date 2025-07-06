@@ -1,5 +1,4 @@
 #include "Math/Vector.h"
-#include "Vector.h"
 #include <iostream>
 
 float Vec2f::getX() const

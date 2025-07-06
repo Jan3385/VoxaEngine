@@ -9,6 +9,7 @@
 #include "GameEngine.h"
 #include "World/Particles/SolidFallingParticle.h"
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
+#include "Chunk.h"
 
 
 using namespace Volume; 
@@ -24,7 +25,12 @@ void DirtyRect::Include(Vec2i pos)
 void DirtyRect::Update()
 {
     this->start = m_startW-Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);  
-    this->end = m_endW+Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);
+    this->end = m_endW+Vec2i(DIRTY_RECT_PADDING*2, DIRTY_RECT_PADDING*2);
+
+    this->start.x(std::max(this->start.getX(), 0));
+    this->start.y(std::max(this->start.getY(), 0));
+    this->end.x(std::min(this->end.getX(), static_cast<int>(Chunk::CHUNK_SIZE)));
+    this->end.y(std::min(this->end.getY(), static_cast<int>(Chunk::CHUNK_SIZE)));
 
     m_startW = Vec2i(INT_MAX, INT_MAX);
     m_endW = Vec2i(INT_MIN, INT_MIN);
@@ -37,22 +43,21 @@ bool DirtyRect::IsEmpty() const
 
 Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 {
-    this->font = TTF_OpenFont("Fonts/RobotoFont.ttf", 12);
-    
-    if(!this->font)
-        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
-    //std::cout << "Chunk created at: " << m_x << "," << m_y << std::endl;
+    Vec2i chunkWorldPos = Vec2i(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE);
+    for(uint8_t x = 0; x < CHUNK_SIZE; x++){
+        for(uint8_t y = 0; y < CHUNK_SIZE; y++){
+            renderData[x][y].position = glm::ivec2(
+                (chunkWorldPos.getX() + x), //* RENDER_VOXEL_SIZE,
+                (chunkWorldPos.getY() + y) //* RENDER_VOXEL_SIZE
+            );
+            renderData[x][y].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
+        }
+        this->UpdateRenderBufferRanges[x] = Math::Range(0, CHUNK_SIZE - 1);
+    }
 }
 
 Volume::Chunk::~Chunk()
 {
-
-    if (this->font != nullptr) {
-        TTF_CloseFont(this->font);
-        this->font = nullptr;
-    }
-    SDL_FreeSurface(this->chunkSurface);
-
     for (uint8_t i = 0; i < static_cast<uint8_t>(voxels.size()); i++)
     {
         for (uint8_t j = 0; j < static_cast<uint8_t>(voxels[i].size()); j++)
@@ -60,11 +65,82 @@ Volume::Chunk::~Chunk()
             delete voxels[i][j];
         }
     }
+
+    // Delete OpenGL resources
+    glDeleteVertexArrays(1, &renderVoxelVAO);
+    glDeleteBuffers(1, &renderVBO);
+    renderVoxelVAO = 0;
+    renderVBO = 0;
+
+    glDeleteVertexArrays(1, &heatRenderingVAO);
+    glDeleteBuffers(1, &temperatureVBO);
+    heatRenderingVAO = 0;
+    temperatureVBO = 0;
+}
+void Volume::Chunk::SetVBOData()
+{
+    glGenBuffers(1, &renderVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
+
+    glGenBuffers(1, &temperatureVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
+
+    // voxel rendering VAO setup ----
+    glGenVertexArrays(1, &renderVoxelVAO);
+    glBindVertexArray(renderVoxelVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::instance->renderer->quadVBO);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
+    glVertexAttribIPointer(1, 2, GL_INT, sizeof(ChunkVoxelRenderData), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribDivisor(1, 1); // instance attribute
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(ChunkVoxelRenderData), (void*)(sizeof(glm::vec2)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+
+    glBindVertexArray(0);
+    // --------------
+
+    // heat rendering VAO setup ----
+    glGenVertexArrays(1, &heatRenderingVAO);
+    glBindVertexArray(heatRenderingVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::instance->renderer->quadVBO);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0); // location 0
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
+    glVertexAttribIPointer(1, 2, GL_INT, sizeof(ChunkVoxelRenderData), (void*)0); // location 1
+    glEnableVertexAttribArray(1);
+    glVertexAttribDivisor(1, 1);
+
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(ChunkVoxelRenderData), (void*)(sizeof(glm::vec2))); // location 2
+    glEnableVertexAttribArray(2);
+    glVertexAttribDivisor(2, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0); // location 3: heat
+    glEnableVertexAttribArray(3);
+    glVertexAttribDivisor(3, 1);
+
+    glBindVertexArray(0);
+    // --------------
+
+    // Update the instance VBO with the new render data
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(ChunkVoxelRenderData) * CHUNK_SIZE_SQUARED, renderData);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;
+    if(Camera.Expand(Chunk::CHUNK_SIZE/2).Overlaps(this->GetAABB())) return false;
 
     return true;
 }
@@ -114,8 +190,9 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 }
 
 /**
- * Fills the provided buffers with data for shaders.
+ * Fills the provided buffers with data for compute shaders.
  * provides flattened arrays of voxel data for shaders
+ * Updates the internal temperature OpenGL buffer for the chunk
  */
 void Volume::Chunk::GetShadersData(
     float temperatureBuffer[], 
@@ -123,9 +200,10 @@ void Volume::Chunk::GetShadersData(
     float heatConductivityBuffer[], 
     float pressureBuffer[], 
     uint32_t idBuffer[], 
-    int chunkNumber) const
+    int chunkNumber)
 {
-    #pragma omp parallel for collapse(2)
+    float temperatureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+    #pragma omp parallel for
     for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
         for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
             int index = chunkNumber * Chunk::CHUNK_SIZE_SQUARED + y * Chunk::CHUNK_SIZE + x;
@@ -133,7 +211,9 @@ void Volume::Chunk::GetShadersData(
             Volume::VoxelElement* voxel = this->voxels[x][y];
             const Volume::VoxelProperty* props = voxel->properties;
 
-            temperatureBuffer[index] = voxel->temperature.GetCelsius();
+            temperatureVBOBuffer[x][y] = voxel->temperature.GetCelsius();
+            temperatureBuffer[index] = temperatureVBOBuffer[x][y];
+
             heatCapacityBuffer[index] = props->HeatCapacity;
             heatConductivityBuffer[index] = props->HeatConductivity;
             pressureBuffer[index] = voxel->amount;
@@ -142,6 +222,10 @@ void Volume::Chunk::GetShadersData(
                 (static_cast<uint32_t>(voxel->GetState() == State::Liquid) << 30);
         }
     }
+    // Update the temperature VBO with the new data
+    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * CHUNK_SIZE_SQUARED, temperatureVBOBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 // resets voxel update data, DO NOT CALL WITHOUT LOCKING THE VOXELMUTEX, main use for simulation thread
@@ -157,102 +241,37 @@ void Volume::Chunk::SIM_ResetVoxelUpdateData()
     }
 }
 
-SDL_Surface* Volume::Chunk::Render(bool debugRender)
+void Volume::Chunk::Render(bool debugRender)
 {
-    uint8_t x1 = 0;
-    uint8_t y1 = 0;
-    uint16_t x2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
-    uint16_t y2 = CHUNK_SIZE * RENDER_VOXEL_SIZE;
-
-    if(this->chunkSurface == nullptr) {
-        this->chunkSurface = SDL_CreateRGBSurfaceWithFormat(0, CHUNK_SIZE * RENDER_VOXEL_SIZE, CHUNK_SIZE * RENDER_VOXEL_SIZE, 32, SDL_PIXELFORMAT_RGBA8888);
-    }
-    else if(this->dirtyRender || debugRender){
-        this->dirtyRender = false;
-        //SDL_FreeSurface(this->chunkSurface);
-
-        //render individual voxels
-        for (int y = 0; y < CHUNK_SIZE; ++y) {
-            for (int x = 0; x < CHUNK_SIZE; ++x) {
-                RGBA& color = voxels[x][y]->color;
-                SDL_Rect rect = {
-                    x*RENDER_VOXEL_SIZE,
-                    y*RENDER_VOXEL_SIZE,
-                    RENDER_VOXEL_SIZE,
-                    RENDER_VOXEL_SIZE
-                };
-                SDL_FillRect(this->chunkSurface, &rect, SDL_MapRGBA(this->chunkSurface->format, color.r, color.g, color.b, color.a));
-            }
+    for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
+        if(this->UpdateRenderBufferRanges[x].IsEmpty()) continue;
+        for(uint8_t y = this->UpdateRenderBufferRanges[x].Start(); y <= this->UpdateRenderBufferRanges[x].End(); ++y) {
+            renderData[x][y].color = voxels[x][y]->color.getGLMVec4();
         }
-        if(debugRender){
-            // Render chunk position as text
-            SDL_Color textColor = {255, 255, 255, 255};
-            std::string text = std::to_string(m_x) + "," + std::to_string(m_y);
+    }
 
-            // Render text to a surface
-            SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
+    // Update the instance VBO with the new render data
+    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
+    for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
+        if(this->UpdateRenderBufferRanges[x].IsEmpty()) continue;
 
-            // Copy the text surface to the target surface
-            SDL_Rect textRect = {x1, y1, textSurface->w, textSurface->h};
-            SDL_BlitSurface(textSurface, nullptr, this->chunkSurface, &textRect);
-
-            // Free the text surface
-            SDL_FreeSurface(textSurface);
+        if(this->UpdateRenderBufferRanges[x].Start() < 0 || 
+           this->UpdateRenderBufferRanges[x].End() >= CHUNK_SIZE) {
+            std::cerr << "Chunk " << m_x << ", " << m_y << " has invalid render range: "
+                      << this->UpdateRenderBufferRanges[x].Start() << " - "
+                      << this->UpdateRenderBufferRanges[x].End() << std::endl;
+            continue;
         }
-        
+
+        glBufferSubData(GL_ARRAY_BUFFER,
+            sizeof(ChunkVoxelRenderData) * (CHUNK_SIZE * x + this->UpdateRenderBufferRanges[x].Start()), 
+            sizeof(ChunkVoxelRenderData) * (this->UpdateRenderBufferRanges[x].End() - this->UpdateRenderBufferRanges[x].Start() + 1), 
+            &renderData[x][this->UpdateRenderBufferRanges[x].Start()]
+        );
+
+        this->UpdateRenderBufferRanges[x].Reset();
     }
-
-    if(!debugRender) return this->chunkSurface;
-
-    // Determine border color based on update state
-    Uint32 borderColor = SDL_MapRGBA(this->chunkSurface->format, 255, 0, 0, 255);
-
-    // Draw border (manual pixel manipulation for lines)
-    
-    SDL_Rect topLine = {x1, y1, x2 - x1, 1};           // Top
-    SDL_Rect bottomLine = {x1, y2 - 1, x2 - x1, 1};    // Bottom
-    SDL_Rect leftLine = {x1, y1, 1, y2 - y1};          // Left
-    SDL_Rect rightLine = {x2 - 1, y1, 1, y2 - y1};     // Right
-
-    SDL_FillRect(this->chunkSurface, &topLine, borderColor);
-    SDL_FillRect(this->chunkSurface, &bottomLine, borderColor);
-    SDL_FillRect(this->chunkSurface, &leftLine, borderColor);
-    SDL_FillRect(this->chunkSurface, &rightLine, borderColor);
-
-    //draws a blue box at the corner of the chunk if the heat updated on the chunk
-    if(ShouldChunkCalculateHeat()){
-        SDL_Rect box = {x1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, y1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, 10, 10};
-        SDL_FillRect(this->chunkSurface, &box, SDL_MapRGBA(this->chunkSurface->format, 0, 0, 255, 255));
-    }
-
-    //draws a red box at the corner of the chunk if the pressure updated on the chunk
-    if(ShouldChunkCalculatePressure()){
-        SDL_Rect box = {x1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 15, y1 + CHUNK_SIZE * RENDER_VOXEL_SIZE - 25, 10, 10};
-        SDL_FillRect(this->chunkSurface, &box, SDL_MapRGBA(this->chunkSurface->format, 255, 0, 0, 255));
-    }
-
-    //draws the dirty rect borders
-    if(!this->dirtyRect.IsEmpty()){
-        SDL_Rect dirtyRect = {
-            this->dirtyRect.start.getX() * RENDER_VOXEL_SIZE,
-            this->dirtyRect.start.getY() * RENDER_VOXEL_SIZE,
-            (this->dirtyRect.end.getX() - this->dirtyRect.start.getX() + 1) * RENDER_VOXEL_SIZE,
-            (this->dirtyRect.end.getY() - this->dirtyRect.start.getY() + 1) * RENDER_VOXEL_SIZE
-        };
-
-        // Draw the dirty rect borders
-        SDL_Rect topLine = {dirtyRect.x, dirtyRect.y, dirtyRect.w, 1};           // Top
-        SDL_Rect bottomLine = {dirtyRect.x, dirtyRect.y + dirtyRect.h - 1, dirtyRect.w, 1};    // Bottom
-        SDL_Rect leftLine = {dirtyRect.x, dirtyRect.y, 1, dirtyRect.h};          // Left
-        SDL_Rect rightLine = {dirtyRect.x + dirtyRect.w - 1, dirtyRect.y, 1, dirtyRect.h};     // Right
-
-        SDL_FillRect(this->chunkSurface, &topLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
-        SDL_FillRect(this->chunkSurface, &bottomLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
-        SDL_FillRect(this->chunkSurface, &leftLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
-        SDL_FillRect(this->chunkSurface, &rightLine, SDL_MapRGBA(this->chunkSurface->format, 0, 255, 0, 255));
-    }
-
-    return this->chunkSurface;
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 Vec2i Volume::Chunk::GetPos() const
 {
