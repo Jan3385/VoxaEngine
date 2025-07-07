@@ -48,6 +48,8 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 
 # How To Run:
 
+Most libraries are dynamically fetched, so expect the first build to take a while
+
 ## Windows 10/11
 
 Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. 
@@ -61,8 +63,8 @@ After that, run `VoxaEngine.exe` inside the build folder.
 Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. 
 
 You need to install these packages before compiling:
-- `glew` or `libglew-dev`
-- `sdl2` or `libsdl2-dev`
+- `libglew-dev`
+- `libgl1-mesa-dev` or `libgl-dev`
 
 To compile simply run `cmake --preset release` and follow with `cmake --build build` in the project folder.
 

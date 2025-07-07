@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <glew.h>
+#include <GL/glew.h>
 
 class ChunkMatrix; // Forward declaration
 

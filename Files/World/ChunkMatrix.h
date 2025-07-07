@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glew.h>
+#include <GL/glew.h>
 
 #include "World/Chunk.h"
 #include "GameObject/Player.h"

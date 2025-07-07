@@ -3,7 +3,7 @@
 #include <map>
 #include <vector>
 #include <memory>
-#include <glew.h>
+#include <GL/glew.h>
 #include "Math/Vector.h"
 #include "Registry/VoxelRegistry.h"
 

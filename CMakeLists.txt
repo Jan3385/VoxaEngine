@@ -2,108 +2,162 @@ set(CMAKE_GENERATOR "Ninja")
 
 cmake_minimum_required(VERSION 3.10)
 
-# Set compiler
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 
+message(STATUS "Using CMake generator: ${CMAKE_GENERATOR}")
+
 project(VoxaEngine VERSION 0.2.1 LANGUAGES C CXX)
-
-# SDL2 paths
-set(SDL2_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/SDL2")
-set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
-set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
-set(SDL2_DLL "${CMAKE_SOURCE_DIR}/SDL2/SDL2.dll")
-
-set(IMGUI_INCLUDE_HEADER_DIR "${CMAKE_SOURCE_DIR}/SDL2/include/imgui")
-set(IMGUI_INCLUDE_CPP_DIR "${CMAKE_SOURCE_DIR}/imgui")
-
-
-set(GLEW_INCLUDE "${CMAKE_SOURCE_DIR}/GLEW/include/GL")
-set(GLEW_DLL "${CMAKE_SOURCE_DIR}/GLEW/glew32.dll")
-
 
 set(FONTS_FOLDER "${CMAKE_SOURCE_DIR}/Fonts")
 set(TEXTURES_FOLDER "${CMAKE_SOURCE_DIR}/Textures")
 
-# Box2D integration
-set(BOX2D_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/box2D/include")
-file(GLOB_RECURSE BOX2D_SOURCES "${CMAKE_SOURCE_DIR}/box2D/src/*.c")
-
-set_source_files_properties(${BOX2D_SOURCES} PROPERTIES LANGUAGE C)
-
-# Add include directories for SDL2
-include_directories(${SDL2_INCLUDE_DIR} ${IMGUI_INCLUDE_HEADER_DIR} ${GLEW_INCLUDE} ${BOX2D_INCLUDE_DIR})
+message(STATUS "Fetching dependencies...")
 
 include(FetchContent)
 
-# Add GLM (OpenGL Mathematics) library
+# SDL2
 FetchContent_Declare(
-    glm
-    GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG 1.0.1
+  SDL2
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+  GIT_TAG release-2.32.2
+)
+FetchContent_MakeAvailable(SDL2)
+
+# Box2D
+FetchContent_Declare(
+  box2d
+  GIT_REPOSITORY https://github.com/erincatto/box2d.git
+  GIT_TAG v3.1.1
+)
+FetchContent_MakeAvailable(box2d)
+
+# GLM
+FetchContent_Declare(
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG 1.0.1
 )
 FetchContent_MakeAvailable(glm)
 
-# Add FreeType library
+# FreeType
 FetchContent_Declare(
-    freetype
-    GIT_REPOSITORY https://github.com/freetype/freetype.git
-    GIT_TAG VER-2-13-3
+  freetype
+  GIT_REPOSITORY https://github.com/freetype/freetype.git
+  GIT_TAG VER-2-13-3
 )
 FetchContent_MakeAvailable(freetype)
 
+# ImGui (no native CMake build)
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
+  GIT_TAG v1.92.0
+)
+FetchContent_MakeAvailable(imgui)
+
+message(STATUS "Dependencies fetched")
+
+# Add ImGui manually as a static library
+add_library(imgui STATIC
+  ${imgui_SOURCE_DIR}/imgui.cpp
+  ${imgui_SOURCE_DIR}/imgui_draw.cpp
+  ${imgui_SOURCE_DIR}/imgui_tables.cpp
+  ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/imgui_demo.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
+  ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui PUBLIC
+  ${imgui_SOURCE_DIR}
+  ${imgui_SOURCE_DIR}/backends
+)
+
+# Link SDL2 to imgui so SDL2 headers are available for imgui_impl_sdl2.cpp
+if(TARGET SDL2-static)
+  target_link_libraries(imgui PUBLIC SDL2-static)
+elseif(TARGET SDL2)
+  target_link_libraries(imgui PUBLIC SDL2)
+endif()
+
+message(STATUS "ImGui library created")
+
 # Automatically include all .cpp files in the Files folder
 file(GLOB_RECURSE SOURCES "Files/*.cpp")
-file(GLOB_RECURSE IMGUI_SOURCES "${IMGUI_INCLUDE_CPP_DIR}/*.cpp")
 
-add_executable(VoxaEngine ${SOURCES} ${IMGUI_SOURCES} ${BOX2D_SOURCES})
+add_executable(VoxaEngine ${SOURCES})
 
 # OpenMP support (pragma omp)
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(VoxaEngine PRIVATE OpenMP::OpenMP_CXX)
+  target_link_libraries(VoxaEngine PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
-# Link GLEW library
+# check OpenGL
 find_package(OpenGL REQUIRED)
+
+# Link all FetchContent dependencies
+# SDL2 target name check (static or shared)
+if(TARGET SDL2-static)
+  target_link_libraries(VoxaEngine PRIVATE SDL2-static)
+elseif(TARGET SDL2)
+  target_link_libraries(VoxaEngine PRIVATE SDL2)
+endif()
+
+message(STATUS "Linking platform-specific libraries...")
+
+# Platform-specific GLEW linking
 if(WIN32)
-    set(GLEW_LIBRARY "${CMAKE_SOURCE_DIR}/GLEW/lib/Release/x64/glew32.lib")
-    target_link_libraries(VoxaEngine PRIVATE ${GLEW_LIBRARY} OpenGL::GL)
+  target_link_libraries(VoxaEngine PRIVATE
+    imgui
+    box2d
+    glm
+    freetype
+    ${PROJECT_SOURCE_DIR}/GLEW/lib/Release/x64/glew32s.lib
+    OpenGL::GL
+  )
+
+  # Link local GLEW static library
+  target_include_directories(VoxaEngine PRIVATE ${PROJECT_SOURCE_DIR}/GLEW/include)
+  add_definitions(-DGLEW_STATIC)
 elseif(UNIX)
-    find_package(GLEW REQUIRED)
-    target_link_libraries(VoxaEngine PRIVATE ${GLEW_LIBRARIES} OpenGL::GL)
+  find_package(GLEW REQUIRED)
+  target_link_libraries(VoxaEngine PRIVATE
+    imgui
+    box2d
+    glm
+    freetype
+    GLEW::GLEW
+    OpenGL::GL
+  )
 endif()
 
-# Link SDL2 libraries
-if (WIN32)
-    set(SDL2_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2.dll.a")
-    set(SDL2_MAIN_LIBRARY "${CMAKE_SOURCE_DIR}/SDL2/lib/libSDL2main.a")
-    target_link_libraries(VoxaEngine PRIVATE ${SDL2_LIBRARY} ${SDL2_MAIN_LIBRARY})
-elseif (UNIX)
-    find_package(SDL2 REQUIRED)
-    target_include_directories(VoxaEngine PRIVATE ${SDL2_INCLUDE_DIRS})
-endif()
+message(STATUS "Linking libraries completed")
 
-# Link GLM library
-target_link_libraries(VoxaEngine PRIVATE glm)
-message(STATUS "GLM source dir: ${glm_SOURCE_DIR}")
+# SDL main function override
+add_definitions(-DSDL_MAIN_HANDLED)
 
-# Link FreeType library
-target_link_libraries(VoxaEngine PRIVATE freetype)
-
-# Link project libraries
+# Include project Files folder
 target_include_directories(VoxaEngine PRIVATE ${PROJECT_SOURCE_DIR}/Files)
 
+# Add include directories for fetched libraries
+target_include_directories(VoxaEngine PRIVATE
+  ${box2d_SOURCE_DIR}/include
+  ${glm_SOURCE_DIR}
+  ${freetype_SOURCE_DIR}/include
+)
+
+
+# Set C++ standard
 set_property(TARGET VoxaEngine PROPERTY CXX_STANDARD 20)
 
+message(STATUS "Running post-build commands...")
+
+# Post build: copy Fonts and Textures
 add_custom_command(TARGET VoxaEngine POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_DLL} $<TARGET_FILE_DIR:VoxaEngine>
-
-    COMMAND ${CMAKE_COMMAND} -E copy ${GLEW_DLL} $<TARGET_FILE_DIR:VoxaEngine>
-
-    COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Fonts
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${FONTS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Fonts
-    
-    COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Textures
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEXTURES_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Textures
+  COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Fonts
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${FONTS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Fonts
+  COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Textures
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEXTURES_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Textures
 )

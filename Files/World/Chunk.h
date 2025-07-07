@@ -4,7 +4,7 @@
 #include <array>
 #include <mutex>
 #include <vector>
-#include <glew.h>
+#include <GL/glew.h>
 
 #include <glm/glm.hpp>
 

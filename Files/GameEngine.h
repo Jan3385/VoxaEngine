@@ -5,10 +5,9 @@
 #include <atomic>
 #include <list>
 
-#include <glew.h>
+#include <GL/glew.h>
 
 #include <SDL.h>
-#include <SDL_ttf.h>
 
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
@@ -32,7 +31,7 @@ private:
     SDL_GLContext glContext;
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
-
+    
     std::thread simulationThread;
 
     float fixedUpdateTimer = 0;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SDL.h>
-#include <glew.h>
+#include <GL/glew.h>
 
 #include "Math/Vector.h"
 #include "Math/AABB.h"

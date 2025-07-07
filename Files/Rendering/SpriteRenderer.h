@@ -3,7 +3,7 @@
 #include "Shader/Rendering/RenderingShader.h"
 #include "Math/Vector.h"
 
-#include <glew.h>
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 
 class GameObject;
