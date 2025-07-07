@@ -48,8 +48,8 @@ namespace Volume
     	static const unsigned short int RENDER_VOXEL_SIZE = 4; // 4
     	static const unsigned short int CHUNK_SIZE = 64; // 64
 		static const unsigned short int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE; // 4096
-    	//VoxelElement*** voxels;
-    	std::array<std::array<VoxelElement*, CHUNK_SIZE>, CHUNK_SIZE> voxels;
+    	
+		VoxelElement* voxels[CHUNK_SIZE][CHUNK_SIZE];
 
     	Chunk(const Vec2i& pos);
     	~Chunk();

@@ -58,9 +58,9 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
 
 Volume::Chunk::~Chunk()
 {
-    for (uint8_t i = 0; i < static_cast<uint8_t>(voxels.size()); i++)
+    for (unsigned short int i = 0; i < Chunk::CHUNK_SIZE; i++)
     {
-        for (uint8_t j = 0; j < static_cast<uint8_t>(voxels[i].size()); j++)
+        for (unsigned short int  j = 0; j < Chunk::CHUNK_SIZE; j++)
         {
             delete voxels[i][j];
         }
