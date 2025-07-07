@@ -169,13 +169,13 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     Game::Player *player = GameEngine::instance->Player;
 
     glm::mat4 voxelProj = glm::ortho(
-        player->Camera.corner.getX(), player->Camera.corner.getX() + player->Camera.size.getX(), 
-        player->Camera.corner.getY() + player->Camera.size.getY(), player->Camera.corner.getY(),
+        player->Camera.corner.x, player->Camera.corner.x + player->Camera.size.x, 
+        player->Camera.corner.y + player->Camera.size.y, player->Camera.corner.y,
         -1.0f, 1.0f
     );
     glm::mat4 screenProj = glm::ortho(
-        0.0f, player->Camera.size.getX(), 
-        player->Camera.size.getY(), 0.0f,
+        0.0f, player->Camera.size.x, 
+        player->Camera.size.y, 0.0f,
         -1.0f, 1.0f
     );
 
@@ -227,8 +227,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     this->temperatureRenderProgram.SetBool("showHeatAroundCursor", this->showHeatAroundCursor);
     this->temperatureRenderProgram.SetVec2("cursorPosition", 
         glm::vec2(
-            mousePos.getX() / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getX(),
-            mousePos.getY() / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getY()
+            mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x,
+            mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y
         )
     );
     
@@ -260,12 +260,12 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
             // draw chunk AABBs
             if(chunk->GetAABB().Overlaps(player->Camera)) {
                 glm::vec2 start = {
-                    chunk->GetAABB().corner.getX(),
-                    chunk->GetAABB().corner.getY()
+                    chunk->GetAABB().corner.x,
+                    chunk->GetAABB().corner.y
                 };
                 glm::vec2 end = {
-                    chunk->GetAABB().corner.getX() + chunk->GetAABB().size.getX(),
-                    chunk->GetAABB().corner.getY() + chunk->GetAABB().size.getY()
+                    chunk->GetAABB().corner.x + chunk->GetAABB().size.x,
+                    chunk->GetAABB().corner.y + chunk->GetAABB().size.y
                 };
 
                 std::vector<glm::vec2> points = {
@@ -277,11 +277,11 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                 this->DrawClosedShape(points, red, voxelProj, 2.0f);
 
                 fontRenderer.RenderText(
-                    std::to_string(chunk->GetPos().getX()) + 
+                    std::to_string(chunk->GetPos().x) + 
                         ", " + 
-                        std::to_string(chunk->GetPos().getY()),
+                        std::to_string(chunk->GetPos().y),
                     fontRenderer.pixelFont,
-                    Vec2f(chunk->GetAABB().corner.getX()+2, chunk->GetAABB().corner.getY()+chunk->GetAABB().size.getY()-1),
+                    Vec2f(chunk->GetAABB().corner.x+2, chunk->GetAABB().corner.y+chunk->GetAABB().size.y-1),
                     1.0f,
                     glm::vec4(0.3f, 0.3f, 0.3f, 0.6f),
                     voxelProj
@@ -291,12 +291,12 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                 if(chunk->dirtyRect.IsEmpty()) continue;
 
                 glm::vec2 dirtyStart = {
-                    chunk->dirtyRect.start.getX() + chunk->GetAABB().corner.getX(),
-                    chunk->dirtyRect.start.getY() + chunk->GetAABB().corner.getY()
+                    chunk->dirtyRect.start.x + chunk->GetAABB().corner.x,
+                    chunk->dirtyRect.start.y + chunk->GetAABB().corner.y
                 };
                 glm::vec2 dirtyEnd = {
-                    chunk->dirtyRect.end.getX() - chunk->dirtyRect.start.getX() + dirtyStart.x,
-                    chunk->dirtyRect.end.getY() - chunk->dirtyRect.start.getY() + dirtyStart.y
+                    chunk->dirtyRect.end.x - chunk->dirtyRect.start.x + dirtyStart.x,
+                    chunk->dirtyRect.end.y - chunk->dirtyRect.start.y + dirtyStart.y
                 };
 
                 std::vector<glm::vec2> dirtyRectPoints = {
@@ -312,8 +312,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         // show voxel name, temperature and amount at mouse position
         Volume::VoxelElement* voxelAtMousePos = chunkMatrix.VirtualGetAt(
             Vec2i(
-                static_cast<int>(mousePos.getX()/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getX()),
-                static_cast<int>(mousePos.getY()/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.getY())
+                static_cast<int>(mousePos.x/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x),
+                static_cast<int>(mousePos.y/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y)
             )
         );
         glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
@@ -470,7 +470,7 @@ void GameRenderer::UpdateParticleVBO(ChunkMatrix &chunkMatrix)
     std::vector<Particle::ParticleRenderData> particleData;
     for (Particle::VoxelParticle* particle : chunkMatrix.particles) {
         particleData.push_back({
-            .position = glm::vec2(particle->GetPosition().getX(), particle->GetPosition().getY()),
+            .position = glm::vec2(particle->GetPosition().x, particle->GetPosition().y),
             .color = particle->color.getGLMVec4()
         });
     }

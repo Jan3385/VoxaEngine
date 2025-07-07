@@ -3,47 +3,47 @@
 Vec2f AABB::GetCenter() const
 {
     return Vec2f(
-        corner.getX() + size.getX() / 2,
-        corner.getY() + size.getY() / 2
+        corner.x + size.x / 2,
+        corner.y + size.y / 2
     );
 }
 
 void AABB::SetCenter(Vec2f& center)
 {
     corner = Vec2f(
-        center.getX() - size.getX() / 2,
-        center.getY() - size.getY() / 2
+        center.x - size.x / 2,
+        center.y - size.y / 2
     );
 }
 
 bool AABB::Contains(const Vec2f &point) const
 {
-    return (point.getX() >= corner.getX() && point.getX() <= corner.getX() + size.getX() &&
-            point.getY() >= corner.getY() && point.getY() <= corner.getY() + size.getY());
+    return (point.x >= corner.x && point.x <= corner.x + size.x &&
+            point.y >= corner.y && point.y <= corner.y + size.y);
 }
 
 bool AABB::Contains(const AABB &other) const
 {
-    return (corner.getX() <= other.corner.getX() &&
-            corner.getX() + size.getX() >= other.corner.getX() + other.size.getX() &&
-            corner.getY() <= other.corner.getY() &&
-            corner.getY() + size.getY() >= other.corner.getY() + other.size.getY());
+    return (corner.x <= other.corner.x &&
+            corner.x + size.x >= other.corner.x + other.size.x &&
+            corner.y <= other.corner.y &&
+            corner.y + size.y >= other.corner.y + other.size.y);
 }
 
 bool AABB::Overlaps(const AABB &other) const
 {
-    return (corner.getX() <= other.corner.getX() + other.size.getX() &&
-            corner.getX() + size.getX() >= other.corner.getX() &&
-            corner.getY() <= other.corner.getY() + other.size.getY() &&
-            corner.getY() + size.getY() >= other.corner.getY());
+    return (corner.x <= other.corner.x + other.size.x &&
+            corner.x + size.x >= other.corner.x &&
+            corner.y <= other.corner.y + other.size.y &&
+            corner.y + size.y >= other.corner.y);
 }
 
 AABB AABB::Expand(float amount) const
 {
     return AABB(
-        corner.getX() - amount,
-        corner.getY() - amount,
-        size.getX() + amount * 2,
-        size.getY() + amount * 2
+        corner.x - amount,
+        corner.y - amount,
+        size.x + amount * 2,
+        size.y + amount * 2
     );
 }

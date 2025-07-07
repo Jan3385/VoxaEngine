@@ -1,40 +1,20 @@
 #include "Math/Vector.h"
 #include <iostream>
 
-float Vec2f::getX() const
-{
-    return m_x;
-}
-
-float Vec2f::getY() const
-{
-    return m_y;
-}
-
-void Vec2f::x(float x)
-{
-    m_x = x;
-}
-
-void Vec2f::y(float y)
-{
-    m_y = y;
-}
-
 Vec2f::Vec2f()
 {
 }
 
 Vec2f::Vec2f(float x, float y)
 {
-    this->x(x);
-    this->y(y);
+    this->x = x;
+    this->y = y;
 }
 
 Vec2f::Vec2f(const Vec2i vec)
 {
-    this->x(vec.getX());
-    this->y(vec.getY());
+    this->x = vec.x;
+    this->y = vec.y;
 }
 
 Vec2f::~Vec2f()
@@ -43,26 +23,26 @@ Vec2f::~Vec2f()
 
 Vec2f Vec2f::operator+(const Vec2f &other) const
 {
-    return Vec2f(this->getX() + other.getX(), this->getY() + other.getY());
+    return Vec2f(this->x + other.x, this->y + other.y);
 }
 
 Vec2f Vec2f::operator-(const Vec2f &other) const
 {
-    return Vec2f(this->getX() - other.getX(), this->getY() - other.getY());
+    return Vec2f(this->x - other.x, this->y - other.y);
 }
 
 Vec2f Vec2f::operator+=(const Vec2f &other)
 {
-    this->x(this->getX() + other.getX());
-    this->y(this->getY() + other.getY());
+    this->x = this->x + other.x;
+    this->y = this->y + other.y;
     return *this;
 }
 
 Vec2f Vec2f::operator*(const int &other) const
 {
     return Vec2f(
-        this->getX() * other,
-        this->getY() * other
+        this->x * other,
+        this->y * other
     );
 }
 
@@ -72,28 +52,9 @@ Vec2f Vec2f::operator/(const float &other) const
         throw std::runtime_error("Division by zero in Vec2f::operator/");
     }
     return Vec2f(
-        this->getX() / other,
-        this->getY() / other
+        this->x / other,
+        this->y / other
     );
-}
-int Vec2i::getX() const
-{
-    return m_x;
-}
-
-int Vec2i::getY() const
-{
-    return m_y;
-}
-
-void Vec2i::x(int x)
-{
-    m_x = x;
-}
-
-void Vec2i::y(int y)
-{
-    m_y = y;
 }
 
 Vec2i::Vec2i()
@@ -102,14 +63,14 @@ Vec2i::Vec2i()
 
 Vec2i::Vec2i(int x, int y)
 {
-    this->x(x);
-    this->y(y);
+    this->x = x;
+    this->y = y;
 }
 
 Vec2i::Vec2i(const Vec2f vec)
 {
-    this->x(vec.getX());
-    this->y(vec.getY());
+    this->x = vec.x;
+    this->y = vec.y;
 }
 
 Vec2i::~Vec2i()
@@ -118,42 +79,42 @@ Vec2i::~Vec2i()
 
 Vec2i Vec2i::operator+(const Vec2i &other) const
 {
-    return Vec2i(this->getX() + other.getX(), this->getY() + other.getY());
+    return Vec2i(this->x + other.x, this->y + other.y);
 }
 
 Vec2i Vec2i::operator-(const Vec2i &other) const
 {
-    return Vec2i(this->getX() - other.getX(), this->getY() - other.getY());
+    return Vec2i(this->x - other.x, this->y - other.y);
 }
 
 Vec2i Vec2i::operator+=(const Vec2i &other)
 {
-    this->x(this->getX() + other.getX());
-    this->y(this->getY() + other.getY());
+    this->x = this->x + other.x;
+    this->y = this->y + other.y;
     return *this;
 }
 
 Vec2i Vec2i::operator-=(const Vec2i &other)
 {
-    this->x(this->getX() - other.getX());
-    this->y(this->getY() - other.getY());
+    this->x = this->x - other.x;
+    this->y = this->y - other.y;
     return *this;
 }
 
 Vec2i Vec2i::operator*(const int &other) const
 {
     return Vec2i(
-        this->getX() * other,
-        this->getY() * other
+        this->x * other,
+        this->y * other
     );
 }
 
 bool Vec2i::operator!=(const Vec2i &other) const
 {
-    return this->getX() != other.getX() || this->getY() != other.getY();
+    return this->x != other.x || this->y != other.y;
 }
 
 bool Vec2i::operator==(const Vec2i &other) const
 {
-    return this->getX() == other.getX() && this->getY() == other.getY();
+    return this->x == other.x && this->y == other.y;
 }

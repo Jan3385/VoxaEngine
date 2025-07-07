@@ -72,9 +72,9 @@ void SpriteRenderer::RenderSprite(GameObject *object, float rotation, const glm:
     glBindTexture(GL_TEXTURE_2D, object->GetTexture());
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(object->GetPosition().getX(), object->GetPosition().getY(), 0.0f));
+    model = glm::translate(model, glm::vec3(object->GetPosition().x, object->GetPosition().y, 0.0f));
     model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
-    model = glm::scale(model, glm::vec3(object->GetSize().getX(), object->GetSize().getY(), 1.0f));
+    model = glm::scale(model, glm::vec3(object->GetSize().x, object->GetSize().y, 1.0f));
     
     spriteRenderProgram.SetMat4("model", model);
 
@@ -94,8 +94,8 @@ GLuint SpriteRenderer::LoadTextureFromFile(const std::string &filePath, Vec2i *r
         return 0;
     }
 
-    r_size->x(surface->w);
-    r_size->y(surface->h);
+    r_size->x = surface->w;
+    r_size->y = surface->h;
 
     GLuint textureID;
     glGenTextures(1, &textureID);

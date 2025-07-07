@@ -70,7 +70,7 @@ void Particle::SolidFallingParticle::SetNextValidPosition(ChunkMatrix *matrix)
 {
     int iteration = 0;
 
-    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.getX()), std::abs(m_dPosition.getY())); // Normalize the velocity vector
+    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y)); // Normalize the velocity vector
 
     Vec2f futurePos = fPosition + m_dPosition;
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);

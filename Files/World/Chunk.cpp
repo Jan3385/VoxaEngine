@@ -16,10 +16,10 @@ using namespace Volume;
 
 void DirtyRect::Include(Vec2i pos)
 {
-    m_startW.x(std::min(m_startW.getX(), pos.getX()));
-    m_startW.y(std::min(m_startW.getY(), pos.getY()));
-    m_endW.x(std::max(m_endW.getX(), pos.getX()));
-    m_endW.y(std::max(m_endW.getY(), pos.getY()));
+    m_startW.x = std::min(m_startW.x, pos.x);
+    m_startW.y = std::min(m_startW.y, pos.y);
+    m_endW.x = std::max(m_endW.x, pos.x);
+    m_endW.y = std::max(m_endW.y, pos.y);
 }
 
 void DirtyRect::Update()
@@ -27,10 +27,10 @@ void DirtyRect::Update()
     this->start = m_startW-Vec2i(DIRTY_RECT_PADDING, DIRTY_RECT_PADDING);  
     this->end = m_endW+Vec2i(DIRTY_RECT_PADDING*2, DIRTY_RECT_PADDING*2);
 
-    this->start.x(std::max(this->start.getX(), 0));
-    this->start.y(std::max(this->start.getY(), 0));
-    this->end.x(std::min(this->end.getX(), static_cast<int>(Chunk::CHUNK_SIZE)));
-    this->end.y(std::min(this->end.getY(), static_cast<int>(Chunk::CHUNK_SIZE)));
+    this->start.x = std::max(this->start.x, 0);
+    this->start.y = std::max(this->start.y, 0);
+    this->end.x = std::min(this->end.x, static_cast<int>(Chunk::CHUNK_SIZE));
+    this->end.y = std::min(this->end.y, static_cast<int>(Chunk::CHUNK_SIZE));
 
     m_startW = Vec2i(INT_MAX, INT_MAX);
     m_endW = Vec2i(INT_MIN, INT_MIN);
@@ -38,17 +38,17 @@ void DirtyRect::Update()
 
 bool DirtyRect::IsEmpty() const
 {
-    return this->start.getX() == INT_MAX-DIRTY_RECT_PADDING;
+    return this->start.x == INT_MAX-DIRTY_RECT_PADDING;
 }
 
-Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.getX()), m_y(pos.getY())
+Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
 {
     Vec2i chunkWorldPos = Vec2i(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE);
     for(uint8_t x = 0; x < CHUNK_SIZE; x++){
         for(uint8_t y = 0; y < CHUNK_SIZE; y++){
             renderData[x][y].position = glm::ivec2(
-                (chunkWorldPos.getX() + x), //* RENDER_VOXEL_SIZE,
-                (chunkWorldPos.getY() + y) //* RENDER_VOXEL_SIZE
+                (chunkWorldPos.x + x), //* RENDER_VOXEL_SIZE,
+                (chunkWorldPos.y + y) //* RENDER_VOXEL_SIZE
             );
             renderData[x][y].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
         }
@@ -156,10 +156,10 @@ bool Volume::Chunk::ShouldChunkCalculatePressure() const
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
-    for (int x = dirtyRect.end.getX(); x >= dirtyRect.start.getX(); --x)
+    for (int x = dirtyRect.end.x; x >= dirtyRect.start.x; --x)
     {
-        //for (int y = dirtyRect.end.getY(); y >= dirtyRect.start.getY(); --y) -> better gasses, worse solids
-        for (int y = dirtyRect.start.getY(); y <= dirtyRect.end.getY(); ++y) //better solids, worse gasses
+        //for (int y = dirtyRect.end.y; y >= dirtyRect.start.y; --y) -> better gasses, worse solids
+        for (int y = dirtyRect.start.y; y <= dirtyRect.end.y; ++y) //better solids, worse gasses
         {
             if(x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_SIZE) continue;
     		if (voxels[x][y]->Step(matrix)) {

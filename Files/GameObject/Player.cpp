@@ -107,7 +107,7 @@ void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
     this->gunLaserParticleGenerator->position = Vec2f(this->position);
     Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, vector::ZERO) + Camera.corner;
     Vec2f direction = mousePos - (this->position);
-    float angle = std::atan2(direction.getY(), direction.getX());
+    float angle = std::atan2(direction.y, direction.x);
     this->gunLaserParticleGenerator->angle = angle;
 
     chunkMatrix.voxelMutex.unlock();
@@ -123,7 +123,7 @@ void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
     
     Particle::AddBulletParticle(
         &chunkMatrix,
-        std::atan2(direction.getY(), direction.getX()),
+        std::atan2(direction.y, direction.x),
         20.0f,
         3.0f,
         this->position
@@ -135,7 +135,7 @@ bool Game::Player::ShouldRender() const
 }
 Vec2f Game::Player::GetCameraPos() const
 {
-    return Vec2f(Camera.corner + Vec2f(Camera.size.getX()/2, Camera.size.getY()/2));
+    return Vec2f(Camera.corner + Vec2f(Camera.size.x/2, Camera.size.y/2));
 }
 
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsUnder(ChunkMatrix &chunkMatrix)
@@ -167,7 +167,7 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsLeft(ChunkMatrix &chun
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
         Vec2f localPos = Vec2i(this->position) + Vec2i(-PLAYER_WIDTH/2, y);
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.getX()), floor(localPos.getY())));
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.x), floor(localPos.y)));
         if (voxel) {
             voxels.push_back(voxel);
         }
@@ -180,7 +180,7 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsRight(ChunkMatrix &chu
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
         Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH/2, y);
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.getX()), floor(localPos.getY())));
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.x), floor(localPos.y)));
         if (voxel) {
             voxels.push_back(voxel);
         }
@@ -275,7 +275,7 @@ void Game::Player::MovePlayer(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
     //check if the player isnt being teleported into a solid voxel
     if(!this->NoClip){
-        if(chunkMatrix.VirtualGetAt(Vec2i(floor(pos.getX()), floor(pos.getY())))->GetState() == Volume::State::Solid){
+        if(chunkMatrix.VirtualGetAt(Vec2i(floor(pos.x), floor(pos.y)))->GetState() == Volume::State::Solid){
             return;
         }
     }
@@ -287,44 +287,44 @@ void Game::Player::MovePlayer(Vec2f pos, ChunkMatrix &chunkMatrix)
 void Game::Player::MovePlayerBy(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
     // Move the player by X
-    for(int i = 0; i < floor(abs(pos.getX())); ++i){
+    for(int i = 0; i < floor(abs(pos.x)); ++i){
         int leftWallLevel = this->touchLeftWall(chunkMatrix);
-        if (leftWallLevel > STEP_HEIGHT && pos.getX() < 0) {
+        if (leftWallLevel > STEP_HEIGHT && pos.x < 0) {
             break;
         }
         int rightWallLevel = this->touchRightWall(chunkMatrix);
-        if (rightWallLevel > STEP_HEIGHT && pos.getX() > 0) {
+        if (rightWallLevel > STEP_HEIGHT && pos.x > 0) {
             break;
         }
-        this->position.x(this->position.getX() + (pos.getX() > 0 ? 1 : -1));
-        if(pos.getX() < 0)this->position.y(this->position.getY() - leftWallLevel);
-        if(pos.getX() > 0)this->position.y(this->position.getY() - rightWallLevel);
+        this->position.x += pos.x > 0 ? 1 : -1;
+        if(pos.x < 0) this->position.y -= leftWallLevel;
+        if(pos.x > 0) this->position.y -= rightWallLevel;
     }
     int leftWallLevel = this->touchLeftWall(chunkMatrix);
     int rightWallLevel = this->touchRightWall(chunkMatrix);
-    if((leftWallLevel < STEP_HEIGHT && pos.getX() < 0) || 
-        (rightWallLevel < STEP_HEIGHT && pos.getX() > 0)){
+    if((leftWallLevel < STEP_HEIGHT && pos.x < 0) || 
+        (rightWallLevel < STEP_HEIGHT && pos.x > 0)){
 
-        this->position.x(this->position.getX() + std::fmod(pos.getX(), 1.0f)); // Move the remaining part
-        if(pos.getX() < 0)this->position.y(this->position.getY() - leftWallLevel);
-        if(pos.getX() > 0)this->position.y(this->position.getY() - rightWallLevel);
+        this->position.x += std::fmod(pos.x, 1.0f); // Move the remaining part
+        if(pos.x < 0)this->position.y -= leftWallLevel;
+        if(pos.x > 0)this->position.y -= rightWallLevel;
     }
 
     // Move to the ground by one step
-    int move = pos.getY() > 0 ? 1 : -1;
-    for (int i = 0; i < floor(abs(pos.getY())); ++i) {
+    int move = pos.y > 0 ? 1 : -1;
+    for (int i = 0; i < floor(abs(pos.y)); ++i) {
         if ((this->isOnGround(chunkMatrix) && move > 0) || (this->isOnCeiling(chunkMatrix) && move < 0)) {
             break;
         }
-        this->position.y(this->position.getY() + move);
+        this->position.y += move;
     }
 
-    if((!this->isOnGround(chunkMatrix) || pos.getY() < 0) && (!this->isOnCeiling(chunkMatrix) || pos.getY() > 0)){
-        this->position.y(this->position.getY() + std::fmod(pos.getY(), 1.0f)); // Move the remaining part
+    if((!this->isOnGround(chunkMatrix) || pos.y < 0) && (!this->isOnCeiling(chunkMatrix) || pos.y > 0)){
+        this->position.y += std::fmod(pos.y, 1.0f); // Move the remaining part
     }
 
     if(this->isOnGround(chunkMatrix)){
-        this->position.y(floor(this->position.getY())); //Snap to ground
+        this->position.y = floor(this->position.y); //Snap to ground
     }
 }
 
@@ -332,7 +332,7 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
     using namespace Volume;
 
-    Camera.corner = (pos-Vec2f(Camera.size.getX()/2, Camera.size.getY()/2));
+    Camera.corner = (pos-Vec2f(Camera.size.x/2, Camera.size.y/2));
 
     Vec2f cameraMin = Camera.corner;
     Vec2f cameraMax = Camera.corner + Camera.size;
@@ -345,8 +345,8 @@ void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
     Vec2i chunkMax = chunkMatrix.WorldToChunkPosition(adjustedMax);
 
     std::vector<Vec2i> chunksToLoad;
-    for (int x = chunkMin.getX(); x <= chunkMax.getX(); ++x) {
-        for (int y = chunkMin.getY(); y <= chunkMax.getY(); ++y) {
+    for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
+        for (int y = chunkMin.y; y <= chunkMax.y; ++y) {
             if(!chunkMatrix.IsValidChunkPosition(Vec2i(x, y))) continue;    // Skip invalid chunk positions
             if(chunkMatrix.GetChunkAtChunkPosition(Vec2i(x, y))) continue;  // If the chunk already exists, skip it
             chunksToLoad.push_back(Vec2i(x, y));
@@ -362,7 +362,7 @@ void Game::Player::MoveCameraTowards(Vec2f to, ChunkMatrix &chunkMatrix)
 {
     Vec2f from = GetCameraPos();
 
-    Vec2f pos = Vec2f(std::lerp(from.getX(), to.getX(), 0.1), std::lerp(from.getY(), to.getY(), 0.1));
+    Vec2f pos = Vec2f(std::lerp(from.x, to.x, 0.1), std::lerp(from.y, to.y, 0.1));
 
 
     this->MoveCamera(pos, chunkMatrix);

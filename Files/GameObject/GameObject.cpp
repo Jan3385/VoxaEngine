@@ -10,8 +10,8 @@ GameObject::GameObject(Vec2f position, std::string texturePath)
 
     Vec2i size;
     this->texture = SpriteRenderer::LoadTextureFromFile(texturePath, &size);
-    this->width = size.getX();
-    this->height = size.getY();
+    this->width = size.x;
+    this->height = size.y;
 }
 
 GameObject::~GameObject()

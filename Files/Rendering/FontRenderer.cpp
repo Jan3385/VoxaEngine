@@ -70,8 +70,8 @@ void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos,
     for(c = text.begin(); c != text.end(); c++) {
         Character ch = font->characters[*c];
 
-        float xpos = pos.getX() + ch.Bearing.x * scale;
-        float ypos = pos.getY() + (ch.Size.y - ch.Bearing.y) * scale;
+        float xpos = pos.x + ch.Bearing.x * scale;
+        float ypos = pos.y + (ch.Size.y - ch.Bearing.y) * scale;
 
         float w = ch.Size.x * scale;
         float h = ch.Size.y * scale;
@@ -95,7 +95,7 @@ void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos,
         glDrawArrays(GL_TRIANGLES, 0, 6); // Render the quad
 
         // Advance the cursor for the next glyph
-        pos.x(pos.getX() + (ch.Advance >> 6) * scale);
+        pos.x += (ch.Advance >> 6) * scale;
     }
     glBindVertexArray(0); // Unbind VAO
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture

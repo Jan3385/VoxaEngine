@@ -46,7 +46,7 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
     {
         Particle::AddFallingParticle(matrix, 
             RGBA(240+variation(10), 240+variation(10), 240+variation(10), 100+variation(15)),
-            std::atan2(m_dPosition.getY(), m_dPosition.getX()) + M_PI + variation(60)/100.0f,
+            std::atan2(m_dPosition.y, m_dPosition.x) + M_PI + variation(60)/100.0f,
             1.0f + variation(5)/10.0f,
             0.3f,
             fPosition,
@@ -103,7 +103,7 @@ Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,
 void Particle::BulletParticle::SetNextValidPosition(ChunkMatrix *matrix){
     int iteration = 0;
 
-    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.getX()), std::abs(m_dPosition.getY())); // Normalize the velocity vector
+    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y)); // Normalize the velocity vector
 
     Vec2f futurePos = fPosition + m_dPosition;
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);

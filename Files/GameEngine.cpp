@@ -166,8 +166,8 @@ void GameEngine::PollEvents()
         if(!io.WantCaptureMouse){
             switch (this->windowEvent.type){
                 case SDL_MOUSEMOTION:
-                    this->mousePos.x(this->windowEvent.motion.x);
-                    this->mousePos.y(this->windowEvent.motion.y);
+                    this->mousePos.x = this->windowEvent.motion.x;
+                    this->mousePos.y = this->windowEvent.motion.y;
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                     m_OnMouseButtonDown(this->windowEvent.button);
@@ -218,8 +218,8 @@ void GameEngine::PollEvents()
                         this->windowEvent.window.data1, 
                         this->windowEvent.window.data2
                     );
-                    this->WindowSize.x(this->windowEvent.window.data1);
-                    this->WindowSize.y(this->windowEvent.window.data2);
+                    this->WindowSize.x = this->windowEvent.window.data1;
+                    this->WindowSize.y = this->windowEvent.window.data2;
                 break;
             }
             break;

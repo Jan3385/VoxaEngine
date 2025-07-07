@@ -10,15 +10,15 @@ void Particle::LaserParticleGenerator::TickParticles()
     //get end position based on angle and length
     Vec2i currentPos = Vec2i(position);
     Vec2i endPosition = Vec2i(
-        position.getX() + length * cos(angle),
-        position.getY() + length * sin(angle)
+        position.x + length * cos(angle),
+        position.y + length * sin(angle)
     );
     
-    int dx = abs(endPosition.getX() - currentPos.getX()), sx = currentPos.getX() < endPosition.getX() ? 1 : -1;
-    int dy = -abs(endPosition.getY() - currentPos.getY()), sy = currentPos.getY() < endPosition.getY() ? 1 : -1;
+    int dx = abs(endPosition.x - currentPos.x), sx = currentPos.x < endPosition.x ? 1 : -1;
+    int dy = -abs(endPosition.y - currentPos.y), sy = currentPos.y < endPosition.y ? 1 : -1;
     int err = dx + dy;
 
-    int totalNumberOfParticlesInLine = std::max(abs(endPosition.getX() - currentPos.getX()), abs(endPosition.getY() - currentPos.getY()));
+    int totalNumberOfParticlesInLine = std::max(abs(endPosition.x - currentPos.x), abs(endPosition.y - currentPos.y));
     int particleCount = 0;
     while(true){
         particleCount++;
@@ -50,11 +50,11 @@ void Particle::LaserParticleGenerator::TickParticles()
         int e2 = 2 * err;
         if (e2 >= dy) {
             err += dy;
-            currentPos.x(currentPos.getX() + sx);
+            currentPos.x += sx;
         }
         if (e2 <= dx) {
             err += dx;
-            currentPos.y(currentPos.getY() + sy);
+            currentPos.y += sy;
         }
     }
 }

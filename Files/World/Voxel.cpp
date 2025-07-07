@@ -21,7 +21,7 @@ VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperatu
 	this->properties = Registry::VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;
 
-	srand(position.getX() + position.getY() * rand()); // temp fix
+	srand(position.x + position.y * rand()); // temp fix
 
 	//tint the color factor 1 to 1.2
 	float factor = 1 + ((rand() % 20) / 100.0f);
@@ -295,7 +295,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 			this->amount -= transferAmount;
 
 			if(missingAmount > 0.0f){
-				Vec2i localPos = Vec2i(this->position.getX() % Chunk::CHUNK_SIZE, this->position.getY() % Chunk::CHUNK_SIZE);
+				Vec2i localPos = Vec2i(this->position.x % Chunk::CHUNK_SIZE, this->position.y % Chunk::CHUNK_SIZE);
 				matrix->GetChunkAtWorldPosition(this->position)->dirtyRect.Include(localPos);
 				return true;
 			}
@@ -317,7 +317,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 					DieAndReplace(*matrix, "Empty");
 				}
 			}
-			Vec2i localPos = Vec2i(this->position.getX() % Chunk::CHUNK_SIZE, this->position.getY() % Chunk::CHUNK_SIZE);
+			Vec2i localPos = Vec2i(this->position.x % Chunk::CHUNK_SIZE, this->position.y % Chunk::CHUNK_SIZE);
 			matrix->GetChunkAtWorldPosition(this->position)->dirtyRect.Include(localPos);
 			return true;
 		}
@@ -469,13 +469,13 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 	
 	if(next->GetState() != State::Gas) return false; // if the next voxel is not gas, stop
 	
-	if(direction.getY() > 0){
+	if(direction.y > 0){
 		// down
 		if(next->IsStateBelowDensity(this->GetState(), this->properties->Density) && !next->updatedThisFrame){
 			this->Swap(next->position, *matrix);
 			return true;
 		}
-	}else if(direction.getY() < 0){
+	}else if(direction.y < 0){
 		// up
 		if(next->IsStateAboveDensity(this->GetState(), this->properties->Density)){
 			this->Swap(next->position, *matrix);
@@ -483,7 +483,7 @@ bool Volume::VoxelGas::MoveInDirection(ChunkMatrix *matrix, Vec2i direction)
 		}
 	}else{
 		// sides
-		this->StepAlongSide(matrix, direction.getX() > 0, this->properties->FluidDispursionRate);
+		this->StepAlongSide(matrix, direction.x > 0, this->properties->FluidDispursionRate);
 		return true;
 	}
     

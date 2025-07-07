@@ -44,24 +44,24 @@ void ChunkMatrix::cleanup()
 Vec2i ChunkMatrix::WorldToChunkPosition(const Vec2f &pos)
 {
     return Vec2i(
-	    static_cast<int>(pos.getX() / Chunk::CHUNK_SIZE),
-	    static_cast<int>(pos.getY() / Chunk::CHUNK_SIZE)
+	    static_cast<int>(pos.x / Chunk::CHUNK_SIZE),
+	    static_cast<int>(pos.y / Chunk::CHUNK_SIZE)
     );
 }
 
 Vec2f ChunkMatrix::ChunkToWorldPosition(const Vec2i &pos)
 {
     return Vec2f(
-	    static_cast<float>(pos.getX() * Chunk::CHUNK_SIZE),
-        static_cast<float>(pos.getY() * Chunk::CHUNK_SIZE)
+	    static_cast<float>(pos.x * Chunk::CHUNK_SIZE),
+        static_cast<float>(pos.y * Chunk::CHUNK_SIZE)
     );
 }
 
 Vec2f ChunkMatrix::MousePosToWorldPos(const Vec2f &mousePos, Vec2f offset)
 {
     return Vec2f(
-        (mousePos.getX() + offset.getX()) / Chunk::RENDER_VOXEL_SIZE,
-        (mousePos.getY() + offset.getY())/ Chunk::RENDER_VOXEL_SIZE
+        (mousePos.x + offset.x) / Chunk::RENDER_VOXEL_SIZE,
+        (mousePos.y + offset.y)/ Chunk::RENDER_VOXEL_SIZE
     );
 }
 
@@ -71,8 +71,8 @@ Volume::Chunk *ChunkMatrix::GetChunkAtWorldPosition(const Vec2f &pos)
 	if (!IsValidChunkPosition(chunkPos)) return nullptr;
 
     uint8_t AssignedGridPass = 0;
-    if (chunkPos.getX() % 2 != 0) AssignedGridPass += 1;
-    if (chunkPos.getY() % 2 != 0) AssignedGridPass += 2;
+    if (chunkPos.x % 2 != 0) AssignedGridPass += 1;
+    if (chunkPos.y % 2 != 0) AssignedGridPass += 2;
 
     for (size_t i = 0; i < this->GridSegmented[AssignedGridPass].size(); i++)
     {
@@ -91,8 +91,8 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
     if (!IsValidChunkPosition(pos)) return nullptr;
 
     uint8_t AssignedGridPass = 0;
-    if (pos.getX() % 2 != 0) AssignedGridPass += 1;
-    if (pos.getY() % 2 != 0) AssignedGridPass += 2;
+    if (pos.x % 2 != 0) AssignedGridPass += 1;
+    if (pos.y % 2 != 0) AssignedGridPass += 2;
 
 
     for (size_t i = 0; i < this->GridSegmented[AssignedGridPass].size(); i++)
@@ -152,17 +152,17 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     for (int x = 0; x < Chunk::CHUNK_SIZE; ++x) {
         for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
     		//Create voxel determining on its position
-            if (pos.getY() > 4) {
-                if(pos.getY() == 5 && y <= 5){
+            if (pos.y > 4) {
+                if(pos.y == 5 && y <= 5){
                     chunk->voxels[x][y] = new VoxelSolid
                         ("Grass", 
-                        Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
+                        Vec2i(x + pos.x * Chunk::CHUNK_SIZE,y + pos.y * Chunk::CHUNK_SIZE), 
                         Temperature(21), 
                         true, 20);
                 }else{
                     chunk->voxels[x][y] = new VoxelSolid
                         ("Dirt", 
-                        Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE,y + pos.getY() * Chunk::CHUNK_SIZE), 
+                        Vec2i(x + pos.x * Chunk::CHUNK_SIZE,y + pos.y * Chunk::CHUNK_SIZE), 
                         Temperature(21), 
                         true, 20);
                 }
@@ -170,13 +170,13 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
             else {
                 chunk->voxels[x][y] = new VoxelGas
                     ("Oxygen", 
-                    Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
+                    Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE),
                     Temperature(21), 1);
             }
-    		if (pos.getY() == 4 && pos.getX() <= 3) {
+    		if (pos.y == 4 && pos.x <= 3) {
     			chunk->voxels[x][y] = new VoxelSolid
                     ("Sand", 
-                    Vec2i(x + pos.getX() * Chunk::CHUNK_SIZE, y + pos.getY() * Chunk::CHUNK_SIZE),
+                    Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE),
                     Temperature(21),
                     false, 20);
     		}
@@ -185,8 +185,8 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     chunk->lastCheckedCountDown = 20;
 
     uint8_t AssignedGridPass = 0;
-    if (pos.getX() % 2 != 0) AssignedGridPass += 1;
-    if (pos.getY() % 2 != 0) AssignedGridPass += 2;
+    if (pos.x % 2 != 0) AssignedGridPass += 1;
+    if (pos.y % 2 != 0) AssignedGridPass += 2;
 
     this->GridSegmented[AssignedGridPass].push_back(chunk);
 
@@ -198,8 +198,8 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 {
     uint8_t AssignedGridPass = 0;
-    if (pos.getX() % 2 != 0) AssignedGridPass += 1;
-    if (pos.getY() % 2 != 0) AssignedGridPass += 2;
+    if (pos.x % 2 != 0) AssignedGridPass += 1;
+    if (pos.y % 2 != 0) AssignedGridPass += 2;
 
     for (int32_t i = this->GridSegmented[AssignedGridPass].size()-1; i >= 0; --i)
     {
@@ -236,7 +236,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
         chunkCreationMutex.unlock();
     }
 
-    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
+    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.x % Chunk::CHUNK_SIZE)][abs(pos.y % Chunk::CHUNK_SIZE)];
 
     if(!voxel){
         return nullptr;
@@ -258,7 +258,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
         return nullptr;
     }
 
-    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.getX() % Chunk::CHUNK_SIZE)][abs(pos.getY() % Chunk::CHUNK_SIZE)];
+    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.x % Chunk::CHUNK_SIZE)][abs(pos.y % Chunk::CHUNK_SIZE)];
 
     if(!voxel){
         return nullptr;
@@ -281,8 +281,8 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     // Calculate positions in the chunk and local position
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(voxel->position));
     Vec2i localPos = Vec2i(
-        abs(voxel->position.getX() % Chunk::CHUNK_SIZE), 
-        abs(voxel->position.getY() % Chunk::CHUNK_SIZE));
+        abs(voxel->position.x % Chunk::CHUNK_SIZE), 
+        abs(voxel->position.y % Chunk::CHUNK_SIZE));
 
 
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
@@ -295,15 +295,15 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     }
 
     //delete the old voxel if it exists
-    if(chunk->voxels[localPos.getX()][localPos.getY()]){
-        delete chunk->voxels[localPos.getX()][localPos.getY()];
+    if(chunk->voxels[localPos.x][localPos.y]){
+        delete chunk->voxels[localPos.x][localPos.y];
     }
 
     // Set the new voxel and mark for update
-    chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
+    chunk->voxels[localPos.x][localPos.y] = voxel;
 
     chunk->dirtyRect.Include(localPos);
-    chunk->UpdateRenderBufferRanges[localPos.getX()].AddValue(localPos.getY());
+    chunk->UpdateRenderBufferRanges[localPos.x].AddValue(localPos.y);
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
@@ -321,8 +321,8 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     // Calculate positions in the chunk and local position
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(voxel->position));
     Vec2i localPos = Vec2i(
-        abs(voxel->position.getX() % Chunk::CHUNK_SIZE), 
-        abs(voxel->position.getY() % Chunk::CHUNK_SIZE));
+        abs(voxel->position.x % Chunk::CHUNK_SIZE), 
+        abs(voxel->position.y % Chunk::CHUNK_SIZE));
     
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
@@ -334,10 +334,10 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     }
 
     // Set the new voxel and mark for update
-    chunk->voxels[localPos.getX()][localPos.getY()] = voxel;
+    chunk->voxels[localPos.x][localPos.y] = voxel;
 
     chunk->dirtyRect.Include(localPos);
-    chunk->UpdateRenderBufferRanges[localPos.getX()].AddValue(localPos.getY());
+    chunk->UpdateRenderBufferRanges[localPos.x].AddValue(localPos.y);
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
@@ -488,14 +488,14 @@ void ChunkMatrix::GetVoxelsInCubeAtWorldPosition(const Vec2f &start, const Vec2f
 
 bool ChunkMatrix::IsValidWorldPosition(const Vec2i &pos) const
 {
-    return pos.getX() >= Volume::Chunk::CHUNK_SIZE &&
-	    pos.getY() >= Volume::Chunk::CHUNK_SIZE;
+    return pos.x >= Volume::Chunk::CHUNK_SIZE &&
+	    pos.y >= Volume::Chunk::CHUNK_SIZE;
 }
 
 bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 {
-    return pos.getX() > 0 &&
-	    pos.getY() > 0;
+    return pos.x > 0 &&
+	    pos.y > 0;
 }
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
@@ -512,8 +512,8 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     	Vec2f currentPos = Vec2f(pos);
     	for (int j = 0; j < radius; j++)
     	{
-    		currentPos.x(currentPos.getX() + dx);
-    		currentPos.y(currentPos.getY() + dy);
+    		currentPos.x += dx;
+    		currentPos.y += dy;
             Volume::VoxelElement *voxel = VirtualGetAt(currentPos);
     		if (voxel == nullptr) continue;
 
