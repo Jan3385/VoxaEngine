@@ -1,5 +1,6 @@
 #include "Math/Vector.h"
-#include <iostream>
+#include <stdexcept>
+#include <cmath>
 #include "Vector.h"
 
 Vec2f::Vec2f()
@@ -95,6 +96,16 @@ void Vec2i::Rotate180()
 {
     this->x = -this->x;
     this->y = -this->y;
+}
+
+float Vec2f::Length() const
+{
+    return std::sqrt(this->x * this->x + this->y * this->y);
+}
+
+float Vec2f::LengthSquared() const
+{
+    return this->x * this->x + this->y * this->y;
 }
 
 Vec2i Vec2i::operator+(const Vec2i &other) const

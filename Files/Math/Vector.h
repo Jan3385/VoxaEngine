@@ -11,6 +11,14 @@ public:
     Vec2f(float x, float y);
     Vec2f(const Vec2i vec);
     ~Vec2f();
+
+    void RotateLeft();
+    void RotateRight();
+    void Rotate180();
+
+    float Length() const;
+    float LengthSquared() const;
+
     Vec2f operator+(const Vec2f& other) const;
     Vec2f operator-(const Vec2f& other) const;
     Vec2f operator+=(const Vec2f& other);
@@ -30,6 +38,9 @@ public:
     void RotateLeft();
     void RotateRight();
     void Rotate180();
+
+    float Length() const;
+    float LengthSquared() const;
 
     Vec2i operator+(const Vec2i& other) const;
     Vec2i operator-(const Vec2i& other) const;

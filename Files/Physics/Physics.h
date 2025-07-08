@@ -22,6 +22,17 @@ private:
         const int currentLabel
     );
 
+    static float PerpendicularDistance(
+        const b2Vec2& point, 
+        const b2Vec2& lineStart, 
+        const b2Vec2& lineEnd
+    );
+
+    static std::vector<b2Vec2> DouglasPeuckerSimplify(
+        const std::vector<b2Vec2>& points, 
+        float epsilon
+    );
+
 public:
     GamePhysics();
     ~GamePhysics();

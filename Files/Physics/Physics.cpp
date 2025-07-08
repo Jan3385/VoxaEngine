@@ -119,9 +119,66 @@ std::vector<b2Vec2> GamePhysics::MarchingSquaresEdgeTrace(
     return polygon;
 }
 
-void GamePhysics::Step(float deltaTime)
+/// @brief                  Calculate the perpendicular distance from a point to a line segment
+/// @param point            the point to measure distance from
+/// @param lineStart        the start point of the line segment
+/// @param lineEnd          the end point of the line segment
+/// @return                 the perpendicular distance from the point to the line segment
+/// If the line segment is a point, it returns the distance from the point to that point
+float GamePhysics::PerpendicularDistance(const b2Vec2 &point, const b2Vec2 &lineStart, const b2Vec2 &lineEnd)
 {
-    b2World_Step(worldId, deltaTime, this->SIMULATION_STEP_COUNT);
+    b2Vec2 dVec = lineEnd - lineStart;
+
+    if(dVec.x == 0.0f && dVec.y == 0.0f) {
+        dVec = point - lineStart;
+        return std::sqrt(dVec.x * dVec.x + dVec.y * dVec.y);
+    }
+
+    float t = ((point.x - lineStart.x) * dVec.x + (point.y - lineStart.y) * dVec.y) / (dVec.x * dVec.x + dVec.y * dVec.y);
+    if(t < 0.0f) {
+        dVec = point - lineStart;
+    } else if(t > 1.0f) {
+        dVec = point - lineEnd;
+    } else {
+        b2Vec2 xVec = lineStart + t * dVec;
+        dVec = point - xVec;
+    }
+
+    return std::sqrt(dVec.x * dVec.x + dVec.y * dVec.y);
+}
+
+std::vector<b2Vec2> GamePhysics::DouglasPeuckerSimplify(const std::vector<b2Vec2> &points, float epsilon)
+{
+    if(points.size() < 3) {
+        return points;      // no need to simplify
+    }
+
+    float maxDistance = 0.0f;
+    size_t index = 0;
+
+    for (size_t i = 0; i < points.size(); i++)
+    {
+        float distance = PerpendicularDistance(points[i], points.front(), points.back());
+        if (distance > maxDistance) {
+            maxDistance = distance;
+            index = i;
+        }
+    }
+
+    if(maxDistance > epsilon) {
+        std::vector<b2Vec2> leftPoints(points.begin(), points.begin() + index + 1);
+        std::vector<b2Vec2> rightPoints(points.begin() + index, points.end());
+
+        std::vector<b2Vec2> leftSimplified = DouglasPeuckerSimplify(leftPoints, epsilon);
+        std::vector<b2Vec2> rightSimplified = DouglasPeuckerSimplify(rightPoints, epsilon);
+
+        leftSimplified.pop_back(); // Remove the last point to avoid duplication
+        leftSimplified.insert(leftSimplified.end(), rightSimplified.begin(), rightSimplified.end());
+        return leftSimplified;
+    } else {
+        return {points.front(), points.back()};
+    }
+    
 }
 
 void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 voxelProj)
@@ -172,6 +229,9 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
         std::vector<b2Vec2> edges = MarchingSquaresEdgeTrace(labels, label);
 
         if (!edges.empty()) {
+            // STEP 3: Douglas-Peucker simplification
+            edges = DouglasPeuckerSimplify(edges, 0.8f);
+
             // Convert b2Vec2 to your renderer's vector type if needed
             std::vector<glm::vec2> renderPoints;
             for (const auto& v : edges) {
@@ -204,4 +264,9 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
         //    body->CreateFixture(&fixtureDef);
         //}
     }
+}
+
+void GamePhysics::Step(float deltaTime)
+{
+    b2World_Step(worldId, deltaTime, this->SIMULATION_STEP_COUNT);
 }
