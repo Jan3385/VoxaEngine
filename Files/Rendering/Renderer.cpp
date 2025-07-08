@@ -345,6 +345,14 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         }
     }
 
+    Volume::Chunk *c = chunkMatrix.GetChunkAtChunkPosition(Vec2i(4, 4));
+
+    if(c){
+        GameEngine::instance->physics->Generate2DCollidersForChunk(
+            c, voxelProj
+        );
+    }
+
     this->RenderIMGUI(chunkMatrix);
 
     SDL_GL_SwapWindow(r_window);

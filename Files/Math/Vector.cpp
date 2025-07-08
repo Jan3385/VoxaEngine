@@ -1,5 +1,6 @@
 #include "Math/Vector.h"
 #include <iostream>
+#include "Vector.h"
 
 Vec2f::Vec2f()
 {
@@ -76,6 +77,25 @@ Vec2i::Vec2i(const Vec2f vec)
 Vec2i::~Vec2i()
 {
 }
+void Vec2i::RotateLeft()
+{
+    int temp = this->x;
+    this->x = this->y;
+    this->y = -temp;
+}
+
+void Vec2i::RotateRight()
+{
+    int temp = this->x;
+    this->x = -this->y;
+    this->y = temp;
+}
+
+void Vec2i::Rotate180()
+{
+    this->x = -this->x;
+    this->y = -this->y;
+}
 
 Vec2i Vec2i::operator+(const Vec2i &other) const
 {
@@ -101,6 +121,13 @@ Vec2i Vec2i::operator-=(const Vec2i &other)
     return *this;
 }
 
+Vec2i Vec2i::operator*(const Vec2i &other) const
+{
+    return Vec2i(
+        this->x * other.x,
+        this->y * other.y
+    );
+}
 Vec2i Vec2i::operator*(const int &other) const
 {
     return Vec2i(
