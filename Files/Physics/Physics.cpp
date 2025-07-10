@@ -59,7 +59,9 @@ void GamePhysics::FloodFillChunk(
     // fill in holes inside labels
     for(int y = 0; y < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++y) {
         for(int x = 0; x < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++x) {
-            int surroundedSides = 0;
+            uint8_t surroundedSides = 0;
+            uint8_t verticalSides = 0;
+            uint8_t horizontalSides = 0;
             for(const Vec2i& offset : vector::AROUND4) {
                 Vec2i neighbor = Vec2i(x, y) + offset;
 
@@ -71,9 +73,12 @@ void GamePhysics::FloodFillChunk(
 
                 if(labels[neighbor.y][neighbor.x] == currentLabel) {
                     ++surroundedSides;
+
+                    if(offset.x == 0) ++verticalSides;
+                    else ++horizontalSides;
                 }
             }
-            if(labels[y][x] == 0 && surroundedSides >= 3) {
+            if(labels[y][x] == 0 && (surroundedSides >= 3 || verticalSides == 2 || horizontalSides == 2)) {
                 labels[y][x] = currentLabel;
             }
         }
