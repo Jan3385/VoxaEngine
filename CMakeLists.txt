@@ -16,6 +16,8 @@ message(STATUS "Fetching dependencies...")
 
 include(FetchContent)
 
+# TODO: Add vcpkg support
+
 # SDL2
 FetchContent_Declare(
   SDL2
@@ -31,6 +33,27 @@ FetchContent_Declare(
   GIT_TAG v3.1.1
 )
 FetchContent_MakeAvailable(box2d)
+
+# poly2tri (mesh triangulation)
+FetchContent_Declare(
+  poly2tri
+  GIT_REPOSITORY https://github.com/greenm01/poly2tri.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(poly2tri)
+
+# Add poly2tri as a static library (since it doesn't provide a CMake target)
+add_library(poly2tri STATIC
+  ${poly2tri_SOURCE_DIR}/poly2tri/common/shapes.cc
+  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/advancing_front.cc
+  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/cdt.cc
+  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/sweep.cc
+  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/sweep_context.cc
+)
+
+target_include_directories(poly2tri PUBLIC
+  ${poly2tri_SOURCE_DIR}
+)
 
 # GLM
 FetchContent_Declare(
@@ -112,6 +135,7 @@ if(WIN32)
   target_link_libraries(VoxaEngine PRIVATE
     imgui
     box2d
+    poly2tri
     glm
     freetype
     ${PROJECT_SOURCE_DIR}/GLEW/lib/Release/x64/glew32s.lib
@@ -126,6 +150,7 @@ elseif(UNIX)
   target_link_libraries(VoxaEngine PRIVATE
     imgui
     box2d
+    poly2tri
     glm
     freetype
     GLEW::GLEW

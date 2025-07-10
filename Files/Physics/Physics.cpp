@@ -1,9 +1,11 @@
 #include "Physics/Physics.h"
 
 #include <iostream>
+#include <algorithm>
 #include <queue>
+#include <poly2tri/poly2tri.h>
 #include "Physics.h"
-#include <GameEngine.h>
+#include "GameEngine.h"
 
 GamePhysics::GamePhysics()
 {
@@ -53,6 +55,39 @@ void GamePhysics::FloodFillChunk(
             }
         }
     }
+
+    // fill in holes inside labels
+    for(int y = 0; y < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++y) {
+        for(int x = 0; x < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++x) {
+            int surroundedSides = 0;
+            for(const Vec2i& offset : vector::AROUND4) {
+                Vec2i neighbor = Vec2i(x, y) + offset;
+
+                // Check bounds
+                if(neighbor.x < 0 || neighbor.x > Volume::Chunk::CHUNK_SIZE ||
+                   neighbor.y < 0 || neighbor.y > Volume::Chunk::CHUNK_SIZE) {
+                    continue;
+                }
+
+                if(labels[neighbor.y][neighbor.x] == currentLabel) {
+                    ++surroundedSides;
+                }
+            }
+            if(labels[y][x] == 0 && surroundedSides >= 3) {
+                labels[y][x] = currentLabel;
+            }
+        }
+    }
+}
+
+int m_DirectionToOffsetIndex(const Vec2i &dir)
+{
+    if(dir == vector::RIGHT)return 2;
+    if(dir == vector::UP)   return 1;
+    if(dir == vector::LEFT) return 0;
+    if(dir == vector::DOWN) return 3;
+
+    throw std::invalid_argument("Invalid direction for vector offset index: " + std::to_string(dir.x) + ", " + std::to_string(dir.y));
 }
 
 /// @brief                  Modified Marching Squares algorithm to find edges in a 2D grid
@@ -77,44 +112,55 @@ std::vector<b2Vec2> GamePhysics::MarchingSquaresEdgeTrace(
 
     if(start.x == -1) return polygon;
 
-    // Start trace
+    //  0,0 ---- 1,0
+    //   |        |
+    //   |        |
+    //   |        |
+    //  0,1 ---- 1,1
+    
+    Vec2i offsets[4] = {
+        Vec2i(0, 0),
+        Vec2i(1, 0),
+        Vec2i(1, 1),
+        Vec2i(0, 1),
+    };
+
     Vec2i current = start;
+    Vec2i dir = vector::UP;
 
-    Vec2i direction(-1, 0); // Start going right
+    // initial polygon start
+    int startOffsetIndex = m_DirectionToOffsetIndex(vector::DOWN);
+    Vec2i startEdge = current + offsets[startOffsetIndex];
+    polygon.push_back(b2Vec2(startEdge.x, startEdge.y));
 
-    Vec2i startPos = current;
-    Vec2i startDir = direction;
+    do
+    {
+        Vec2i checkDir = dir;
 
-    do {
-        polygon.push_back(b2Vec2(current.x, current.y));
+        for(int i = 0; i < 4; ++i) {
+            i == 0 ? checkDir.RotateLeft() : checkDir.RotateRight();
 
-        Vec2i leftDir = direction;
-        leftDir.RotateLeft();
-        Vec2i leftPos = current + leftDir;
+            Vec2i edgePos = current + checkDir;
 
-        bool leftFilled = 
-            (leftPos.x >= 0 && leftPos.x < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL && 
-             leftPos.y >= 0 && leftPos.y < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL) 
-            && labels[leftPos.y][leftPos.x] == currentLabel;
-        
-        if(leftFilled){
-            direction = leftDir;
-            current += direction;
-        } else {
-            Vec2i forwardPos = current + direction;
-            bool forwardFilled = 
-                (forwardPos.x >= 0 && forwardPos.x < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL && 
-                 forwardPos.y >= 0 && forwardPos.y < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL) 
-                && labels[forwardPos.y][forwardPos.x] == currentLabel;
-            
-            if(forwardFilled) {
-                current = forwardPos;
-            } else {
-                direction.RotateRight();
+            if(edgePos == startEdge)
+                return polygon; // We have completed the polygon
+
+            bool labelAtCheck = (labels[edgePos.y][edgePos.x] == currentLabel);
+
+            if(!labelAtCheck) {
+                // If we found a label in the check direction, we can place the polygon point
+                Vec2i currentOffset = offsets[m_DirectionToOffsetIndex(checkDir)];
+                polygon.push_back(b2Vec2(current.x + currentOffset.x, current.y + currentOffset.y));
+                continue;
             }
+
+            // If we found a label in the check direction, we can change the direction in that direction
+            dir = checkDir;
+            break;
         }
 
-    } while(!(current == startPos && direction == startDir));
+        current += checkDir;
+    } while (true);
 
     return polygon;
 }
@@ -181,6 +227,174 @@ std::vector<b2Vec2> GamePhysics::DouglasPeuckerSimplify(const std::vector<b2Vec2
     
 }
 
+std::vector<b2Vec2> GamePhysics::RemoveCollinearPoints(const std::vector<b2Vec2> &points, float epsilon)
+{
+    if(points.size() < 3) {
+        return points;
+    }
+
+    std::vector<b2Vec2> result;
+    result.reserve(points.size());
+
+    result.push_back(points.front());
+
+    for(size_t i = 1; i < points.size() - 1; ++i) {
+        const b2Vec2 &prev = points[i - 1];
+        const b2Vec2 &curr = points[i];
+        const b2Vec2 &next = points[i + 1];
+
+        float area = (curr.x - prev.x) * (next.y - prev.y) - (curr.y - prev.y) * (next.x - prev.x);
+        if(std::abs(area) > epsilon) {
+            result.push_back(curr);
+        }
+    }
+
+    result.push_back(points.back());
+    
+    return result;
+}
+
+std::vector<b2Vec2> GamePhysics::RemoveDuplicatePoints(const std::vector<b2Vec2> &points, float epsilon)
+{
+    if(points.size() < 2) {
+        return points;
+    }
+
+    std::vector<b2Vec2> result;
+    result.reserve(points.size());
+    result.push_back(points[0]);
+
+    for (size_t i = 1; i < points.size(); ++i) {
+        const b2Vec2& prev = result.back();
+        const b2Vec2& curr = points[i];
+        if (std::abs(prev.x - curr.x) > epsilon || std::abs(prev.y - curr.y) > epsilon) {
+            result.push_back(curr);
+        }
+    }
+
+    return result;
+}
+
+// Polygon triangulation helper functions -------------------
+
+/// @brief Calculates the area of a polygon defined by a vector of b2Vec2 points
+float GamePhysics::PolygonArea(const std::vector<b2Vec2> &polygon)
+{
+    float area = 0.0f;
+    size_t n = polygon.size();
+    
+    for (size_t i = 0; i < n; ++i) {
+        const b2Vec2 &p1 = polygon[i];
+        const b2Vec2 &p2 = polygon[(i + 1) % n];
+        area += p1.x * p2.y - p2.x * p1.y;
+    }
+    
+    return area * 0.5f;
+}
+
+/// @brief Checks if three points form a convex corner (using cross product)
+/// @param prev  previous point
+/// @param curr  current point
+/// @param next  next point
+/// @param ccw   true if checking for counter-clockwise convexity, false for clockwise
+/// @return      true if the points form a convex corner, false otherwise
+bool GamePhysics::IsConvex(const b2Vec2 &prev, const b2Vec2 &curr, const b2Vec2 &next, bool ccw)
+{
+    b2Vec2 v1 = curr - prev;
+    b2Vec2 v2 = next - curr;
+
+    float crossProduct = v1.x * v2.y - v1.y * v2.x;
+
+    constexpr float EPSILON = 1e-8f;
+    return ccw ? (crossProduct > EPSILON) : (crossProduct < -EPSILON);
+}
+
+/// @brief Checks if a point is inside a triangle defined by three b2Vec2 points
+bool GamePhysics::IsPointInTriangle(const b2Vec2 &point, const Triangle &triangle)
+{
+    float area = std::abs((triangle.b.x - triangle.a.x) * (triangle.c.y - triangle.a.y) - 
+                          (triangle.c.x - triangle.a.x) * (triangle.b.y - triangle.a.y));
+    float area1 = std::abs((triangle.a.x - point.x) * (triangle.b.y - point.y) - 
+                           (triangle.b.x - point.x) * (triangle.a.y - point.y));
+    float area2 = std::abs((triangle.b.x - point.x) * (triangle.c.y - point.y) -
+                           (triangle.c.x - point.x) * (triangle.b.y - point.y));
+    float area3 = std::abs((triangle.c.x - point.x) * (triangle.a.y - point.y) -
+                           (triangle.a.x - point.x) * (triangle.c.y - point.y));
+
+    return std::abs(area - (area1 + area2 + area3)) < 1e-5f;
+}
+
+// ----------------------------------------------------------
+
+/// @brief Triangulates a polygon defined by a vector of b2Vec2 points (unused)
+/// @param polygon Vector of b2Vec2 points representing the polygon vertices
+/// @return Vector of Triangle objects representing the triangulated polygons
+std::vector<Triangle> GamePhysics::TriangulatePolygon(const std::vector<b2Vec2> &polygon)
+{
+    std::vector<Triangle> triangles;
+    if(polygon.size() < 3) return triangles;
+
+    bool ccw = PolygonArea(polygon) > 0;
+    size_t n = polygon.size();
+
+    std::vector<int> indices(n);
+    for(size_t i = 0; i < n; ++i) indices[i] = i;
+
+    while(indices.size() > 3){
+        bool earFound = false;
+        for(size_t i = 0; i < indices.size(); ++i) {
+            int prevIdx = indices[(i+indices.size() - 1) % indices.size()];
+            int currIdx = indices[i];
+            int nextIdx = indices[(i+1) % indices.size()];
+
+            const b2Vec2 &prev = polygon[prevIdx];
+            const b2Vec2 &curr = polygon[currIdx];
+            const b2Vec2 &next = polygon[nextIdx];
+
+            if(!IsConvex(prev, curr, next, ccw))
+                continue; // Not a convex corner
+            
+            bool hasPointInside = false;
+            Triangle triangle(prev, curr, next);
+            for(size_t j = 0; j < indices.size(); ++j) {
+                int testIdx = indices[j];
+                if(testIdx == prevIdx || testIdx == currIdx || testIdx == nextIdx)
+                    continue; // Skip the triangle vertices
+
+                if(IsPointInTriangle(polygon[indices[j]], triangle)) {
+                    hasPointInside = true;
+                    break; // Found a point inside the triangle
+                }
+            }
+
+            if(hasPointInside) continue;
+
+            // Found an ear
+            triangles.emplace_back(triangle);
+            indices.erase(indices.begin() + i);
+            earFound = true;
+            break;
+        }
+
+        if(!earFound) {
+            break;
+        } 
+    }
+
+    // Add the last triangle
+    if(indices.size() == 3) {
+        int idx1 = indices[0];
+        int idx2 = indices[1];
+        int idx3 = indices[2];
+        triangles.emplace_back(Triangle(polygon[idx1], polygon[idx2], polygon[idx3]));
+    }
+
+    return triangles;
+}
+
+/// @brief Generates 2D colliders for a chunk using flood fill and marching squares
+/// @param chunk Chunk to generate colliders for
+/// @param voxelProj REMOVE AFTER DONE - testing variable
 void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 voxelProj)
 {
 
@@ -189,7 +403,6 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
     int currentLabel = 1;
 
     bool grid       [Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL][Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL] = {false};
-    bool paddedGrid [Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL][Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL] = {false};
 
     for(int y = 0; y < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++y) {
         for(int x = 0; x < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++x) {
@@ -197,19 +410,6 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
             if( y < Volume::Chunk::CHUNK_SIZE && x < Volume::Chunk::CHUNK_SIZE &&
                 chunk->voxels[x][y] && chunk->voxels[x][y]->GetState() == Volume::State::Solid) {
                 grid[y][x] = true;
-            } // Pad to the right and bottom due to how the flood fill works
-            else if(grid[y][x-1] && !paddedGrid[y][x-1]) {
-                grid[y][x] = true;
-                paddedGrid[y][x] = true;
-            }
-            else if(grid[y-1][x] && !paddedGrid[y-1][x]) {
-                grid[y][x] = true;
-                paddedGrid[y][x] = true;
-                
-                if(paddedGrid[y-1][x+1]){
-                    paddedGrid[y][x+1] = true;
-                    grid[y][x+1] = true;
-                }
             }
             
         }
@@ -224,29 +424,82 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
         }
     }
 
-    // STEP 2: marching squares to get edges
     for(int label = 1; label < currentLabel; ++label) {
+        // STEP 2: marching squares to get edges
         std::vector<b2Vec2> edges = MarchingSquaresEdgeTrace(labels, label);
 
-        if (!edges.empty()) {
-            // STEP 3: Douglas-Peucker simplification
-            edges = DouglasPeuckerSimplify(edges, 0.8f);
+        if (edges.size() >= 3) {
+            // STEP 3: Remove duplicate points
+            edges = RemoveDuplicatePoints(edges, 1e-3f);
 
-            // Convert b2Vec2 to your renderer's vector type if needed
-            std::vector<glm::vec2> renderPoints;
-            for (const auto& v : edges) {
-                renderPoints.emplace_back(v.x + chunk->GetPos().x*chunk->CHUNK_SIZE, v.y + chunk->GetPos().y*chunk->CHUNK_SIZE);
+            // STEP 3.1: Douglas-Peucker simplification
+            edges = DouglasPeuckerSimplify(edges, 0.5f);
+
+            // STEP 3.2: Remove collinear points
+            edges = RemoveCollinearPoints(edges, 1e-3f);
+
+            if(edges.size() < 3) {
+                continue; // Not enough points to form a polygon
             }
-            
-            GameEngine::instance->renderer->DrawClosedShape(
-                renderPoints, 
-                glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), // Color red for edges
-                voxelProj, 
-                1.0f // Line width
-            );
+
+            // Ensure the polygon is oriented counter-clockwise
+            if (PolygonArea(edges) < 0) {
+                std::reverse(edges.begin(), edges.end());
+            }
+
+            // Ensure the polygon does not have degenerate edges TODO: remove when safe
+            bool isValid = true;
+            for (size_t i = 0; i < edges.size(); ++i) {
+                size_t j = (i + 1) % edges.size();
+                if (std::abs(edges[i].x - edges[j].x) < 1e-5f &&
+                    std::abs(edges[i].y - edges[j].y) < 1e-5f) {
+                    isValid = false;
+                    break;
+                }
+            }
+            if (!isValid) {
+                std::cerr << "Invalid polygon: degenerate edges detected." << std::endl;
+                continue;
+            }
+
+            // STEP 5: Triangulation using poly2tri
+            std::vector<p2t::Point*> p2tPoints;
+            for (const auto& edge : edges) {
+                p2tPoints.push_back(new p2t::Point(edge.x, edge.y));
+            }
+            p2t::CDT cdt(p2tPoints);
+            cdt.Triangulate();
+
+            std::vector<Triangle> triangles;
+            for (const auto& triangle : cdt.GetTriangles()) {
+                triangles.emplace_back(
+                    b2Vec2(triangle->GetPoint(0)->x, triangle->GetPoint(0)->y),
+                    b2Vec2(triangle->GetPoint(1)->x, triangle->GetPoint(1)->y),
+                    b2Vec2(triangle->GetPoint(2)->x, triangle->GetPoint(2)->y)
+                );
+            }
+
+            for (auto* p : p2tPoints) {
+                delete p;
+            }
+
+            //Render the triangles
+            for (const auto& tri : triangles) {
+                std::vector<glm::vec2> renderTriangle = {
+                    glm::vec2(tri.a.x + chunk->GetPos().x * chunk->CHUNK_SIZE, tri.a.y + chunk->GetPos().y * chunk->CHUNK_SIZE),
+                    glm::vec2(tri.b.x + chunk->GetPos().x * chunk->CHUNK_SIZE, tri.b.y + chunk->GetPos().y * chunk->CHUNK_SIZE),
+                    glm::vec2(tri.c.x + chunk->GetPos().x * chunk->CHUNK_SIZE, tri.c.y + chunk->GetPos().y * chunk->CHUNK_SIZE)
+                };
+
+                GameEngine::instance->renderer->DrawClosedShape(
+                    renderTriangle,
+                    glm::vec4(1.0f, 0.0f, 0.0f, 0.5f),
+                    voxelProj,
+                    1.0f
+                );
+            }
         }
         
-        // STEP 3: create polygon shape from edges
         //if(!edges.empty()) {
         //    b2PolygonShape polygonShape;
         //    polygonShape.Set(edges.data(), edges.size());
@@ -266,6 +519,8 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
     }
 }
 
+/// @brief Steps the physics simulation forward by a given time step
+/// @param deltaTime        time step for the simulation
 void GamePhysics::Step(float deltaTime)
 {
     b2World_Step(worldId, deltaTime, this->SIMULATION_STEP_COUNT);

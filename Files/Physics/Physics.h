@@ -5,6 +5,15 @@
 #include <Math/Vector.h>
 #include <World/Chunk.h>
 
+struct Triangle{
+    b2Vec2 a;
+    b2Vec2 b;
+    b2Vec2 c;
+
+    Triangle(const b2Vec2& a, const b2Vec2& b, const b2Vec2& c)
+        : a(a), b(b), c(c) {};
+};
+
 class GamePhysics{
 private:
     static constexpr int GRID_PADDING_FILL = 1;
@@ -31,6 +40,26 @@ private:
     static std::vector<b2Vec2> DouglasPeuckerSimplify(
         const std::vector<b2Vec2>& points, 
         float epsilon
+    );
+
+    static std::vector<b2Vec2> RemoveCollinearPoints(
+        const std::vector<b2Vec2>& points, 
+        float epsilon
+    );
+
+    static std::vector<b2Vec2> RemoveDuplicatePoints(
+        const std::vector<b2Vec2>& points,
+        float epsilon
+    );
+
+    // Helper function for triangulation of a polygon
+    static float PolygonArea(const std::vector<b2Vec2>& polygon);
+    static bool  IsConvex(const b2Vec2& prev, const b2Vec2& curr, const b2Vec2& next, bool ccw);
+    static bool  IsPointInTriangle(const b2Vec2& point, const Triangle& triangle);
+
+    // unused as tradeoff for already made solution which is better and faster
+    static std::vector<Triangle> TriangulatePolygon(
+        const std::vector<b2Vec2>& polygon
     );
 
 public:

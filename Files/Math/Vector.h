@@ -93,9 +93,14 @@ namespace vector{
         Vec2i(1, -1),
         Vec2i(0, 0)
     };
+    // (0, -1)
     const Vec2i UP = Vec2i(0, -1);
+    // (0, 1)
     const Vec2i DOWN = Vec2i(0, 1);
+    // (-1, 0)
     const Vec2i LEFT = Vec2i(-1, 0);
+    // (1, 0)
     const Vec2i RIGHT = Vec2i(1, 0);
+    // (0, 0)
     const Vec2i ZERO = Vec2i(0, 0);
 };

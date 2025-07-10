@@ -345,11 +345,29 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         }
     }
 
-    Volume::Chunk *c = chunkMatrix.GetChunkAtChunkPosition(Vec2i(4, 4));
+    Volume::Chunk *c1 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(4, 4));
+    Volume::Chunk *c2 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(4, 5));
+    Volume::Chunk *c3 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(5, 4));
+    Volume::Chunk *c4 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(5, 5));
 
-    if(c){
+    if(c1){
         GameEngine::instance->physics->Generate2DCollidersForChunk(
-            c, voxelProj
+            c1, voxelProj
+        );
+    }
+    if(c2){
+        GameEngine::instance->physics->Generate2DCollidersForChunk(
+            c2, voxelProj
+        );
+    }
+    if(c3){
+        GameEngine::instance->physics->Generate2DCollidersForChunk(
+            c3, voxelProj
+        );
+    }
+    if(c4){
+        GameEngine::instance->physics->Generate2DCollidersForChunk(
+            c4, voxelProj
         );
     }
 
