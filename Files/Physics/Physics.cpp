@@ -467,6 +467,7 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
             }
 
             // Ensure the polygon does not have degenerate edges TODO: remove when safe
+            /*
             bool isValid = true;
             for (size_t i = 0; i < edges.size(); ++i) {
                 size_t j = (i + 1) % edges.size();
@@ -480,6 +481,7 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
                 std::cerr << "Invalid polygon: degenerate edges detected." << std::endl;
                 continue;
             }
+            */
 
             // STEP 5: Triangulation using poly2tri
             /*
@@ -508,6 +510,7 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
             // STEP 6: Store the triangles for physics
             allTriangleColliders.insert(allTriangleColliders.end(), triangles.begin(), triangles.end());
             allEdges.insert(allEdges.end(), edges.begin(), edges.end());
+            allEdges.push_back(b2Vec2(-1,-1)); // (-1, -1) as a separating vector
         }
     }
     // STEP 7: Update the chunk's physics body with the generated triangles

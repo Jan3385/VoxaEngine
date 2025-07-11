@@ -6,6 +6,7 @@
 #include <vector>
 #include <mutex>
 #include <math.h>
+#include <algorithm>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -361,15 +362,26 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                         1.0f
                     );
                 }
-                std::vector<glm::vec2> edges;
+
+                int numOfSeparatingVectors = std::count_if(
+                    chunk->GetEdges().begin(), chunk->GetEdges().end(),
+                    [](const b2Vec2& edge) { return edge.x == -1 && edge.y == -1; }
+                );
+
+                std::vector<std::vector<glm::vec2>> edges(numOfSeparatingVectors); // reserve space for edges
+                int i = 0;
                 for(const b2Vec2& edge : chunk->GetEdges()) {
-                    glm::vec2 start = glm::vec2(edge.x, edge.y) + 
-                        glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y);
-                    edges.push_back(start);
+                    if(edge.x == -1 && edge.y == -1) { // (-1, -1) is a separating vector
+                        ++i;
+                        continue;
+                    }
+                    glm::vec2 worldSpaceEdge = glm::vec2(edge.x, edge.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y);
+                    edges[i].push_back(worldSpaceEdge);
                 }
-                if(edges.size() >= 3) {
+                for(auto& polygon : edges) {
+                    if(polygon.size() < 3) continue; // skip edges with less than 3 points
                     this->DrawClosedShape(
-                        edges, 
+                        polygon, 
                         glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), 
                         voxelProj, 
                         2.0f
