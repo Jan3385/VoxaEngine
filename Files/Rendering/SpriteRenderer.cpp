@@ -59,7 +59,7 @@ void SpriteRenderer::Initialize()
 }
 
 // rotation in degrees
-void SpriteRenderer::RenderSprite(GameObject *object, float rotation, const glm::vec4 &tint, glm::mat4 projection)
+void SpriteRenderer::RenderSprite(GameObject *object, const glm::vec4 &tint, glm::mat4 projection)
 {
     if(!initialized)
         return;
@@ -73,7 +73,7 @@ void SpriteRenderer::RenderSprite(GameObject *object, float rotation, const glm:
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(object->GetPosition().x, object->GetPosition().y, 0.0f));
-    model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::rotate(model, object->GetRotation(), glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, glm::vec3(object->GetSize().x, object->GetSize().y, 1.0f));
     
     spriteRenderProgram.SetMat4("model", model);

@@ -28,7 +28,7 @@ public:
     SpriteRenderer& operator=(SpriteRenderer&&) = delete;
 
     void Initialize();
-    void RenderSprite(GameObject *object, float rotation, const glm::vec4& tint, glm::mat4 projection);
+    void RenderSprite(GameObject *object, const glm::vec4& tint, glm::mat4 projection);
 
     static GLuint LoadTextureFromFile(const std::string& filePath, Vec2i *r_size);
 };

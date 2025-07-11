@@ -187,7 +187,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
         this->spriteRenderer.RenderSprite(
             object,
-            0.0f,
             glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
             voxelProj
         );
@@ -197,7 +196,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     if(player->ShouldRender()) {
         this->spriteRenderer.RenderSprite(
             player,
-            0.0f,
             glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
             voxelProj
         );

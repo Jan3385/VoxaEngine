@@ -25,15 +25,11 @@ public:
 
     virtual bool ShouldRender() const { return true; };
 
-    Vec2f GetPosition() const {
-        return position;
-    }
-    Vec2i GetSize() const {
-        return Vec2i(width, height);
-    }
-    GLuint GetTexture() const {
-        return texture;
-    }
+    Vec2f GetPosition() const   { return position; }
+    // Get rotation in radians
+    float GetRotation() const   { return rotation; }
+    Vec2i GetSize() const       { return Vec2i(width, height); }
+    GLuint GetTexture() const   { return texture; }
 protected:
     bool enabled = false;
     Vec2f position;

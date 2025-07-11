@@ -62,7 +62,8 @@ void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)
 
     b2Vec2 newPos = b2Body_GetPosition(m_physicsBody);
     this->position = Vec2f(newPos.x, newPos.y);
-    this->rotation = b2Body_GetRotation(m_physicsBody).c;
+    b2Rot rot = b2Body_GetRotation(m_physicsBody);
+    this->rotation = std::atan2(rot.s, rot.c); // Convert b2Rot to radians
 }
 
 void PhysicsObject::DestroyPhysicsBody()
