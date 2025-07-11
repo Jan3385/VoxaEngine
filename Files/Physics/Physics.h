@@ -2,8 +2,9 @@
 
 #include <box2d/box2d.h>
 
-#include <Math/Vector.h>
-#include <World/Chunk.h>
+#include "Math/Vector.h"
+#include "World/Chunk.h"
+#include "GameObject/PhysicsObject.h"
 
 struct Triangle{
     b2Vec2 a;
@@ -16,6 +17,7 @@ struct Triangle{
 
 class GamePhysics{
 private:
+    static constexpr int PHYS_OBJECT_GRAVITY = 9.81f * 12.0f;
     static constexpr int GRID_PADDING_FILL = 1;
     static constexpr int SIMULATION_STEP_COUNT = 4;
     b2WorldId worldId;
@@ -66,6 +68,8 @@ public:
     GamePhysics();
     ~GamePhysics();
     void Step(float deltaTime);
+
+    std::vector<PhysicsObject*> physicsObjects;
 
     void Generate2DCollidersForChunk(
         Volume::Chunk* chunk

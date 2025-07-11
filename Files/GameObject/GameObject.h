@@ -13,6 +13,8 @@ public:
     GameObject(Vec2f position, std::string texturePath);
     virtual ~GameObject();
 
+    void SetEnabled(bool enabled) { this->enabled = enabled; }
+
     // Disable copy and move semantics
     GameObject(const GameObject&) = delete;
     GameObject(GameObject&&) = delete;
@@ -33,7 +35,9 @@ public:
         return texture;
     }
 protected:
+    bool enabled = false;
     Vec2f position;
+    float rotation = 0.0f; // in radians
     int width = 0;
     int height = 0;
     GLuint texture = 0;

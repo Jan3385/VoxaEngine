@@ -10,7 +10,7 @@
 GamePhysics::GamePhysics()
 {
     b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = b2Vec2(0.0f, -9.81f);
+    worldDef.gravity = b2Vec2(0.0f, PHYS_OBJECT_GRAVITY);
     
     worldId = b2CreateWorld(&worldDef);
 }
@@ -414,7 +414,6 @@ std::vector<Triangle> GamePhysics::TriangulatePolygon(const std::vector<b2Vec2> 
 /// @param chunk Chunk to generate colliders for
 void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
 {
-    std::cout << "Generating 2D colliders for chunk at (" << chunk->GetPos().x << ", " << chunk->GetPos().y << ")" << std::endl;
     // STEP 1: flood fill
     int labels      [Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL][Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL] = {0};
     int currentLabel = 1;
@@ -466,23 +465,6 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
                 std::reverse(edges.begin(), edges.end());
             }
 
-            // Ensure the polygon does not have degenerate edges TODO: remove when safe
-            /*
-            bool isValid = true;
-            for (size_t i = 0; i < edges.size(); ++i) {
-                size_t j = (i + 1) % edges.size();
-                if (std::abs(edges[i].x - edges[j].x) < 1e-5f &&
-                    std::abs(edges[i].y - edges[j].y) < 1e-5f) {
-                    isValid = false;
-                    break;
-                }
-            }
-            if (!isValid) {
-                std::cerr << "Invalid polygon: degenerate edges detected." << std::endl;
-                continue;
-            }
-            */
-
             // STEP 5: Triangulation using poly2tri
             /*
             std::vector<p2t::Point*> p2tPoints;
@@ -521,5 +503,17 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
 /// @param deltaTime        time step for the simulation
 void GamePhysics::Step(float deltaTime)
 {
+    for(PhysicsObject* obj : physicsObjects) {
+        if(obj->dirtyColliders) {
+            obj->CreatePhysicsBody(worldId);
+            obj->dirtyColliders = false;
+        }
+    }
+
     b2World_Step(worldId, deltaTime, this->SIMULATION_STEP_COUNT);
+
+    // Update all physics object locations
+    for(PhysicsObject* obj : physicsObjects) {
+        obj->UpdatePhysicPosition(worldId);
+    }
 }
