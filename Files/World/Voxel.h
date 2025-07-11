@@ -29,7 +29,7 @@ namespace Volume {
 		short int GetAcceleration() const { return Acceleration; };
 		void SetAcceleration(short int acceleration);
 		void IncrementAcceleration(short int amount);
-		bool IsFalling = false;
+		bool isFalling = false;
 	private:
 		short int Acceleration = 1;
 		static constexpr short int MAX_ACCELERATION = 10;
@@ -71,6 +71,7 @@ namespace Volume {
 
 		// Check if the voxel meets all the conditions to update colliders in its chunk
 		virtual bool ShouldTriggerDirtyColliders() { return false; };
+		virtual bool IsSolidCollider() const { return false; };
 
 		bool IsStateBelowDensity(State state, float density) const;
 		bool IsStateAboveDensity(State state, float density) const;
@@ -95,6 +96,7 @@ namespace Volume {
 		void TryToMoveVoxelBelow(ChunkMatrix* matrix);
 
 		bool ShouldTriggerDirtyColliders() override;
+		bool IsSolidCollider() const override;
 	private:
 		void StopFalling();
 	};

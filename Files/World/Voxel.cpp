@@ -153,7 +153,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
 
     //falling down + acceleration + setting isFalling to near voxel handling
     if (StepAlongDirection(matrix, vector::DOWN, GetAcceleration())) { //if is able to fall down
-    	IsFalling = true;
+    	isFalling = true;
     	IncrementAcceleration(1);
 
     	//try to set isFalling to true on adjasent voxels - simulates inertia
@@ -163,7 +163,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     	{
     		VoxelSolid *leftMovable = dynamic_cast<VoxelSolid*>(left);
     		if ((1 - leftMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
-    			leftMovable->IsFalling = true;
+    			leftMovable->isFalling = true;
     			leftMovable->XVelocity = 1;
     		}
     	}
@@ -171,14 +171,14 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     	{
     		VoxelSolid *rightMovable = dynamic_cast<VoxelSolid*>(right);
     		if ((1 - rightMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
-    			rightMovable->IsFalling = true;
+    			rightMovable->isFalling = true;
     			rightMovable->XVelocity = 1;
     		}
     	}
 
     	return true;
     }
-    else if (IsFalling) { //On the frame of the impact
+    else if (isFalling) { //On the frame of the impact
     	StopFalling();
     	//If the voxel below is a solid, try to move to the sides
 
@@ -205,7 +205,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     	{
     		VoxelSolid *belowMovable = dynamic_cast<VoxelSolid*>(below);
     		if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
-    			belowMovable->IsFalling = true;
+    			belowMovable->isFalling = true;
     			belowMovable->XVelocity = 1;
     		}
     	}
@@ -248,7 +248,7 @@ void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
     {
     	VoxelSolid* belowMovable = dynamic_cast<VoxelSolid*>(below);
     	if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
-    		belowMovable->IsFalling = true;
+    		belowMovable->isFalling = true;
     		belowMovable->XVelocity = 1;
     	}
     }
@@ -259,10 +259,17 @@ bool Volume::VoxelSolid::ShouldTriggerDirtyColliders()
 	return true;
 }
 
+bool Volume::VoxelSolid::IsSolidCollider() const
+{
+	if (isFalling) return false;
+	
+	return true;
+}
+
 void VoxelSolid::StopFalling()
 {
     XVelocity = ((GetAcceleration() / 6) / (rand()%2 + 1)) + 1;
-    IsFalling = false;
+    isFalling = false;
     SetAcceleration(1);
 }
 
@@ -272,16 +279,17 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
     if (updatedThisFrame) {
     	return true;
     }
+
     updatedThisFrame = true;
 
     //falling down + acceleration
     if (StepAlongDirection(matrix, vector::DOWN, GetAcceleration())) {
-    	IsFalling = true;
+    	isFalling = true;
 		IncrementAcceleration(1);
     	return true;
     }
-    else if (IsFalling) { //On the frame of the impact (stops falling)
-    	IsFalling = false;
+    else if (isFalling) { //On the frame of the impact (stops falling)
+    	isFalling = false;
 		SetAcceleration(1);
     }
 
