@@ -254,6 +254,11 @@ void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
     }
 }
 
+bool Volume::VoxelSolid::ShouldTriggerDirtyColliders()
+{
+	return true;
+}
+
 void VoxelSolid::StopFalling()
 {
     XVelocity = ((GetAcceleration() / 6) / (rand()%2 + 1)) + 1;

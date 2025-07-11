@@ -68,6 +68,6 @@ public:
     void Step(float deltaTime);
 
     void Generate2DCollidersForChunk(
-        Volume::Chunk* chunk, glm::mat4 voxelProj
+        Volume::Chunk* chunk
     );
 };

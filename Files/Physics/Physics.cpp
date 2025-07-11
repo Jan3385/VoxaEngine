@@ -138,6 +138,7 @@ std::vector<b2Vec2> GamePhysics::MarchingSquaresEdgeTrace(
     Vec2i startEdge = current + offsets[startOffsetIndex];
     polygon.push_back(b2Vec2(startEdge.x, startEdge.y));
 
+    int pass = 0;
     do
     {
         Vec2i checkDir = dir;
@@ -150,10 +151,17 @@ std::vector<b2Vec2> GamePhysics::MarchingSquaresEdgeTrace(
             if(edgePos == startEdge)
                 return polygon; // We have completed the polygon
 
-            bool labelAtCheck = (labels[edgePos.y][edgePos.x] == currentLabel);
+            
+            bool labelAtCheck;
+            if(edgePos.x < 0 || edgePos.x >= Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL ||
+               edgePos.y < 0 || edgePos.y >= Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL) {
+                labelAtCheck = false; // Out of bounds, no label
+            } else {
+                labelAtCheck = (labels[edgePos.y][edgePos.x] == currentLabel);
+            }
 
             if(!labelAtCheck) {
-                // If we found a label in the check direction, we can place the polygon point
+                // If we havent found a label in the check direction, we can place the polygon point
                 Vec2i currentOffset = offsets[m_DirectionToOffsetIndex(checkDir)];
                 polygon.push_back(b2Vec2(current.x + currentOffset.x, current.y + currentOffset.y));
                 continue;
@@ -165,7 +173,12 @@ std::vector<b2Vec2> GamePhysics::MarchingSquaresEdgeTrace(
         }
 
         current += checkDir;
-    } while (true);
+        pass++;
+    } while (pass < 5000);
+
+    //TODO: just a hack to not crash, fix this properly someday
+    if(pass >= 5000)
+        return {};
 
     return polygon;
 }
@@ -399,10 +412,9 @@ std::vector<Triangle> GamePhysics::TriangulatePolygon(const std::vector<b2Vec2> 
 
 /// @brief Generates 2D colliders for a chunk using flood fill and marching squares
 /// @param chunk Chunk to generate colliders for
-/// @param voxelProj REMOVE AFTER DONE - testing variable
-void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 voxelProj)
+void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
 {
-
+    std::cout << "Generating 2D colliders for chunk at (" << chunk->GetPos().x << ", " << chunk->GetPos().y << ")" << std::endl;
     // STEP 1: flood fill
     int labels      [Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL][Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL] = {0};
     int currentLabel = 1;
@@ -429,6 +441,8 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
         }
     }
 
+    std::vector<Triangle> allTriangleColliders;
+    std::vector<b2Vec2> allEdges;
     for(int label = 1; label < currentLabel; ++label) {
         // STEP 2: marching squares to get edges
         std::vector<b2Vec2> edges = MarchingSquaresEdgeTrace(labels, label);
@@ -437,11 +451,11 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
             // STEP 3: Remove duplicate points
             edges = RemoveDuplicatePoints(edges, 1e-3f);
 
-            // STEP 3.1: Douglas-Peucker simplification
-            edges = DouglasPeuckerSimplify(edges, 0.5f);
-
             // STEP 3.2: Remove collinear points
             edges = RemoveCollinearPoints(edges, 1e-3f);
+
+            // STEP 3.1: Douglas-Peucker simplification
+            edges = DouglasPeuckerSimplify(edges, 0.5f);
 
             if(edges.size() < 3) {
                 continue; // Not enough points to form a polygon
@@ -468,6 +482,7 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
             }
 
             // STEP 5: Triangulation using poly2tri
+            /*
             std::vector<p2t::Point*> p2tPoints;
             for (const auto& edge : edges) {
                 p2tPoints.push_back(new p2t::Point(edge.x, edge.y));
@@ -486,42 +501,17 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk, glm::mat4 vo
 
             for (auto* p : p2tPoints) {
                 delete p;
-            }
+            }*/
+            // I would rather use poly2tri but it causes crashes (maybe bad topology on my part)
+            std::vector<Triangle> triangles = TriangulatePolygon(edges);
 
-            //Render the triangles
-            for (const auto& tri : triangles) {
-                std::vector<glm::vec2> renderTriangle = {
-                    glm::vec2(tri.a.x + chunk->GetPos().x * chunk->CHUNK_SIZE, tri.a.y + chunk->GetPos().y * chunk->CHUNK_SIZE),
-                    glm::vec2(tri.b.x + chunk->GetPos().x * chunk->CHUNK_SIZE, tri.b.y + chunk->GetPos().y * chunk->CHUNK_SIZE),
-                    glm::vec2(tri.c.x + chunk->GetPos().x * chunk->CHUNK_SIZE, tri.c.y + chunk->GetPos().y * chunk->CHUNK_SIZE)
-                };
-
-                GameEngine::instance->renderer->DrawClosedShape(
-                    renderTriangle,
-                    glm::vec4(1.0f, 0.0f, 0.0f, 0.5f),
-                    voxelProj,
-                    1.0f
-                );
-            }
+            // STEP 6: Store the triangles for physics
+            allTriangleColliders.insert(allTriangleColliders.end(), triangles.begin(), triangles.end());
+            allEdges.insert(allEdges.end(), edges.begin(), edges.end());
         }
-        
-        //if(!edges.empty()) {
-        //    b2PolygonShape polygonShape;
-        //    polygonShape.Set(edges.data(), edges.size());
-
-        //    // Create a body for the polygon
-        //    b2BodyDef bodyDef;
-        //    bodyDef.type = b2_staticBody;
-        //    b2Body* body = b2CreateBody(worldId, &bodyDef);
-
-        //    // Attach the polygon shape to the body
-        //    b2FixtureDef fixtureDef;
-        //    fixtureDef.shape = &polygonShape;
-        //    fixtureDef.density = 1.0f;
-        //    fixtureDef.friction = 0.5f;
-        //    body->CreateFixture(&fixtureDef);
-        //}
     }
+    // STEP 7: Update the chunk's physics body with the generated triangles
+    chunk->UpdateColliders(allTriangleColliders, allEdges, worldId);
 }
 
 /// @brief Steps the physics simulation forward by a given time step

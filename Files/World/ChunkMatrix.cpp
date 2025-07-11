@@ -192,6 +192,9 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
 
     this->Grid.push_back(chunk);
 
+    // Set chunks colliders
+    GameEngine::instance->physics->Generate2DCollidersForChunk(chunk);
+
     return chunk;
 }
 
@@ -294,6 +297,10 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
         chunkCreationMutex.unlock();
     }
 
+    // update physics if changing a solid voxel
+    if(voxel->ShouldTriggerDirtyColliders() || chunk->voxels[localPos.x][localPos.y]->ShouldTriggerDirtyColliders())
+        chunk->dirtyColliders = true;
+
     //delete the old voxel if it exists
     if(chunk->voxels[localPos.x][localPos.y]){
         delete chunk->voxels[localPos.x][localPos.y];
@@ -332,6 +339,10 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
         GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
+
+    // update physics if changing a solid voxel
+    if(voxel->ShouldTriggerDirtyColliders() || chunk->voxels[localPos.x][localPos.y]->ShouldTriggerDirtyColliders())
+        chunk->dirtyColliders = true;
 
     // Set the new voxel and mark for update
     chunk->voxels[localPos.x][localPos.y] = voxel;

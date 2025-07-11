@@ -1,4 +1,4 @@
-#include "World/Chunk.h"
+#include "Chunk.h"
 #include "World/Voxel.h"
 #include "World/voxelTypes.h"	
 #include <math.h>
@@ -6,10 +6,11 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+
 #include "GameEngine.h"
 #include "World/Particles/SolidFallingParticle.h"
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
-#include "Chunk.h"
+#include "Physics/Physics.h"
 
 
 using namespace Volume; 
@@ -189,6 +190,36 @@ void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
     }
 }
 
+void Volume::Chunk::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)
+{
+    this->dirtyColliders = false;
+
+    this->DestroyPhysicsBody();
+    this->CreatePhysicsBody(worldId);
+
+    b2ShapeDef shapeDef = b2DefaultShapeDef();
+    shapeDef.material = b2DefaultSurfaceMaterial();
+
+    for(Triangle t : triangles){
+        b2Hull hull;
+        hull.points[0] = t.a;
+        hull.points[1] = t.b;
+        hull.points[2] = t.c;
+        hull.count = 3;
+
+        b2Polygon polygon = b2MakePolygon(
+            &hull, 0.01f
+        );
+
+        b2CreatePolygonShape(
+            m_physicsBody, &shapeDef, &polygon
+        );
+    }
+
+    m_triangleColliders.assign(triangles.begin(), triangles.end());
+    m_edges.assign(edges.begin(), edges.end());
+}
+
 /**
  * Fills the provided buffers with data for compute shaders.
  * provides flattened arrays of voxel data for shaders
@@ -284,3 +315,23 @@ AABB Volume::Chunk::GetAABB() const
         Vec2f(CHUNK_SIZE, CHUNK_SIZE));
 }
 
+void Volume::Chunk::DestroyPhysicsBody()
+{
+    if (b2Body_IsValid(m_physicsBody)) {
+        b2DestroyBody(m_physicsBody);
+        m_physicsBody = b2_nullBodyId;
+    }
+}
+
+void Volume::Chunk::CreatePhysicsBody(b2WorldId worldId)
+{
+    if (b2Body_IsValid(m_physicsBody)) {
+        std::cerr << "Physics body already exists for chunk at (" << m_x << ", " << m_y << ")." << std::endl;
+        return;
+    }
+    
+    b2BodyDef bodyDef = b2DefaultBodyDef();
+    bodyDef.type = b2_staticBody;
+    bodyDef.position = b2Vec2(m_x * CHUNK_SIZE, m_y * CHUNK_SIZE);
+    m_physicsBody = b2CreateBody(worldId, &bodyDef);
+}

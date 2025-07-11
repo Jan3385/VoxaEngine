@@ -344,31 +344,39 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
             );
         }
     }
+    if(this->renderMeshData) {
+        for (auto& chunk : chunkMatrix.Grid) {
+            if(chunk->GetAABB().Overlaps(player->Camera)) {
+                for (const Triangle& t : chunk->GetColliders()) {
+                    std::vector<glm::vec2> points = {
+                        glm::vec2(t.a.x, t.a.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
+                        glm::vec2(t.b.x, t.b.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
+                        glm::vec2(t.c.x, t.c.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y)
+                    };
 
-    Volume::Chunk *c1 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(4, 4));
-    Volume::Chunk *c2 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(4, 5));
-    Volume::Chunk *c3 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(5, 4));
-    Volume::Chunk *c4 = chunkMatrix.GetChunkAtChunkPosition(Vec2i(5, 5));
-
-    if(c1){
-        GameEngine::instance->physics->Generate2DCollidersForChunk(
-            c1, voxelProj
-        );
-    }
-    if(c2){
-        GameEngine::instance->physics->Generate2DCollidersForChunk(
-            c2, voxelProj
-        );
-    }
-    if(c3){
-        GameEngine::instance->physics->Generate2DCollidersForChunk(
-            c3, voxelProj
-        );
-    }
-    if(c4){
-        GameEngine::instance->physics->Generate2DCollidersForChunk(
-            c4, voxelProj
-        );
+                    this->DrawClosedShape(
+                        points, 
+                        glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 
+                        voxelProj, 
+                        1.0f
+                    );
+                }
+                std::vector<glm::vec2> edges;
+                for(const b2Vec2& edge : chunk->GetEdges()) {
+                    glm::vec2 start = glm::vec2(edge.x, edge.y) + 
+                        glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y);
+                    edges.push_back(start);
+                }
+                if(edges.size() >= 3) {
+                    this->DrawClosedShape(
+                        edges, 
+                        glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), 
+                        voxelProj, 
+                        2.0f
+                    );
+                }
+            }
+        }
     }
 
     this->RenderIMGUI(chunkMatrix);
@@ -468,6 +476,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
     ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 10, 1, 2000);
     ImGui::Checkbox("Place Unmovable Solid Voxels", &GameEngine::instance->placeUnmovableSolidVoxels);
     if(ImGui::Button("Toggle Debug Rendering")) ToggleDebugRendering();
+    ImGui::Checkbox("Render Mesh Data", &this->renderMeshData);
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
     ImGui::Checkbox("No Clip", &player->NoClip);

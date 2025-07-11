@@ -69,6 +69,9 @@ namespace Volume {
 		bool IsMoveableSolid();
 		bool IsUnmoveableSolid();
 
+		// Check if the voxel meets all the conditions to update colliders in its chunk
+		virtual bool ShouldTriggerDirtyColliders() { return false; };
+
 		bool IsStateBelowDensity(State state, float density) const;
 		bool IsStateAboveDensity(State state, float density) const;
 
@@ -90,6 +93,8 @@ namespace Volume {
 		bool Step(ChunkMatrix* matrix) override;
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		void TryToMoveVoxelBelow(ChunkMatrix* matrix);
+
+		bool ShouldTriggerDirtyColliders() override;
 	private:
 		void StopFalling();
 	};

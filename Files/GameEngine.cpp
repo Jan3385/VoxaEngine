@@ -143,6 +143,12 @@ void GameEngine::m_SimulationThread()
             m_UpdateGridVoxel(i);
         }
 
+        // Update colliders for all chunks
+        for(size_t i = 0; i < chunkMatrix.Grid.size(); ++i) {
+            if(chunkMatrix.Grid[i]->dirtyColliders)
+                physics->Generate2DCollidersForChunk(chunkMatrix.Grid[i]);
+        }
+
         chunkMatrix.voxelMutex.unlock();
 
         chunkMatrix.UpdateParticles();

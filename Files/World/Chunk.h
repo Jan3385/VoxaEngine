@@ -8,11 +8,15 @@
 
 #include <glm/glm.hpp>
 
+#include <box2d/box2d.h>
+
 #include "Math/Math.h"
 
 #include "World/Voxel.h"
 #include "World/Particle.h"
 #include "World/ParticleGenerator.h"
+
+struct Triangle;
 
 class DirtyRect{
 public:
@@ -61,6 +65,13 @@ namespace Volume
 		bool ShouldChunkCalculatePressure() const;
     	void UpdateVoxels(ChunkMatrix* matrix);
 
+		// Physics
+		bool dirtyColliders = true;
+		void UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId);
+		b2BodyId GetPhysicsBody() const { return m_physicsBody; }
+		std::vector<Triangle> &GetColliders() { return m_triangleColliders; }
+		std::vector<b2Vec2> &GetEdges() { return m_edges; }
+
 		void GetShadersData(
 			float temperatureBuffer[],
 			float heatCapacityBuffer[],
@@ -89,6 +100,13 @@ namespace Volume
     private:
     	short int m_x;
     	short int m_y;	
+
+		b2BodyId m_physicsBody = b2_nullBodyId;
+		std::vector<Triangle> m_triangleColliders;
+		std::vector<b2Vec2> m_edges;
+
+		void DestroyPhysicsBody();
+		void CreatePhysicsBody(b2WorldId worldId);
 
 		// rendering data
 		ChunkVoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
