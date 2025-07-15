@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "World/voxelTypes.h"
+#include "GameObjectRegistry.h"
+#include "VoxelRegistry.h"
 
 using namespace Volume;
 using namespace Registry;
@@ -19,7 +21,7 @@ void VoxelRegistry::RegisterVoxel(const std::string &name, VoxelProperty propert
 	if(registriesClosed) 
 		throw std::runtime_error("Voxel registered after designated time window: " + name);
 	
-	property.id = idCounter++;
+	property.id = ++idCounter;
 
 	registry[name] = property;
 
@@ -64,6 +66,15 @@ void VoxelRegistry::RegisterVoxels()
 			.SetColor(RGBA(70, 70, 70, 200))
 			.PhaseUp("Liquid_Oxygen", -218.79)
 			.SetSolidInertiaResistance(0.15)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Organics",
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 2000, 0.4, 1000)
+			.SetName("Organic goo")
+			.SetColor(RGBA(90, 80, 19, 255))
+			.SetSolidInertiaResistance(0.5)
+			.SetFlamability(0)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -303,6 +314,22 @@ VoxelProperty *VoxelRegistry::GetProperties(uint32_t id)
 	return it->second;
 }
 
+std::string Registry::VoxelRegistry::GetStringID(uint32_t numericId)
+{
+	VoxelProperty* it = VoxelRegistry::idRegistry.find(numericId)->second;
+	if(it == nullptr){
+		throw std::runtime_error("Voxel property not found for numeric id: " + std::to_string(numericId));
+	}
+
+	for(const auto& pair : VoxelRegistry::registry){
+		if(pair.second.id == numericId){
+			return pair.first;
+		}
+	}
+
+	throw std::runtime_error("Voxel string ID not found for numeric id: " + std::to_string(numericId));
+}
+
 bool VoxelRegistry::CanGetMovedByExplosion(State state)
 {
     return state == State::Liquid || state == State::Solid;
@@ -380,27 +407,46 @@ VoxelBuilder &VoxelBuilder::SetFlamability(uint8_t flamability)
 VoxelProperty VoxelBuilder::Build()
 {
     return VoxelProperty{
-		this->Name,
-		this->Constructor,
-		this->Color,
-		this->Density,
-		this->HeatCapacity,
-		this->HeatConductivity,
-		this->CooledChange,
-		this->HeatedChange,
-		0,
-		10,
-		this->Flamability
+		.name = this->Name,
+		.Constructor = this->Constructor,
+		.pColor = this->Color,
+		.Density = this->Density,
+		.HeatCapacity = this->HeatCapacity,
+		.HeatConductivity = this->HeatConductivity,
+		.CooledChange = this->CooledChange,
+		.HeatedChange = this->HeatedChange,
+		.SolidInertiaResistance = this->SolidInertiaResistance,
+		.FluidDispursionRate = this->FluidDispursionRate,
+		.Flamability = this->Flamability
 	};
 }
 
+/// @brief Allocates a new instance of a voxel element from string id
+/// @return pointer to the newly created voxel element
 VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float amount, Temperature temp, bool placeUnmovableSolids)
+{
+	VoxelProperty* prop = VoxelRegistry::GetProperties(id);   
+
+	return CreateVoxelElement(prop, id, position, amount, temp, placeUnmovableSolids);
+}
+
+/// @brief Allocates a new instance of a voxel element from numeric id
+/// @return pointer to the newly created voxel element
+Volume::VoxelElement *CreateVoxelElement(uint32_t id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids)
+{
+	VoxelProperty* prop = VoxelRegistry::GetProperties(id);
+
+	std::string stringId = VoxelRegistry::GetStringID(id);
+
+	return CreateVoxelElement(prop, stringId, position, amount, temp, placeUnmovableSolids);
+}
+/// @brief Allocates a new instance of a voxel element from VoxelProperty pointer
+/// @return pointer to the newly created voxel element
+Volume::VoxelElement *CreateVoxelElement(Volume::VoxelProperty *property, std::string id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids)
 {
 	VoxelElement *voxel;
 
-	VoxelProperty* prop = VoxelRegistry::GetProperties(id);   
-
-	if(prop->Constructor == DefaultVoxelConstructor::Custom){
+    if(property->Constructor == DefaultVoxelConstructor::Custom){
 		if(id == "Empty")
 			voxel = new EmptyVoxel(position);
 		else if(id == "Fire")
@@ -415,9 +461,9 @@ VoxelElement *CreateVoxelElement(std::string id, Vec2i position, float amount, T
 
 		return voxel;
 	}
-	if(prop->Constructor == DefaultVoxelConstructor::GasVoxel)
+	if(property->Constructor == DefaultVoxelConstructor::GasVoxel)
 		voxel = new VoxelGas(id, position, temp, amount);
-	else if(prop->Constructor == DefaultVoxelConstructor::LiquidVoxel)
+	else if(property->Constructor == DefaultVoxelConstructor::LiquidVoxel)
 		voxel = new VoxelLiquid(id, position, temp, amount);
 	else{
 		voxel = new VoxelSolid(id, position, temp, placeUnmovableSolids, amount);

@@ -21,6 +21,7 @@ public:
     uint8_t a;
     RGBA();
     RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    RGBA(uint32_t color); // ARGB format
     glm::vec4 getGLMVec4() const;
     ~RGBA();
 };

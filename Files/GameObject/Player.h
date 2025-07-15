@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameObject/GameObject.h"
+#include "GameObject/VoxelObject.h"
 
 #include "Math/Vector.h"
 #include "Math/AABB.h"
@@ -9,13 +9,13 @@
 
 namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
-    class Player  : public GameObject {
+    class Player  : public VoxelObject {
     public:
         static bool NoClip;
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 600;
         static constexpr int SPEED = 60;
         Player();
-        Player(ChunkMatrix *matrix);
+        Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
         ~Player();
         void Update(ChunkMatrix& chunkMatrix, float deltaTime);
 

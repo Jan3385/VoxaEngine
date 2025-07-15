@@ -25,7 +25,7 @@ public:
 	std::vector<Particle::VoxelParticle*> particles;
 	std::vector<Particle::ParticleGenerator*> particleGenerators;
 
-	std::vector<GameObject*> gameObjects;
+	std::vector<VoxelObject*> voxelObjects;
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);

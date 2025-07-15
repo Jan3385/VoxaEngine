@@ -21,7 +21,6 @@ namespace Registry{
 	};
 }
 
-
 namespace Volume{
 	class VoxelElement;
 	
@@ -51,6 +50,8 @@ namespace Volume{
 }
 
 Volume::VoxelElement* CreateVoxelElement(std::string id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids);
+Volume::VoxelElement* CreateVoxelElement(uint32_t id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids);
+Volume::VoxelElement* CreateVoxelElement(Volume::VoxelProperty* property, std::string id, Vec2i position, float amount, Volume::Temperature temp, bool placeUnmovableSolids);
 
 namespace Registry{
 	class VoxelBuilder{
@@ -82,6 +83,7 @@ namespace Registry{
 	public:
 		static Volume::VoxelProperty* GetProperties(std::string id);
 		static Volume::VoxelProperty* GetProperties(uint32_t id);
+		static std::string GetStringID(uint32_t id);
 		static bool CanGetMovedByExplosion(Volume::State state);
 		static bool CanGetDestroyedByExplosion(std::string id, float explosionPower);
 		static bool CanBeMovedBySolid(Volume::State state);

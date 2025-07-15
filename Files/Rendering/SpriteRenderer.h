@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-class GameObject;
+class VoxelObject;
 
 class SpriteRenderer
 {
@@ -28,7 +28,7 @@ public:
     SpriteRenderer& operator=(SpriteRenderer&&) = delete;
 
     void Initialize();
-    void RenderSprite(GameObject *object, const glm::vec4& tint, glm::mat4 projection);
+    void RenderSprite(Vec2f position, Vec2i size, float rotation, GLuint texture, const glm::vec4& tint, glm::mat4 projection);
 
     static GLuint LoadTextureFromFile(const std::string& filePath, Vec2i *r_size);
 };

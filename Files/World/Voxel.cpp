@@ -21,7 +21,7 @@ VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperatu
 	this->properties = Registry::VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;
 
-	srand(position.x + position.y * rand()); // temp fix
+	srand(position.x + position.y * rand()); //TODO: temp fix
 
 	//tint the color factor 1 to 1.2
 	float factor = 1 + ((rand() % 20) / 100.0f);

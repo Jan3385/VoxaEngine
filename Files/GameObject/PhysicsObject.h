@@ -1,17 +1,17 @@
 #pragma once
 
-#include <GameObject/GameObject.h>
+#include <GameObject/VoxelObject.h>
 
 #include <box2d/box2d.h>
 
 struct Triangle;
 
-class PhysicsObject: public GameObject
+class PhysicsObject: public VoxelObject
 {
 public:
     PhysicsObject() = default;
-    PhysicsObject(Vec2f position, std::string texturePath)
-        : GameObject(position, texturePath) { }
+    PhysicsObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData)
+        : VoxelObject(position, voxelData) { }
 
     ~PhysicsObject();
 
@@ -26,7 +26,7 @@ public:
 
     void Update(ChunkMatrix& chunkMatrix, float deltaTime) override;
     void UpdatePhysicPosition(b2WorldId worldId);
-    void CreatePhysicsBody(b2WorldId worldId);
+    void CreatePhysicsBody(b2WorldId worldId); //TODO: make private
 private:
     b2BodyId m_physicsBody = b2_nullBodyId;
     std::vector<Triangle> m_triangleColliders;

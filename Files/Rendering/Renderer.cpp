@@ -73,7 +73,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
 
-    this->chunkRenderProgram = Shader::Shader(
+    this->voxelRenderProgram = Shader::Shader(
         Shader::voxelArraySimulationVertexShader,
         Shader::voxelArraySimulationFragmentShader
     );
@@ -180,24 +180,31 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         -1.0f, 1.0f
     );
 
+    this->voxelRenderProgram.Use();
+    this->voxelRenderProgram.SetMat4("projection", voxelProj);
+
     //render objects
-    for (GameObject* object : chunkMatrix.gameObjects) {
+    for (VoxelObject* object : chunkMatrix.voxelObjects) {
         if(object == nullptr) continue;
         if(!object->ShouldRender()) continue;
 
-        this->spriteRenderer.RenderSprite(
-            object,
-            glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-            voxelProj
+        unsigned int voxelCount = object->UpdateRenderBuffer();
+
+        glBindVertexArray(object->renderVoxelVAO);
+        glDrawArraysInstanced(
+            GL_TRIANGLE_FAN, 0, 4, 
+            static_cast<GLsizei>(voxelCount)
         );
     }
 
     //render player
     if(player->ShouldRender()) {
-        this->spriteRenderer.RenderSprite(
-            player,
-            glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-            voxelProj
+        unsigned int voxelCount = player->UpdateRenderBuffer();
+
+        glBindVertexArray(player->renderVoxelVAO);
+        glDrawArraysInstanced(
+            GL_TRIANGLE_FAN, 0, 4, 
+            static_cast<GLsizei>(voxelCount)
         );
     }
 
@@ -205,9 +212,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         chunk->SetVBOData();
     }
     this->chunkCreateBuffer.clear();
-
-    this->chunkRenderProgram.Use();
-    this->chunkRenderProgram.SetMat4("projection", voxelProj);
     
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){

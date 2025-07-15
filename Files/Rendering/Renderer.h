@@ -18,7 +18,7 @@ private:
     // Borrowed from Engine class
     SDL_GLContext *r_GLContext = nullptr;
 
-    Shader::Shader chunkRenderProgram;    
+    Shader::Shader voxelRenderProgram;    
     Shader::Shader temperatureRenderProgram;
     Shader::Shader particleRenderProgram;    
     Shader::Shader closedShapeRenderProgram;

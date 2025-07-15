@@ -105,7 +105,7 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
     //update the render buffer for chunk
     Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
     if(chunk)
-        chunk->UpdateRenderBufferRanges[this->position.x%Chunk::CHUNK_SIZE].AddValue(this->position.y%Chunk::CHUNK_SIZE);
+        chunk->UpdateRenderBufferRanges[this->position.y%Chunk::CHUNK_SIZE].AddValue(this->position.x%Chunk::CHUNK_SIZE);
 
     return true;
 }
@@ -159,7 +159,7 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
     //update the render buffer for chunk
     Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
     if(chunk)
-        chunk->UpdateRenderBufferRanges[this->position.x%Chunk::CHUNK_SIZE].AddValue(this->position.y%Chunk::CHUNK_SIZE);
+        chunk->UpdateRenderBufferRanges[this->position.y%Chunk::CHUNK_SIZE].AddValue(this->position.x%Chunk::CHUNK_SIZE);
 
     return true;
 }
@@ -217,7 +217,7 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
     //update the render buffer for chunk
     Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
     if(chunk)
-        chunk->UpdateRenderBufferRanges[this->position.x%Chunk::CHUNK_SIZE].AddValue(this->position.y%Chunk::CHUNK_SIZE);
+        chunk->UpdateRenderBufferRanges[this->position.y%Chunk::CHUNK_SIZE].AddValue(this->position.x%Chunk::CHUNK_SIZE);
 
     return true;
 }

@@ -16,7 +16,7 @@ PhysicsObject::~PhysicsObject()
     std::vector<PhysicsObject*>& vec = GameEngine::instance->physics->physicsObjects;
     vec.erase(std::remove(vec.begin(), vec.end(), this), vec.end());
 
-    GameObject::~GameObject();
+    VoxelObject::~VoxelObject();
 }
 
 void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)
@@ -51,7 +51,7 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
 
 void PhysicsObject::Update(ChunkMatrix& chunkMatrix, float deltaTime)
 {
-    GameObject::Update(chunkMatrix, deltaTime);
+    VoxelObject::Update(chunkMatrix, deltaTime);
 }
 
 void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)
@@ -63,7 +63,7 @@ void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)
     b2Vec2 newPos = b2Body_GetPosition(m_physicsBody);
     this->position = Vec2f(newPos.x, newPos.y);
     b2Rot rot = b2Body_GetRotation(m_physicsBody);
-    this->rotation = std::atan2(rot.s, rot.c); // Convert b2Rot to radians
+    this->SetRotation(std::atan2(rot.s, rot.c)); // Convert b2Rot to radians
 }
 
 void PhysicsObject::DestroyPhysicsBody()

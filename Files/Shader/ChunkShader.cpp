@@ -147,10 +147,10 @@ void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
         auto& chunk = chunkMatrix.Grid[chunkIndex];
-        chunk->voxels[x][y]->temperature.SetCelsius(heatOutputData[i]);
-        chunk->voxels[x][y]->amount = pressureOutputData[i];
+        chunk->voxels[y][x]->temperature.SetCelsius(heatOutputData[i]);
+        chunk->voxels[y][x]->amount = pressureOutputData[i];
 
-        chunk->voxels[x][y]->CheckTransitionTemps(chunkMatrix);
+        chunk->voxels[y][x]->CheckTransitionTemps(chunkMatrix);
     }
 
     delete[] heatOutputData;

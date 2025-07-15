@@ -11,13 +11,16 @@
 bool Game::Player::NoClip = true;
 
 Game::Player::Player()
-    : GameObject()
+    : VoxelObject()
 {
     
 }
 
-Game::Player::Player(ChunkMatrix *matrix)
-    : GameObject(Vec2f(100.0f, 0.0f), "Textures/Player.bmp")
+Game::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData)
+    : VoxelObject(
+        Vec2f(100.0f, 0.0f),
+        voxelData
+    )
 {
     this->Camera = AABB(
         Vec2f((800.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2, (600.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2), 

@@ -20,10 +20,15 @@ GameEngine::GameEngine()
     this->physics = new GamePhysics();
 
     Registry::VoxelRegistry::RegisterVoxels();
+    Registry::GameObjectRegistry::RegisterObjects();
     this->renderer = new GameRenderer(&glContext);
     
     ChunkShader::InitializeBuffers();
     ChunkShader::InitializeComputeShaders();
+}
+
+void GameEngine::Initialize(){
+    this->Player = new Game::Player(&this->chunkMatrix, Registry::GameObjectRegistry::GetProperties("Player")->voxelData);
 }
 
 GameEngine::~GameEngine()
@@ -78,6 +83,16 @@ void GameEngine::Update()
     //Update Player
     this->Player->Update(this->chunkMatrix, this->deltaTime);
 
+    // Run physics simulation
+    physics->Step(this->deltaTime);
+
+    for(VoxelObject* object : chunkMatrix.voxelObjects) {
+        if(object->IsEnabled()) {
+            object->UpdateRotatedVoxelBuffer();
+        }
+    }
+
+
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
@@ -115,6 +130,13 @@ void GameEngine::m_SimulationThread()
 
         simulationUpdateTimer -= simulationFixedDeltaTime;
 
+        // Update game objects
+        for (VoxelObject* voxelObject : chunkMatrix.voxelObjects) {
+            if (voxelObject->IsEnabled()) {
+                voxelObject->Update(chunkMatrix, simulationFixedDeltaTime);
+            }
+        }
+
         //Reset voxels to default pre-simulation state
         chunkMatrix.voxelMutex.lock();
         #pragma omp parallel for
@@ -148,9 +170,6 @@ void GameEngine::m_SimulationThread()
             if(chunkMatrix.Grid[i]->dirtyColliders)
                 physics->Generate2DCollidersForChunk(chunkMatrix.Grid[i]);
         }
-
-        // Run physics simulation
-        physics->Step(simulationFixedDeltaTime);
 
         chunkMatrix.voxelMutex.unlock();
 
@@ -249,7 +268,7 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_t:
                 Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
-                Registry::CreatePhysicsObject(&chunkMatrix, physics, worldMousePos, "Textures/Barrel.bmp");
+                Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, this->physics);
                 break;
             }
             break;

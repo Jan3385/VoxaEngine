@@ -36,7 +36,7 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
         for(int x = 0; x < Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL; ++x) {
 
             if( y < Volume::Chunk::CHUNK_SIZE && x < Volume::Chunk::CHUNK_SIZE &&
-                chunk->voxels[x][y] && chunk->voxels[x][y]->IsSolidCollider()) {
+                    chunk->voxels[y][x] && chunk->voxels[y][x]->IsSolidCollider()) {
                 grid[y][x] = true;
             }
             

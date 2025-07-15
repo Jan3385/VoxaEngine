@@ -86,6 +86,7 @@ public:
     ChunkMatrix chunkMatrix;
 
     GameEngine();
+    void Initialize();
     ~GameEngine();
     void StartFrame();
     void EndFrame();

@@ -154,13 +154,13 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     		//Create voxel determining on its position
             if (pos.y > 4) {
                 if(pos.y == 5 && y <= 5){
-                    chunk->voxels[x][y] = new VoxelSolid
+                    chunk->voxels[y][x] = new VoxelSolid
                         ("Grass", 
                         Vec2i(x + pos.x * Chunk::CHUNK_SIZE,y + pos.y * Chunk::CHUNK_SIZE), 
                         Temperature(21), 
                         true, 20);
                 }else{
-                    chunk->voxels[x][y] = new VoxelSolid
+                    chunk->voxels[y][x] = new VoxelSolid
                         ("Dirt", 
                         Vec2i(x + pos.x * Chunk::CHUNK_SIZE,y + pos.y * Chunk::CHUNK_SIZE), 
                         Temperature(21), 
@@ -168,13 +168,13 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
                 }
             }
             else {
-                chunk->voxels[x][y] = new VoxelGas
+                chunk->voxels[y][x] = new VoxelGas
                     ("Oxygen", 
                     Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE),
                     Temperature(21), 1);
             }
     		if (pos.y == 4 && pos.x <= 3) {
-    			chunk->voxels[x][y] = new VoxelSolid
+    			chunk->voxels[y][x] = new VoxelSolid
                     ("Sand", 
                     Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE),
                     Temperature(21),
@@ -239,7 +239,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
         chunkCreationMutex.unlock();
     }
 
-    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.x % Chunk::CHUNK_SIZE)][abs(pos.y % Chunk::CHUNK_SIZE)];
+    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.y % Chunk::CHUNK_SIZE)][abs(pos.x % Chunk::CHUNK_SIZE)];
 
     if(!voxel){
         return nullptr;
@@ -261,7 +261,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
         return nullptr;
     }
 
-    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.x % Chunk::CHUNK_SIZE)][abs(pos.y % Chunk::CHUNK_SIZE)];
+    Volume::VoxelElement *voxel = chunk->voxels[abs(pos.y % Chunk::CHUNK_SIZE)][abs(pos.x % Chunk::CHUNK_SIZE)];
 
     if(!voxel){
         return nullptr;
@@ -298,19 +298,19 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     }
 
     // update physics if changing a solid voxel
-    if(voxel->ShouldTriggerDirtyColliders() || chunk->voxels[localPos.x][localPos.y]->ShouldTriggerDirtyColliders())
+    if(voxel->ShouldTriggerDirtyColliders() || chunk->voxels[localPos.y][localPos.x]->ShouldTriggerDirtyColliders())
         chunk->dirtyColliders = true;
 
     //delete the old voxel if it exists
-    if(chunk->voxels[localPos.x][localPos.y]){
-        delete chunk->voxels[localPos.x][localPos.y];
+    if(chunk->voxels[localPos.y][localPos.x]){
+        delete chunk->voxels[localPos.y][localPos.x];
     }
 
     // Set the new voxel and mark for update
-    chunk->voxels[localPos.x][localPos.y] = voxel;
+    chunk->voxels[localPos.y][localPos.x] = voxel;
 
     chunk->dirtyRect.Include(localPos);
-    chunk->UpdateRenderBufferRanges[localPos.x].AddValue(localPos.y);
+    chunk->UpdateRenderBufferRanges[localPos.y].AddValue(localPos.x);
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
@@ -341,14 +341,14 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     }
 
     // update physics if changing a solid voxel
-    if(voxel->ShouldTriggerDirtyColliders() || chunk->voxels[localPos.x][localPos.y]->ShouldTriggerDirtyColliders())
+    if(voxel->ShouldTriggerDirtyColliders() || chunk->voxels[localPos.y][localPos.x]->ShouldTriggerDirtyColliders())
         chunk->dirtyColliders = true;
 
     // Set the new voxel and mark for update
-    chunk->voxels[localPos.x][localPos.y] = voxel;
+    chunk->voxels[localPos.y][localPos.x] = voxel;
 
     chunk->dirtyRect.Include(localPos);
-    chunk->UpdateRenderBufferRanges[localPos.x].AddValue(localPos.y);
+    chunk->UpdateRenderBufferRanges[localPos.y].AddValue(localPos.x);
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;

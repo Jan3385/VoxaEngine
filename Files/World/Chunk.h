@@ -36,7 +36,7 @@ private:
 
 namespace Volume
 {
-	struct ChunkVoxelRenderData{
+	struct VoxelRenderData{
 		glm::ivec2 position; // position in chunk
 		glm::vec4 color; 	// RGBA color
 	};
@@ -109,7 +109,7 @@ namespace Volume
 		void CreatePhysicsBody(b2WorldId worldId);
 
 		// rendering data
-		ChunkVoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
+		VoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
 		GLuint renderVBO;
 
 		GLuint temperatureVBO;
