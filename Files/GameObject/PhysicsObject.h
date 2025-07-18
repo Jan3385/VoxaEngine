@@ -26,11 +26,13 @@ public:
 
     void Update(ChunkMatrix& chunkMatrix, float deltaTime) override;
     void UpdatePhysicPosition(b2WorldId worldId);
-    void CreatePhysicsBody(b2WorldId worldId); //TODO: make private
+
+    // physics mesh body
+    std::vector<Triangle> triangleColliders;
+	std::vector<b2Vec2> edges;
 private:
     b2BodyId m_physicsBody = b2_nullBodyId;
-    std::vector<Triangle> m_triangleColliders;
-	std::vector<b2Vec2> m_edges;
 
+    void CreatePhysicsBody(b2WorldId worldId);
     void DestroyPhysicsBody();
 };

@@ -31,4 +31,7 @@ public:
     void Generate2DCollidersForChunk(
         Volume::Chunk* chunk
     );
+    void Generate2DCollidersForVoxelObject(
+        PhysicsObject* object
+    );
 };

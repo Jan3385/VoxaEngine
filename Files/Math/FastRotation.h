@@ -21,13 +21,13 @@ void FastRotate2DVector(const std::vector<std::vector<T*>>& input, std::vector<s
 
 
     Vec2f center(
-        static_cast<float>(input.size() / 2),
-        static_cast<float>(input[0].size() / 2)
+        static_cast<float>((input.size() - 1) / 2.0f),
+        static_cast<float>((input[0].size() - 1) / 2.0f)
     );
 
     Vec2f outputCenter(
-        static_cast<float>(output.size() / 2),
-        static_cast<float>(output[0].size() / 2)
+        static_cast<float>((output.size() - 1) / 2.0f),
+        static_cast<float>((output[0].size() - 1) / 2.0f)
     );
 
     for (int y = 0; y < static_cast<int>(output[0].size()); ++y) {

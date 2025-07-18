@@ -48,13 +48,14 @@ public:
     Vec2i GetSize() const { return Vec2i(width, height); }
 
 	GLuint renderVoxelVAO = 0;
+
+    std::vector<std::vector<Volume::VoxelElement*>> voxels;
 protected:
 
     bool enabled = false;
     Vec2f position;
     int width = 0;
     int height = 0;
-    std::vector<std::vector<Volume::VoxelElement*>> voxels;
 
     // VoxelElement buffer for rotated voxels
     // Includes empty pointers for empty voxels

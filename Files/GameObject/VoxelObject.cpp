@@ -13,7 +13,6 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
 {
     this->position = position;
 
-    // TODO: copy voxels to this->voxels using id
     this->voxels.resize(voxelData.size());
     for (size_t y = 0; y < voxelData.size(); ++y)
     {
@@ -82,7 +81,7 @@ unsigned int VoxelObject::UpdateRenderBuffer()
             Volume::VoxelElement* voxel = this->rotatedVoxelBuffer[y][x];
             if (voxel) {
                 renderData.push_back({
-                    .position = glm::ivec2(x + this->position.x - width/2, y + this->position.y - height/2),
+                    .position = glm::ivec2(x + this->position.x - this->width/2, y + this->position.y - this->height/2),
                     .color = voxel->color.getGLMVec4(),
                 });
                 ++usedCount;

@@ -15,8 +15,19 @@ void FloodFillChunk(
     Vec2i start, unsigned short int currentLabel
 );
 
+void FloodFillObject(
+    const std::vector<std::vector<bool>> &values,
+    std::vector<std::vector<int>> &labels,
+    const Vec2i &start
+);
+
 std::vector<b2Vec2> MarchingSquaresEdgeTrace(
     const int labels[Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL][Volume::Chunk::CHUNK_SIZE+GRID_PADDING_FILL],
+    const int currentLabel
+);
+
+std::vector<b2Vec2> MarchingSquaresEdgeTrace(
+    std::vector<std::vector<int>> &labels, 
     const int currentLabel
 );
 

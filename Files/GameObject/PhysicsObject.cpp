@@ -31,9 +31,9 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
 
     for(Triangle t : triangles){
         b2Hull hull;
-        hull.points[0] = t.a;
-        hull.points[1] = t.b;
-        hull.points[2] = t.c;
+        hull.points[0] = t.a - b2Vec2(this->width / 2, this->height / 2);
+        hull.points[1] = t.b - b2Vec2(this->width / 2, this->height / 2);
+        hull.points[2] = t.c - b2Vec2(this->width / 2, this->height / 2);
         hull.count = 3;
 
         b2Polygon polygon = b2MakePolygon(
@@ -45,8 +45,8 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
         );
     }
 
-    m_triangleColliders.assign(triangles.begin(), triangles.end());
-    m_edges.assign(edges.begin(), edges.end());
+    this->triangleColliders.assign(triangles.begin(), triangles.end());
+    this->edges.assign(edges.begin(), edges.end());
 }
 
 void PhysicsObject::Update(ChunkMatrix& chunkMatrix, float deltaTime)
@@ -94,11 +94,12 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
     bodyDef.isEnabled = true;
     bodyDef.rotation = b2MakeRot(0.0f);
     bodyDef.enableSleep = true;
+    // Set origin to center of object
     bodyDef.position = b2Vec2(position.x, position.y);
     m_physicsBody = b2CreateBody(worldId, &bodyDef);
 
-    b2Polygon boxShape = b2MakeBox(this->width/2, this->height/2);
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.material = b2DefaultSurfaceMaterial();
-    b2CreatePolygonShape(m_physicsBody, &shapeDef, &boxShape);
+    //b2Polygon boxShape = b2MakeBox(this->width/2, this->height/2);
+    //b2ShapeDef shapeDef = b2DefaultShapeDef();
+    //shapeDef.material = b2DefaultSurfaceMaterial();
+    //b2CreatePolygonShape(m_physicsBody, &shapeDef, &boxShape);
 }

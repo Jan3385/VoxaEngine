@@ -69,6 +69,34 @@ void FloodFillChunk(
     }
 }
 
+void FloodFillObject(const std::vector<std::vector<bool>> &values, std::vector<std::vector<int>> &labels, const Vec2i &start)
+{
+    std::queue<Vec2i> queue;
+    queue.push(start);
+    labels[start.y][start.x] = 1;
+
+    while(!queue.empty()){
+        Vec2i current = queue.front();
+        queue.pop();
+
+        for(const Vec2i& offset : vector::AROUND4){
+            Vec2i neighbor = current + offset;
+
+            // Check bounds
+            if(neighbor.x < 0 || neighbor.x >= values[0].size() ||
+               neighbor.y < 0 || neighbor.y >= values.size()) {
+                continue;
+            }
+
+            // If the neighbor is part of the fill area and not labeled yet
+            if(values[neighbor.y][neighbor.x] && labels[neighbor.y][neighbor.x] == 0) {
+                labels[neighbor.y][neighbor.x] = 1;
+                queue.push(neighbor);
+            }
+        }
+    }
+}
+
 int m_DirectionToOffsetIndex(const Vec2i &dir)
 {
     if(dir == vector::RIGHT)return 2;
@@ -164,6 +192,88 @@ std::vector<b2Vec2> MarchingSquaresEdgeTrace(
     if(pass >= 5000)
         return {};
 
+    return polygon;
+}
+
+std::vector<b2Vec2> MarchingSquaresEdgeTrace(std::vector<std::vector<int>> &labels, const int currentLabel)
+{
+    std::vector<b2Vec2> polygon;
+
+    Vec2i start(-1, -1);
+    for(int y = labels.size() - 1; y >= 0 && start.x == -1; --y) {
+        for(int x = 0; x < labels[0].size(); ++x) {
+            if(labels[y][x] == currentLabel) {
+                start = Vec2i(x, y);
+                break;
+            }
+        }
+    }
+
+    if(start.x == -1) return polygon;
+
+    //  0,0 ---- 1,0
+    //   |        |
+    //   |        |
+    //   |        |
+    //  0,1 ---- 1,1
+    
+    Vec2i offsets[4] = {
+        Vec2i(0, 0),
+        Vec2i(1, 0),
+        Vec2i(1, 1),
+        Vec2i(0, 1),
+    };
+
+    Vec2i current = start;
+    Vec2i dir = vector::UP;
+
+    // initial polygon start
+    int startOffsetIndex = m_DirectionToOffsetIndex(vector::DOWN);
+    Vec2i startEdge = current + offsets[startOffsetIndex];
+    polygon.push_back(b2Vec2(startEdge.x, startEdge.y));
+
+    int pass = 0;
+    do
+    {
+        Vec2i checkDir = dir;
+
+        for(int i = 0; i < 4; ++i) {
+            i == 0 ? checkDir.RotateLeft() : checkDir.RotateRight();
+
+            Vec2i edgePos = current + checkDir;
+
+            if(edgePos == startEdge)
+                return polygon; // We have completed the polygon
+
+            
+            bool labelAtCheck;
+            if(edgePos.x < 0 || edgePos.x >= labels[0].size() ||
+               edgePos.y < 0 || edgePos.y >= labels.size()) {
+                labelAtCheck = false; // Out of bounds, no label
+            } else {
+                labelAtCheck = (labels[edgePos.y][edgePos.x] == currentLabel);
+            }
+
+            if(!labelAtCheck) {
+                // If we havent found a label in the check direction, we can place the polygon point
+                Vec2i currentOffset = offsets[m_DirectionToOffsetIndex(checkDir)];
+                polygon.push_back(b2Vec2(current.x + currentOffset.x, current.y + currentOffset.y));
+                continue;
+            }
+
+            // If we found a label in the check direction, we can change the direction in that direction
+            dir = checkDir;
+            break;
+        }
+
+        current += checkDir;
+        pass++;
+    } while (pass < 5000);
+
+    //TODO: again a hack to not crash
+    if(pass >= 5000)
+        return {};
+    
     return polygon;
 }
 

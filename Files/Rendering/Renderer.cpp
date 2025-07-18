@@ -207,7 +207,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
             static_cast<GLsizei>(voxelCount)
         );
     }
-
     for(auto& chunk : this->chunkCreateBuffer) {
         chunk->SetVBOData();
     }
