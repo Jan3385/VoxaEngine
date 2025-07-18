@@ -5,6 +5,11 @@
 
 #include "Math/Vector.h"
 
+/// @brief Fast rotation of a 2D vector grid.
+/// @tparam T Type of the elements in the grid.
+/// @param input input grid of vectors to rotate
+/// @param output output grid of rotated vectors
+/// @param angle angle in radians to rotate the vectors
 template<typename T>
 void FastRotate2DVector(const std::vector<std::vector<T*>>& input, std::vector<std::vector<T*>>& output, float angle)
 {

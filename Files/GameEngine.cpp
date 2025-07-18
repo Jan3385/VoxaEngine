@@ -267,8 +267,16 @@ void GameEngine::PollEvents()
                 MovementKeysHeld[3] = false;
                 break;
             case SDLK_t:
+                {
                 Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
                 Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, this->physics);
+                }
+                break;
+            case SDLK_z:
+                {
+                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
+                Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, this->physics);
+                }
                 break;
             }
             break;

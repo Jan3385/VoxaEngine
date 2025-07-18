@@ -86,6 +86,13 @@ void GameObjectRegistry::RegisterObjects()
             .SetVoxelFileName("Barrel")
             .Build()
     );
+    GameObjectRegistry::RegisterGameObject(
+        "Ball",
+        GameObjectBuilder(GameObjectType::PhysicsObject)
+            .SetMass(10)
+            .SetVoxelFileName("Ball")
+            .Build()
+    );
 
     registriesClosed = true;
     std::cout << "[ OK ]" << std::endl;

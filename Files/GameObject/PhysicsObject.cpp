@@ -29,11 +29,15 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.material = b2DefaultSurfaceMaterial();
 
+    b2Vec2 centerOffset = b2Vec2(
+        (this->width - 1) / 2.0f, 
+        (this->height) / 2.0f);
+
     for(Triangle t : triangles){
         b2Hull hull;
-        hull.points[0] = t.a - b2Vec2(this->width / 2, this->height / 2);
-        hull.points[1] = t.b - b2Vec2(this->width / 2, this->height / 2);
-        hull.points[2] = t.c - b2Vec2(this->width / 2, this->height / 2);
+        hull.points[0] = t.a - centerOffset;
+        hull.points[1] = t.b - centerOffset;
+        hull.points[2] = t.c - centerOffset;
         hull.count = 3;
 
         b2Polygon polygon = b2MakePolygon(

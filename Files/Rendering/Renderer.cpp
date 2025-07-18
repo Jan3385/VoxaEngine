@@ -347,6 +347,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         }
     }
     if(this->renderMeshData) {
+        // Draw chunk mesh data as before
         for (auto& chunk : chunkMatrix.Grid) {
             if(chunk->GetAABB().Overlaps(player->Camera)) {
                 for (const Triangle& t : chunk->GetColliders()) {
@@ -355,7 +356,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                         glm::vec2(t.b.x, t.b.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
                         glm::vec2(t.c.x, t.c.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y)
                     };
-
                     this->DrawClosedShape(
                         points, 
                         glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 
@@ -363,12 +363,10 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                         1.0f
                     );
                 }
-
                 int numOfSeparatingVectors = std::count_if(
                     chunk->GetEdges().begin(), chunk->GetEdges().end(),
                     [](const b2Vec2& edge) { return edge.x == -1 && edge.y == -1; }
                 );
-
                 std::vector<std::vector<glm::vec2>> edges(numOfSeparatingVectors); // reserve space for edges
                 int i = 0;
                 for(const b2Vec2& edge : chunk->GetEdges()) {
@@ -388,6 +386,29 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                         2.0f
                     );
                 }
+            }
+        }
+
+        for (PhysicsObject* physObj : GameEngine::instance->physics->physicsObjects) {
+            float rot = physObj->GetRotation();
+            float cosR = std::cos(rot);
+            float sinR = std::sin(rot);
+            Vec2f pos = physObj->GetPosition();
+            float cx = physObj->GetSize().x / 2.0f;
+            float cy = physObj->GetSize().y / 2.0f;
+
+            for (const Triangle& t : physObj->triangleColliders) {
+                std::vector<glm::vec2> tri(3);
+                // Rotate and translate each vertex, centering mesh
+                for (int i = 0; i < 3; ++i) {
+                    const b2Vec2* v = (i == 0) ? &t.a : (i == 1) ? &t.b : &t.c;
+                    float x = v->x - cx;
+                    float y = v->y - cy;
+                    float xr = cosR * x - sinR * y + pos.x;
+                    float yr = sinR * x + cosR * y + pos.y;
+                    tri[i] = glm::vec2(xr, yr);
+                }
+                this->DrawClosedShape(tri, glm::vec4(0.2f, 0.2f, 1.0f, 1.0f), voxelProj, 2.0f);
             }
         }
     }
