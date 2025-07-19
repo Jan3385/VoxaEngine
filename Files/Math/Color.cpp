@@ -1,10 +1,29 @@
 #include "Math/Color.h"
 #include "Color.h"
 
-RGB::RGB() : r(0), g(0), b(0) { }
+RGB RGB::operator*(const RGB &other) const
+{
+    return RGB(
+        static_cast<uint8_t>(this->r * other.r / 255),
+        static_cast<uint8_t>(this->g * other.g / 255),
+        static_cast<uint8_t>(this->b * other.b / 255)
+    );
+}
+
+RGB::RGB() : r(0), g(0), b(0) {}
 RGB::RGB(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
 
-RGBA::RGBA() : RGB(), a(0) { }
+RGBA RGBA::operator*(const RGBA &other) const
+{
+    return RGBA(
+        static_cast<uint8_t>(this->r * other.r / 255),
+        static_cast<uint8_t>(this->g * other.g / 255),
+        static_cast<uint8_t>(this->b * other.b / 255),
+        static_cast<uint8_t>(this->a * other.a / 255)
+    );
+}
+
+RGBA::RGBA() : RGB(), a(0) {}
 
 RGBA::RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : RGB(r, g, b), a(a) {};
 

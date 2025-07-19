@@ -10,6 +10,9 @@ public:
     uint8_t r;
     uint8_t g;
     uint8_t b;
+
+    RGB operator*(const RGB& other) const;
+
     RGB();
     RGB(uint8_t r, uint8_t g, uint8_t b);
     ~RGB();
@@ -19,6 +22,9 @@ public:
 class RGBA : public RGB{
 public:
     uint8_t a;
+
+    RGBA operator*(const RGBA& other) const;
+
     RGBA();
     RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     RGBA(uint32_t color); // ARGB format

@@ -511,8 +511,20 @@ bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 {
-    const uint16_t numOfRays = 360;
+    const uint16_t numOfRays = radius < 16 ? 180 : 360;
     const double angleStep = M_PI * 2 / numOfRays;
+
+    // Physics explosion
+    b2ExplosionDef eDef;
+    eDef = b2DefaultExplosionDef();
+    eDef.position = b2Vec2(pos.x, pos.y);
+    eDef.radius = radius;
+    eDef.falloff = radius * 0.5f;
+    eDef.impulsePerLength = 1000.0f / radius;
+    b2World_Explode(
+        GameEngine::instance->physics->GetWorldId(),
+        &eDef
+    );
 
     for (uint16_t i = 0; i < numOfRays; i++)
     {
@@ -521,7 +533,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     	float dy = static_cast<float>(std::sin(angle));
 
     	Vec2f currentPos = Vec2f(pos);
-    	for (int j = 0; j < radius; j++)
+    	for (int j = 0; j < radius * 1.5f; j++)
     	{
     		currentPos.x += dx;
     		currentPos.y += dy;
@@ -531,7 +543,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     		if (j < radius * 0.2f) {
                 PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 5.0f, true);
             }
-            else {
+            else if(j <= radius) {
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
                     PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false);
@@ -542,6 +554,23 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
                     
                     VoxelElement *fireVoxel = CreateVoxelElement("Fire", currentPos, 1.3f, Temperature(radius * 100), false);
                     VirtualSetAt_NoDelete(fireVoxel);
+                }
+            }else{
+                // blacken out voxels around explosion
+                if(!voxel->IsUnmoveableSolid()) continue;
+
+                voxel->color = voxel->color * RGBA(220, 220, 220, 255);
+                
+                // heat up the voxel
+                constexpr float temperatureIncrease = 80.0f;
+                voxel->temperature.SetCelsius(
+                    std::max(voxel->temperature.GetCelsius(), (radius*1.5f-j) * temperatureIncrease));
+
+                Vec2i currentPosI = Vec2i(currentPos);
+
+                Chunk *chunk = GetChunkAtChunkPosition(WorldToChunkPosition(currentPos));
+                if(chunk){
+                    chunk->UpdateRenderBufferRanges[currentPosI.y % Chunk::CHUNK_SIZE].AddValue(currentPosI.x % Chunk::CHUNK_SIZE);
                 }
             }
     	}

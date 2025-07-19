@@ -27,6 +27,7 @@ public:
     void Step(float deltaTime);
 
     std::vector<PhysicsObject*> physicsObjects;
+    b2WorldId GetWorldId() const { return worldId; }
 
     void Generate2DCollidersForChunk(
         Volume::Chunk* chunk
