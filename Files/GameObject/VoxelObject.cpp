@@ -104,6 +104,13 @@ unsigned int VoxelObject::UpdateRenderBuffer()
     return renderVoxelCount;
 }
 
+void VoxelObject::UpdateBoundingBox()
+{
+    Vec2f size = Vec2f(rotatedVoxelBuffer[0].size(), rotatedVoxelBuffer.size());
+    Vec2f pos = this->position - size / 2.0f;
+
+    this->boundingBox = AABB(pos, size);
+}
 
 void VoxelObject::UpdateRotatedVoxelBuffer()
 {

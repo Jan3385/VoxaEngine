@@ -410,6 +410,21 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
                 }
                 this->DrawClosedShape(tri, glm::vec4(0.2f, 0.2f, 1.0f, 1.0f), voxelProj, 2.0f);
             }
+            glm::vec2 aabbStart = {
+                physObj->GetBoundingBox().corner.x,
+                physObj->GetBoundingBox().corner.y
+            };
+            glm::vec2 aabbEnd = {
+                physObj->GetBoundingBox().corner.x + physObj->GetBoundingBox().size.x,
+                physObj->GetBoundingBox().corner.y + physObj->GetBoundingBox().size.y
+            };
+            std::vector<glm::vec2> aabbPoints = {
+                aabbStart,
+                {aabbEnd.x, aabbStart.y},
+                aabbEnd,
+                {aabbStart.x, aabbEnd.y}
+            };
+            this->DrawClosedShape(aabbPoints, glm::vec4(0.8f, 0.2f, 0.8f, 1.0f), voxelProj, 1.5f);
         }
     }
 

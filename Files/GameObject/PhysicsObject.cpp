@@ -68,6 +68,8 @@ void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)
     this->position = Vec2f(newPos.x, newPos.y);
     b2Rot rot = b2Body_GetRotation(m_physicsBody);
     this->SetRotation(std::atan2(rot.s, rot.c)); // Convert b2Rot to radians
+
+    this->UpdateBoundingBox();
 }
 
 void PhysicsObject::DestroyPhysicsBody()
@@ -101,9 +103,4 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
     // Set origin to center of object
     bodyDef.position = b2Vec2(position.x, position.y);
     m_physicsBody = b2CreateBody(worldId, &bodyDef);
-
-    //b2Polygon boxShape = b2MakeBox(this->width/2, this->height/2);
-    //b2ShapeDef shapeDef = b2DefaultShapeDef();
-    //shapeDef.material = b2DefaultSurfaceMaterial();
-    //b2CreatePolygonShape(m_physicsBody, &shapeDef, &boxShape);
 }

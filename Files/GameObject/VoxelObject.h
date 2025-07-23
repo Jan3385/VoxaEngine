@@ -37,6 +37,9 @@ public:
     // Get rotation in radians
     float GetRotation() const   { return rotation; }
 
+    AABB GetBoundingBox() const { return this->boundingBox;}
+    void UpdateBoundingBox();
+
     void SetRotation(float rotation) {
         if(this->rotation == rotation) return;
         this->rotation = rotation;
@@ -56,6 +59,7 @@ protected:
     Vec2f position;
     int width = 0;
     int height = 0;
+    AABB boundingBox;
 
     // VoxelElement buffer for rotated voxels
     // Includes empty pointers for empty voxels
