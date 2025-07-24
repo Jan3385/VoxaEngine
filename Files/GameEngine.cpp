@@ -112,9 +112,9 @@ void GameEngine::m_UpdateGridVoxel(int pass)
     #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
         auto& chunk = chunkMatrix.GridSegmented[pass][i];
-        if (!chunk->dirtyRect.IsEmpty()) {
-            chunk->UpdateVoxels(&this->chunkMatrix);
-        }
+
+        chunk->UpdateVoxels(&this->chunkMatrix);
+        
         chunk->dirtyRect.Update();
     }
 }

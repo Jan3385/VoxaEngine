@@ -225,7 +225,7 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
     }
 }
 
-Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
+Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeObjects)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
 
@@ -241,6 +241,18 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
 
     Volume::VoxelElement *voxel = chunk->voxels[abs(pos.y % Chunk::CHUNK_SIZE)][abs(pos.x % Chunk::CHUNK_SIZE)];
 
+    if(includeObjects && (!voxel || voxel->GetState() != State::Solid)){
+        // Try to search for a voxel in voxelObjects
+        for (VoxelObject* obj : chunk->voxelObjectInChunk) {
+            if (obj->GetBoundingBox().Contains(Vec2f(pos))) {
+                Volume::VoxelElement* foundVoxel = obj->GetVoxelAt(pos);
+
+                if (foundVoxel) return foundVoxel;
+                else break; // Stop the search if only found null
+            }
+        }
+    }
+
     if(!voxel){
         return nullptr;
     } 
@@ -250,7 +262,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos)
     return voxel;
 }
 
-Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
+Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos, bool includeObjects)
 {
     Vec2i chunkPos = WorldToChunkPosition(Vec2f(pos));
 
@@ -263,6 +275,18 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
 
     Volume::VoxelElement *voxel = chunk->voxels[abs(pos.y % Chunk::CHUNK_SIZE)][abs(pos.x % Chunk::CHUNK_SIZE)];
 
+    if(includeObjects && (!voxel || voxel->GetState() != State::Solid)){
+        // Try to search for a voxel in voxelObjects
+        for (VoxelObject* obj : chunk->voxelObjectInChunk) {
+            if (obj->GetBoundingBox().Contains(Vec2f(pos))) {
+                Volume::VoxelElement* foundVoxel = obj->GetVoxelAt(pos);
+
+                if (foundVoxel) return foundVoxel;
+
+            }
+        }
+    }
+
     if(!voxel){
         return nullptr;
     } 
@@ -272,7 +296,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt_NoLoad(const Vec2i &pos)
     return voxel;
 }
 // Set a voxel at a specific position, deleting the old one
-void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
+void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
 {
     if (!voxel) return; // Check for null pointer
 
@@ -286,6 +310,20 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     Vec2i localPos = Vec2i(
         abs(voxel->position.x % Chunk::CHUNK_SIZE), 
         abs(voxel->position.y % Chunk::CHUNK_SIZE));
+
+    if(includeObjects)
+    {
+        for(VoxelObject* obj : voxelObjects)
+        {
+            if(obj->GetBoundingBox().Contains(Vec2f(voxel->position)))
+            {
+                // If the voxel is part of a VoxelObject, set it there
+                obj->SetVoxelAt(voxel->position, voxel);
+                return;
+            }
+        }
+    }
+    
 
 
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
@@ -316,7 +354,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel)
     chunk->forcePressureUpdate = true;
 }
 // Same as VirtualSetAt but does not delete the old voxel
-void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
+void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includeObjects)
 {
     if (!voxel) return; // Check for null pointer
 
@@ -330,6 +368,19 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel)
     Vec2i localPos = Vec2i(
         abs(voxel->position.x % Chunk::CHUNK_SIZE), 
         abs(voxel->position.y % Chunk::CHUNK_SIZE));
+
+    if(includeObjects)
+    {
+        for(VoxelObject* obj : voxelObjects)
+        {
+            if(obj->GetBoundingBox().Contains(Vec2f(voxel->position)))
+            {
+                // If the voxel is part of a VoxelObject, set it there
+                obj->SetVoxelAt(voxel->position, voxel);
+                return;
+            }
+        }
+    }
     
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 

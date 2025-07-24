@@ -316,7 +316,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
             Vec2i(
                 static_cast<int>(mousePos.x/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x),
                 static_cast<int>(mousePos.y/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y)
-            )
+            ),
+            true
         );
         glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
         if(voxelAtMousePos != nullptr){

@@ -16,6 +16,8 @@
 #include "World/Particle.h"
 #include "World/ParticleGenerator.h"
 
+class VoxelObject;
+
 struct Triangle;
 
 class DirtyRect{
@@ -54,6 +56,7 @@ namespace Volume
 		static const unsigned short int CHUNK_SIZE_SQUARED = CHUNK_SIZE * CHUNK_SIZE; // 4096
     	
 		VoxelElement* voxels[CHUNK_SIZE][CHUNK_SIZE];
+		std::vector<VoxelObject*> voxelObjectInChunk;
 
     	Chunk(const Vec2i& pos);
     	~Chunk();
@@ -63,6 +66,7 @@ namespace Volume
 		bool ShouldChunkDelete(AABB &Camera) const;
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;
+
     	void UpdateVoxels(ChunkMatrix* matrix);
 
 		// Physics

@@ -157,6 +157,18 @@ bool Volume::Chunk::ShouldChunkCalculatePressure() const
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
+    // update vector of objects in chunk
+    this->voxelObjectInChunk.clear();
+    for(VoxelObject* obj : matrix->voxelObjects)
+    {
+        if(obj->GetBoundingBox().Overlaps(this->GetAABB()))
+        {
+            this->voxelObjectInChunk.push_back(obj);
+        }
+    }
+
+    if(dirtyRect.IsEmpty()) return;
+
     for (int x = dirtyRect.end.x; x >= dirtyRect.start.x; --x)
     {
         //for (int y = dirtyRect.end.y; y >= dirtyRect.start.y; --y) -> better gasses, worse solids

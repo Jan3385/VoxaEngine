@@ -3,6 +3,7 @@
 #include "Rendering/SpriteRenderer.h"
 #include "GameEngine.h"
 #include "Registry/GameObjectRegistry.h"
+#include "World/Voxel.h"
 
 #include "Math/FastRotation.h"
 
@@ -102,6 +103,48 @@ unsigned int VoxelObject::UpdateRenderBuffer()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return renderVoxelCount;
+}
+
+Volume::VoxelElement *VoxelObject::GetVoxelAt(const Vec2i &worldPos) const
+{
+    Vec2i localPos = worldPos - Vec2i(this->position) + Vec2i(this->width / 2, this->height / 2);
+
+    if (localPos.x < 0 || localPos.x >= static_cast<int>(this->rotatedVoxelBuffer[0].size()) || 
+        localPos.y < 0 || localPos.y >= static_cast<int>(this->rotatedVoxelBuffer.size())) {
+        return nullptr;
+    }
+    
+    return this->rotatedVoxelBuffer[localPos.y][localPos.x];
+}
+
+void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
+{
+    Vec2i localPos = worldPos - Vec2i(this->position) + Vec2i(this->width / 2, this->height / 2);
+
+    // get the correct position from the rotated buffer
+    if(this->rotatedVoxelBuffer[localPos.y][localPos.x] == nullptr) {
+        return; // No voxel at this position TODO: somehow recalculate the position instead of returning
+    }
+    localPos = this->rotatedVoxelBuffer[localPos.y][localPos.x]->position;
+
+    if (localPos.x < 0 || localPos.x >= this->width || localPos.y < 0 || localPos.y >= this->height) {
+        return; // Out of bounds
+    }
+
+    if (voxel) {
+        voxel->position = localPos;
+    }
+
+    // Delete the old voxel if it exists
+    if (this->voxels[localPos.y][localPos.x]) {
+        delete this->voxels[localPos.y][localPos.x];
+    }
+
+    this->voxels[localPos.y][localPos.x] = voxel;
+
+    // Update bounding box
+    this->UpdateBoundingBox(); //TODO: mark as dirty instead
+    this->dirtyRotation = true;
 }
 
 void VoxelObject::UpdateBoundingBox()

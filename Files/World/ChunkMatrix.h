@@ -39,10 +39,10 @@ public:
 
 	//Virtual setter / getter
 	//Accesses a virtual 2D array that ignores chunks
-	Volume::VoxelElement* VirtualGetAt(const Vec2i& pos);
-	Volume::VoxelElement* VirtualGetAt_NoLoad(const Vec2i& pos);
-	void VirtualSetAt(Volume::VoxelElement *voxel);
-	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel);
+	Volume::VoxelElement* VirtualGetAt(const Vec2i& pos, bool includeObjects = false);
+	Volume::VoxelElement* VirtualGetAt_NoLoad(const Vec2i& pos, bool includeObjects = false);
+	void VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects = false);
+	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includeObjects = false);
 
 	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive);
 	void PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive);

@@ -37,6 +37,9 @@ public:
     // Get rotation in radians
     float GetRotation() const   { return rotation; }
 
+    Volume::VoxelElement* GetVoxelAt(const Vec2i& worldPos) const;
+    void SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel);
+
     AABB GetBoundingBox() const { return this->boundingBox;}
     void UpdateBoundingBox();
 

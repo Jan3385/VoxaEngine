@@ -24,7 +24,7 @@ void Particle::LaserParticleGenerator::TickParticles()
         particleCount++;
         // Particle generation ------
         int alphaOffset = 0;
-        Volume::VoxelElement *voxel = matrix->VirtualGetAt_NoLoad(currentPos);
+        Volume::VoxelElement *voxel = matrix->VirtualGetAt_NoLoad(currentPos, true);
         if (voxel) {
             // If we hit a solid voxel, stop the laser
             if(voxel->GetState() == Volume::State::Solid)
