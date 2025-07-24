@@ -167,7 +167,24 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object)
             }
 
             // STEP 5: Triangulation using poly2tri
-            std::vector<Triangle> triangles = TriangulatePolygon(edges);
+            std::vector<p2t::Point*> p2tPoints;
+            for (const auto& edge : edges) {
+                p2tPoints.push_back(new p2t::Point(edge.x, edge.y));
+            }
+            p2t::CDT cdt(p2tPoints);
+            cdt.Triangulate();
+            std::vector<Triangle> triangles;
+            for (const auto& triangle : cdt.GetTriangles()) {
+                triangles.emplace_back(
+                    b2Vec2(triangle->GetPoint(0)->x, triangle->GetPoint(0)->y),
+                    b2Vec2(triangle->GetPoint(1)->x, triangle->GetPoint(1)->y),
+                    b2Vec2(triangle->GetPoint(2)->x, triangle->GetPoint(2)->y)
+                );
+            }
+            for (auto* p : p2tPoints) {
+                delete p;
+            }
+            //std::vector<Triangle> triangles = TriangulatePolygon(edges);
 
             // STEP 6: Store the triangles for physics
             allTriangleColliders.insert(allTriangleColliders.end(), triangles.begin(), triangles.end());
