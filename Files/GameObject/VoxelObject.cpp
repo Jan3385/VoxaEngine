@@ -107,25 +107,45 @@ unsigned int VoxelObject::UpdateRenderBuffer()
 
 Volume::VoxelElement *VoxelObject::GetVoxelAt(const Vec2i &worldPos) const
 {
-    Vec2i localPos = worldPos - Vec2i(this->position) + Vec2i(this->width / 2, this->height / 2);
+    // True center of the buffer
+    float centerX = (static_cast<float>(this->rotatedVoxelBuffer[0].size()) - 1) / 2.0f;
+    float centerY = (static_cast<float>(this->rotatedVoxelBuffer.size()) - 1) / 2.0f;
 
-    if (localPos.x < 0 || localPos.x >= static_cast<int>(this->rotatedVoxelBuffer[0].size()) || 
-        localPos.y < 0 || localPos.y >= static_cast<int>(this->rotatedVoxelBuffer.size())) {
+    float localX = static_cast<float>(worldPos.x) - this->position.x + centerX;
+    float localY = static_cast<float>(worldPos.y) - this->position.y + centerY;
+
+    int ix = static_cast<int>(std::round(localX));
+    int iy = static_cast<int>(std::round(localY));
+
+    if (ix < 0 || ix >= static_cast<int>(this->rotatedVoxelBuffer[0].size()) || 
+        iy < 0 || iy >= static_cast<int>(this->rotatedVoxelBuffer.size())) {
         return nullptr;
     }
-    
-    return this->rotatedVoxelBuffer[localPos.y][localPos.x];
+    return this->rotatedVoxelBuffer[iy][ix];
 }
 
 void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
 {
-    Vec2i localPos = worldPos - Vec2i(this->position) + Vec2i(this->width / 2, this->height / 2);
+    // True center of the buffer
+    float centerX = (static_cast<float>(this->rotatedVoxelBuffer[0].size()) - 1) / 2.0f;
+    float centerY = (static_cast<float>(this->rotatedVoxelBuffer.size()) - 1) / 2.0f;
+
+    float localX = static_cast<float>(worldPos.x) - this->position.x + centerX;
+    float localY = static_cast<float>(worldPos.y) - this->position.y + centerY;
+
+    int ix = static_cast<int>(std::round(localX));
+    int iy = static_cast<int>(std::round(localY));
+
+    if (ix < 0 || ix >= static_cast<int>(this->rotatedVoxelBuffer[0].size()) || 
+        iy < 0 || iy >= static_cast<int>(this->rotatedVoxelBuffer.size())) {
+        return;
+    }
 
     // get the correct position from the rotated buffer
-    if(this->rotatedVoxelBuffer[localPos.y][localPos.x] == nullptr) {
+    if(this->rotatedVoxelBuffer[iy][ix] == nullptr) {
         return; // No voxel at this position TODO: somehow recalculate the position instead of returning
     }
-    localPos = this->rotatedVoxelBuffer[localPos.y][localPos.x]->position;
+    Vec2i localPos = this->rotatedVoxelBuffer[iy][ix]->position;
 
     if (localPos.x < 0 || localPos.x >= this->width || localPos.y < 0 || localPos.y >= this->height) {
         return; // Out of bounds
