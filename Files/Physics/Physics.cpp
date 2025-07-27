@@ -141,14 +141,6 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
             }
         }
     }
-    // Print the label 2D map as ASCII using the number
-    std::cout << "Label map:\n";
-    for (int y = 0; y < static_cast<int>(labels.size()); ++y) {
-        for (int x = 0; x < static_cast<int>(labels[0].size()); ++x) {
-            std::cout << labels[y][x] << " ";
-        }
-        std::cout << "\n";
-    }
 
     // find the most prominent label
     int maxLabel = 1;
