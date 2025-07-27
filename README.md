@@ -102,3 +102,11 @@ to set up cmake and prepare it to build. To finish building the project run
 in the project folder.
 
 After that, run `VoxaEngine` inside the build folder.
+
+# Controls
+
+ - `w` `a` `s` `d` - movement (`w` and `s` - swim up and down when not using noclip)
+ - `space` - jump if not using noclip
+ - `left click` - place or shoot
+ - `right click` - explode
+ - `t` `z` `u` - place a physics barrel, physics sphere, static crate
