@@ -18,7 +18,7 @@ void FloodFillChunk(
 void FloodFillObject(
     const std::vector<std::vector<bool>> &values,
     std::vector<std::vector<int>> &labels,
-    const Vec2i &start
+    const Vec2i &start, unsigned short int currentLabel
 );
 
 std::vector<b2Vec2> MarchingSquaresEdgeTrace(

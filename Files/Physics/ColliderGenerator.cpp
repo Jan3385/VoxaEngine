@@ -69,11 +69,12 @@ void FloodFillChunk(
     }
 }
 
-void FloodFillObject(const std::vector<std::vector<bool>> &values, std::vector<std::vector<int>> &labels, const Vec2i &start)
+void FloodFillObject(const std::vector<std::vector<bool>> &values, std::vector<std::vector<int>> &labels, 
+    const Vec2i &start, unsigned short int currentLabel)
 {
     std::queue<Vec2i> queue;
     queue.push(start);
-    labels[start.y][start.x] = 1;
+    labels[start.y][start.x] = currentLabel;
 
     while(!queue.empty()){
         Vec2i current = queue.front();
@@ -83,14 +84,14 @@ void FloodFillObject(const std::vector<std::vector<bool>> &values, std::vector<s
             Vec2i neighbor = current + offset;
 
             // Check bounds
-            if(neighbor.x < 0 || neighbor.x >= values[0].size() ||
-               neighbor.y < 0 || neighbor.y >= values.size()) {
+            if(neighbor.x < 0 || neighbor.x >= static_cast<int>(values[0].size()) ||
+               neighbor.y < 0 || neighbor.y >= static_cast<int>(values.size())) {
                 continue;
             }
 
             // If the neighbor is part of the fill area and not labeled yet
             if(values[neighbor.y][neighbor.x] && labels[neighbor.y][neighbor.x] == 0) {
-                labels[neighbor.y][neighbor.x] = 1;
+                labels[neighbor.y][neighbor.x] = currentLabel;
                 queue.push(neighbor);
             }
         }
@@ -201,7 +202,7 @@ std::vector<b2Vec2> MarchingSquaresEdgeTrace(std::vector<std::vector<int>> &labe
 
     Vec2i start(-1, -1);
     for(int y = labels.size() - 1; y >= 0 && start.x == -1; --y) {
-        for(int x = 0; x < labels[0].size(); ++x) {
+        for(int x = 0; x < static_cast<int>(labels[0].size()); ++x) {
             if(labels[y][x] == currentLabel) {
                 start = Vec2i(x, y);
                 break;
@@ -247,8 +248,8 @@ std::vector<b2Vec2> MarchingSquaresEdgeTrace(std::vector<std::vector<int>> &labe
 
             
             bool labelAtCheck;
-            if(edgePos.x < 0 || edgePos.x >= labels[0].size() ||
-               edgePos.y < 0 || edgePos.y >= labels.size()) {
+            if(edgePos.x < 0 || edgePos.x >= static_cast<int>(labels[0].size()) ||
+               edgePos.y < 0 || edgePos.y >= static_cast<int>(labels.size())) {
                 labelAtCheck = false; // Out of bounds, no label
             } else {
                 labelAtCheck = (labels[edgePos.y][edgePos.x] == currentLabel);

@@ -49,6 +49,8 @@ public:
         this->dirtyRotation = true;
     }
 
+    Vec2f GetRotatedLocalPosition(const Vec2f& localPos) const;
+
     void UpdateRotatedVoxelBuffer();
 
     Vec2i GetSize() const { return Vec2i(width, height); }
@@ -57,7 +59,6 @@ public:
 
     std::vector<std::vector<Volume::VoxelElement*>> voxels;
 protected:
-
     bool enabled = false;
     Vec2f position;
     int width = 0;

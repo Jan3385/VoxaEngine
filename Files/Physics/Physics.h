@@ -26,7 +26,7 @@ private:
 public:
     GamePhysics();
     ~GamePhysics();
-    void Step(float deltaTime);
+    void Step(float deltaTime, ChunkMatrix& chunkMatrix);
 
     std::list<PhysicsObject*> physicsObjects;
     b2WorldId GetWorldId() const { return worldId; }
@@ -35,6 +35,7 @@ public:
         Volume::Chunk* chunk
     );
     void Generate2DCollidersForVoxelObject(
-        PhysicsObject* object
+        PhysicsObject* object,
+        ChunkMatrix* chunkMatrix
     );
 };

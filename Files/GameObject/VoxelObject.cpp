@@ -262,3 +262,24 @@ void VoxelObject::UpdateRotatedVoxelBuffer()
         this->dirtyRotation = false;
     }
 }
+
+Vec2f VoxelObject::GetRotatedLocalPosition(const Vec2f &localPos) const
+{
+    // Calculate the center of the voxel object
+    float centerX = (static_cast<float>(this->width) - 1) / 2.0f;
+    float centerY = (static_cast<float>(this->height) - 1) / 2.0f;
+
+    // Translate localPos to be relative to the center
+    float relX = localPos.x - centerX;
+    float relY = localPos.y - centerY;
+
+    float cos = std::cos(this->rotation);
+    float sin = std::sin(this->rotation);
+
+    // Rotate around the center
+    float rotatedX = cos * relX - sin * relY;
+    float rotatedY = sin * relX + cos * relY;
+
+    // Translate back
+    return Vec2f(rotatedX + centerX, rotatedY + centerY);
+}

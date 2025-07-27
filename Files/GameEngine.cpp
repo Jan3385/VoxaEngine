@@ -85,7 +85,7 @@ void GameEngine::Update()
     this->Player->UpdatePlayer(this->chunkMatrix, this->deltaTime);
 
     // Run physics simulation
-    physics->Step(this->deltaTime);
+    physics->Step(this->deltaTime, this->chunkMatrix);
 
     // update voxelobjects rotation
     for(VoxelObject* object : chunkMatrix.voxelObjects) {

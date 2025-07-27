@@ -16,8 +16,6 @@ namespace Particle{
 		
 		bool Step(ChunkMatrix* matrix) override;
         Vec2f GetPosition() const;
-
-        void SetNextValidPosition(ChunkMatrix *matrix);
 	};
     
     Particle::BulletParticle* AddBulletParticle(ChunkMatrix *matrix,

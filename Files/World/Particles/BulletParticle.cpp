@@ -69,24 +69,30 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
         );
     }
 
-    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos, true);
-    if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
+    Vec2f normalizedVelocity = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y));
+    Vec2f stepPosition = fPosition + normalizedVelocity;
+    
+    float futureDistanceSQRT = (futurePos - fPosition).LengthSquared();
+    float stepDistanceSQRT = (stepPosition - fPosition).LengthSquared();
+
+    while (stepDistanceSQRT < futureDistanceSQRT)
     {
-        //check if the position for the particle exists
-        if (!matrix->IsValidWorldPosition(this->fPosition))
-        {
+        stepPosition += normalizedVelocity;
+        stepDistanceSQRT = (stepPosition - fPosition).LengthSquared();
+
+        Volume::VoxelElement *stepVoxel = matrix->VirtualGetAt(stepPosition, true);
+        if (!stepVoxel || stepVoxel->GetState() == Volume::State::Solid ||this->ShouldDie()){
+
+            matrix->ExplodeAt(stepPosition, 2+(rand()%2-1));
+
+            matrix->PlaceVoxelAt(stepPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true, false);
+
+            this->fPosition = stepPosition;
+
             return true;
         }
-
-        this->SetNextValidPosition(matrix);
-
-        matrix->ExplodeAt(fPosition, 2+(rand()%2-1));
-        
-        matrix->PlaceVoxelAt(this->fPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true, true);
-
-        return true;
     }
-
+    
     if(!isTimeImmortal)
         this->particleLifeTime--;
 
@@ -104,25 +110,4 @@ Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,
     matrix->newParticles.push_back(particle);
 
     return particle;
-}
-
-/// @brief Used to set the last valid position for the bullet particle if it were going in a straight line.
-/// @param matrix The chunk matrix to check for valid positions.
-void Particle::BulletParticle::SetNextValidPosition(ChunkMatrix *matrix){
-    int iteration = 0;
-
-    // Normalize the velocity vector
-    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y)); 
-
-    Vec2f futurePos = fPosition + m_dPosition;
-    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos, true);
-
-    while(futureVoxel && futureVoxel->GetState() != Volume::State::Solid && iteration < 5000)
-    {
-        // Move the particle in the direction of the velocity vector until we hit a solid voxel
-        this->fPosition = futurePos;
-        futurePos = fPosition + m_dPosition;
-        futureVoxel = matrix->VirtualGetAt(futurePos, true);
-        iteration++;
-    }
 }
