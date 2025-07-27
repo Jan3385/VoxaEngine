@@ -49,24 +49,46 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 # How To Run:
 
 > [!NOTE]  
-> Most libraries are dynamically fetched, so expect the first build to take a while
+> ImGui and poly2tri libraries are dynamically downloaded on build. Yours first build may take few minutes
 
 ## Windows 10/11
 
-Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. 
+Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. *vcpkg* is required to fetch all external libraries
 
-To compile simply run `cmake --preset release` and follow with `cmake --build build` in the project folder.
+To compile run 
+
+`cmake --preset release` 
+
+to select a build preset. Afterwards run
+
+`cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
+
+to set up cmake and prepare it to build. To finish building the project run
+
+`cmake --build build` 
 
 After that, run `VoxaEngine.exe` inside the build folder.
 
 ## UNIX Linux
 
-Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. 
+Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. *vcpkg* is required to fetch all external libraries
 
 You need to install these packages before compiling (package name depends on your linux distribution):
 - `libglew-dev` or `glew`
 - `libgl1-mesa-dev` or `libgl-dev`
 
-To compile simply run `cmake --preset release` and follow with `cmake --build build` in the project folder.
+To compile run 
+
+`cmake --preset release` 
+
+to select a build preset. Afterwards run
+
+`cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
+
+to set up cmake and prepare it to build. To finish building the project run
+
+`cmake --build build` 
+
+in the project folder.
 
 After that, run `VoxaEngine` inside the build folder.
