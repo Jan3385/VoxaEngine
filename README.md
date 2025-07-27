@@ -42,6 +42,12 @@ Most of the gas pressure simulation is done on the GPU for faster speeds
 
 Utilizing flamability and flame propagation with oxygen
 
+### Physics simulation
+
+![Simulation GIF](/Promotional-stuff/physics-simulation.gif)
+
+Utilizing Box2D and a custom object logic to support fully destructable, dynamic objects
+
 ### OpenGL rendering
 
 SDL2 renderer and most of other renderers are not made with this kind of "voxel" rendering in mind. This is why this project runs on custom render shaders to provide maximum performance that wouldn't be possible without it
