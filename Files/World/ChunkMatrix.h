@@ -2,6 +2,8 @@
 
 #include <GL/glew.h>
 
+#include <list>
+
 #include "World/Chunk.h"
 #include "GameObject/Player.h"
 
@@ -25,7 +27,7 @@ public:
 	std::vector<Particle::VoxelParticle*> particles;
 	std::vector<Particle::ParticleGenerator*> particleGenerators;
 
-	std::vector<VoxelObject*> voxelObjects;
+	std::list<VoxelObject*> voxelObjects;
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
@@ -44,8 +46,9 @@ public:
 	void VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects = false);
 	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includeObjects = false);
 
-	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive);
-	void PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive);
+	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, 
+		bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects = false);
+	void PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects = false);
 	void SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp = std::nullopt);
 	// returns true if the gas was displaced. False if no change accured
 	bool TryToDisplaceGas(const Vec2i& pos, std::string id, Volume::Temperature temp, float amount, bool placeUnmovableSolids);

@@ -36,7 +36,7 @@ Game::Player::~Player()
 
 }
 
-void Game::Player::Update(ChunkMatrix& chunkMatrix, float deltaTime)
+void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 {
     chunkMatrix.voxelMutex.lock();
     this->onGround = this->isOnGround(chunkMatrix);

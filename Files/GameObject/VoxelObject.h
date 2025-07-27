@@ -28,7 +28,7 @@ public:
     VoxelObject& operator=(const VoxelObject&) = delete;
     VoxelObject& operator=(VoxelObject&&) = delete;
 
-    virtual void Update(ChunkMatrix& chunkMatrix, float deltaTime);
+    virtual bool Update(ChunkMatrix& chunkMatrix);
 
     virtual bool ShouldRender() const { return true; };
     virtual unsigned int UpdateRenderBuffer();
@@ -38,7 +38,7 @@ public:
     float GetRotation() const   { return rotation; }
 
     Volume::VoxelElement* GetVoxelAt(const Vec2i& worldPos) const;
-    void SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel);
+    virtual void SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel);
 
     AABB GetBoundingBox() const { return this->boundingBox;}
     void UpdateBoundingBox();
@@ -74,4 +74,6 @@ protected:
 private:
     float rotation = 0.0f; // in radians
     unsigned int renderVoxelCount = 0;
+
+    float maxHeatTransfer = 0.0f;
 };

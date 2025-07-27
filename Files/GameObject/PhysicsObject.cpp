@@ -8,19 +8,17 @@
 
 PhysicsObject::~PhysicsObject()
 {
-    if (b2Body_IsValid(m_physicsBody)) {
-        b2DestroyBody(m_physicsBody);
-        m_physicsBody = b2_nullBodyId;
-    }
+    this->DestroyPhysicsBody();
+}
 
-    std::vector<PhysicsObject*>& vec = GameEngine::instance->physics->physicsObjects;
-    vec.erase(std::remove(vec.begin(), vec.end(), this), vec.end());
-
-    VoxelObject::~VoxelObject();
+void PhysicsObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
+{
+    VoxelObject::SetVoxelAt(worldPos, voxel);
+    this->dirtyColliders = true;
 }
 
 void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)
-{
+{   
     this->dirtyColliders = false;
 
     this->DestroyPhysicsBody();
@@ -53,11 +51,6 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
     this->edges.assign(edges.begin(), edges.end());
 }
 
-void PhysicsObject::Update(ChunkMatrix& chunkMatrix, float deltaTime)
-{
-    VoxelObject::Update(chunkMatrix, deltaTime);
-}
-
 void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)
 {
     if (!b2Body_IsValid(m_physicsBody)) {
@@ -75,6 +68,10 @@ void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)
 void PhysicsObject::DestroyPhysicsBody()
 {
     if (b2Body_IsValid(m_physicsBody)) {
+        // Store the velocity and angular velocity before destroying the body
+        this->velocity = b2Body_GetLinearVelocity(m_physicsBody);
+        this->angularVelocity = b2Body_GetAngularVelocity(m_physicsBody);
+
         b2DestroyBody(m_physicsBody);
         m_physicsBody = b2_nullBodyId;
     }
@@ -98,8 +95,12 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
 
     bodyDef.isAwake = true;
     bodyDef.isEnabled = true;
-    bodyDef.rotation = b2MakeRot(0.0f);
+    bodyDef.rotation = b2MakeRot(this->GetRotation());
     bodyDef.enableSleep = true;
+    
+    bodyDef.angularVelocity = this->angularVelocity;
+    bodyDef.linearVelocity = this->velocity;
+
     // Set origin to center of object
     bodyDef.position = b2Vec2(position.x, position.y);
     m_physicsBody = b2CreateBody(worldId, &bodyDef);

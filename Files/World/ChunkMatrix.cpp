@@ -248,7 +248,6 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeOb
                 Volume::VoxelElement* foundVoxel = obj->GetVoxelAt(pos);
 
                 if (foundVoxel) return foundVoxel;
-                else break; // Stop the search if only found null
             }
         }
     }
@@ -405,18 +404,19 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     chunk->forcePressureUpdate = true;
 }
 
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, bool placeUnmovableSolids, float amount, bool destructive)
+void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, 
+    bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects)
 {
     Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
 
-    PlaceVoxelAt(voxel, destructive);
+    PlaceVoxelAt(voxel, destructive, includeObjects);
 }
-void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive)
+void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects)
 {
     if(!voxel) return; // Check for null pointer
 
     if(!destructive){
-        Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(voxel->position);
+        Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(voxel->position, includeObjects);
 
         if(!replacedVoxel){
             // if no voxel to replace, a problem must have happened. Stop
@@ -426,7 +426,7 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive)
 
         //still remain destructive if the voxel its trying to move is unmovable
         if(replacedVoxel->IsUnmoveableSolid()){
-            VirtualSetAt(voxel);
+            VirtualSetAt(voxel, includeObjects);
             return;
         }
 
@@ -483,7 +483,7 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive)
         
     }
         
-    VirtualSetAt(voxel);
+    VirtualSetAt(voxel, includeObjects);
 }
 void ChunkMatrix::SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp)
 {
@@ -562,7 +562,7 @@ bool ChunkMatrix::IsValidChunkPosition(const Vec2i &pos) const
 
 void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 {
-    const uint16_t numOfRays = radius < 16 ? 180 : 360;
+    const uint16_t numOfRays = 360;
     const double angleStep = M_PI * 2 / numOfRays;
 
     // Physics explosion
@@ -571,12 +571,12 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     eDef.position = b2Vec2(pos.x, pos.y);
     eDef.radius = radius;
     eDef.falloff = radius * 0.5f;
-    eDef.impulsePerLength = 1000.0f / radius;
+    eDef.impulsePerLength = 400.0f / std::sqrt(std::max<int>(radius, 8));
     b2World_Explode(
         GameEngine::instance->physics->GetWorldId(),
         &eDef
     );
-
+    
     for (uint16_t i = 0; i < numOfRays; i++)
     {
     	double angle = angleStep * i;
@@ -588,16 +588,18 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     	{
     		currentPos.x += dx;
     		currentPos.y += dy;
-            Volume::VoxelElement *voxel = VirtualGetAt(currentPos);
+            Volume::VoxelElement *voxel = VirtualGetAt(currentPos, true);
     		if (voxel == nullptr) continue;
 
     		if (j < radius * 0.2f) {
-                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 5.0f, true);
+                PlaceVoxelAt(currentPos, "Fire", Temperature(std::min(300, radius * 70)), false, 5.0f, true, true);
             }
             else if(j <= radius) {
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false);
+                {
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false, true);
+                }
                 else {
                     // +- 0.05 degrees radian
                     double smallAngleDeviation = ((rand() % 1000) / 10000.0f - 0.05f);

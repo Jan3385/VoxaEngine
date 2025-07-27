@@ -2,6 +2,8 @@
 
 #include <box2d/box2d.h>
 
+#include <list>
+
 #include "Math/Vector.h"
 #include "World/Chunk.h"
 #include "GameObject/PhysicsObject.h"
@@ -26,7 +28,7 @@ public:
     ~GamePhysics();
     void Step(float deltaTime);
 
-    std::vector<PhysicsObject*> physicsObjects;
+    std::list<PhysicsObject*> physicsObjects;
     b2WorldId GetWorldId() const { return worldId; }
 
     void Generate2DCollidersForChunk(

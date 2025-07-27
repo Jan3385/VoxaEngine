@@ -3,6 +3,7 @@
 #include <mutex>
 #include <future>
 #include <cstring>
+#include <algorithm>
 
 #include "Shader/ChunkShader.h"
 #include "Registry/GameObjectRegistry.h"
@@ -81,11 +82,12 @@ void GameEngine::Update()
     this->PollEvents();
 
     //Update Player
-    this->Player->Update(this->chunkMatrix, this->deltaTime);
+    this->Player->UpdatePlayer(this->chunkMatrix, this->deltaTime);
 
     // Run physics simulation
     physics->Step(this->deltaTime);
 
+    // update voxelobjects rotation
     for(VoxelObject* object : chunkMatrix.voxelObjects) {
         if(object->IsEnabled()) {
             object->UpdateRotatedVoxelBuffer();
@@ -130,15 +132,27 @@ void GameEngine::m_SimulationThread()
 
         simulationUpdateTimer -= simulationFixedDeltaTime;
 
+        chunkMatrix.voxelMutex.lock();
         // Update game objects
-        for (VoxelObject* voxelObject : chunkMatrix.voxelObjects) {
+        for (auto it = chunkMatrix.voxelObjects.begin(); it != chunkMatrix.voxelObjects.end(); ) {
+            VoxelObject* voxelObject = *it;
             if (voxelObject->IsEnabled()) {
-                voxelObject->Update(chunkMatrix, simulationFixedDeltaTime);
+                if (!voxelObject->Update(chunkMatrix)) {
+                    it = chunkMatrix.voxelObjects.erase(it);
+
+                    PhysicsObject* physicsObject = dynamic_cast<PhysicsObject*>(voxelObject);
+                    if (physicsObject) {
+                        this->physics->physicsObjects.remove(physicsObject);
+                    }
+
+                    delete voxelObject;
+                    continue;
+                }
             }
+            ++it;
         }
 
         //Reset voxels to default pre-simulation state
-        chunkMatrix.voxelMutex.lock();
         #pragma omp parallel for
         for(uint8_t i = 0; i < 4; ++i)
         {

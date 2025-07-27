@@ -6,8 +6,11 @@
 
 #include <cmath>
 
+/// @brief Returns a random variation value.
+/// @param max The maximum variation value.
+/// @return A random variation value in the range [-max, max].
 int variation(int max){
-    return rand() % (2 * max + 1) - max; // Returns a random number in the range [-max, max]
+    return rand() % (2 * max + 1) - max;
 }
 
 using namespace Particle;
@@ -66,7 +69,7 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
         );
     }
 
-    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
+    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos, true);
     if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
     {
         //check if the position for the particle exists
@@ -79,7 +82,7 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
 
         matrix->ExplodeAt(fPosition, 2+(rand()%2-1));
         
-        matrix->PlaceVoxelAt(this->fPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true);
+        matrix->PlaceVoxelAt(this->fPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true, true);
 
         return true;
     }
@@ -89,9 +92,11 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
 
     return false;
 }
+
 Vec2f Particle::BulletParticle::GetPosition() const {
     return Vec2f((Vec2i)this->fPosition);
 }
+
 Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,
     float angle, float speed, float damage, Vec2f position)
 {
@@ -100,20 +105,24 @@ Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,
 
     return particle;
 }
+
+/// @brief Used to set the last valid position for the bullet particle if it were going in a straight line.
+/// @param matrix The chunk matrix to check for valid positions.
 void Particle::BulletParticle::SetNextValidPosition(ChunkMatrix *matrix){
     int iteration = 0;
 
-    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y)); // Normalize the velocity vector
+    // Normalize the velocity vector
+    m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y)); 
 
     Vec2f futurePos = fPosition + m_dPosition;
-    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
+    Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos, true);
 
     while(futureVoxel && futureVoxel->GetState() != Volume::State::Solid && iteration < 5000)
     {
         // Move the particle in the direction of the velocity vector until we hit a solid voxel
         this->fPosition = futurePos;
         futurePos = fPosition + m_dPosition;
-        futureVoxel = matrix->VirtualGetAt(futurePos);
+        futureVoxel = matrix->VirtualGetAt(futurePos, true);
         iteration++;
     }
 }

@@ -17,7 +17,7 @@ namespace Game{
         Player();
         Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
         ~Player();
-        void Update(ChunkMatrix& chunkMatrix, float deltaTime);
+        void UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime);
 
         void FireGun(ChunkMatrix& chunkMatrix);
 

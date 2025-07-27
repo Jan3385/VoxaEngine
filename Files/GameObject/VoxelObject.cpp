@@ -24,7 +24,13 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
                 this->voxels[y][x] = nullptr; // Empty voxel
             } else {
                 this->voxels[y][x] = CreateVoxelElement(
-                    data.id, Vec2i(x, y), 0.0f, Volume::Temperature(21.0f), true);
+                    data.id, 
+                    Vec2i(x, y), 
+                    20.0f, 
+                    Volume::Temperature(21.0f), 
+                    true
+                );
+
                 this->voxels[y][x]->color = data.color;
             }
         }
@@ -61,22 +67,96 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
 
 VoxelObject::~VoxelObject()
 {
-    this->enabled = false;
+    if (renderVoxelVAO != 0) {
+        glDeleteVertexArrays(1, &renderVoxelVAO);
+        renderVoxelVAO = 0;
+    }
 
-    std::vector<VoxelObject*>& vec = GameEngine::instance->chunkMatrix.voxelObjects;
-    vec.erase(std::remove(vec.begin(), vec.end(), this), vec.end());
+    if (renderVoxelVBO != 0) {
+        glDeleteBuffers(1, &renderVoxelVBO);
+        renderVoxelVBO = 0;
+    }
+    
+    for(int y = this->voxels.size() - 1; y >= 0; --y) {
+        for(int x = this->voxels[y].size() - 1; x >= 0; --x) {
+            Volume::VoxelElement* voxel = this->voxels[y][x];
+            if(voxel) {
+                delete voxel;
+                this->voxels[y][x] = nullptr;
+            }
+        }
+    }
+
+    this->enabled = false;
 }
 
-void VoxelObject::Update(ChunkMatrix& chunkMatrix, float deltaTime)
+bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 {
-    
+    bool calculateHeat = GameEngine::instance->runHeatSimulation && maxHeatTransfer > 0.1f;
+    if(calculateHeat) maxHeatTransfer = 0.0f;
+
+    bool foundVoxel = false;
+
+    for(int y = 0; y < static_cast<int>(this->voxels.size()); ++y) {
+        for(int x = 0; x < static_cast<int>(this->voxels[y].size()); ++x) {
+            Volume::VoxelElement* voxel = this->voxels[y][x];
+            if(voxel) {
+                foundVoxel = true;
+
+                // remove any non-solid voxels and let them enter the simulation
+                if(voxel->GetState() != Volume::State::Solid) {
+                    chunkMatrix.PlaceVoxelAt(
+                        voxel,
+                        false,
+                        false
+                    );
+
+                    this->voxels[y][x] = nullptr;
+                    this->dirtyRotation = true;
+                    continue;
+                }
+
+                voxel->Step(&chunkMatrix);
+                
+                // heat transfer between voxels
+                if(calculateHeat){
+                    voxel->CheckTransitionTemps(chunkMatrix);
+                    for(Vec2i dir : vector::AROUND4){
+                        if(x + dir.x < 0 || x + dir.x >= this->width ||
+                           y + dir.y < 0 || y + dir.y >= this->height) {
+                            continue; // Out of bounds
+                        }
+
+                        Volume::VoxelElement* neighbor = this->voxels[y + dir.y][x + dir.x];
+
+                        if(!neighbor) continue;
+                            
+                        float heatCapacity = voxel->properties->HeatCapacity / 40;
+                        float heatDiff = neighbor->temperature.GetCelsius() - voxel->temperature.GetCelsius();
+                        float heatTransfer = heatDiff * neighbor->properties->HeatConductivity / heatCapacity;
+                        maxHeatTransfer = std::max(maxHeatTransfer, heatTransfer);
+                        
+                        if (heatTransfer != 0.0f) {
+                            voxel->temperature.SetCelsius(voxel->temperature.GetCelsius() + heatTransfer);
+                            neighbor->temperature.SetCelsius(neighbor->temperature.GetCelsius() - heatTransfer);
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    if(!foundVoxel) {
+        return false;
+    }
+    return true;
 }
 
 unsigned int VoxelObject::UpdateRenderBuffer()
 {
     std::vector<Volume::VoxelRenderData> renderData;
 
-    size_t usedCount = 0;
     Vec2f offset = this->position - Vec2f((rotatedVoxelBuffer[0].size()) / 2.0f, (rotatedVoxelBuffer.size()) / 2.0f);
     offset.x = std::ceil(offset.x);
     offset.y = std::ceil(offset.y + 0.1f); // offset to avoid object being above the ground (makes the object sometimes render inside the ground)
@@ -91,18 +171,15 @@ unsigned int VoxelObject::UpdateRenderBuffer()
                         y + offset.y),
                     .color = voxel->color.getGLMVec4(),
                 });
-                ++usedCount;
             }
         }
     }
 
-    renderVoxelCount = static_cast<unsigned int>(usedCount);
-
     glBindBuffer(GL_ARRAY_BUFFER, renderVoxelVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Volume::VoxelRenderData) * renderVoxelCount, renderData.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Volume::VoxelRenderData) * renderData.size(), renderData.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    return renderVoxelCount;
+    return renderData.size();
 }
 
 Volume::VoxelElement *VoxelObject::GetVoxelAt(const Vec2i &worldPos) const
@@ -138,22 +215,23 @@ void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
 
     if (ix < 0 || ix >= static_cast<int>(this->rotatedVoxelBuffer[0].size()) || 
         iy < 0 || iy >= static_cast<int>(this->rotatedVoxelBuffer.size())) {
+        delete voxel;
         return;
     }
 
     // get the correct position from the rotated buffer
     if(this->rotatedVoxelBuffer[iy][ix] == nullptr) {
+        delete voxel;
         return; // No voxel at this position TODO: somehow recalculate the position instead of returning
     }
     Vec2i localPos = this->rotatedVoxelBuffer[iy][ix]->position;
 
     if (localPos.x < 0 || localPos.x >= this->width || localPos.y < 0 || localPos.y >= this->height) {
+        delete voxel;
         return; // Out of bounds
     }
 
-    if (voxel) {
-        voxel->position = localPos;
-    }
+    voxel->position = localPos;
 
     // Delete the old voxel if it exists
     if (this->voxels[localPos.y][localPos.x]) {
@@ -161,10 +239,12 @@ void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
     }
 
     this->voxels[localPos.y][localPos.x] = voxel;
+    this->rotatedVoxelBuffer[iy][ix] = voxel;
 
-    // Update bounding box
-    this->UpdateBoundingBox(); //TODO: mark as dirty instead
     this->dirtyRotation = true;
+
+    //force heat updates
+    this->maxHeatTransfer = 1.0f;
 }
 
 void VoxelObject::UpdateBoundingBox()
