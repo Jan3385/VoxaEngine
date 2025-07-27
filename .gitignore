@@ -3,3 +3,4 @@
 .VSCodeCounter/
 imgui.ini
 launch.json
+vcpkg_installed/
