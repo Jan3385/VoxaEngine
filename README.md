@@ -55,7 +55,7 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 # How To Run:
 
 > [!NOTE]  
-> ImGui and poly2tri libraries are dynamically downloaded on build. Yours first build may take few minutes
+> ImGui and poly2tri libraries are dynamically downloaded on build. Your first build may take few minutes
 
 ## Windows 10/11
 
