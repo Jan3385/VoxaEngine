@@ -55,13 +55,13 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 
 Make sure you have at least *CMake v3.10* installed and functional. Ensure you have a *g++* compiler with *Ninja* generator installed and working with CMake. *vcpkg* is required to fetch all external libraries
 
-To compile run 
+To compile run following in the project folder:
 
 `cmake --preset release` 
 
 to select a build preset. Afterwards run
 
-`cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
+`cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH\TO\VCPKG\CMAKE\vcpkg.cmake"`
 
 to set up cmake and prepare it to build. To finish building the project run
 
@@ -77,7 +77,7 @@ You need to install these packages before compiling (package name depends on you
 - `libglew-dev` or `glew`
 - `libgl1-mesa-dev` or `libgl-dev`
 
-To compile run 
+To compile run following in the project folder:
 
 `cmake --preset release` 
 
