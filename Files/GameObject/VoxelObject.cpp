@@ -5,8 +5,6 @@
 #include "Registry/GameObjectRegistry.h"
 #include "World/Voxel.h"
 
-#include "Math/FastRotation.h"
-
 #include <iostream>
 #include <algorithm>
 
@@ -258,7 +256,7 @@ void VoxelObject::UpdateBoundingBox()
 void VoxelObject::UpdateRotatedVoxelBuffer()
 {
     if (this->dirtyRotation) {
-        FastRotate2DVector(this->voxels, this->rotatedVoxelBuffer, -this->rotation);
+        this->rotatedVoxelBuffer = this->voxels;
         this->dirtyRotation = false;
     }
 }

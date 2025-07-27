@@ -26,6 +26,8 @@ public:
     bool dirtyColliders = true;
 	void UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId);
 
+    void UpdateRotatedVoxelBuffer() override;
+
     void UpdatePhysicPosition(b2WorldId worldId);
 
     // physics mesh body

@@ -89,8 +89,15 @@ void GameObjectRegistry::RegisterObjects()
     GameObjectRegistry::RegisterGameObject(
         "Ball",
         GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetMass(10)
+            .SetMass(20)
             .SetVoxelFileName("Ball")
+            .Build()
+    );
+    GameObjectRegistry::RegisterGameObject(
+        "Crate",
+        GameObjectBuilder(GameObjectType::GameObject)
+            .SetMass(10)
+            .SetVoxelFileName("Crate")
             .Build()
     );
 

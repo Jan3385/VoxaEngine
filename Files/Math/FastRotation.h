@@ -52,8 +52,6 @@ void FastRotate2DVector(const std::vector<std::vector<T*>>& input, std::vector<s
             if (neighbourVec.x >= 0 && neighbourVec.x < static_cast<int>(input.size()) &&
                 neighbourVec.y >= 0 && neighbourVec.y < static_cast<int>(input[0].size())) {
                 output[x][y] = input[neighbourVec.x][neighbourVec.y];
-            } else {
-                output[x][y] = nullptr; // Out of bounds, set to nullptr
             }
         }
     }

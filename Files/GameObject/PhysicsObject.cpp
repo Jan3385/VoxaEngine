@@ -1,5 +1,7 @@
 #include "PhysicsObject.h"
 
+#include "Math/FastRotation.h"
+
 #include <iostream>
 #include <algorithm>
 
@@ -49,6 +51,14 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
 
     this->triangleColliders.assign(triangles.begin(), triangles.end());
     this->edges.assign(edges.begin(), edges.end());
+}
+
+void PhysicsObject::UpdateRotatedVoxelBuffer()
+{
+    if (this->dirtyRotation) {
+        FastRotate2DVector(this->voxels, this->rotatedVoxelBuffer, -this->GetRotation());
+        this->dirtyRotation = false;
+    }
 }
 
 void PhysicsObject::UpdatePhysicPosition(b2WorldId worldId)

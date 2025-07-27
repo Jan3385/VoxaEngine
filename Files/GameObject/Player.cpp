@@ -145,7 +145,7 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsUnder(ChunkMatrix &chu
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT/2));
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT/2 + 1));
         if (voxel) {
             voxels.push_back(voxel);
         }

@@ -51,8 +51,8 @@ public:
 
     Vec2f GetRotatedLocalPosition(const Vec2f& localPos) const;
 
-    void UpdateRotatedVoxelBuffer();
-
+    virtual void UpdateRotatedVoxelBuffer();
+ 
     Vec2i GetSize() const { return Vec2i(width, height); }
 
 	GLuint renderVoxelVAO = 0;

@@ -292,6 +292,12 @@ void GameEngine::PollEvents()
                 Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, this->physics);
                 }
                 break;
+            case SDLK_u:
+                {
+                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
+                Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, this->physics);
+                }
+                break;
             }
             break;
         }
