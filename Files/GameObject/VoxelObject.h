@@ -65,6 +65,8 @@ protected:
     int height = 0;
     AABB boundingBox;
 
+    float ExchangeHeatBetweenVoxels(Volume::VoxelElement* v1, Volume::VoxelElement* v2);
+
     // VoxelElement buffer for rotated voxels
     // Includes empty pointers for empty voxels
     std::vector<std::vector<Volume::VoxelElement*>> rotatedVoxelBuffer;

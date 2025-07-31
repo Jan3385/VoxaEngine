@@ -93,6 +93,8 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
     bool calculateHeat = GameEngine::instance->runHeatSimulation && maxHeatTransfer > 0.1f;
     if(calculateHeat) maxHeatTransfer = 0.0f;
 
+    PhysicsObject* thisPhys = dynamic_cast<PhysicsObject*>(this);
+
     bool foundVoxel = false;
 
     for(int y = 0; y < static_cast<int>(this->voxels.size()); ++y) {
@@ -101,24 +103,49 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
             if(voxel) {
                 foundVoxel = true;
 
-                // remove any non-solid voxels and let them enter the simulation
-                if(voxel->GetState() != Volume::State::Solid) {
-                    chunkMatrix.PlaceVoxelAt(
-                        voxel,
-                        false,
-                        false
-                    );
-
-                    this->voxels[y][x] = nullptr;
-                    this->dirtyRotation = true;
-                    continue;
-                }
-
                 voxel->Step(&chunkMatrix);
                 
                 // heat transfer between voxels
                 if(calculateHeat){
-                    voxel->CheckTransitionTemps(chunkMatrix);
+                    std::string transitionId = voxel->ShouldTransitionToID();
+                    if(!transitionId.empty()){
+                        float amount = voxel->amount;
+                        Volume::Temperature temp = voxel->temperature;
+                        delete this->voxels[y][x];
+
+                        this->voxels[y][x] = CreateVoxelElement(
+                            transitionId, 
+                            Vec2i(x, y), 
+                            amount, 
+                            temp, 
+                            true
+                        );
+
+                        voxel = this->voxels[y][x];
+                        this->dirtyRotation = true;
+
+                        // remove any non-solid voxels and let them enter the simulation
+                        if(voxel->GetState() != Volume::State::Solid) {
+                            Vec2i worldPos = Vec2i(
+                                static_cast<int>(this->position.x + x - (this->rotatedVoxelBuffer[0].size() / 2.0f)),
+                                static_cast<int>(this->position.y + y - (this->rotatedVoxelBuffer.size() / 2.0f))
+                            );
+                            voxel->position = worldPos;
+
+                            chunkMatrix.PlaceVoxelAt(
+                                voxel,
+                                false,
+                                false
+                            );
+
+                            this->voxels[y][x] = nullptr;
+                            this->dirtyRotation = true;
+                            if(thisPhys)
+                                thisPhys->dirtyColliders = true;
+
+                            continue;
+                        }
+                    }
                     for(Vec2i dir : vector::AROUND4){
                         if(x + dir.x < 0 || x + dir.x >= this->width ||
                            y + dir.y < 0 || y + dir.y >= this->height) {
@@ -129,19 +156,27 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 
                         if(!neighbor) continue;
                             
-                        float heatCapacity = voxel->properties->HeatCapacity / 40;
-                        float heatDiff = neighbor->temperature.GetCelsius() - voxel->temperature.GetCelsius();
-                        float heatTransfer = heatDiff * neighbor->properties->HeatConductivity / heatCapacity;
-                        maxHeatTransfer = std::max(maxHeatTransfer, heatTransfer);
-                        
-                        if (heatTransfer != 0.0f) {
-                            voxel->temperature.SetCelsius(voxel->temperature.GetCelsius() + heatTransfer);
-                            neighbor->temperature.SetCelsius(neighbor->temperature.GetCelsius() - heatTransfer);
-                        }
-
+                        maxHeatTransfer = std::max(maxHeatTransfer, ExchangeHeatBetweenVoxels(voxel, neighbor));
                     }
                 }
             }
+        }
+    }
+
+    // interaction between object and chunk matrix
+    for(int y = 0; y < static_cast<int>(this->rotatedVoxelBuffer.size()); ++y) {
+        for(int x = 0; x < static_cast<int>(this->rotatedVoxelBuffer[y].size()); ++x) {
+            Volume::VoxelElement* objectVoxel = this->rotatedVoxelBuffer[y][x];
+            
+            Vec2i worldPos = Vec2i(
+                static_cast<int>(this->position.x + x - (this->rotatedVoxelBuffer[0].size() / 2.0f)),
+                static_cast<int>(this->position.y + y - (this->rotatedVoxelBuffer.size() / 2.0f))
+            );
+
+            Volume::VoxelElement* worldVoxel = chunkMatrix.VirtualGetAt(worldPos, false);
+
+            maxHeatTransfer = std::max(maxHeatTransfer, ExchangeHeatBetweenVoxels(objectVoxel, worldVoxel));
+
         }
     }
 
@@ -259,6 +294,22 @@ void VoxelObject::UpdateRotatedVoxelBuffer()
         this->rotatedVoxelBuffer = this->voxels;
         this->dirtyRotation = false;
     }
+}
+
+float VoxelObject::ExchangeHeatBetweenVoxels(Volume::VoxelElement *v1, Volume::VoxelElement *v2)
+{
+    if(!v1 || !v2) return 0.0f;
+
+    float heatCapacity = v1->properties->HeatCapacity / 40;
+    float heatDiff = v2->temperature.GetCelsius() - v1->temperature.GetCelsius();
+    float heatTransfer = heatDiff * v2->properties->HeatConductivity / heatCapacity;
+    
+    if (heatTransfer != 0.0f) {
+        v1->temperature.SetCelsius(v1->temperature.GetCelsius() + heatTransfer);
+        v2->temperature.SetCelsius(v2->temperature.GetCelsius() - heatTransfer);
+    }
+
+    return heatTransfer;
 }
 
 Vec2f VoxelObject::GetRotatedLocalPosition(const Vec2f &localPos) const

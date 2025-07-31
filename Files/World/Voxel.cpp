@@ -37,25 +37,25 @@ VoxelElement::~VoxelElement()
 {
 }
 
-bool VoxelElement::CheckTransitionTemps(ChunkMatrix& matrix) {	
+std::string Volume::VoxelElement::ShouldTransitionToID()
+{
 	if(this->properties->HeatedChange.has_value()){
 		if (this->temperature.GetCelsius() > 
 			this->properties->HeatedChange.value().TemperatureAt.GetCelsius() + Volume::TEMP_TRANSITION_THRESHOLD)
-    	{
-    		this->DieAndReplace(matrix, this->properties->HeatedChange.value().To);
-    		return true;
-    	}
+		{
+			return this->properties->HeatedChange.value().To;
+		}
 	}
 
 	if(this->properties->CooledChange.has_value()){
 		if (this->temperature.GetCelsius() < 
 			this->properties->CooledChange.value().TemperatureAt.GetCelsius() - Volume::TEMP_TRANSITION_THRESHOLD)
-    	{
-			this->DieAndReplace(matrix, this->properties->CooledChange.value().To);
-    		return true;
-    	}
+		{
+			return this->properties->CooledChange.value().To;
+		}
 	}
-	return false;
+
+	return "";
 }
 
 void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)

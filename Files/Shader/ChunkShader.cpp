@@ -150,7 +150,10 @@ void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
         chunk->voxels[y][x]->temperature.SetCelsius(heatOutputData[i]);
         chunk->voxels[y][x]->amount = pressureOutputData[i];
 
-        chunk->voxels[y][x]->CheckTransitionTemps(chunkMatrix);
+        std::string newId = chunk->voxels[y][x]->ShouldTransitionToID();
+        if(!newId.empty()){
+            chunk->voxels[y][x]->DieAndReplace(chunkMatrix, newId);
+        }
     }
 
     delete[] heatOutputData;

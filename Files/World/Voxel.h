@@ -59,8 +59,8 @@ namespace Volume {
 		virtual bool Step(ChunkMatrix* matrix) { updatedThisFrame = true; return false; };
 		//return true if the voxel acted on another voxel
 		virtual bool ActOnAnother() { return false; };
-		//return true if the voxel transitioned to another state
-		bool CheckTransitionTemps(ChunkMatrix& matrix);
+		//return the id of the voxel that this voxel should transition to, empty string if no transition
+		std::string ShouldTransitionToID();
 
 		// Swap the voxel with another voxel
 		void Swap(Vec2i& toSwapPos,ChunkMatrix& matrix);
