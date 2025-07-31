@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+GLuint Shader::Shader::activeShaderID = 0;
+
 Shader::Shader::Shader(const char* vertexCode, const char* fragmentCode)
 {
     int success;
@@ -40,8 +42,23 @@ Shader::Shader::Shader(const char* vertexCode, const char* fragmentCode)
     glDeleteShader(fragmentShader);
 }
 
+/// @brief Unsets the active shader cache
+/// Use this when you cannot guarantee that the shader cache will be valid (calling a shader elsewhere than in Shader::Use())
+void Shader::Shader::UnsetActiveShaderCache()
+{
+    activeShaderID = 0;
+}
+
 void Shader::Shader::Use() const
 {
+    if (ID == 0)
+        throw std::runtime_error("Shader program with ID 0 is not valid.");
+    
+    if(activeShaderID == ID) {
+        return; // Already using this shader
+    }
+
+    Shader::activeShaderID = ID;
     glUseProgram(ID);
 }
 

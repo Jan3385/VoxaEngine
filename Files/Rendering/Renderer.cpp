@@ -10,6 +10,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+
 #include "Math/AABB.h"
 #include "GameObject/Player.h"
 
@@ -164,11 +165,13 @@ GameRenderer::~GameRenderer()
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 {
+    // clear screen with a light blue color
     glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     Game::Player *player = GameEngine::instance->Player;
 
+    // set up projections
     glm::mat4 voxelProj = glm::ortho(
         player->Camera.corner.x, player->Camera.corner.x + player->Camera.size.x, 
         player->Camera.corner.y + player->Camera.size.y, player->Camera.corner.y,
@@ -180,261 +183,36 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
         -1.0f, 1.0f
     );
 
-    this->voxelRenderProgram.Use();
-    this->voxelRenderProgram.SetMat4("projection", voxelProj);
+    this->RenderVoxelObjects(chunkMatrix, voxelProj);
 
-    //render objects
-    for (VoxelObject* object : chunkMatrix.voxelObjects) {
-        if(object == nullptr) continue;
-        if(!object->ShouldRender()) continue;
-
-        unsigned int voxelCount = object->UpdateRenderBuffer();
-
-        glBindVertexArray(object->renderVoxelVAO);
-        glDrawArraysInstanced(
-            GL_TRIANGLE_FAN, 0, 4, 
-            static_cast<GLsizei>(voxelCount)
-        );
-    }
-
-    //render player
-    if(player->ShouldRender()) {
-        unsigned int voxelCount = player->UpdateRenderBuffer();
-
-        glBindVertexArray(player->renderVoxelVAO);
-        glDrawArraysInstanced(
-            GL_TRIANGLE_FAN, 0, 4, 
-            static_cast<GLsizei>(voxelCount)
-        );
-    }
-    for(auto& chunk : this->chunkCreateBuffer) {
-        chunk->SetVBOData();
-    }
-    this->chunkCreateBuffer.clear();
+    this->RenderPlayer(player, voxelProj);
     
-    for (auto& chunk : chunkMatrix.Grid) {
-        if(chunk->GetAABB().Overlaps(player->Camera)){
-            chunk->Render(false);
+    this->RenderChunks(chunkMatrix, player, voxelProj);
 
-            glBindVertexArray(chunk->renderVoxelVAO);
-            glDrawArraysInstanced(
-                GL_TRIANGLE_FAN, 0, 4, 
-                Volume::Chunk::CHUNK_SIZE_SQUARED
-            );
-        }
-    }
-
-    this->temperatureRenderProgram.Use();
-    this->temperatureRenderProgram.SetMat4("projection", voxelProj);
-    this->temperatureRenderProgram.SetBool("showHeatAroundCursor", this->showHeatAroundCursor);
-    this->temperatureRenderProgram.SetVec2("cursorPosition", 
-        glm::vec2(
-            mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x,
-            mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y
-        )
-    );
+    glm::vec2 mousePosInWorld = {
+        mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x,
+        mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y
+    };
     
-    for (auto& chunk : chunkMatrix.Grid) {
-        if(chunk->GetAABB().Overlaps(player->Camera)) {
-            glBindVertexArray(chunk->heatRenderingVAO);
-            glDrawArraysInstanced(
-                GL_TRIANGLE_FAN, 0, 4, 
-                Volume::Chunk::CHUNK_SIZE_SQUARED
-            );
-        }
-    }
+    this->RenderHeat(chunkMatrix, mousePosInWorld, player, voxelProj);
 
-    if(chunkMatrix.particles.size() > 0){
-        this->UpdateParticleVBO(chunkMatrix);
-        this->particleRenderProgram.Use();
-        this->particleRenderProgram.SetMat4("projection", voxelProj);
-        glBindVertexArray(this->particleVAO);
-        glDrawArraysInstanced(
-            GL_TRIANGLE_FAN, 0, 4, 
-            static_cast<GLsizei>(chunkMatrix.particles.size())
-        );
-    }
+    this->RenderParticles(chunkMatrix, voxelProj);
 
-    if (this->debugRendering) {
-        glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
-        glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        for (auto& chunk : chunkMatrix.Grid) {
-            // draw chunk AABBs
-            if(chunk->GetAABB().Overlaps(player->Camera)) {
-                glm::vec2 start = {
-                    chunk->GetAABB().corner.x,
-                    chunk->GetAABB().corner.y
-                };
-                glm::vec2 end = {
-                    chunk->GetAABB().corner.x + chunk->GetAABB().size.x,
-                    chunk->GetAABB().corner.y + chunk->GetAABB().size.y
-                };
+    if (this->debugRendering)
+        this->RenderDebugMode(chunkMatrix, player, mousePosInWorld, voxelProj, screenProj);
 
-                std::vector<glm::vec2> points = {
-                    start,
-                    {end.x, start.y},
-                    end,
-                    {start.x, end.y}
-                };
-                this->DrawClosedShape(points, red, voxelProj, 2.0f);
+    if(this->renderMeshData)
+        this->RenderMeshData(chunkMatrix, player, voxelProj);
 
-                fontRenderer.RenderText(
-                    std::to_string(chunk->GetPos().x) + 
-                        ", " + 
-                        std::to_string(chunk->GetPos().y),
-                    fontRenderer.pixelFont,
-                    Vec2f(chunk->GetAABB().corner.x+2, chunk->GetAABB().corner.y+chunk->GetAABB().size.y-1),
-                    1.0f,
-                    glm::vec4(0.3f, 0.3f, 0.3f, 0.6f),
-                    voxelProj
-                );
-                
-                //draw dirty rects
-                if(chunk->dirtyRect.IsEmpty()) continue;
-
-                glm::vec2 dirtyStart = {
-                    chunk->dirtyRect.start.x + chunk->GetAABB().corner.x,
-                    chunk->dirtyRect.start.y + chunk->GetAABB().corner.y
-                };
-                glm::vec2 dirtyEnd = {
-                    chunk->dirtyRect.end.x - chunk->dirtyRect.start.x + dirtyStart.x,
-                    chunk->dirtyRect.end.y - chunk->dirtyRect.start.y + dirtyStart.y
-                };
-
-                std::vector<glm::vec2> dirtyRectPoints = {
-                    dirtyStart,
-                    {dirtyEnd.x, dirtyStart.y},
-                    dirtyEnd,
-                    {dirtyStart.x, dirtyEnd.y}
-                };
-                this->DrawClosedShape(dirtyRectPoints, green, voxelProj, 1.0f);
-            }
-        }
-
-        // show voxel name, temperature and amount at mouse position
-        Volume::VoxelElement* voxelAtMousePos = chunkMatrix.VirtualGetAt(
-            Vec2i(
-                static_cast<int>(mousePos.x/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x),
-                static_cast<int>(mousePos.y/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y)
-            ),
-            true
-        );
-        glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
-        if(voxelAtMousePos != nullptr){
-            fontRenderer.RenderText(
-                "Voxel: " + voxelAtMousePos->properties->name,
-                fontRenderer.pixelFont,
-                Vec2f(5, 10),
-                1.0f,
-                fontColor,
-                screenProj
-            );
-            fontRenderer.RenderText(
-                "Temperature: " + std::to_string(static_cast<int>(voxelAtMousePos->temperature.GetCelsius())) + "C",
-                fontRenderer.pixelFont,
-                Vec2f(5, 20),
-                1.0f,
-                fontColor,
-                screenProj
-            );
-            fontRenderer.RenderText(
-                "Amount: " + std::to_string(static_cast<int>(voxelAtMousePos->amount)),
-                fontRenderer.pixelFont,
-                Vec2f(5, 30),
-                1.0f,
-                fontColor,
-                screenProj
-            );
-        }
-    }
-    if(this->renderMeshData) {
-        // Draw chunk mesh data as before
-        for (auto& chunk : chunkMatrix.Grid) {
-            if(chunk->GetAABB().Overlaps(player->Camera)) {
-                for (const Triangle& t : chunk->GetColliders()) {
-                    std::vector<glm::vec2> points = {
-                        glm::vec2(t.a.x, t.a.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
-                        glm::vec2(t.b.x, t.b.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
-                        glm::vec2(t.c.x, t.c.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y)
-                    };
-                    this->DrawClosedShape(
-                        points, 
-                        glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 
-                        voxelProj, 
-                        1.0f
-                    );
-                }
-                int numOfSeparatingVectors = std::count_if(
-                    chunk->GetEdges().begin(), chunk->GetEdges().end(),
-                    [](const b2Vec2& edge) { return edge.x == -1 && edge.y == -1; }
-                );
-                std::vector<std::vector<glm::vec2>> edges(numOfSeparatingVectors); // reserve space for edges
-                int i = 0;
-                for(const b2Vec2& edge : chunk->GetEdges()) {
-                    if(edge.x == -1 && edge.y == -1) { // (-1, -1) is a separating vector
-                        ++i;
-                        continue;
-                    }
-                    glm::vec2 worldSpaceEdge = glm::vec2(edge.x, edge.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y);
-                    edges[i].push_back(worldSpaceEdge);
-                }
-                for(auto& polygon : edges) {
-                    if(polygon.size() < 3) continue; // skip edges with less than 3 points
-                    this->DrawClosedShape(
-                        polygon, 
-                        glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), 
-                        voxelProj, 
-                        2.0f
-                    );
-                }
-            }
-        }
-
-        for (PhysicsObject* physObj : GameEngine::instance->physics->physicsObjects) {
-            float rot = physObj->GetRotation();
-            float cosR = std::cos(rot);
-            float sinR = std::sin(rot);
-            Vec2f pos = physObj->GetPosition();
-            float cx = physObj->GetSize().x / 2.0f;
-            float cy = physObj->GetSize().y / 2.0f;
-
-            for (const Triangle& t : physObj->triangleColliders) {
-                std::vector<glm::vec2> tri(3);
-                // Rotate and translate each vertex, centering mesh
-                for (int i = 0; i < 3; ++i) {
-                    const b2Vec2* v = (i == 0) ? &t.a : (i == 1) ? &t.b : &t.c;
-                    float x = v->x - cx;
-                    float y = v->y - cy;
-                    float xr = cosR * x - sinR * y + pos.x;
-                    float yr = sinR * x + cosR * y + pos.y;
-                    tri[i] = glm::vec2(xr, yr);
-                }
-                this->DrawClosedShape(tri, glm::vec4(0.2f, 0.2f, 1.0f, 1.0f), voxelProj, 2.0f);
-            }
-            glm::vec2 aabbStart = {
-                physObj->GetBoundingBox().corner.x,
-                physObj->GetBoundingBox().corner.y
-            };
-            glm::vec2 aabbEnd = {
-                physObj->GetBoundingBox().corner.x + physObj->GetBoundingBox().size.x,
-                physObj->GetBoundingBox().corner.y + physObj->GetBoundingBox().size.y
-            };
-            std::vector<glm::vec2> aabbPoints = {
-                aabbStart,
-                {aabbEnd.x, aabbStart.y},
-                aabbEnd,
-                {aabbStart.x, aabbEnd.y}
-            };
-            this->DrawClosedShape(aabbPoints, glm::vec4(0.8f, 0.2f, 0.8f, 1.0f), voxelProj, 1.5f);
-        }
-    }
-
-    this->RenderIMGUI(chunkMatrix);
+    this->RenderIMGUI(chunkMatrix, player);
 
     SDL_GL_SwapWindow(r_window);
+
+    Shader::Shader::UnsetActiveShaderCache();
+
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "GL error: " << err << std::endl;
+        std::cerr << "GL error: [" << err << "]" << std::endl;
     }
 }
 
@@ -479,10 +257,8 @@ void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const g
     glDrawArrays(GL_LINE_LOOP, 0, size);
 }
 
-void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
+void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player)
 {
-    Game::Player *player = GameEngine::instance->Player;
-
     ImGui_ImplSDL2_NewFrame();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
@@ -548,6 +324,274 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 void GameRenderer::ToggleDebugRendering()
 {
     this->debugRendering = !this->debugRendering;
+}
+
+void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projection)
+{
+    this->voxelRenderProgram.Use();
+    this->voxelRenderProgram.SetMat4("projection", projection);
+
+    for (VoxelObject* object : chunkMatrix.voxelObjects) {
+        if(object == nullptr) continue;
+        if(!object->ShouldRender()) continue;
+
+        unsigned int voxelCount = object->UpdateRenderBuffer();
+
+        glBindVertexArray(object->renderVoxelVAO);
+        glDrawArraysInstanced(
+            GL_TRIANGLE_FAN, 0, 4, 
+            static_cast<GLsizei>(voxelCount)
+        );
+    }
+}
+
+void GameRenderer::RenderPlayer(Game::Player *player, glm::mat4 projection)
+{
+    this->voxelRenderProgram.Use();
+    this->voxelRenderProgram.SetMat4("projection", projection);    
+
+    if(player->ShouldRender()) {
+        unsigned int voxelCount = player->UpdateRenderBuffer();
+
+        glBindVertexArray(player->renderVoxelVAO);
+        glDrawArraysInstanced(
+            GL_TRIANGLE_FAN, 0, 4, 
+            static_cast<GLsizei>(voxelCount)
+        );
+    }
+}
+
+void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, Game::Player *player, glm::mat4 projection)
+{
+    // set up new VBOs for newly created chunks
+    for(auto& chunk : this->chunkCreateBuffer) {
+        chunk->SetVBOData();
+    }
+    this->chunkCreateBuffer.clear();
+
+    this->voxelRenderProgram.Use();
+    this->voxelRenderProgram.SetMat4("projection", projection);
+    
+    for (auto& chunk : chunkMatrix.Grid) {
+        if(chunk->GetAABB().Overlaps(player->Camera)){
+            chunk->Render(false);
+
+            glBindVertexArray(chunk->renderVoxelVAO);
+            glDrawArraysInstanced(
+                GL_TRIANGLE_FAN, 0, 4, 
+                Volume::Chunk::CHUNK_SIZE_SQUARED
+            );
+        }
+    }
+}
+
+void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, Game::Player *player,  glm::mat4 projection)
+{
+    this->temperatureRenderProgram.Use();
+    this->temperatureRenderProgram.SetMat4("projection", projection);
+    this->temperatureRenderProgram.SetBool("showHeatAroundCursor", this->showHeatAroundCursor);
+    this->temperatureRenderProgram.SetVec2("cursorPosition", mousePos);
+
+    for (auto& chunk : chunkMatrix.Grid) {
+        if(chunk->GetAABB().Overlaps(player->Camera)) {
+            glBindVertexArray(chunk->heatRenderingVAO);
+            glDrawArraysInstanced(
+                GL_TRIANGLE_FAN, 0, 4, 
+                Volume::Chunk::CHUNK_SIZE_SQUARED
+            );
+        }
+    }
+}
+
+void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projection)
+{
+    if(chunkMatrix.particles.size() > 0){
+        this->UpdateParticleVBO(chunkMatrix);
+        this->particleRenderProgram.Use();
+        this->particleRenderProgram.SetMat4("projection", projection);
+        glBindVertexArray(this->particleVAO);
+        glDrawArraysInstanced(
+            GL_TRIANGLE_FAN, 0, 4, 
+            static_cast<GLsizei>(chunkMatrix.particles.size())
+        );
+    }
+}
+
+void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, Game::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj)
+{
+    glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    for (auto& chunk : chunkMatrix.Grid) {
+        // draw chunk AABBs
+        if(chunk->GetAABB().Overlaps(player->Camera)) {
+            glm::vec2 start = {
+                chunk->GetAABB().corner.x,
+                chunk->GetAABB().corner.y
+            };
+            glm::vec2 end = {
+                chunk->GetAABB().corner.x + chunk->GetAABB().size.x,
+                chunk->GetAABB().corner.y + chunk->GetAABB().size.y
+            };
+
+            std::vector<glm::vec2> points = {
+                start,
+                {end.x, start.y},
+                end,
+                {start.x, end.y}
+            };
+            this->DrawClosedShape(points, red, voxelProj, 2.0f);
+
+            fontRenderer.RenderText(
+                std::to_string(chunk->GetPos().x) + 
+                    ", " + 
+                    std::to_string(chunk->GetPos().y),
+                fontRenderer.pixelFont,
+                Vec2f(chunk->GetAABB().corner.x+2, chunk->GetAABB().corner.y+chunk->GetAABB().size.y-1),
+                1.0f,
+                glm::vec4(0.3f, 0.3f, 0.3f, 0.6f),
+                voxelProj
+            );
+            
+            //draw dirty rects
+            if(chunk->dirtyRect.IsEmpty()) continue;
+
+            glm::vec2 dirtyStart = {
+                chunk->dirtyRect.start.x + chunk->GetAABB().corner.x,
+                chunk->dirtyRect.start.y + chunk->GetAABB().corner.y
+            };
+            glm::vec2 dirtyEnd = {
+                chunk->dirtyRect.end.x - chunk->dirtyRect.start.x + dirtyStart.x,
+                chunk->dirtyRect.end.y - chunk->dirtyRect.start.y + dirtyStart.y
+            };
+
+            std::vector<glm::vec2> dirtyRectPoints = {
+                dirtyStart,
+                {dirtyEnd.x, dirtyStart.y},
+                dirtyEnd,
+                {dirtyStart.x, dirtyEnd.y}
+            };
+            this->DrawClosedShape(dirtyRectPoints, green, voxelProj, 1.0f);
+        }
+    }
+
+    // show voxel name, temperature and amount at mouse position
+    Volume::VoxelElement* voxelAtMousePos = chunkMatrix.VirtualGetAt(
+        Vec2i(
+            static_cast<int>(mousePos.x/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x),
+            static_cast<int>(mousePos.y/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y)
+        ),
+        true
+    );
+    glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
+    if(voxelAtMousePos != nullptr){
+        fontRenderer.RenderText(
+            "Voxel: " + voxelAtMousePos->properties->name,
+            fontRenderer.pixelFont,
+            Vec2f(5, 10),
+            1.0f,
+            fontColor,
+            screenProj
+        );
+        fontRenderer.RenderText(
+            "Temperature: " + std::to_string(static_cast<int>(voxelAtMousePos->temperature.GetCelsius())) + "C",
+            fontRenderer.pixelFont,
+            Vec2f(5, 20),
+            1.0f,
+            fontColor,
+            screenProj
+        );
+        fontRenderer.RenderText(
+            "Amount: " + std::to_string(static_cast<int>(voxelAtMousePos->amount)),
+            fontRenderer.pixelFont,
+            Vec2f(5, 30),
+            1.0f,
+            fontColor,
+            screenProj
+        );
+    }
+}
+
+void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, Game::Player *player, glm::mat4 projection)
+{
+    // Draw chunk mesh data as before
+    for (auto& chunk : chunkMatrix.Grid) {
+        if(chunk->GetAABB().Overlaps(player->Camera)) {
+            for (const Triangle& t : chunk->GetColliders()) {
+                std::vector<glm::vec2> points = {
+                    glm::vec2(t.a.x, t.a.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
+                    glm::vec2(t.b.x, t.b.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
+                    glm::vec2(t.c.x, t.c.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y)
+                };
+                this->DrawClosedShape(
+                    points, 
+                    glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), 
+                    projection, 
+                    1.0f
+                );
+            }
+            int numOfSeparatingVectors = std::count_if(
+                chunk->GetEdges().begin(), chunk->GetEdges().end(),
+                [](const b2Vec2& edge) { return edge.x == -1 && edge.y == -1; }
+            );
+            std::vector<std::vector<glm::vec2>> edges(numOfSeparatingVectors); // reserve space for edges
+            int i = 0;
+            for(const b2Vec2& edge : chunk->GetEdges()) {
+                if(edge.x == -1 && edge.y == -1) { // (-1, -1) is a separating vector
+                    ++i;
+                    continue;
+                }
+                glm::vec2 worldSpaceEdge = glm::vec2(edge.x, edge.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y);
+                edges[i].push_back(worldSpaceEdge);
+            }
+            for(auto& polygon : edges) {
+                if(polygon.size() < 3) continue; // skip edges with less than 3 points
+                this->DrawClosedShape(
+                    polygon, 
+                    glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), 
+                    projection, 
+                    2.0f
+                );
+            }
+        }
+    }
+
+    for (PhysicsObject* physObj : GameEngine::instance->physics->physicsObjects) {
+        float rot = physObj->GetRotation();
+        float cosR = std::cos(rot);
+        float sinR = std::sin(rot);
+        Vec2f pos = physObj->GetPosition();
+        float cx = physObj->GetSize().x / 2.0f;
+        float cy = physObj->GetSize().y / 2.0f;
+
+        for (const Triangle& t : physObj->triangleColliders) {
+            std::vector<glm::vec2> tri(3);
+            // Rotate and translate each vertex, centering mesh
+            for (int i = 0; i < 3; ++i) {
+                const b2Vec2* v = (i == 0) ? &t.a : (i == 1) ? &t.b : &t.c;
+                float x = v->x - cx;
+                float y = v->y - cy;
+                float xr = cosR * x - sinR * y + pos.x;
+                float yr = sinR * x + cosR * y + pos.y;
+                tri[i] = glm::vec2(xr, yr);
+            }
+            this->DrawClosedShape(tri, glm::vec4(0.2f, 0.2f, 1.0f, 1.0f), projection, 2.0f);
+        }
+        glm::vec2 aabbStart = {
+            physObj->GetBoundingBox().corner.x,
+            physObj->GetBoundingBox().corner.y
+        };
+        glm::vec2 aabbEnd = {
+            physObj->GetBoundingBox().corner.x + physObj->GetBoundingBox().size.x,
+            physObj->GetBoundingBox().corner.y + physObj->GetBoundingBox().size.y
+        };
+        std::vector<glm::vec2> aabbPoints = {
+            aabbStart,
+            {aabbEnd.x, aabbStart.y},
+            aabbEnd,
+            {aabbStart.x, aabbEnd.y}
+        };
+        this->DrawClosedShape(aabbPoints, glm::vec4(0.8f, 0.2f, 0.8f, 1.0f), projection, 1.5f);
+    }
 }
 
 void GameRenderer::UpdateParticleVBO(ChunkMatrix &chunkMatrix)

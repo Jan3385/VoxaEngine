@@ -12,6 +12,8 @@ namespace Shader{
         Shader() = default;
         Shader(const char* vertexCode, const char* fragmentCode);
 
+        static void UnsetActiveShaderCache();
+
         void Use() const;
 
         GLint GetUniformLocation(const std::string &name);
@@ -27,5 +29,6 @@ namespace Shader{
 
     private:
         std::unordered_map<std::string, GLint> uniformLocationCache;
+        static GLuint activeShaderID;
     };
 }
