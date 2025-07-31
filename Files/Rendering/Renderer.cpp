@@ -476,10 +476,7 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, Game::Player *playe
 
     // show voxel name, temperature and amount at mouse position
     Volume::VoxelElement* voxelAtMousePos = chunkMatrix.VirtualGetAt(
-        Vec2i(
-            static_cast<int>(mousePos.x/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x),
-            static_cast<int>(mousePos.y/Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y)
-        ),
+        Vec2i(mousePos.x, mousePos.y),
         true
     );
     glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
