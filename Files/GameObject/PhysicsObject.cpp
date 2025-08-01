@@ -13,6 +13,45 @@ PhysicsObject::~PhysicsObject()
     this->DestroyPhysicsBody();
 }
 
+void PhysicsObject::UpdatePhysicsEffects(ChunkMatrix &chunkMatrix, float deltaTime)
+{
+    // RIP, bouncy barrels will never be forgotten 🪦🪽✝️
+
+    int ySize = static_cast<int>(this->rotatedVoxelBuffer.size());
+
+    Vec2i bottomOfObject = Vec2i(
+        static_cast<int>(this->position.x), 
+        static_cast<int>(this->position.y + ySize / 2.0f - 1)
+    );
+
+    float percentageOfObjectInLiquid = 0.0f;
+    for(int y = 0; y < ySize; ++y) {
+        Volume::VoxelElement* voxel = chunkMatrix.VirtualGetAt( Vec2i(bottomOfObject.x, bottomOfObject.y - y), false);
+
+        if(voxel && voxel->GetState() == Volume::State::Liquid)
+            percentageOfObjectInLiquid += 1.0f / ySize;
+    }
+
+    if(percentageOfObjectInLiquid > 0.0f){
+        float mass = b2Body_GetMass(m_physicsBody);
+
+        // apply buoyancy force
+        constexpr float buoyancyFactor = 1.03f;
+        b2Vec2 buoyancyForce = b2Vec2(0, -9.81f * mass * buoyancyFactor * percentageOfObjectInLiquid);
+        b2Body_ApplyForceToCenter(m_physicsBody, buoyancyForce, true);
+
+        // apply drag force
+        b2Vec2 dragForce = -b2Body_GetLinearVelocity(m_physicsBody) * 0.1f * mass;
+        b2Body_ApplyForceToCenter(m_physicsBody, dragForce, false);
+
+        // apply angular drag
+        float angularVelocity = b2Body_GetAngularVelocity(m_physicsBody);
+        float angularDragCoefficient = 5.0f * percentageOfObjectInLiquid;
+        float angularDragTorque = -angularVelocity * angularDragCoefficient * mass;
+        b2Body_ApplyTorque(m_physicsBody, angularDragTorque, false);
+    }
+}
+
 void PhysicsObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
 {
     VoxelObject::SetVoxelAt(worldPos, voxel);
@@ -28,6 +67,18 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
 
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.material = b2DefaultSurfaceMaterial();
+
+    float avarageDensity = 0.0f;
+    for (const auto& row : this->voxels) {
+        for (const auto& voxel : row) {
+            if (voxel) {
+                avarageDensity += voxel->properties->Density * voxel->amount;
+            }
+        }
+    }
+    avarageDensity /= this->GetSize().x * this->GetSize().y;
+
+    shapeDef.density = avarageDensity;
 
     b2Vec2 centerOffset = b2Vec2(
         (this->width - 1) / 2.0f, 

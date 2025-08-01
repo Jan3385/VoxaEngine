@@ -21,6 +21,8 @@ public:
     PhysicsObject& operator=(const PhysicsObject&) = delete;
     PhysicsObject& operator=(PhysicsObject&&) = delete;
 
+    void UpdatePhysicsEffects(ChunkMatrix& chunkMatrix, float deltaTime);
+
     void SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel) override;
 
     bool dirtyColliders = true;

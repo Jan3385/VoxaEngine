@@ -167,19 +167,26 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
                         true, 20);
                 }
             }
+            else if (pos.y == 4 && pos.x <= 3) {
+                if(pos.x == 2)
+                    chunk->voxels[y][x] = new VoxelLiquid
+                        ("Water", 
+                        Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE), 
+                        Temperature(21), 
+                        20);
+                else
+                    chunk->voxels[y][x] = new VoxelSolid
+                        ("Sand", 
+                        Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE), 
+                        Temperature(21), 
+                        false, 20);
+    		}
             else {
                 chunk->voxels[y][x] = new VoxelGas
                     ("Oxygen", 
                     Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE),
                     Temperature(21), 1);
             }
-    		if (pos.y == 4 && pos.x <= 3) {
-    			chunk->voxels[y][x] = new VoxelSolid
-                    ("Sand", 
-                    Vec2i(x + pos.x * Chunk::CHUNK_SIZE, y + pos.y * Chunk::CHUNK_SIZE),
-                    Temperature(21),
-                    false, 20);
-    		}
         }
     }
     chunk->lastCheckedCountDown = 20;

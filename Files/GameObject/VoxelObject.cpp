@@ -88,6 +88,9 @@ VoxelObject::~VoxelObject()
     this->enabled = false;
 }
 
+/// @brief Updates the voxelobject and the voxels inside it. Should be in simulation thread
+/// @param chunkMatrix 
+/// @return returns true if the object should presist, false if it should be removed
 bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 {
     bool calculateHeat = GameEngine::instance->runHeatSimulation && maxHeatTransfer > 0.1f;

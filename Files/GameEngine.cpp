@@ -94,6 +94,14 @@ void GameEngine::Update()
         }
     }
 
+    this->chunkMatrix.voxelMutex.lock();
+    for(PhysicsObject* object : physics->physicsObjects) {
+        if(object->IsEnabled()) {
+            object->UpdatePhysicsEffects(chunkMatrix, deltaTime);
+        }
+    }
+    this->chunkMatrix.voxelMutex.unlock();
+
 
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
