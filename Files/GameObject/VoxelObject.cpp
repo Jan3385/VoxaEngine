@@ -97,6 +97,7 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 
     bool foundVoxel = false;
 
+    // interaction between object and its own voxels
     for(int y = 0; y < static_cast<int>(this->voxels.size()); ++y) {
         for(int x = 0; x < static_cast<int>(this->voxels[y].size()); ++x) {
             Volume::VoxelElement* voxel = this->voxels[y][x];
