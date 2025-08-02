@@ -1,10 +1,9 @@
 #pragma once
 
-#include <GameObject/VoxelObject.h>
+#include "GameObject/VoxelObject.h"
+#include "Physics/Triangle.h"
 
 #include <box2d/box2d.h>
-
-struct Triangle;
 
 class PhysicsObject: public VoxelObject
 {
@@ -24,6 +23,8 @@ public:
     void UpdatePhysicsEffects(ChunkMatrix& chunkMatrix, float deltaTime);
 
     void SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel) override;
+
+    virtual bool CanBreakIntoParts() const { return true; }
 
     bool dirtyColliders = true;
 	void UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId);

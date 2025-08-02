@@ -160,27 +160,29 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
     }
     
     // remove all non-prominent voxel groups
-    for(int y = 0; y < static_cast<int>(object->voxels.size()); ++y) {
-        for(int x = 0; x < static_cast<int>(object->voxels[0].size()); ++x) {
-            if(labels[y][x] != maxLabel) { // any other label than the most prominent one get removed
-                // kick the voxel out of the voxel
-                Volume::VoxelElement* voxel = object->voxels[y][x];
-                if(voxel) {
-                    voxel->position = Vec2i(x, y);
-                    voxel->position = object->GetRotatedLocalPosition(voxel->position);
-                    voxel->position += Vec2i(object->GetPosition().x, object->GetPosition().y) -
-                        Vec2i(object->GetSize().x / 2, object->GetSize().y / 2);
+    if(object->CanBreakIntoParts()){
+        for(int y = 0; y < static_cast<int>(object->voxels.size()); ++y) {
+            for(int x = 0; x < static_cast<int>(object->voxels[0].size()); ++x) {
+                if(labels[y][x] != maxLabel) { // any other label than the most prominent one get removed
+                    // kick the voxel out of the voxel
+                    Volume::VoxelElement* voxel = object->voxels[y][x];
+                    if(voxel) {
+                        voxel->position = Vec2i(x, y);
+                        voxel->position = object->GetRotatedLocalPosition(voxel->position);
+                        voxel->position += Vec2i(object->GetPosition().x, object->GetPosition().y) -
+                            Vec2i(object->GetSize().x / 2, object->GetSize().y / 2);
 
-                    Volume::VoxelSolid* solidVoxel = dynamic_cast<Volume::VoxelSolid*>(voxel);
-                    if(solidVoxel)
-                        solidVoxel->isStatic = false;
+                        Volume::VoxelSolid* solidVoxel = dynamic_cast<Volume::VoxelSolid*>(voxel);
+                        if(solidVoxel)
+                            solidVoxel->isStatic = false;
 
-                    chunkMatrix->PlaceVoxelAt(
-                        voxel,
-                        false,
-                        false
-                    );
-                    object->voxels[y][x] = nullptr;
+                        chunkMatrix->PlaceVoxelAt(
+                            voxel,
+                            false,
+                            false
+                        );
+                        object->voxels[y][x] = nullptr;
+                    }
                 }
             }
         }

@@ -4,8 +4,7 @@
 #include <box2d/box2d.h>
 #include "Math/Vector.h"
 #include "World/Chunk.h"
-
-struct Triangle;
+#include "Physics/Triangle.h"
 
 static constexpr int GRID_PADDING_FILL = 1;
 

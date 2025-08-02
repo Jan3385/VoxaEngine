@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameObject/VoxelObject.h"
+#include "GameObject/PhysicsObject.h"
 
 #include "Math/Vector.h"
 #include "Math/AABB.h"
@@ -9,7 +9,7 @@
 
 namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
-    class Player  : public VoxelObject {
+    class Player  : public PhysicsObject {
     public:
         static bool NoClip;
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 600;
@@ -17,7 +17,16 @@ namespace Game{
         Player();
         Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
         ~Player();
+
+        // Disable copy and move semantics
+        Player(const Player&) = delete;
+        Player(Player&&) = delete;
+        Player& operator=(const Player&) = delete;
+        Player& operator=(Player&&) = delete;
+
         void UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime);
+
+        bool CanBreakIntoParts() const override { return false; }
 
         void FireGun(ChunkMatrix& chunkMatrix);
 

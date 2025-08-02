@@ -6,18 +6,15 @@
 #include <future>
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 #include "Player.h"
 
 bool Game::Player::NoClip = true;
 
-Game::Player::Player()
-    : VoxelObject()
-{
-    
-}
+Game::Player::Player() = default;
 
 Game::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData)
-    : VoxelObject(
+    : PhysicsObject(
         Vec2f(100.0f, 0.0f),
         voxelData
     )
@@ -33,7 +30,14 @@ Game::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::Voxe
 
 Game::Player::~Player()
 {
-
+    delete this->gunLaserParticleGenerator;
+    this->gunLaserParticleGenerator = nullptr;
+    
+    // Clean up the player object from the physics objects
+    auto it = std::find(GameEngine::instance->physics->physicsObjects.begin(), GameEngine::instance->physics->physicsObjects.end(), this);
+    if (it != GameEngine::instance->physics->physicsObjects.end()) {
+        GameEngine::instance->physics->physicsObjects.erase(it);
+    }
 }
 
 void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)

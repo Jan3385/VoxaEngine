@@ -22,6 +22,7 @@ GameEngine::GameEngine()
 
     Registry::VoxelRegistry::RegisterVoxels();
     Registry::GameObjectRegistry::RegisterObjects();
+    
     this->renderer = new GameRenderer(&glContext);
     
     ChunkShader::InitializeBuffers();
@@ -30,6 +31,7 @@ GameEngine::GameEngine()
 
 void GameEngine::Initialize(){
     this->Player = new Game::Player(&this->chunkMatrix, Registry::GameObjectRegistry::GetProperties("Player")->voxelData);
+    physics->physicsObjects.push_back(this->Player);
 }
 
 GameEngine::~GameEngine()
@@ -323,6 +325,15 @@ void GameEngine::Render()
 void GameEngine::StartSimulationThread()
 {
     this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
+}
+
+void GameEngine::StopSimulationThread()
+{
+    if (simulationThread.joinable())
+    {
+        this->running = false;
+        simulationThread.join();
+    }
 }
 
 Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)

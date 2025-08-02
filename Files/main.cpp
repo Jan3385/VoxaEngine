@@ -30,5 +30,8 @@ int main(int argc, char* argv[]){
         gEngine.EndFrame();
     }
 
+    //Stop simulation thread
+    gEngine.StopSimulationThread();
+
     return EXIT_SUCCESS;
 }

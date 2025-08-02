@@ -7,15 +7,7 @@
 #include "Math/Vector.h"
 #include "World/Chunk.h"
 #include "GameObject/PhysicsObject.h"
-
-struct Triangle{
-    b2Vec2 a;
-    b2Vec2 b;
-    b2Vec2 c;
-
-    Triangle(const b2Vec2& a, const b2Vec2& b, const b2Vec2& c)
-        : a(a), b(b), c(c) {};
-};
+#include "Physics/Triangle.h"
 
 class GamePhysics{
 private:

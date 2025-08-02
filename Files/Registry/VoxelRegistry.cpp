@@ -78,6 +78,13 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
+		"Uncarium",
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 100, 0.01f, 1000)
+			.SetName("Uncarium")
+			.SetColor(RGBA(25, 25, 25, 255))
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
 		"Water",
 		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 4186, 0.6f, 2)
 			.SetName("Water")

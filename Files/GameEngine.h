@@ -95,6 +95,7 @@ public:
     void Render();
 
     void StartSimulationThread();
+    void StopSimulationThread();
 
     Volume::Chunk* LoadChunkInView(Vec2i pos);
 };

@@ -10,6 +10,8 @@
 
 #include <box2d/box2d.h>
 
+#include "Physics/Triangle.h"
+
 #include "Math/Math.h"
 
 #include "World/Voxel.h"
@@ -17,8 +19,6 @@
 #include "World/ParticleGenerator.h"
 
 class VoxelObject;
-
-struct Triangle;
 
 class DirtyRect{
 public:

@@ -74,7 +74,7 @@ void GameObjectRegistry::RegisterObjects()
     std::cout << "Registering game objects ";
     GameObjectRegistry::RegisterGameObject(
         "Player",
-        GameObjectBuilder(GameObjectType::GameObject)
+        GameObjectBuilder(GameObjectType::PhysicsObject)
             .SetMass(100)
             .SetVoxelFileName("Player")
             .Build()
