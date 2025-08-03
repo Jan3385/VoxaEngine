@@ -1,7 +1,6 @@
 #include "GameEngine.h"
 #include <iostream>
 #include <mutex>
-#include <future>
 #include <cstring>
 #include <algorithm>
 
@@ -36,17 +35,18 @@ void GameEngine::Initialize(){
 
 GameEngine::~GameEngine()
 {
+    std::cout << "Stopping game engine..." << std::endl;
     this->running = false;
     if (simulationThread.joinable())
         simulationThread.join();
+
+    delete this->Player;
 
     SDL_GL_DeleteContext(glContext);
 
     delete this->renderer;
 
     delete this->physics;
-
-    delete this->Player;
 
     chunkMatrix.cleanup();
 }
@@ -329,11 +329,10 @@ void GameEngine::StartSimulationThread()
 
 void GameEngine::StopSimulationThread()
 {
-    if (simulationThread.joinable())
-    {
-        this->running = false;
-        simulationThread.join();
-    }
+    std::cout << "Stopping simulation thread..." << std::endl;
+    this->running = false;
+    simulationThread.join();
+    std::cout << "Simulation thread stopped." << std::endl;
 }
 
 Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)

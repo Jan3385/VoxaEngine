@@ -158,6 +158,8 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
     bodyDef.isEnabled = true;
     bodyDef.rotation = b2MakeRot(this->GetRotation());
     bodyDef.enableSleep = true;
+
+    bodyDef.fixedRotation = this->IsAbleToRotate() ? false : true;
     
     bodyDef.angularVelocity = this->angularVelocity;
     bodyDef.linearVelocity = this->velocity;

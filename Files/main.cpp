@@ -1,37 +1,36 @@
 #include "GameEngine.h"
 #include <iostream>
 #include <chrono>
-#include <thread>
 
 int main(int argc, char* argv[]){
     //init srand
     std::srand(static_cast<unsigned>(time(NULL)));
-
-    GameEngine gEngine;
     
-    GameEngine::instance = &gEngine;
+    GameEngine::instance = new GameEngine();
 
-    gEngine.Initialize();
-    
+    GameEngine::instance->Initialize();
+
     //Start simulation thread
-    gEngine.StartSimulationThread();
+    GameEngine::instance->StartSimulationThread();
 
     //Game Loop
-    while (gEngine.running)
+    while (GameEngine::instance->running)
     {
-        gEngine.StartFrame();
+        GameEngine::instance->StartFrame();
 
         //Update
-        gEngine.Update();
+        GameEngine::instance->Update();
 
         //Render
-        gEngine.Render();
+        GameEngine::instance->Render();
 
-        gEngine.EndFrame();
+        GameEngine::instance->EndFrame();
     }
 
-    //Stop simulation thread
-    gEngine.StopSimulationThread();
+    delete GameEngine::instance;
+    GameEngine::instance = nullptr;
+
+    std::cout << "Thanks for playing! <3" << std::endl;
 
     return EXIT_SUCCESS;
 }

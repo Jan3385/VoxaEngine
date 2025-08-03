@@ -13,7 +13,7 @@ namespace Game{
     public:
         static bool NoClip;
         static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 600;
-        static constexpr int SPEED = 60;
+        static constexpr int SPEED = 10;
         Player();
         Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
         ~Player();
@@ -25,6 +25,7 @@ namespace Game{
         Player& operator=(Player&&) = delete;
 
         void UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime);
+        bool Update(ChunkMatrix& chunkMatrix) override;
 
         bool CanBreakIntoParts() const override { return false; }
 
@@ -44,6 +45,8 @@ namespace Game{
         std::vector<Volume::VoxelElement*> GetVoxelsVerticalSlice(ChunkMatrix& chunkMatrix);
 
         AABB Camera;
+    protected:
+        bool IsAbleToRotate() const override { return false; }
     private:
         static constexpr int PLAYER_WIDTH = 8;
         static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;
@@ -68,8 +71,6 @@ namespace Game{
          */
         int touchRightWall(ChunkMatrix& chunkMatrix);
 
-        void MovePlayer(Vec2f pos, ChunkMatrix& chunkMatrix);
-        void MovePlayerBy(Vec2f pos, ChunkMatrix& chunkMatrix);
         void MoveCamera(Vec2f pos, ChunkMatrix& chunkMatrix);
         void MoveCameraTowards(Vec2f to, ChunkMatrix& chunkMatrix);
     };

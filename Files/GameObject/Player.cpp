@@ -3,7 +3,6 @@
 
 #include "World/Particles/BulletParticle.h"
 
-#include <future>
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -47,68 +46,26 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 
     this->gunLaserParticleGenerator->enabled = this->gunEnabled;
 
-    // Apply gravity
-    if(!this->NoClip){
-        if (this->onGround) {
-            this->acceleration = 0;
-        } else if(this->isOnCeiling(chunkMatrix)){
-            this->acceleration = GRAVITY * deltaTime;
-        }else {
-            this->acceleration += GRAVITY * deltaTime;
-        }
-    }else{
-        this->acceleration = 0;
-    }
-    
-    std::vector<Volume::VoxelElement*> verticalVoxels = this->GetVoxelsVerticalSlice(chunkMatrix);
-    int LiquidPercentile = Volume::GetLiquidVoxelPercentile(verticalVoxels);
-    if(this->NoClip) LiquidPercentile = 0;
-
-    bool isInWater = LiquidPercentile > 20; // 20% of the voxels are liquid
-
-    if(isInWater){
-        this->acceleration -= (1+(LiquidPercentile*0.01f)) * GRAVITY * deltaTime; // 1 - 2 times gravity
-        this->acceleration /= (1.001f * (1 + deltaTime));
-    }
-
     if (GameEngine::MovementKeysHeld[0]) // W
     {
-        if(isInWater){
-            this->MovePlayerBy(Vec2f(0, -30 * deltaTime), chunkMatrix);
-        }
-
-        if (this->onGround) {
-            this->acceleration = -JUMP_ACCELERATION;
-        }else if(this->NoClip){
-            this->MovePlayerBy(Vec2f(0, -100 * deltaTime), chunkMatrix);
+        if(this->onGround){
+            b2Vec2 velocity = b2Vec2(0.0f, -300000.0f);
+            b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
         }
     }
     if (GameEngine::MovementKeysHeld[1]){ // S
-        if(isInWater){
-            this->acceleration += (1+(LiquidPercentile*0.01f)) * GRAVITY * deltaTime;
-        }
-
-        if(this->NoClip){
-            this->MovePlayerBy(Vec2f(0, 100 * deltaTime), chunkMatrix);
-        }
+        
     }
     if (GameEngine::MovementKeysHeld[2]){ // A
-        if(this->NoClip)
-            this->MovePlayerBy(Vec2f(-100 * deltaTime,0), chunkMatrix);
-        else
-            this->MovePlayerBy(Vec2f(-Player::SPEED * deltaTime, 0), chunkMatrix);
+        b2Vec2 vel = b2Body_GetLinearVelocity(m_physicsBody);
+        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-SPEED, vel.y));
     }
     if (GameEngine::MovementKeysHeld[3]){ // D
-        if(this->NoClip)
-            this->MovePlayerBy(Vec2f(100 * deltaTime,0), chunkMatrix);
-        else
-            this->MovePlayerBy(Vec2f(Player::SPEED * deltaTime, 0), chunkMatrix);
+        b2Vec2 vel = b2Body_GetLinearVelocity(m_physicsBody);
+        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(SPEED, vel.y));
     }
 
-    this->MoveCameraTowards(Vec2f(this->position), chunkMatrix);
-
-    // Move the player downwards
-    if(acceleration != 0) MovePlayerBy(Vec2f(0, this->acceleration * deltaTime), chunkMatrix);
+    this->MoveCamera(Vec2f(this->position), chunkMatrix);
 
     //update player laser
     this->gunLaserParticleGenerator->position = Vec2f(this->position);
@@ -118,6 +75,11 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
     this->gunLaserParticleGenerator->angle = angle;
 
     chunkMatrix.voxelMutex.unlock();
+}
+
+bool Game::Player::Update(ChunkMatrix &chunkMatrix)
+{
+    return true;
 }
 
 void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
@@ -276,63 +238,6 @@ int Game::Player::touchRightWall(ChunkMatrix &chunkMatrix)
         }
     }
     return highest;
-}
-
-void Game::Player::MovePlayer(Vec2f pos, ChunkMatrix &chunkMatrix)
-{
-    //check if the player isnt being teleported into a solid voxel
-    if(!this->NoClip){
-        if(chunkMatrix.VirtualGetAt(Vec2i(floor(pos.x), floor(pos.y)))->GetState() == Volume::State::Solid){
-            return;
-        }
-    }
-
-    this->position = pos;
-    //this->MoveCamera(Vec2f(this->position), chunkMatrix);
-}
-
-void Game::Player::MovePlayerBy(Vec2f pos, ChunkMatrix &chunkMatrix)
-{
-    // Move the player by X
-    for(int i = 0; i < floor(abs(pos.x)); ++i){
-        int leftWallLevel = this->touchLeftWall(chunkMatrix);
-        if (leftWallLevel > STEP_HEIGHT && pos.x < 0) {
-            break;
-        }
-        int rightWallLevel = this->touchRightWall(chunkMatrix);
-        if (rightWallLevel > STEP_HEIGHT && pos.x > 0) {
-            break;
-        }
-        this->position.x += pos.x > 0 ? 1 : -1;
-        if(pos.x < 0) this->position.y -= leftWallLevel;
-        if(pos.x > 0) this->position.y -= rightWallLevel;
-    }
-    int leftWallLevel = this->touchLeftWall(chunkMatrix);
-    int rightWallLevel = this->touchRightWall(chunkMatrix);
-    if((leftWallLevel < STEP_HEIGHT && pos.x < 0) || 
-        (rightWallLevel < STEP_HEIGHT && pos.x > 0)){
-
-        this->position.x += std::fmod(pos.x, 1.0f); // Move the remaining part
-        if(pos.x < 0)this->position.y -= leftWallLevel;
-        if(pos.x > 0)this->position.y -= rightWallLevel;
-    }
-
-    // Move to the ground by one step
-    int move = pos.y > 0 ? 1 : -1;
-    for (int i = 0; i < floor(abs(pos.y)); ++i) {
-        if ((this->isOnGround(chunkMatrix) && move > 0) || (this->isOnCeiling(chunkMatrix) && move < 0)) {
-            break;
-        }
-        this->position.y += move;
-    }
-
-    if((!this->isOnGround(chunkMatrix) || pos.y < 0) && (!this->isOnCeiling(chunkMatrix) || pos.y > 0)){
-        this->position.y += std::fmod(pos.y, 1.0f); // Move the remaining part
-    }
-
-    if(this->isOnGround(chunkMatrix)){
-        this->position.y = floor(this->position.y); //Snap to ground
-    }
 }
 
 void Game::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)

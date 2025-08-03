@@ -36,12 +36,14 @@ public:
     // physics mesh body
     std::vector<Triangle> triangleColliders;
 	std::vector<b2Vec2> edges;
-private:
-    b2BodyId m_physicsBody = b2_nullBodyId;
+protected:
+    virtual bool IsAbleToRotate() const { return true; }
 
-    b2Vec2 velocity = b2Vec2(0.0f, 0.0f);
-    float angularVelocity = 0.0f;
+    b2BodyId m_physicsBody = b2_nullBodyId;
 
     void CreatePhysicsBody(b2WorldId worldId);
     void DestroyPhysicsBody();
+private:
+    b2Vec2 velocity = b2Vec2(0.0f, 0.0f);
+    float angularVelocity = 0.0f;
 };

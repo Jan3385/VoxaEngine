@@ -75,7 +75,7 @@ void GameObjectRegistry::RegisterObjects()
     GameObjectRegistry::RegisterGameObject(
         "Player",
         GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetMass(100)
+            .SetMass(10)
             .SetVoxelFileName("Player")
             .Build()
     );
