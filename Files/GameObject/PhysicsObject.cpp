@@ -33,10 +33,13 @@ void PhysicsObject::UpdatePhysicsEffects(ChunkMatrix &chunkMatrix, float deltaTi
     }
 
     if(percentageOfObjectInLiquid > 0.0f){
+        // inflate the percentage a little bit to make objects more above water when calm
+        percentageOfObjectInLiquid = std::clamp(percentageOfObjectInLiquid + 0.2f, 0.0f, 1.0f);
+
         float mass = b2Body_GetMass(m_physicsBody);
 
         // apply buoyancy force
-        constexpr float buoyancyFactor = 1.03f;
+        constexpr float buoyancyFactor = 1.1f;
         b2Vec2 buoyancyForce = b2Vec2(0, -9.81f * mass * buoyancyFactor * percentageOfObjectInLiquid);
         b2Body_ApplyForceToCenter(m_physicsBody, buoyancyForce, true);
 

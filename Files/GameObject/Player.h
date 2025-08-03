@@ -12,8 +12,9 @@ namespace Game{
     class Player  : public PhysicsObject {
     public:
         static bool NoClip;
-        static constexpr float GRAVITY = 9.81f * Volume::VOXEL_SIZE_METERS * 600;
+        static constexpr float DOWN_MOVEMENT_ACCELERATION = 9.81f * 600;
         static constexpr int SPEED = 10;
+        static constexpr int NOCLIP_SPEED = 30;
         Player();
         Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
         ~Player();
@@ -52,14 +53,13 @@ namespace Game{
         static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;
         static constexpr int WAIST_HEIGHT = PLAYER_HEIGHT / 2;
         static constexpr int STEP_HEIGHT = 3;
-        static constexpr float JUMP_ACCELERATION = 200;
+        static constexpr float JUMP_ACCELERATION = 300000.0f;
 
         Particle::LaserParticleGenerator *gunLaserParticleGenerator;
 
         float acceleration = 0;
 
         bool isOnGround(ChunkMatrix& chunkMatrix);
-        bool isOnCeiling(ChunkMatrix& chunkMatrix);
         /**
          * @brief Gets the highest level voxel on the left side of the player
          * \returns 0 if not touching at all, N if touching

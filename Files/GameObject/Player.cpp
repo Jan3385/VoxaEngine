@@ -41,28 +41,69 @@ Game::Player::~Player()
 
 void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 {
+    if(!b2Body_IsValid(m_physicsBody)) return;
+
     chunkMatrix.voxelMutex.lock();
     this->onGround = this->isOnGround(chunkMatrix);
 
     this->gunLaserParticleGenerator->enabled = this->gunEnabled;
 
+    //TODO: change only when noclip changes and remove all velocity
+    if(NoClip){
+        b2Body_SetGravityScale(m_physicsBody, 0.0f);
+        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(0.0f, 0.0f));
+    }
+    else
+        b2Body_SetGravityScale(m_physicsBody, 1.0f);
+
+    bool keyHeld = false;
     if (GameEngine::MovementKeysHeld[0]) // W
     {
-        if(this->onGround){
-            b2Vec2 velocity = b2Vec2(0.0f, -300000.0f);
-            b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
+        keyHeld = true;
+        if(NoClip){
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x, -NOCLIP_SPEED));
+        } else {
+            if(this->onGround){
+                b2Vec2 velocity = b2Vec2(0.0f, -JUMP_ACCELERATION);
+                b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
+            }
         }
     }
     if (GameEngine::MovementKeysHeld[1]){ // S
-        
+        keyHeld = true;
+        if(NoClip){
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x, NOCLIP_SPEED));
+        } else {
+            b2Vec2 velocity = b2Vec2(0.0f, DOWN_MOVEMENT_ACCELERATION);
+            b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
+        }
     }
     if (GameEngine::MovementKeysHeld[2]){ // A
-        b2Vec2 vel = b2Body_GetLinearVelocity(m_physicsBody);
-        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-SPEED, vel.y));
+        keyHeld = true;
+        if(NoClip){
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-NOCLIP_SPEED, velocity.y));
+        }else{
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-SPEED, velocity.y));
+        }
     }
     if (GameEngine::MovementKeysHeld[3]){ // D
-        b2Vec2 vel = b2Body_GetLinearVelocity(m_physicsBody);
-        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(SPEED, vel.y));
+        keyHeld = true;
+        if(NoClip){
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(NOCLIP_SPEED, velocity.y));
+        }else{
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(SPEED, velocity.y));
+        }
+    }
+
+    if(!GameEngine::MovementKeysHeld[2] && !GameEngine::MovementKeysHeld[3] && !NoClip){
+        b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x / 1.3f, velocity.y));
     }
 
     this->MoveCamera(Vec2f(this->position), chunkMatrix);
@@ -111,7 +152,7 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsUnder(ChunkMatrix &chu
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
-        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT/2 + 1));
+        auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT/2 + 1), true);
         if (voxel) {
             voxels.push_back(voxel);
         }
@@ -186,20 +227,6 @@ bool Game::Player::isOnGround(ChunkMatrix &chunkMatrix)
     if(this->NoClip) return false;
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsUnder(chunkMatrix);
-    for (const auto& voxel : voxels) {
-        if(voxel->GetState() == Volume::State::Solid){
-            return true;
-            break;
-        }
-    }
-    return false;
-}
-
-bool Game::Player::isOnCeiling(ChunkMatrix &chunkMatrix)
-{
-    if(this->NoClip) return false;
-
-    std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsAbove(chunkMatrix);
     for (const auto& voxel : voxels) {
         if(voxel->GetState() == Volume::State::Solid){
             return true;
