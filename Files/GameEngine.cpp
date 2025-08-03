@@ -35,7 +35,6 @@ void GameEngine::Initialize(){
 
 GameEngine::~GameEngine()
 {
-    std::cout << "Stopping game engine..." << std::endl;
     this->running = false;
     if (simulationThread.joinable())
         simulationThread.join();
