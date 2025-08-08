@@ -75,6 +75,14 @@ if(OpenMP_CXX_FOUND)
   target_link_libraries(VoxaEngine PRIVATE OpenMP::OpenMP_CXX)
 endif()
 
+if (MINGW)
+  target_link_options(VoxaEngine PRIVATE
+    -static
+    -static-libgcc
+    -static-libstdc++
+  )
+endif()
+
 # check OpenGL
 find_package(OpenGL REQUIRED)
 
