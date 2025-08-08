@@ -578,7 +578,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     eDef.position = b2Vec2(pos.x, pos.y);
     eDef.radius = radius;
     eDef.falloff = radius * 0.5f;
-    eDef.impulsePerLength = 400000.0f * radius;
+    eDef.impulsePerLength = 1000000.0f * std::sqrt(radius);
 
     b2World_Explode(
         GameEngine::instance->physics->GetWorldId(),
