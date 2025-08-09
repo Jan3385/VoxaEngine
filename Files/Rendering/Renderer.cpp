@@ -305,7 +305,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player)
     ImGui::Checkbox("Render Mesh Data", &this->renderMeshData);
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
-    ImGui::Checkbox("No Clip", &player->NoClip);
+    if(ImGui::Button("Toggle NoClip")) player->SetNoClip(!player->GetNoClip());
     ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
     ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
     ImGui::DragFloat("Fixed Update speed", &GameEngine::instance->fixedDeltaTime, 0.05f, 1/30.0, 4);

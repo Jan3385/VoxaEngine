@@ -196,7 +196,7 @@ unsigned int VoxelObject::UpdateRenderBuffer()
 
     Vec2f offset = this->position - Vec2f((rotatedVoxelBuffer[0].size()) / 2.0f, (rotatedVoxelBuffer.size()) / 2.0f);
     offset.x = std::ceil(offset.x);
-    offset.y = std::ceil(offset.y + 0.1f); // offset to avoid object being above the ground (makes the object sometimes render inside the ground)
+    offset.y = std::ceil(offset.y);
 
     for (size_t y = 0; y < this->rotatedVoxelBuffer.size(); ++y) {
         for (size_t x = 0; x < this->rotatedVoxelBuffer[0].size(); ++x) {

@@ -8,8 +8,6 @@
 #include <algorithm>
 #include "Player.h"
 
-bool Game::Player::NoClip = true;
-
 Game::Player::Player() = default;
 
 Game::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData)
@@ -48,21 +46,10 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 
     this->gunLaserParticleGenerator->enabled = this->gunEnabled;
 
-    //TODO: change only when noclip changes and remove all velocity
-    if(NoClip){
-        b2Body_SetGravityScale(m_physicsBody, 0.0f);
-        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(0.0f, 0.0f));
-    }
-    else
-        b2Body_SetGravityScale(m_physicsBody, 1.0f);
-
-    bool keyHeld = false;
     if (GameEngine::MovementKeysHeld[0]) // W
     {
-        keyHeld = true;
-        if(NoClip){
-            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
-            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x, -NOCLIP_SPEED));
+        if(this->noClip){
+            this->position.y -= NOCLIP_SPEED * deltaTime;
         } else {
             if(this->onGround){
                 b2Vec2 velocity = b2Vec2(0.0f, -JUMP_ACCELERATION);
@@ -71,37 +58,32 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
         }
     }
     if (GameEngine::MovementKeysHeld[1]){ // S
-        keyHeld = true;
-        if(NoClip){
-            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
-            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x, NOCLIP_SPEED));
+        if(this->noClip){
+            this->position.y += NOCLIP_SPEED * deltaTime;
         } else {
             b2Vec2 velocity = b2Vec2(0.0f, DOWN_MOVEMENT_ACCELERATION);
             b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
         }
     }
     if (GameEngine::MovementKeysHeld[2]){ // A
-        keyHeld = true;
-        if(NoClip){
-            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
-            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-NOCLIP_SPEED, velocity.y));
+        if(this->noClip){
+            this->position.x -= NOCLIP_SPEED * deltaTime;
         }else{
             b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
             b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-SPEED, velocity.y));
         }
     }
     if (GameEngine::MovementKeysHeld[3]){ // D
-        keyHeld = true;
-        if(NoClip){
-            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
-            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(NOCLIP_SPEED, velocity.y));
+        if(this->noClip){
+            this->position.x += NOCLIP_SPEED * deltaTime;
         }else{
             b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
             b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(SPEED, velocity.y));
         }
     }
 
-    if(!GameEngine::MovementKeysHeld[2] && !GameEngine::MovementKeysHeld[3] && !NoClip){
+    // Apply friction when not moving horizontally
+    if(!GameEngine::MovementKeysHeld[2] && !GameEngine::MovementKeysHeld[3] && !this->noClip){
         b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
         b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x / 1.3f, velocity.y));
     }
@@ -123,6 +105,17 @@ bool Game::Player::Update(ChunkMatrix &chunkMatrix)
     return true;
 }
 
+void Game::Player::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)
+{
+    PhysicsObject::UpdateColliders(triangles, edges, worldId);
+
+    // enable/disable based on noClip
+    if(this->noClip)
+        b2Body_Disable(m_physicsBody);
+    else 
+        b2Body_Enable(m_physicsBody);
+}
+
 void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
 {
     if(!this->gunEnabled) return;
@@ -141,7 +134,24 @@ void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
 }
 bool Game::Player::ShouldRender() const
 {
-    return !NoClip;
+    return !noClip;
+}
+void Game::Player::SetNoClip(bool value)
+{
+    if(this->noClip == value) return;
+
+    this->noClip = value;
+
+    if(this->noClip){
+        b2Body_SetGravityScale(m_physicsBody, 0);
+        b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(0, 0));
+        b2Body_Disable(m_physicsBody);
+    } else {
+        b2Body_Enable(m_physicsBody);
+        b2Body_SetGravityScale(m_physicsBody, 1);
+
+        b2Body_SetTransform(m_physicsBody, b2Vec2(this->position.x, this->position.y), b2Rot{1.0f, 0.0f});
+    }
 }
 Vec2f Game::Player::GetCameraPos() const
 {
@@ -224,7 +234,7 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsVerticalSlice(ChunkMat
 
 bool Game::Player::isOnGround(ChunkMatrix &chunkMatrix)
 {
-    if(this->NoClip) return false;
+    if(this->noClip) return false;
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsUnder(chunkMatrix);
     for (const auto& voxel : voxels) {
@@ -238,7 +248,7 @@ bool Game::Player::isOnGround(ChunkMatrix &chunkMatrix)
 
 int Game::Player::touchLeftWall(ChunkMatrix &chunkMatrix)
 {
-    if(this->NoClip) return 0;
+    if(this->noClip) return 0;
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsLeft(chunkMatrix);
     int highest = 0;
@@ -254,7 +264,7 @@ int Game::Player::touchLeftWall(ChunkMatrix &chunkMatrix)
 
 int Game::Player::touchRightWall(ChunkMatrix &chunkMatrix)
 {
-    if(this->NoClip) return 0;
+    if(this->noClip) return 0;
 
     std::vector<Volume::VoxelElement*> voxels = this->GetVoxelsRight(chunkMatrix);
     int highest = 0;

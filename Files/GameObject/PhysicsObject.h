@@ -26,8 +26,10 @@ public:
 
     virtual bool CanBreakIntoParts() const { return true; }
 
+    b2BodyId GetPhysicsBodyId() const { return m_physicsBody; }
+
     bool dirtyColliders = true;
-	void UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId);
+	virtual void UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId);
 
     void UpdateRotatedVoxelBuffer() override;
 

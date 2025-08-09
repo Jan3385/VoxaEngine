@@ -11,10 +11,9 @@ namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
     class Player  : public PhysicsObject {
     public:
-        static bool NoClip;
         static constexpr float DOWN_MOVEMENT_ACCELERATION = 9.81f * 600;
         static constexpr int SPEED = 10;
-        static constexpr int NOCLIP_SPEED = 30;
+        static constexpr int NOCLIP_SPEED = 200;
         Player();
         Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
         ~Player();
@@ -28,12 +27,16 @@ namespace Game{
         void UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime);
         bool Update(ChunkMatrix& chunkMatrix) override;
 
+        void UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId) override;
+
         bool CanBreakIntoParts() const override { return false; }
 
         void FireGun(ChunkMatrix& chunkMatrix);
 
         bool ShouldRender() const override;
 
+        bool GetNoClip() const { return noClip; }
+        void SetNoClip(bool value);
         Vec2f GetCameraPos() const;
         bool onGround = false;
         bool gunEnabled = false;
@@ -48,6 +51,7 @@ namespace Game{
         AABB Camera;
     protected:
         bool IsAbleToRotate() const override { return false; }
+        bool noClip = true;
     private:
         static constexpr int PLAYER_WIDTH = 8;
         static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;

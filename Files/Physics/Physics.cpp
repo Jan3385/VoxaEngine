@@ -258,6 +258,8 @@ void GamePhysics::Step(float deltaTime, ChunkMatrix& chunkMatrix)
 
     // Update all physics object locations
     for(PhysicsObject* obj : physicsObjects) {
-        obj->UpdatePhysicPosition(worldId);
+        if(b2Body_IsEnabled(obj->GetPhysicsBodyId())) {
+            obj->UpdatePhysicPosition(worldId);
+        }
     }
 }
