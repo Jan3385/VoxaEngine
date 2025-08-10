@@ -88,6 +88,7 @@ void GameEngine::Update()
     // Run physics simulation
     physics->Step(this->deltaTime, this->chunkMatrix);
 
+    this->chunkMatrix.voxelMutex.lock();
     // update voxelobjects rotation
     for(VoxelObject* object : chunkMatrix.voxelObjects) {
         if(object->IsEnabled()) {
@@ -95,7 +96,6 @@ void GameEngine::Update()
         }
     }
 
-    this->chunkMatrix.voxelMutex.lock();
     for(PhysicsObject* object : physics->physicsObjects) {
         if(object->IsEnabled()) {
             object->UpdatePhysicsEffects(chunkMatrix, deltaTime);

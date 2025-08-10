@@ -324,8 +324,8 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
             if(obj->GetBoundingBox().Contains(Vec2f(voxel->position)))
             {
                 // If the voxel is part of a VoxelObject, set it there
-                obj->SetVoxelAt(voxel->position, voxel);
-                return;
+                if(obj->SetVoxelAt(voxel->position, voxel))
+                    return;
             }
         }
     }
@@ -382,8 +382,8 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
             if(obj->GetBoundingBox().Contains(Vec2f(voxel->position)))
             {
                 // If the voxel is part of a VoxelObject, set it there
-                obj->SetVoxelAt(voxel->position, voxel);
-                return;
+                if(obj->SetVoxelAt(voxel->position, voxel))
+                    return;
             }
         }
     }
@@ -606,15 +606,15 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
                 //destroy gas and immovable solids.. create particles for other
     			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
                 {
-                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, false, true);
+                    PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, true, true);
                 }
                 else {
                     // +- 0.05 degrees radian
                     double smallAngleDeviation = ((rand() % 1000) / 10000.0f - 0.05f);
-                    Particle::AddSolidFallingParticle(this,voxel ,angle + smallAngleDeviation, (radius*1.1f - j)*0.7f);
-                    
+                    Particle::AddSolidFallingParticle(this, voxel, angle + smallAngleDeviation, (radius*1.1f - j)*0.7f);
+
                     VoxelElement *fireVoxel = CreateVoxelElement("Fire", currentPos, 1.3f, Temperature(radius * 100), false);
-                    VirtualSetAt_NoDelete(fireVoxel);
+                    VirtualSetAt_NoDelete(fireVoxel, true);
                 }
             }else{
                 // blacken out voxels around explosion

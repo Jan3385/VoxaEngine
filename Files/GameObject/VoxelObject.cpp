@@ -238,7 +238,11 @@ Volume::VoxelElement *VoxelObject::GetVoxelAt(const Vec2i &worldPos) const
     return this->rotatedVoxelBuffer[iy][ix];
 }
 
-void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
+/// @brief Sets a voxel at the specified world position.
+/// @param worldPos The world position to set the voxel at.
+/// @param voxel The voxel to set.
+/// @return True if the voxel was set successfully, false otherwise.
+bool VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
 {
     // True center of the buffer
     float centerX = (static_cast<float>(this->rotatedVoxelBuffer[0].size()) - 1) / 2.0f;
@@ -252,20 +256,17 @@ void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
 
     if (ix < 0 || ix >= static_cast<int>(this->rotatedVoxelBuffer[0].size()) || 
         iy < 0 || iy >= static_cast<int>(this->rotatedVoxelBuffer.size())) {
-        delete voxel;
-        return;
+        return false; // Out of bounds
     }
 
     // get the correct position from the rotated buffer
     if(this->rotatedVoxelBuffer[iy][ix] == nullptr) {
-        delete voxel;
-        return; // No voxel at this position TODO: somehow recalculate the position instead of returning
+        return false; // No voxel at this position TODO: somehow recalculate the position instead of returning
     }
     Vec2i localPos = this->rotatedVoxelBuffer[iy][ix]->position;
 
     if (localPos.x < 0 || localPos.x >= this->width || localPos.y < 0 || localPos.y >= this->height) {
-        delete voxel;
-        return; // Out of bounds
+        return false; // Out of bounds
     }
 
     voxel->position = localPos;
@@ -282,6 +283,8 @@ void VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
 
     //force heat updates
     this->maxHeatTransfer = 1.0f;
+
+    return true;
 }
 
 void VoxelObject::UpdateBoundingBox()

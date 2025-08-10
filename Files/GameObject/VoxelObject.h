@@ -38,7 +38,7 @@ public:
     float GetRotation() const   { return rotation; }
 
     Volume::VoxelElement* GetVoxelAt(const Vec2i& worldPos) const;
-    virtual void SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel);
+    virtual bool SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel);
 
     AABB GetBoundingBox() const { return this->boundingBox;}
     void UpdateBoundingBox();
