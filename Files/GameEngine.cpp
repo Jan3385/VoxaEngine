@@ -85,10 +85,10 @@ void GameEngine::Update()
     //Update Player
     this->Player->UpdatePlayer(this->chunkMatrix, this->deltaTime);
 
+    this->chunkMatrix.voxelMutex.lock();
     // Run physics simulation
     physics->Step(this->deltaTime, this->chunkMatrix);
 
-    this->chunkMatrix.voxelMutex.lock();
     // update voxelobjects rotation
     for(VoxelObject* object : chunkMatrix.voxelObjects) {
         if(object->IsEnabled()) {
