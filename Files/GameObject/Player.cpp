@@ -42,19 +42,24 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
     if(!b2Body_IsValid(m_physicsBody)) return;
 
     chunkMatrix.voxelMutex.lock();
+
     this->onGround = this->isOnGround(chunkMatrix);
 
     this->gunLaserParticleGenerator->enabled = this->gunEnabled;
 
     if (GameEngine::MovementKeysHeld[0]) // W
     {
+        float verticalVelocity = b2Body_GetLinearVelocity(m_physicsBody).y;
+
         if(this->noClip){
             this->position.y -= NOCLIP_SPEED * deltaTime;
-        } else {
-            if(this->onGround){
-                b2Vec2 velocity = b2Vec2(0.0f, -JUMP_ACCELERATION);
-                b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
-            }
+        } else if(this->onGround && verticalVelocity <= 0) {      // Jumping
+            // reset vertical velocity
+            b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
+            b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x, 0.0f));
+
+            velocity = b2Vec2(0.0f, -JUMP_ACCELERATION);
+            b2Body_ApplyLinearImpulseToCenter(m_physicsBody, velocity, true);
         }
     }
     if (GameEngine::MovementKeysHeld[1]){ // S
@@ -82,8 +87,8 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
         }
     }
 
-    // Apply friction when not moving horizontally
-    if(!GameEngine::MovementKeysHeld[2] && !GameEngine::MovementKeysHeld[3] && !this->noClip){
+    // Apply friction when not moving horizontally and on ground
+    if(!GameEngine::MovementKeysHeld[2] && !GameEngine::MovementKeysHeld[3] && this->onGround && !this->noClip){
         b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
         b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x / 1.3f, velocity.y));
     }
@@ -161,7 +166,7 @@ Vec2f Game::Player::GetCameraPos() const
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsUnder(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
+    for (int x = -PLAYER_WIDTH/2+1; x < PLAYER_WIDTH/2-1; ++x) {
         auto voxel = chunkMatrix.VirtualGetAt(Vec2f(this->position) + Vec2f(x, PLAYER_HEIGHT/2 + 1), true);
         if (voxel) {
             voxels.push_back(voxel);

@@ -244,6 +244,8 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
     object->UpdateColliders(allTriangleColliders, allEdges, worldId);
 }
 
+//TODO: tone down explosion force, lower organic material density and make barrels lighter, current problem is that the simulation expects them to be all solid iron (maybe add object density override?)
+
 /// @brief Steps the physics simulation forward by a given time step
 /// @param deltaTime        time step for the simulation
 void GamePhysics::Step(float deltaTime, ChunkMatrix& chunkMatrix)

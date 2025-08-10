@@ -57,7 +57,7 @@ namespace Game{
         static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;
         static constexpr int WAIST_HEIGHT = PLAYER_HEIGHT / 2;
         static constexpr int STEP_HEIGHT = 3;
-        static constexpr float JUMP_ACCELERATION = 300000.0f;
+        static constexpr float JUMP_ACCELERATION = 100000000.0f; //will be a lot smaller once densities for organics get adjusted
 
         Particle::LaserParticleGenerator *gunLaserParticleGenerator;
 
