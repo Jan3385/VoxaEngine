@@ -74,6 +74,13 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
         if(this->noClip){
             this->position.x -= NOCLIP_SPEED * deltaTime;
         }else{
+            int voxelHeightLeft = touchLeftWall(chunkMatrix);
+
+            if(voxelHeightLeft > 0 && voxelHeightLeft <= STEP_HEIGHT) {
+                this->position.y -= voxelHeightLeft + 1;
+                b2Body_SetTransform(m_physicsBody, b2Vec2(this->position.x, this->position.y), b2Rot{1.0f, 0.0f});
+            }
+
             b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
             b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(-SPEED, velocity.y));
         }
@@ -82,6 +89,13 @@ void Game::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
         if(this->noClip){
             this->position.x += NOCLIP_SPEED * deltaTime;
         }else{
+            int voxelHeightRight = touchRightWall(chunkMatrix);
+
+            if(voxelHeightRight > 0 && voxelHeightRight <= STEP_HEIGHT) {
+                this->position.y -= voxelHeightRight + 1;
+                b2Body_SetTransform(m_physicsBody, b2Vec2(this->position.x, this->position.y), b2Rot{1.0f, 0.0f});
+            }
+
             b2Vec2 velocity = b2Body_GetLinearVelocity(m_physicsBody);
             b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(SPEED, velocity.y));
         }
@@ -190,8 +204,8 @@ std::vector<Volume::VoxelElement *> Game::Player::GetVoxelsAbove(ChunkMatrix &ch
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsLeft(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
-        Vec2f localPos = Vec2i(this->position) + Vec2i(-PLAYER_WIDTH/2, y);
+    for (int y = -PLAYER_HEIGHT/2; y <= PLAYER_HEIGHT/2; ++y) {
+        Vec2f localPos = Vec2i(this->position) + Vec2i(-PLAYER_WIDTH/2 + 1, y); // +1 because the feet sprite isnt at the exact edge
         auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.x), floor(localPos.y)));
         if (voxel) {
             voxels.push_back(voxel);
@@ -203,8 +217,8 @@ std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsLeft(ChunkMatrix &chun
 std::vector<Volume::VoxelElement*> Game::Player::GetVoxelsRight(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
-    for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
-        Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH/2, y);
+    for (int y = -PLAYER_HEIGHT/2; y <= PLAYER_HEIGHT/2; ++y) {
+        Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH/2 - 1, y); // -1 because the feet sprite isnt at the exact edge
         auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.x), floor(localPos.y)));
         if (voxel) {
             voxels.push_back(voxel);
