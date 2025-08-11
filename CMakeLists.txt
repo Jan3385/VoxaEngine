@@ -1,10 +1,10 @@
-
 cmake_minimum_required(VERSION 3.10)
 
 project(VoxaEngine VERSION 0.2.1 LANGUAGES C CXX)
 
 set(FONTS_FOLDER "${CMAKE_SOURCE_DIR}/Fonts")
 set(TEXTURES_FOLDER "${CMAKE_SOURCE_DIR}/Textures")
+set(SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Files/Shader/Rendering/Shaders")
 
 # Use vcpkg for dependencies
 find_package(SDL2 CONFIG REQUIRED)
@@ -131,4 +131,6 @@ add_custom_command(TARGET VoxaEngine POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${FONTS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Fonts
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Textures
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${TEXTURES_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Textures
+  COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Shaders
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Shaders
 )

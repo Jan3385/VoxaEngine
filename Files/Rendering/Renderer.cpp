@@ -75,24 +75,19 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     }
 
     this->voxelRenderProgram = Shader::Shader(
-        Shader::voxelArraySimulationVertexShader,
-        Shader::voxelArraySimulationFragmentShader
+        "VoxelArrayRender"
     );
     this->temperatureRenderProgram = Shader::Shader(
-        Shader::temperatureVoxelVertexShader,
-        Shader::temperatureVoxelFragmentShader
+        "TemperatureVoxelArray"
     );
     this->particleRenderProgram = Shader::Shader(
-        Shader::voxelParticleVertexShader,
-        Shader::voxelParticleFragmentShader
+        "ParticleArrayRender"
     );
     this->closedShapeRenderProgram = Shader::Shader(
-        Shader::closedShapeDrawVertexShader,
-        Shader::closedShapeDrawFragmentShader
+        "ClosedShape"
     );
     this->cursorRenderProgram = Shader::Shader(
-        Shader::cursorRenderVertexShader,
-        Shader::cursorRenderFragmentShader
+        "CursorRender"
     );
 
     // Quad VBO setup ----

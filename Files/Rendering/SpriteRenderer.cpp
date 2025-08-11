@@ -3,8 +3,6 @@
 #include <SDL.h>
 #include <iostream>
 
-#include "Shader/Rendering/vertexShaderLibrary.h"
-#include "Shader/Rendering/fragmentShaderLibrary.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "GameObject/VoxelObject.h"
@@ -28,8 +26,7 @@ void SpriteRenderer::Initialize()
         return;
 
     spriteRenderProgram = Shader::Shader(
-        Shader::spriteRenderVertexShader,
-        Shader::spriteRenderFragmentShader
+        "SpriteRender"
     );
 
     float quadVertices[] = {

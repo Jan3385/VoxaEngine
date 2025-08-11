@@ -4,9 +4,6 @@
 #include <iostream>
 #include <vector>
 
-#include "Shader/Rendering/vertexShaderLibrary.h"
-#include "Shader/Rendering/fragmentShaderLibrary.h"
-
 FontRenderer::FontRenderer()
 {
 
@@ -18,8 +15,7 @@ void FontRenderer::Initialize()
         return;
 
     this->textRenderProgram = Shader::Shader(
-        Shader::textRenderVertexShader,
-        Shader::textRenderFragmentShader
+        "TextRender"
     );
 
     // Setup VAO and VBO for text rendering

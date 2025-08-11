@@ -4,8 +4,6 @@
 #include "Math/Vector.h"
 #include "GameObject/Player.h"
 #include "Shader/Rendering/RenderingShader.h"
-#include "Shader/Rendering/vertexShaderLibrary.h"
-#include "Shader/Rendering/fragmentShaderLibrary.h"
 #include "Rendering/FontRenderer.h"
 #include "Rendering/SpriteRenderer.h"
 
