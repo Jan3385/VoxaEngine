@@ -354,17 +354,17 @@ void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
     chunkMatrix.voxelMutex.lock();
-    Vec2f offset = this->Player->Camera.corner*(Volume::Chunk::RENDER_VOXEL_SIZE);
+    
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:
         if(this->Player->gunEnabled)
             this->Player->FireGun(this->chunkMatrix);
         else
-            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, offset, Volume::Temperature(this->placeVoxelTemperature));
+            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, this->Player->Camera.corner, Volume::Temperature(this->placeVoxelTemperature));
         break;
     case SDL_BUTTON_RIGHT:
-        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, offset);
+        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, this->Player->Camera.corner);
     }
     chunkMatrix.voxelMutex.unlock();
 }

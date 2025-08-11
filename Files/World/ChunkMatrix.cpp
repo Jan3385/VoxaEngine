@@ -57,8 +57,9 @@ Vec2f ChunkMatrix::ChunkToWorldPosition(const Vec2i &pos)
     );
 }
 
-Vec2f ChunkMatrix::MousePosToWorldPos(const Vec2f &mousePos, Vec2f offset)
+Vec2f ChunkMatrix::MousePosToWorldPos(const Vec2f &mousePos, const Vec2f &cameraOffset)
 {
+    Vec2f offset = cameraOffset * Volume::Chunk::RENDER_VOXEL_SIZE;
     return Vec2f(
         (mousePos.x + offset.x) / Chunk::RENDER_VOXEL_SIZE,
         (mousePos.y + offset.y)/ Chunk::RENDER_VOXEL_SIZE

@@ -90,6 +90,10 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         Shader::closedShapeDrawVertexShader,
         Shader::closedShapeDrawFragmentShader
     );
+    this->cursorRenderProgram = Shader::Shader(
+        Shader::cursorRenderVertexShader,
+        Shader::cursorRenderFragmentShader
+    );
 
     // Quad VBO setup ----
     float quad[] = {
@@ -135,6 +139,16 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    // --------------
+
+    // Cursor VAO setup ----
+    glGenVertexArrays(1, &cursorVAO);
+    glBindVertexArray(cursorVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+    // --------------
 
     this->fontRenderer.Initialize();
     this->spriteRenderer.Initialize();
@@ -189,20 +203,24 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     
     this->RenderChunks(chunkMatrix, player, voxelProj);
 
-    glm::vec2 mousePosInWorld = {
-        mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.x,
-        mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + player->Camera.corner.y
-    };
-    
-    this->RenderHeat(chunkMatrix, mousePosInWorld, player, voxelProj);
+    //glm::vec2 mousePosInWorld = {
+    //    mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + static_cast<int>(player->Camera.corner.x),
+    //    mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + static_cast<int>(player->Camera.corner.y)
+    //};
+    Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(mousePos, player->Camera.corner);
+    glm::vec2 mousePosInWorldInt = glm::vec2(static_cast<int>(mousePosInWorldF.x), static_cast<int>(mousePosInWorldF.y));
+
+    this->RenderHeat(chunkMatrix, mousePosInWorldInt, player, voxelProj);
 
     this->RenderParticles(chunkMatrix, voxelProj);
 
     if (this->debugRendering)
-        this->RenderDebugMode(chunkMatrix, player, mousePosInWorld, voxelProj, screenProj);
+        this->RenderDebugMode(chunkMatrix, player, mousePosInWorldInt, voxelProj, screenProj);
 
     if(this->renderMeshData)
         this->RenderMeshData(chunkMatrix, player, voxelProj);
+
+    this->RenderCursor(mousePosInWorldInt, player, voxelProj);
 
     this->RenderIMGUI(chunkMatrix, player);
 
@@ -319,6 +337,12 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player)
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+    if(mouseOverUI)
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    else
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }
 
 void GameRenderer::ToggleDebugRendering()
@@ -415,6 +439,23 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
             static_cast<GLsizei>(chunkMatrix.particles.size())
         );
     }
+}
+
+void GameRenderer::RenderCursor(glm::vec2 mousePos, Game::Player *player, glm::mat4 projection)
+{
+    int cursorSize = GameEngine::instance->placementRadius * 2 + 1;
+
+    cursorSize = player->gunEnabled ? 1 : cursorSize;
+
+    this->cursorRenderProgram.Use();
+    this->cursorRenderProgram.SetVec2("size", glm::vec2(cursorSize, cursorSize));
+    this->cursorRenderProgram.SetVec2("cursorPosition", mousePos);
+    this->cursorRenderProgram.SetMat4("projection", projection);
+
+    this->cursorRenderProgram.SetVec4("outlineColor", glm::vec4(1.0f, 1.0f, 1.0f, 0.9f));
+
+    glBindVertexArray(this->cursorVAO);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, Game::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj)

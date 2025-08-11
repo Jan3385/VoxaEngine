@@ -7,4 +7,5 @@ namespace Shader{
     extern const char* closedShapeDrawFragmentShader;
     extern const char* textRenderFragmentShader;
     extern const char* spriteRenderFragmentShader;
+    extern const char* cursorRenderFragmentShader;
 }

@@ -7,7 +7,7 @@ namespace Shader {
 // ---------------------------------------------
 const char* voxelArraySimulationVertexShader = R"glsl(
 #version 460 core
-layout (location = 0) in vec2 aPos;          // Quad vertex (0-1)
+layout (location = 0) in vec2 quadVertex;          // Quad vertex (0-1)
 layout (location = 1) in ivec2 instancePos;  // Voxel position
 layout (location = 2) in vec4 instanceColor;
 
@@ -17,7 +17,7 @@ out vec4 vertexColor;                        // output color to fragment shader
 
 void main()
 {
-    gl_Position = projection * vec4(instancePos + aPos, 0.0, 1.0);
+    gl_Position = projection * vec4(instancePos + quadVertex, 0.0, 1.0);
 
     vertexColor = instanceColor;
 }
@@ -28,7 +28,7 @@ void main()
 // ---------------------------------------------
 const char* temperatureVoxelVertexShader = R"glsl(
 #version 460 core
-layout(location = 0) in vec2 aPos;         // Quad vertex (0-1)
+layout(location = 0) in vec2 quadVertex;         // Quad vertex (0-1)
 layout(location = 1) in ivec2 instancePos; // Voxel position
 layout(location = 2) in vec4 instanceColor;// Voxel color
 layout(location = 3) in float aHeat;       // Heat value
@@ -96,7 +96,7 @@ const float distanceThreshold = 50.0;
 
 void main()
 {
-    gl_Position = projection * vec4(instancePos + aPos, 0.0, 1.0);
+    gl_Position = projection * vec4(instancePos + quadVertex, 0.0, 1.0);
 
     // alpha: 0 at 100°C, 0.5 at 2000°C, clamp in between
     float alpha = clamp((aHeat - 100.0) / (2000.0 - 100.0) * maxAlpha, 0.0, maxAlpha);
@@ -104,7 +104,7 @@ void main()
     vertexColor = vec4(HeatToColor(aHeat), alpha);
 
     if(showHeatAroundCursor) {
-        float distance = length(instancePos + aPos - cursorPosition);
+        float distance = length(instancePos + quadVertex - cursorPosition);
         vec3 heatColor = HeatToIndicatorColor(aHeat);
         float alpha = clamp(1.0 - distance / distanceThreshold, 0.0, 0.4);
         vertexColor = mix(vertexColor, vec4(heatColor, 1), alpha);
@@ -118,7 +118,7 @@ void main()
 // ---------------------------------------------
 const char* voxelParticleVertexShader = R"glsl(
 #version 460 core
-layout (location = 0) in vec2 aPos;          // Quad vertex (0-1)
+layout (location = 0) in vec2 quadVertex;          // Quad vertex (0-1)
 layout (location = 1) in vec2 instancePos;  // Voxel position
 layout (location = 2) in vec4 instanceColor;
 
@@ -128,7 +128,7 @@ out vec4 vertexColor;                        // output color to fragment shader
 
 void main()
 {
-    gl_Position = projection * vec4(instancePos + aPos, 0.0, 1.0);
+    gl_Position = projection * vec4(instancePos + quadVertex, 0.0, 1.0);
 
     vertexColor = instanceColor;
 }
@@ -140,13 +140,13 @@ void main()
 const char* closedShapeDrawVertexShader = R"glsl(
 #version 460 core
 
-layout (location = 0) in vec2 aPos;
+layout (location = 0) in vec2 vert;
 
 uniform mat4 uProjection;
 
 void main()
 {
-    gl_Position = uProjection * vec4(aPos, 0.0, 1.0);
+    gl_Position = uProjection * vec4(vert, 0.0, 1.0);
 }
 )glsl";
 
@@ -172,7 +172,7 @@ void main()
 // ---------------------------------------------
 const char* spriteRenderVertexShader = R"glsl(
 #version 460 core
-layout (location = 0) in vec2 aPos;          // Quad vertex
+layout (location = 0) in vec2 quadVertex;   // Quad vertex
 layout (location = 1) in vec2 aTexCoord;    // Texture coordinates
 
 uniform mat4 projection;                     // Projection matrix
@@ -181,8 +181,31 @@ uniform mat4 model;                          // Model matrix
 out vec2 TexCoords;                         // output texture coordinates to fragment shader
 void main()
 {
-    gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
+    gl_Position = projection * model * vec4(quadVertex, 0.0, 1.0);
     TexCoords = aTexCoord;                  // Pass texture coordinates to fragment shader
+}
+)glsl";
+
+// ---------------------------------------------
+// Vertex shaders for rendering cursors
+// ---------------------------------------------
+const char* cursorRenderVertexShader = R"glsl(
+#version 460 core
+layout (location = 0) in vec2 quadVertex;   // Quad vertex (0-1)
+
+uniform vec2 size;
+uniform vec2 cursorPosition;
+uniform mat4 projection;
+
+out vec2 uv;
+
+void main()
+{
+    uv = quadVertex;
+
+    vec2 halfSize = floor(size / 2.0);
+    vec2 vertex = (quadVertex * size - halfSize + cursorPosition);
+    gl_Position = projection * vec4(vertex, 0.0, 1.0);
 }
 )glsl";
 
