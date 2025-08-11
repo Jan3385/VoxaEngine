@@ -22,7 +22,7 @@ public:
 
     void UpdatePhysicsEffects(ChunkMatrix& chunkMatrix, float deltaTime);
 
-    bool SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel) override;
+    bool SetVoxelAt(const Vec2i& worldPos, Volume::VoxelElement* voxel, bool noDelete = false) override;
 
     virtual bool CanBreakIntoParts() const { return true; }
 

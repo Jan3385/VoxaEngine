@@ -44,7 +44,7 @@ bool SolidFallingParticle::Step(ChunkMatrix *matrix)
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
     if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
     {
-    	//check if the position for the particle exists
+        //check if the position for the particle exists
     	if (!matrix->IsValidWorldPosition(this->fPosition))
     	{
     		return true;

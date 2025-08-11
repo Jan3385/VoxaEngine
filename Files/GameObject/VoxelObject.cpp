@@ -241,8 +241,9 @@ Volume::VoxelElement *VoxelObject::GetVoxelAt(const Vec2i &worldPos) const
 /// @brief Sets a voxel at the specified world position.
 /// @param worldPos The world position to set the voxel at.
 /// @param voxel The voxel to set.
+/// @param noDelete If true, the existing voxel at the position will not be deleted. WARNING: This may cause memory leaks.
 /// @return True if the voxel was set successfully, false otherwise.
-bool VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
+bool VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel, bool noDelete)
 {
     // True center of the buffer
     float centerX = (static_cast<float>(this->rotatedVoxelBuffer[0].size()) - 1) / 2.0f;
@@ -272,7 +273,7 @@ bool VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
     voxel->position = localPos;
 
     // Delete the old voxel if it exists
-    if (this->voxels[localPos.y][localPos.x]) {
+    if (this->voxels[localPos.y][localPos.x] && !noDelete) {
         delete this->voxels[localPos.y][localPos.x];
     }
 

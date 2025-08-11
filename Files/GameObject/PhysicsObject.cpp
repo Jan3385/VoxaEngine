@@ -55,10 +55,10 @@ void PhysicsObject::UpdatePhysicsEffects(ChunkMatrix &chunkMatrix, float deltaTi
     }
 }
 
-bool PhysicsObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel)
+bool PhysicsObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel, bool noDelete)
 {
     this->dirtyColliders = true;
-    return VoxelObject::SetVoxelAt(worldPos, voxel);
+    return VoxelObject::SetVoxelAt(worldPos, voxel, noDelete);
 }
 
 void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)

@@ -324,7 +324,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
             if(obj->GetBoundingBox().Contains(Vec2f(voxel->position)))
             {
                 // If the voxel is part of a VoxelObject, set it there
-                if(obj->SetVoxelAt(voxel->position, voxel))
+                if(obj->SetVoxelAt(voxel->position, voxel, false))
                     return;
             }
         }
@@ -382,7 +382,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
             if(obj->GetBoundingBox().Contains(Vec2f(voxel->position)))
             {
                 // If the voxel is part of a VoxelObject, set it there
-                if(obj->SetVoxelAt(voxel->position, voxel))
+                if(obj->SetVoxelAt(voxel->position, voxel, true))
                     return;
             }
         }
@@ -611,10 +611,14 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
                 else {
                     // +- 0.05 degrees radian
                     double smallAngleDeviation = ((rand() % 1000) / 10000.0f - 0.05f);
+                    
+                    voxel->position = Vec2f(currentPos);
                     Particle::AddSolidFallingParticle(this, voxel, angle + smallAngleDeviation, (radius*1.1f - j)*0.7f);
 
                     VoxelElement *fireVoxel = CreateVoxelElement("Fire", currentPos, 1.3f, Temperature(radius * 100), false);
-                    VirtualSetAt_NoDelete(fireVoxel, true);
+                    
+                    // false, because all voxels in voxelobjects should be unmovable, thus no condition should result in getting here
+                    VirtualSetAt_NoDelete(fireVoxel, false); 
                 }
             }else{
                 // blacken out voxels around explosion
