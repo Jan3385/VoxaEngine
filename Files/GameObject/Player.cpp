@@ -139,7 +139,7 @@ void Game::Player::FireGun(ChunkMatrix &chunkMatrix)
 {
     if(!this->gunEnabled) return;
 
-    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, this->Camera.corner * Volume::Chunk::RENDER_VOXEL_SIZE);
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, this->Camera.corner);
     
     Vec2f direction = mousePos - this->position;
     
