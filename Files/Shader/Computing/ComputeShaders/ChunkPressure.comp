@@ -1,6 +1,21 @@
 #version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
+layout(std430, binding = 0) buffer OutputChunkBuffer {
+    float voxelPressureOut[];
+};
+layout(std430, binding = 1) buffer IdBuffer {
+    uint voxelIds[];
+};
+layout(std430, binding = 2) buffer PressureBuffer {
+    float voxelPressures[];
+};
+layout(std430, binding = 3) buffer ChunkBuffer {
+    ChunkConnectivityData chunkData[];
+};
+uniform uint NumberOfVoxels; // total number of voxels in the simulation
+
+
 // bigger number = slower
 #define PRESSURE_TRANSITION_SPEED 1.1
 
@@ -22,22 +37,6 @@ struct ChunkConnectivityData{
     int chunkLeft;
     int chunkRight;
     int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
-};
-
-layout(std430, binding = 0) buffer OutputChunkBuffer {
-    float voxelPressureOut[];
-};
-layout(std430, binding = 1) buffer IdBuffer {
-    uint voxelIds[];
-};
-layout(std430, binding = 2) buffer PressureBuffer {
-    float voxelPressures[];
-};
-
-uniform uint NumberOfVoxels; // total number of voxels in the simulation
-
-layout(std430, binding = 3) buffer ChunkBuffer {
-    ChunkConnectivityData chunkData[];
 };
 
 uint GetVoxelIndex(uint x, uint y, uint chunk) {
