@@ -127,7 +127,7 @@ endif()
 set_property(TARGET VoxaEngine PROPERTY CXX_STANDARD 20)
 
 # Post build: copy Fonts and Textures
-add_custom_command(TARGET VoxaEngine POST_BUILD
+add_custom_target(copy_assets ALL
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Fonts
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${FONTS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Fonts
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Textures
@@ -135,4 +135,5 @@ add_custom_command(TARGET VoxaEngine POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Shaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${RENDER_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Shaders/RenderShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Shaders/ComputeShaders
+  DEPENDS VoxaEngine
 )

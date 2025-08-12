@@ -260,6 +260,7 @@ void Volume::Chunk::GetShadersData(
             heatCapacityBuffer[index] = props->HeatCapacity;
             heatConductivityBuffer[index] = props->HeatConductivity;
             pressureBuffer[index] = voxel->amount;
+            
             idBuffer[index] = props->id |
                 (static_cast<uint32_t>(voxel->GetState() != State::Gas) << 31) |
                 (static_cast<uint32_t>(voxel->GetState() == State::Liquid) << 30);

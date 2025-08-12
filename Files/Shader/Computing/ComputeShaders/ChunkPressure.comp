@@ -69,62 +69,60 @@ void main(){
         ivec2 nPos = pos + directions[i];
         uint nIndex;
 
-        // forbid diagonal heat transfer
+        // forbid diagonal pressure transfer
         if((testPos.x < 0 || testPos.x >= CHUNK_SIZE) && (testPos.y < 0 || testPos.y >= CHUNK_SIZE))
             continue;
 
 		// if out of bounds from current chunk
         if(testPos.x < 0 || testPos.x >= CHUNK_SIZE || testPos.y < 0 || testPos.y >= CHUNK_SIZE) {
-            if(testPos.x < 0){ // right
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkRight == c){
-                        nC = chunkData[i].chunk;
+            int nC = -1;
+            if(testPos.x < 0){ // left neighbor chunk
+                for(int j = 0; j < numberOfChunks; ++j){
+                    if(chunkData[j].chunkRight == c){
+                        nC = chunkData[j].chunk;
                         break;
                     }
                 }
                 if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + CHUNK_SIZE + (nPos.x - CHUNK_SIZE);
-                ++NumOfValidDirections;
-            }else if (testPos.x >= CHUNK_SIZE){ // left
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkLeft == c){
-                        nC = chunkData[i].chunk;
+                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - 1);
+            }else if (testPos.x >= CHUNK_SIZE){ // right neighbor chunk
+                for(int j = 0; j < numberOfChunks; ++j){
+                    if(chunkData[j].chunkLeft == c){
+                        nC = chunkData[j].chunk;
                         break;
                     }
                 }
                 if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - nPos.x);
-                ++NumOfValidDirections;
-            }
-            if(testPos.y >= CHUNK_SIZE){ // up
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkUp == c){
-                        nC = chunkData[i].chunk;
+                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + 0;
+            }else if(testPos.y < 0){ // top neighbor chunk
+                for(int j = 0; j < numberOfChunks; ++j){
+                    if(chunkData[j].chunkDown == c){
+                        nC = chunkData[j].chunk;
                         break;
                     }
                 }
                 if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - nPos.y) * CHUNK_SIZE + nPos.x;
-                ++NumOfValidDirections;
-            }else if(testPos.y < 0){ // down
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkDown == c){
-                        nC = chunkData[i].chunk;
+                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - 1) * CHUNK_SIZE + nPos.x;
+            }else if(testPos.y >= CHUNK_SIZE){ // bottom neighbor chunk
+                for(int j = 0; j < numberOfChunks; ++j){
+                    if(chunkData[j].chunkUp == c){
+                        nC = chunkData[j].chunk;
                         break;
                     }
                 }
                 if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE + nPos.y) * CHUNK_SIZE + nPos.x;
-                ++NumOfValidDirections;
+                nIndex = nC * CHUNK_SIZE_SQUARED + 0 * CHUNK_SIZE + nPos.x;
+            }else{
+                continue;
             }
         }else{ // if in bounds
             nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
-            ++NumOfValidDirections;
         }
+
+        if (nIndex < 0 || nIndex >= NumberOfVoxels)
+            continue;
+
+        ++NumOfValidDirections;
 
 		if(voxelIds[index] == voxelIds[nIndex]){
 			float pressureDiff = voxelPressures[index] - voxelPressures[nIndex];

@@ -62,7 +62,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     std::vector<uint32_t>   idBuffer(numberOfVoxels);
     std::vector<ChunkConnectivityData> connectivityDataBuffer(chunkCount);
 
-    // Load data for shaders TODO: try to write directly to buffers, skipping vectors and such
+    // Load data for shaders
     uint16_t chunkIndex = 0;
     std::vector<Volume::Chunk*> chunksToUpdate;
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
