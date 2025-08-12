@@ -74,6 +74,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
 
+    std::cout << "Compiling voxel render shaders... ";
     this->voxelRenderProgram = new Shader::RenderShader(
         "VoxelArrayRender"
     );
@@ -89,6 +90,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     this->cursorRenderProgram = new Shader::RenderShader(
         "CursorRender"
     );
+    std::cout << "[Done]" << std::endl;
 
     // Quad VBO setup ----
     float quad[] = {

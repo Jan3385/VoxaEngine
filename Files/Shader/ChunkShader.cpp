@@ -28,9 +28,13 @@ Shader::ChunkShaderManager::ChunkShaderManager()
 
     glGenBuffers(1, &this->outputDataBuffer);
 
+    std::cout << "Compiling chunk compute shaders... ";
+
     this->heatShader = new ComputeShader("ChunkHeat");
     this->pressureShader = new ComputeShader("ChunkPressure");
     this->clearBufferShader = new ComputeShader("ClearOutputBuffer.comp", "Output buffer clearing");
+
+    std::cout << "[Done]" << std::endl;
 }
 
 Shader::ChunkShaderManager::~ChunkShaderManager()
