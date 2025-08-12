@@ -74,19 +74,19 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
         std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
     }
 
-    this->voxelRenderProgram = Shader::Shader(
+    this->voxelRenderProgram = new Shader::RenderShader(
         "VoxelArrayRender"
     );
-    this->temperatureRenderProgram = Shader::Shader(
+    this->temperatureRenderProgram = new Shader::RenderShader(
         "TemperatureVoxelArray"
     );
-    this->particleRenderProgram = Shader::Shader(
+    this->particleRenderProgram = new Shader::RenderShader(
         "ParticleArrayRender"
     );
-    this->closedShapeRenderProgram = Shader::Shader(
+    this->closedShapeRenderProgram = new Shader::RenderShader(
         "ClosedShape"
     );
-    this->cursorRenderProgram = Shader::Shader(
+    this->cursorRenderProgram = new Shader::RenderShader(
         "CursorRender"
     );
 
@@ -158,6 +158,17 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
 
 GameRenderer::~GameRenderer()
 {
+    if(this->voxelRenderProgram)
+        delete this->voxelRenderProgram;
+    if(this->temperatureRenderProgram)
+        delete this->temperatureRenderProgram;
+    if(this->particleRenderProgram)
+        delete this->particleRenderProgram;
+    if(this->closedShapeRenderProgram)
+        delete this->closedShapeRenderProgram;
+    if(this->cursorRenderProgram)
+        delete this->cursorRenderProgram;
+
     // Cleanup OpenGL resources
     glDeleteVertexArrays(1, &particleVAO);
     glDeleteBuffers(1, &particleVBO);
@@ -237,9 +248,9 @@ void GameRenderer::DrawClosedShape(const std::vector<glm::vec2> &points, const g
         return;
     }
 
-    closedShapeRenderProgram.Use();
-    closedShapeRenderProgram.SetVec4("uColor", color);
-    closedShapeRenderProgram.SetMat4("uProjection", projection);
+    closedShapeRenderProgram->Use();
+    closedShapeRenderProgram->SetVec4("uColor", color);
+    closedShapeRenderProgram->SetMat4("uProjection", projection);
 
     glBindBuffer(GL_ARRAY_BUFFER, closedShapeVBO);
     glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec2), points.data(), GL_DYNAMIC_DRAW);
@@ -259,9 +270,9 @@ void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const g
         return;
     }
 
-    closedShapeRenderProgram.Use();
-    closedShapeRenderProgram.SetVec4("uColor", color);
-    closedShapeRenderProgram.SetMat4("uProjection", projection);
+    closedShapeRenderProgram->Use();
+    closedShapeRenderProgram->SetVec4("uColor", color);
+    closedShapeRenderProgram->SetMat4("uProjection", projection);
 
     glBindVertexArray(VAO);
 
@@ -310,7 +321,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player)
         }
         ImGui::EndCombo();
     }
-    ImGui::SliderInt("Placement Radius", &GameEngine::instance->placementRadius, 1, 10);
+    ImGui::SliderInt("Placement Radius", &GameEngine::instance->placementRadius, 0, 10);
     ImGui::DragFloat("Placement Temperature", &GameEngine::instance->placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
     ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 10, 1, 2000);
     ImGui::Checkbox("Place Unmovable Solid Voxels", &GameEngine::instance->placeUnmovableSolidVoxels);
@@ -347,8 +358,8 @@ void GameRenderer::ToggleDebugRendering()
 
 void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projection)
 {
-    this->voxelRenderProgram.Use();
-    this->voxelRenderProgram.SetMat4("projection", projection);
+    this->voxelRenderProgram->Use();
+    this->voxelRenderProgram->SetMat4("projection", projection);
 
     for (VoxelObject* object : chunkMatrix.voxelObjects) {
         if(object == nullptr) continue;
@@ -366,8 +377,8 @@ void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projec
 
 void GameRenderer::RenderPlayer(Game::Player *player, glm::mat4 projection)
 {
-    this->voxelRenderProgram.Use();
-    this->voxelRenderProgram.SetMat4("projection", projection);    
+    this->voxelRenderProgram->Use();
+    this->voxelRenderProgram->SetMat4("projection", projection);
 
     if(player->ShouldRender()) {
         unsigned int voxelCount = player->UpdateRenderBuffer();
@@ -388,9 +399,9 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, Game::Player *player, 
     }
     this->chunkCreateBuffer.clear();
 
-    this->voxelRenderProgram.Use();
-    this->voxelRenderProgram.SetMat4("projection", projection);
-    
+    this->voxelRenderProgram->Use();
+    this->voxelRenderProgram->SetMat4("projection", projection);
+
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)){
             chunk->Render(false);
@@ -406,10 +417,10 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, Game::Player *player, 
 
 void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, Game::Player *player,  glm::mat4 projection)
 {
-    this->temperatureRenderProgram.Use();
-    this->temperatureRenderProgram.SetMat4("projection", projection);
-    this->temperatureRenderProgram.SetBool("showHeatAroundCursor", this->showHeatAroundCursor);
-    this->temperatureRenderProgram.SetVec2("cursorPosition", mousePos);
+    this->temperatureRenderProgram->Use();
+    this->temperatureRenderProgram->SetMat4("projection", projection);
+    this->temperatureRenderProgram->SetBool("showHeatAroundCursor", this->showHeatAroundCursor);
+    this->temperatureRenderProgram->SetVec2("cursorPosition", mousePos);
 
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(player->Camera)) {
@@ -426,8 +437,8 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
 {
     if(chunkMatrix.particles.size() > 0){
         this->UpdateParticleVBO(chunkMatrix);
-        this->particleRenderProgram.Use();
-        this->particleRenderProgram.SetMat4("projection", projection);
+        this->particleRenderProgram->Use();
+        this->particleRenderProgram->SetMat4("projection", projection);
         glBindVertexArray(this->particleVAO);
         glDrawArraysInstanced(
             GL_TRIANGLE_FAN, 0, 4, 
@@ -442,12 +453,12 @@ void GameRenderer::RenderCursor(glm::vec2 mousePos, Game::Player *player, glm::m
 
     cursorSize = player->gunEnabled ? 1 : cursorSize;
 
-    this->cursorRenderProgram.Use();
-    this->cursorRenderProgram.SetVec2("size", glm::vec2(cursorSize, cursorSize));
-    this->cursorRenderProgram.SetVec2("cursorPosition", mousePos);
-    this->cursorRenderProgram.SetMat4("projection", projection);
+    this->cursorRenderProgram->Use();
+    this->cursorRenderProgram->SetVec2("size", glm::vec2(cursorSize, cursorSize));
+    this->cursorRenderProgram->SetVec2("cursorPosition", mousePos);
+    this->cursorRenderProgram->SetMat4("projection", projection);
 
-    this->cursorRenderProgram.SetVec4("outlineColor", glm::vec4(1.0f, 1.0f, 1.0f, 0.9f));
+    this->cursorRenderProgram->SetVec4("outlineColor", glm::vec4(1.0f, 1.0f, 1.0f, 0.9f));
 
     glBindVertexArray(this->cursorVAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

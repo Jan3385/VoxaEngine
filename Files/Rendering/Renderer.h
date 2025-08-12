@@ -17,12 +17,12 @@ private:
     // Borrowed from Engine class
     SDL_GLContext *r_GLContext = nullptr;
 
-    Shader::Shader voxelRenderProgram;    
-    Shader::Shader temperatureRenderProgram;
-    Shader::Shader particleRenderProgram;    
-    Shader::Shader closedShapeRenderProgram;
-    Shader::Shader cursorRenderProgram;
-    
+    Shader::RenderShader *voxelRenderProgram = nullptr;    
+    Shader::RenderShader *temperatureRenderProgram = nullptr;
+    Shader::RenderShader *particleRenderProgram = nullptr;    
+    Shader::RenderShader *closedShapeRenderProgram = nullptr;
+    Shader::RenderShader *cursorRenderProgram = nullptr;
+
     void ToggleDebugRendering();
 
     void RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projection);

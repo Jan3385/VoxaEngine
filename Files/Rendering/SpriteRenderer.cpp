@@ -25,7 +25,7 @@ void SpriteRenderer::Initialize()
     if(initialized)
         return;
 
-    spriteRenderProgram = Shader::Shader(
+    spriteRenderProgram = new Shader::RenderShader(
         "SpriteRender"
     );
 
@@ -49,8 +49,8 @@ void SpriteRenderer::Initialize()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    spriteRenderProgram.Use();
-    spriteRenderProgram.SetInt("textureID", 0); // Set the texture sampler to use texture unit 0
+    spriteRenderProgram->Use();
+    spriteRenderProgram->SetInt("textureID", 0); // Set the texture sampler to use texture unit 0
 
     initialized = true;
 }
@@ -61,9 +61,9 @@ void SpriteRenderer::RenderSprite(Vec2f position, Vec2i size, float rotation, GL
     if(!initialized)
         return;
 
-    spriteRenderProgram.Use();
-    spriteRenderProgram.SetMat4("projection", projection);
-    spriteRenderProgram.SetVec4("tint", tint);
+    spriteRenderProgram->Use();
+    spriteRenderProgram->SetMat4("projection", projection);
+    spriteRenderProgram->SetVec4("tint", tint);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -72,8 +72,8 @@ void SpriteRenderer::RenderSprite(Vec2f position, Vec2i size, float rotation, GL
     model = glm::translate(model, glm::vec3(position.x, position.y, 0.0f));
     model = glm::rotate(model, rotation, glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, glm::vec3(size.x, size.y, 1.0f));
-    
-    spriteRenderProgram.SetMat4("model", model);
+
+    spriteRenderProgram->SetMat4("model", model);
 
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

@@ -39,6 +39,11 @@ void ChunkMatrix::cleanup()
         delete particle;
     }
     newParticles.clear();
+
+    if(chunkShaderManager) {
+        delete chunkShaderManager;
+        chunkShaderManager = nullptr;
+    }
 }
 
 Vec2i ChunkMatrix::WorldToChunkPosition(const Vec2f &pos)
@@ -82,7 +87,6 @@ Volume::Chunk *ChunkMatrix::GetChunkAtWorldPosition(const Vec2f &pos)
             return this->GridSegmented[AssignedGridPass][i];
         }
     }
-    
 
 	return nullptr;
 }
@@ -664,4 +668,12 @@ void ChunkMatrix::UpdateParticles()
             particles.erase(particles.begin() + i);
         }
     }
+}
+
+void ChunkMatrix::RunGPUSimulations()
+{
+    if(!this->chunkShaderManager) {
+        this->chunkShaderManager = new Shader::ChunkShaderManager();
+    }
+    this->chunkShaderManager->BatchRunChunkShaders(*this);
 }

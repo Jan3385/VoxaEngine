@@ -14,7 +14,7 @@ void FontRenderer::Initialize()
     if (initialized)
         return;
 
-    this->textRenderProgram = Shader::Shader(
+    this->textRenderProgram = new Shader::RenderShader(
         "TextRender"
     );
 
@@ -47,6 +47,8 @@ FontRenderer::~FontRenderer()
         return;
 
     delete this->pixelFont;
+    delete this->textRenderProgram;
+
     glDeleteVertexArrays(1, &this->VAO);
     glDeleteBuffers(1, &this->VBO);
     initialized = false;
@@ -55,10 +57,10 @@ FontRenderer::~FontRenderer()
 void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos, 
     float scale, const glm::vec4 &color, glm::mat4 projection)
 {
-    this->textRenderProgram.Use();
-    this->textRenderProgram.SetVec4("textColor", color);
-    this->textRenderProgram.SetMat4("projection", projection);
-    this->textRenderProgram.SetInt("textureID", 0);
+    this->textRenderProgram->Use();
+    this->textRenderProgram->SetVec4("textColor", color);
+    this->textRenderProgram->SetMat4("projection", projection);
+    this->textRenderProgram->SetInt("textureID", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(this->VAO);
 

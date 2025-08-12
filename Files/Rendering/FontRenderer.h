@@ -53,6 +53,6 @@ public:
     Font* pixelFont;
 private:
     bool initialized = false;
-    Shader::Shader textRenderProgram;
+    Shader::RenderShader *textRenderProgram = nullptr;
     GLuint VAO, VBO;
 };

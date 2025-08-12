@@ -16,7 +16,7 @@ private:
     GLuint quadVAO;
     GLuint quadVBO;
 
-    Shader::Shader spriteRenderProgram;
+    Shader::RenderShader *spriteRenderProgram = nullptr;
 public:
     SpriteRenderer();
     ~SpriteRenderer();

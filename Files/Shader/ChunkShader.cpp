@@ -4,91 +4,65 @@
 #include <cstring>
 
 #include "GameEngine.h"
+#include "ChunkShader.h"
 
-using namespace ChunkShader;
 
-// Buffer for storing temperature in FLOAT as Celsius
-GLuint ChunkShader::voxelTemperatureBuffer;
-// Buffer for storing heat capacity in FLOAT
-GLuint ChunkShader::voxelHeatCapacityBuffer;
-// Buffer for storing heat conductivity in FLOAT
-GLuint ChunkShader::voxelConductivityBuffer;
-// Buffer for storing pressure in FLOAT
-GLuint ChunkShader::voxelPressureBuffer;
-// Buffer for storing voxel IDs in UINT
-GLuint ChunkShader::voxelIdBuffer;
-// Output buffer for any output
-GLuint ChunkShader::outputDataBuffer;
+struct ChunkConnectivityData{
+    int32_t chunk;
+    int32_t chunkUp;
+    int32_t chunkDown;
+    int32_t chunkLeft;
+    int32_t chunkRight;
+    int32_t _pad[3]; // Padding to ensure alignment
+};
 
-// Chunk connectivity buffer
-GLuint ChunkShader::chunkConnectivityBuffer;
-
-GLuint  ChunkShader::pressureComputeShaderProgram, 
-        ChunkShader::heatComputeShaderProgram;
-
-GLuint ChunkShader::CompileComputeShader(const char* shaderSource)
+Shader::ChunkShaderManager::ChunkShaderManager()
 {
-    GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
-    glShaderSource(computeShader, 1, &shaderSource, NULL);
-    glCompileShader(computeShader);
+    glGenBuffers(1, &this->chunkConnectivityBuffer);
 
-    GLint success;
-    glGetShaderiv(computeShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetShaderInfoLog(computeShader, 512, NULL, infoLog);
-        std::cerr << "Error compiling compute shader: " << infoLog << std::endl;
-    }
+    glGenBuffers(1, &this->voxelTemperatureBuffer);
+    glGenBuffers(1, &this->voxelHeatCapacityBuffer);
+    glGenBuffers(1, &this->voxelConductivityBuffer);
+    glGenBuffers(1, &this->voxelPressureBuffer);
+    glGenBuffers(1, &this->voxelIdBuffer);
 
-    GLuint program = glCreateProgram();
-    glAttachShader(program, computeShader);
-    glLinkProgram(program);
+    glGenBuffers(1, &this->outputDataBuffer);
 
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        char infoLog[512];
-        glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cerr << "Error linking compute shader program: " << infoLog << std::endl;
-    }
-
-    glDeleteShader(computeShader);
-
-    return program;
+    this->heatShader = new ComputeShader("ChunkHeat");
+    this->pressureShader = new ComputeShader("ChunkPressure");
+    this->clearBufferShader = new ComputeShader("ClearOutputBuffer.comp", "Output buffer clearing");
 }
 
-void ChunkShader::InitializeBuffers()
+Shader::ChunkShaderManager::~ChunkShaderManager()
 {
-    glGenBuffers(1, &voxelTemperatureBuffer);
-    glGenBuffers(1, &voxelHeatCapacityBuffer);
-    glGenBuffers(1, &voxelConductivityBuffer);
-    glGenBuffers(1, &voxelPressureBuffer);
-    glGenBuffers(1, &voxelIdBuffer);
-    glGenBuffers(1, &outputDataBuffer);
-    glGenBuffers(1, &chunkConnectivityBuffer);
+    glDeleteBuffers(1, &this->chunkConnectivityBuffer);
+    glDeleteBuffers(1, &this->voxelTemperatureBuffer);
+    glDeleteBuffers(1, &this->voxelHeatCapacityBuffer);
+    glDeleteBuffers(1, &this->voxelConductivityBuffer);
+    glDeleteBuffers(1, &this->voxelPressureBuffer);
+    glDeleteBuffers(1, &this->voxelIdBuffer);
+    glDeleteBuffers(1, &this->outputDataBuffer);
+
+    delete this->heatShader;
+    delete this->pressureShader;
+    delete this->clearBufferShader;
 }
 
-void ChunkShader::InitializeComputeShaders()
-{
-    heatComputeShaderProgram = CompileComputeShader(computeShaderHeat);
-    pressureComputeShaderProgram = CompileComputeShader(computeShaderPressure);
-}
-
-void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
+void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 {
     uint16_t chunkCount = static_cast<uint16_t>(chunkMatrix.Grid.size());
-
     if(chunkCount == 0) return; // No chunks to process
 
-    uint32_t NumberOfVoxels = chunkCount * Volume::Chunk::CHUNK_SIZE_SQUARED;
+    uint32_t numberOfVoxels = chunkCount * Volume::Chunk::CHUNK_SIZE_SQUARED;
 
-    std::vector<float> temperatureBuffer(NumberOfVoxels);
-    std::vector<float> heatCapacityBuffer(NumberOfVoxels);
-    std::vector<float> heatConductivityBuffer(NumberOfVoxels);
-    std::vector<float> pressureBuffer(NumberOfVoxels);
-    std::vector<uint32_t> idBuffer(NumberOfVoxels);
+    std::vector<float>      temperatureBuffer(numberOfVoxels);
+    std::vector<float>      heatCapacityBuffer(numberOfVoxels);
+    std::vector<float>      heatConductivityBuffer(numberOfVoxels);
+    std::vector<float>      pressureBuffer(numberOfVoxels);
+    std::vector<uint32_t>   idBuffer(numberOfVoxels);
     std::vector<ChunkConnectivityData> connectivityDataBuffer(chunkCount);
 
-    // Load data for shaders
+    // Load data for shaders TODO: try to write directly to buffers, skipping vectors and such
     uint16_t chunkIndex = 0;
     std::vector<Volume::Chunk*> chunksToUpdate;
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
@@ -101,7 +75,8 @@ void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
             chunkIndex++
         );
 
-        ChunkShader::ChunkConnectivityData *data = &connectivityDataBuffer[i];
+        // Set up chunk connectivity data
+        ChunkConnectivityData *data = &connectivityDataBuffer[i];
         data->chunk = i;
         data->chunkUp = -1;
         data->chunkDown = -1;
@@ -124,31 +99,50 @@ void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
         }
     }
 
-    UploadDataToBuffer(voxelTemperatureBuffer, temperatureBuffer.data(), NumberOfVoxels);
-    UploadDataToBuffer(voxelHeatCapacityBuffer, heatCapacityBuffer.data(), NumberOfVoxels);
-    UploadDataToBuffer(voxelConductivityBuffer, heatConductivityBuffer.data(), NumberOfVoxels);
-    UploadDataToBuffer(voxelPressureBuffer, pressureBuffer.data(), NumberOfVoxels);
-    UploadDataToBuffer(voxelIdBuffer, idBuffer.data(), NumberOfVoxels);
-    UploadDataToBuffer(chunkConnectivityBuffer, connectivityDataBuffer.data(), chunkCount);
+    ComputeShader::UploadDataToBuffer(this->voxelTemperatureBuffer, temperatureBuffer.data(), numberOfVoxels);
+    ComputeShader::UploadDataToBuffer(this->voxelHeatCapacityBuffer, heatCapacityBuffer.data(), numberOfVoxels);
+    ComputeShader::UploadDataToBuffer(this->voxelConductivityBuffer, heatConductivityBuffer.data(), numberOfVoxels);
+    ComputeShader::UploadDataToBuffer(this->voxelPressureBuffer, pressureBuffer.data(), numberOfVoxels);
+    ComputeShader::UploadDataToBuffer(this->voxelIdBuffer, idBuffer.data(), numberOfVoxels);
 
-    ClearOutputBuffer(NumberOfVoxels);
-    RunChunkHeatShader(chunkCount);
-    float* heatOutputData = ReadDataFromOutputBuffer<float>(NumberOfVoxels);
+    ComputeShader::UploadDataToBuffer(this->chunkConnectivityBuffer, connectivityDataBuffer.data(), chunkCount);
 
-    ClearOutputBuffer(NumberOfVoxels);
-    RunChunkPressureShader(chunkCount);
-    float* pressureOutputData = ReadDataFromOutputBuffer<float>(NumberOfVoxels);
+    float *heatOutput = nullptr;
+    if(GameEngine::instance->runHeatSimulation)
+    {
+        this->ClearOutputBuffer(numberOfVoxels); //TODO: fix
+        this->BindHeatShaderBuffers();
+        this->heatShader->Use();
+
+        this->heatShader->SetUnsignedInt("NumberOfVoxels", numberOfVoxels);
+
+        this->heatShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
+        heatOutput = ComputeShader::ReadDataFromBuffer<float>(this->outputDataBuffer, numberOfVoxels);
+    }
+
+    float *pressureOutput = nullptr;
+    if(GameEngine::instance->runPressureSimulation)
+    {
+        this->ClearOutputBuffer(numberOfVoxels);
+        this->BindPressureShaderBuffers();
+        this->pressureShader->Use();
+        
+        this->pressureShader->SetUnsignedInt("NumberOfVoxels", numberOfVoxels);
+
+        this->pressureShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
+        pressureOutput = ComputeShader::ReadDataFromBuffer<float>(this->outputDataBuffer, numberOfVoxels);
+    }
 
     #pragma omp parallel for
-    for(uint32_t i = 0; i < NumberOfVoxels; ++i){
+    for (uint32_t i = 0; i < numberOfVoxels; i++) {
         uint16_t chunkIndex = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
         uint16_t voxelIndex = i % Volume::Chunk::CHUNK_SIZE_SQUARED;	
         uint16_t x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
         auto& chunk = chunkMatrix.Grid[chunkIndex];
-        chunk->voxels[y][x]->temperature.SetCelsius(heatOutputData[i]);
-        chunk->voxels[y][x]->amount = pressureOutputData[i];
+        if(heatOutput) chunk->voxels[y][x]->temperature.SetCelsius(heatOutput[i]);
+        if(pressureOutput) chunk->voxels[y][x]->amount = pressureOutput[i];
 
         std::string newId = chunk->voxels[y][x]->ShouldTransitionToID();
         if(!newId.empty()){
@@ -156,373 +150,47 @@ void ChunkShader::RunChunkShaders(ChunkMatrix &chunkMatrix)
         }
     }
 
-    delete[] heatOutputData;
-    delete[] pressureOutputData;
+    delete[] heatOutput;
+    delete[] pressureOutput;
 }
 
-// Uploads data to a buffer of type T.
-template<typename T>
-void ChunkShader::UploadDataToBuffer(GLuint buffer, const T* data, size_t amount){
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, amount * sizeof(T), data, GL_STATIC_DRAW); 
-}
-
-// Uploads data to a Uniform Buffer Object (UBO) of type T.
-template<typename T>
-void ChunkShader::UploadDataToUBO(GLuint UBO, const T* data, size_t amount){
-    glBindBuffer(GL_UNIFORM_BUFFER, UBO);
-    glBufferData(GL_UNIFORM_BUFFER, amount * sizeof(T), data, GL_STATIC_DRAW); 
-}
-
-/**
- * Reads data from the output buffer and returns a pointer to an array of type T.
- * @attention The caller is responsible for deleting the returned pointer!
- * @param VoxelAmount The number of elements to read from the output buffer.
- * @return A pointer to an array of type T containing the data read from the output buffer.
- */
-template <typename T>
-T *ChunkShader::ReadDataFromOutputBuffer(size_t VoxelAmount)
+void Shader::ChunkShaderManager::BindHeatShaderBuffers()
 {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputDataBuffer);
-    T* data = static_cast<T*>(glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY));
-    if (!data) {
-        throw std::runtime_error("Failed to map output buffer for ChunkShader (NULLPTR)");
-    }
-
-    T* result = new T[VoxelAmount];
-    std::memcpy(result, data, VoxelAmount * sizeof(T));
-    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    return result;
+    ComputeShader::BindBufferAt(0, this->outputDataBuffer);
+    ComputeShader::BindBufferAt(1, this->voxelTemperatureBuffer);
+    ComputeShader::BindBufferAt(2, this->voxelHeatCapacityBuffer);
+    ComputeShader::BindBufferAt(3, this->voxelConductivityBuffer);
+    ComputeShader::BindBufferAt(4, this->chunkConnectivityBuffer);
 }
 
-// Needs set voxelIdBuffer, voxelPressureBuffer, chunkConnectivityUniformBuffer.. Sets outputDataBuffer (FLOAT)
-void ChunkShader::RunChunkPressureShader(size_t NumberOfChunks){
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, outputDataBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, voxelIdBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, voxelPressureBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, chunkConnectivityBuffer);
-    
-    glUseProgram(pressureComputeShaderProgram);
-
-    GLint location = glGetUniformLocation(pressureComputeShaderProgram, "NumberOfVoxels");
-    if (location == -1) {
-        throw std::runtime_error("Failed to get uniform location for NumberOfVoxels in pressure compute shader");
-    }
-    glUniform1ui(location, NumberOfChunks * Volume::Chunk::CHUNK_SIZE_SQUARED);
-
-    glDispatchCompute(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, NumberOfChunks);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-}
-// Needs set voxelTemperatureBuffer, voxelHeatCapacityBuffer, voxelConductivityBuffer, chunkConnectivityUniformBuffer.. Sets outputDataBuffer (FLOAT)
-void ChunkShader::RunChunkHeatShader(size_t NumberOfChunks) {
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, outputDataBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, voxelTemperatureBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, voxelHeatCapacityBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, voxelConductivityBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, chunkConnectivityBuffer);
-
-    glUseProgram(heatComputeShaderProgram);
-
-    GLint location = glGetUniformLocation(heatComputeShaderProgram, "NumberOfVoxels");
-    if (location == -1) {
-        throw std::runtime_error("Failed to get uniform location for NumberOfVoxels in heat compute shader");
-    }
-    glUniform1ui(location, NumberOfChunks * Volume::Chunk::CHUNK_SIZE_SQUARED);
-
-    glDispatchCompute(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, NumberOfChunks);
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    
-}
-
-void ChunkShader::ClearOutputBuffer(size_t VoxelAmount)
+void Shader::ChunkShaderManager::BindPressureShaderBuffers()
 {
-    std::vector<float> zeros(VoxelAmount, 0.0f);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputDataBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, VoxelAmount * sizeof(float), zeros.data(), GL_DYNAMIC_COPY);
+    ComputeShader::BindBufferAt(0, this->outputDataBuffer);
+    ComputeShader::BindBufferAt(1, this->voxelIdBuffer);
+    ComputeShader::BindBufferAt(2, this->voxelPressureBuffer);
+    ComputeShader::BindBufferAt(3, this->chunkConnectivityBuffer);
 }
 
-const char* ChunkShader::computeShaderHeat = R"glsl(#version 460 core
-layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
+void Shader::ChunkShaderManager::ClearOutputBuffer(GLuint size)
+{
+    static GLuint lastSize = 0;
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputDataBuffer);
 
-#define TEMPERATURE_TRANSITION_SPEED 80
-
-#define CHUNK_SIZE 64
-#define CHUNK_SIZE_SQUARED 4096
-
-#define DIRECTION_COUNT 4
-
-const ivec2 directions[DIRECTION_COUNT] = {
-    ivec2(0, -1),
-    ivec2(-1, 0),
-    ivec2(1, 0),
-    ivec2(0, 1),
-};
-
-struct ChunkConnectivityData{
-    int chunk;
-    int chunkUp;
-    int chunkDown;
-    int chunkLeft;
-    int chunkRight;
-    int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
-};
-
-// flattened arrays (c = chunk, x = x, y = y)
-layout(std430, binding = 0) buffer OutputBuffer {
-    float voxelTempsOut[];
-};
-layout(std430, binding = 1) buffer TemperatureBuffer {
-    float voxelTemps[];
-};
-layout(std430, binding = 2) buffer HeatCapacityBuffer {
-    float voxelHeatCapacity[];
-};
-layout(std430, binding = 3) buffer ConductivityBuffer {
-    float voxelConductivity[];
-};
-
-uniform uint NumberOfVoxels; // total number of voxels in the simulation
-
-layout(std430, binding = 4) buffer ChunkBuffer {
-    ChunkConnectivityData chunkData[];
-};
-
-
-void main(){
-    uint x = gl_GlobalInvocationID.x;
-    uint y = gl_GlobalInvocationID.y;
-    uint c = gl_GlobalInvocationID.z;
-
-    uint localX = x % CHUNK_SIZE;
-    uint localY = y % CHUNK_SIZE;
-
-    uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
-
-    uint numberOfChunks = NumberOfVoxels / CHUNK_SIZE_SQUARED;
-
-    float sum = 0.0;
-
-    ivec2 pos = ivec2(x, y);
-    ivec2 localPos = ivec2(localX, localY);
-
-    uint NumOfValidDirections = 0;
-    for(int i = 0; i < DIRECTION_COUNT; ++i){
-        ivec2 testPos = localPos + directions[i];
-
-        ivec2 nPos = pos + directions[i];
-        uint nIndex;
-
-        // forbid diagonal heat transfer
-        if((testPos.x < 0 || testPos.x >= CHUNK_SIZE) && (testPos.y < 0 || testPos.y >= CHUNK_SIZE))
-            continue;
-
-        // if out of bounds from current chunk
-        if(testPos.x < 0 || testPos.x >= CHUNK_SIZE || testPos.y < 0 || testPos.y >= CHUNK_SIZE) {
-            if(testPos.x < 0){ // right
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkRight == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + CHUNK_SIZE + (nPos.x - CHUNK_SIZE);
-            }else if (testPos.x >= CHUNK_SIZE){ // left
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkLeft == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - nPos.x);
-            }
-            if(testPos.y >= CHUNK_SIZE){ // up
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkUp == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - nPos.y) * CHUNK_SIZE + nPos.x;
-            }else if(testPos.y < 0){ // down
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkDown == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE + nPos.y) * CHUNK_SIZE + nPos.x;
-            }
-        }else{ // if in bounds
-            nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
-        }
-
-        if (nIndex < 0 || nIndex >= NumberOfVoxels)
-            continue;
-
-        ++NumOfValidDirections;
-        
-        float heatCapacity = voxelHeatCapacity[index]/TEMPERATURE_TRANSITION_SPEED;
-        float heatDiff = voxelTemps[nIndex] - voxelTemps[index];
-        float heatTrans = heatDiff * voxelConductivity[nIndex] / heatCapacity;
-
-        if(heatCapacity <= 0.0f)
-            heatTrans = 0.0f;
-
-        sum += heatTrans;
+    // Only reallocate if size changed
+    if (lastSize != size) {
+        glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(float), nullptr, GL_DYNAMIC_COPY);
+        lastSize = size;
     }
 
-    if(NumOfValidDirections == 0) NumOfValidDirections = 1;
-    
-    voxelTempsOut[index] = voxelTemps[index] + (sum / NumOfValidDirections);
+    // Clear buffer data
+    #ifdef GL_VERSION_4_3
+    glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
+    #else
+    // Fallback - map and memset to zero
+    void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+    if (ptr) {
+        memset(ptr, 0, size * sizeof(float));
+        glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    }
+    #endif
 }
-)glsl";
-
-const char* ChunkShader::computeShaderPressure = R"glsl(#version 460 core
-layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
-
-// bigger number = slower
-#define PRESSURE_TRANSITION_SPEED 1.1
-
-#define CHUNK_SIZE 64
-#define CHUNK_SIZE_SQUARED 4096
-
-#define DIRECTION_COUNT 4
-
-const ivec2 directions[DIRECTION_COUNT] = {
-    ivec2(0, -1),
-    ivec2(-1, 0),
-    ivec2(1, 0),
-    ivec2(0, 1),
-};
-struct ChunkConnectivityData{
-    int chunk;
-    int chunkUp;
-    int chunkDown;
-    int chunkLeft;
-    int chunkRight;
-    int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
-};
-
-layout(std430, binding = 0) buffer OutputChunkBuffer {
-    float voxelPressureOut[];
-};
-layout(std430, binding = 1) buffer IdBuffer {
-    uint voxelIds[];
-};
-layout(std430, binding = 2) buffer PressureBuffer {
-    float voxelPressures[];
-};
-
-uniform uint NumberOfVoxels; // total number of voxels in the simulation
-
-layout(std430, binding = 3) buffer ChunkBuffer {
-    ChunkConnectivityData chunkData[];
-};
-
-void main(){
-	uint x = gl_GlobalInvocationID.x;
-    uint y = gl_GlobalInvocationID.y;
-    uint c = gl_GlobalInvocationID.z;
-
-    uint localX = x % CHUNK_SIZE;
-    uint localY = y % CHUNK_SIZE;
-
-	uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
-
-	// if not gas, return
-	if((voxelIds[index] & (0x1 << 31)) != 0){
-		voxelPressureOut[index] = voxelPressures[index];
-		return;
-	}
-
-	uint numberOfChunks = NumberOfVoxels / CHUNK_SIZE_SQUARED;
-
-	float sum = 0.0;
-
-	ivec2 pos = ivec2(x, y);
-    ivec2 localPos = ivec2(localX, localY);
-
-	uint NumOfValidDirections = 0;
-	for(int i = 0; i < DIRECTION_COUNT; ++i){
-		ivec2 testPos = localPos + directions[i];
-        ivec2 nPos = pos + directions[i];
-        uint nIndex;
-
-        // forbid diagonal heat transfer
-        if((testPos.x < 0 || testPos.x >= CHUNK_SIZE) && (testPos.y < 0 || testPos.y >= CHUNK_SIZE))
-            continue;
-
-		// if out of bounds from current chunk
-        if(testPos.x < 0 || testPos.x >= CHUNK_SIZE || testPos.y < 0 || testPos.y >= CHUNK_SIZE) {
-            if(testPos.x < 0){ // right
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkRight == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + CHUNK_SIZE + (nPos.x - CHUNK_SIZE);
-                ++NumOfValidDirections;
-            }else if (testPos.x >= CHUNK_SIZE){ // left
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkLeft == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + (CHUNK_SIZE - nPos.x);
-                ++NumOfValidDirections;
-            }
-            if(testPos.y >= CHUNK_SIZE){ // up
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkUp == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE - nPos.y) * CHUNK_SIZE + nPos.x;
-                ++NumOfValidDirections;
-            }else if(testPos.y < 0){ // down
-                int nC = -1;
-                for(int i = 0; i < numberOfChunks; ++i){
-                    if(chunkData[i].chunkDown == c){
-                        nC = chunkData[i].chunk;
-                        break;
-                    }
-                }
-                if(nC == -1) continue;
-                nIndex = nC * CHUNK_SIZE_SQUARED + (CHUNK_SIZE + nPos.y) * CHUNK_SIZE + nPos.x;
-                ++NumOfValidDirections;
-            }
-        }else{ // if in bounds
-            nIndex = c * CHUNK_SIZE_SQUARED + nPos.y * CHUNK_SIZE + nPos.x;
-            ++NumOfValidDirections;
-        }
-
-		if(voxelIds[index] == voxelIds[nIndex]){
-			float pressureDiff = voxelPressures[index] - voxelPressures[nIndex];
-			float pressureTransfer = pressureDiff / PRESSURE_TRANSITION_SPEED;
-			sum += pressureTransfer;
-		}else
-			--NumOfValidDirections;
-	}
-
-	if(NumOfValidDirections == 0) NumOfValidDirections = 1;
-    
-    voxelPressureOut[index] = voxelPressures[index] - (sum / NumOfValidDirections);
-}
-)glsl";

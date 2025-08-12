@@ -6,6 +6,7 @@
 
 #include "World/Chunk.h"
 #include "GameObject/Player.h"
+#include "Shader/ChunkShader.h"
 
 class ChunkMatrix {
 public:
@@ -14,7 +15,7 @@ public:
 
 	// cleans the chunkMatrix
 	void cleanup();
-	
+
 	//mutex for changing the voxels, mainly handeled by the simulation thread
 	std::mutex voxelMutex;
 	std::mutex chunkCreationMutex;
@@ -64,11 +65,16 @@ public:
 	//particle functions
 	void UpdateParticles();
 
+	void RunGPUSimulations();
+
 	//Static functions
 	static Vec2i WorldToChunkPosition(const Vec2f& pos);
 	static Vec2f ChunkToWorldPosition(const Vec2i& pos);
 	static Vec2f MousePosToWorldPos(const Vec2f& mousePos, const Vec2f &cameraOffset);
 private:
 	bool cleaned = false;
+
+	// Chunk shader manager for handling chunk-related shaders
+	Shader::ChunkShaderManager *chunkShaderManager = nullptr;
 };
 

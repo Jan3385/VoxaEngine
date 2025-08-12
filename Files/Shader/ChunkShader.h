@@ -1,59 +1,49 @@
 #pragma once
 
+#include "Shader/Computing/ComputeShader.h"
+
 #include <cstdint>
 #include <GL/glew.h>
 
 class ChunkMatrix; // Forward declaration
 
-namespace ChunkShader{
-       GLuint CompileComputeShader(const char* shaderSource);
+namespace Shader{
+       class ChunkShaderManager {
+       public:
+              ChunkShaderManager();
+              ~ChunkShaderManager();
 
-       struct ChunkConnectivityData{
-              int32_t chunk;
-              int32_t chunkUp;
-              int32_t chunkDown;
-              int32_t chunkLeft;
-              int32_t chunkRight;
-              int32_t _pad[3]; // Padding to ensure alignment
+              // collects data for shaders & runs a batch of several chunk shaders
+              void BatchRunChunkShaders(ChunkMatrix& chunkMatrix);
+
+              void BindHeatShaderBuffers();
+              void BindPressureShaderBuffers();
+
+              void ClearOutputBuffer(GLuint size);
+       private:
+              // ----- Buffers -----
+
+              // Chunk connectivity buffer
+              GLuint chunkConnectivityBuffer = 0;
+
+              // Buffer for storing temperature in FLOAT as Celsius
+              GLuint voxelTemperatureBuffer = 0;
+              // Buffer for storing heat capacity in FLOAT
+              GLuint voxelHeatCapacityBuffer = 0;
+              // Buffer for storing heat conductivity in FLOAT
+              GLuint voxelConductivityBuffer = 0;
+              // Buffer for storing pressure in FLOAT
+              GLuint voxelPressureBuffer = 0;
+              // Buffer for storing voxel IDs in UINT
+              GLuint voxelIdBuffer = 0;
+              // Output buffer for any output
+              GLuint outputDataBuffer = 0;
+
+              // -------------------
+
+
+              ComputeShader *heatShader = nullptr;
+              ComputeShader *pressureShader = nullptr;
+              ComputeShader *clearBufferShader = nullptr;
        };
-
-       // Buffer for storing temperature in FLOAT as Celsius
-       extern GLuint voxelTemperatureBuffer;
-       // Buffer for storing heat capacity in FLOAT
-       extern GLuint voxelHeatCapacityBuffer;
-       // Buffer for storing heat conductivity in FLOAT
-       extern GLuint voxelConductivityBuffer;
-       // Buffer for storing pressure in FLOAT
-       extern GLuint voxelPressureBuffer;
-       // Buffer for storing voxel IDs in UINT
-       extern GLuint voxelIdBuffer;
-       // Output buffer for any output
-       extern GLuint outputDataBuffer;
-
-       // Chunk connectivity buffer
-       extern GLuint chunkConnectivityBuffer;
-
-       extern GLuint pressureComputeShaderProgram, 
-              heatComputeShaderProgram;
-
-       extern const char* computeShaderHeat;
-       extern const char* computeShaderPressure;
-
-       void InitializeBuffers();
-       void InitializeComputeShaders();
-       
-       void RunChunkShaders(ChunkMatrix& chunkMatrix);
-
-       template<typename T>
-       void UploadDataToBuffer(GLuint buffer, const T* data, size_t amount);
-
-       template<typename T>
-       void UploadDataToUBO(GLuint UBO, const T* data, size_t amount);
-
-       void RunChunkPressureShader(size_t NumberOfChunks);
-       void RunChunkHeatShader(size_t NumberOfChunks);
-
-       template <typename T>
-       T *ReadDataFromOutputBuffer(size_t VoxelAmount);
-       void ClearOutputBuffer(size_t VoxelAmount);
 }
