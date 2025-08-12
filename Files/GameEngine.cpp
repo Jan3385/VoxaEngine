@@ -221,6 +221,10 @@ void GameEngine::PollEvents()
                 case SDL_MOUSEBUTTONDOWN:
                     m_OnMouseButtonDown(this->windowEvent.button);
                     break;
+                case SDL_MOUSEWHEEL:
+                    this->placementRadius += this->windowEvent.wheel.y;
+                    this->placementRadius = std::clamp(this->placementRadius, 0, 10);
+                    break;
             }
         }
         //keyboard (except keyUp)
