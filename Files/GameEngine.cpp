@@ -296,19 +296,19 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_t:
                 {
-                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
+                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
                 Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, this->physics);
                 }
                 break;
             case SDLK_z:
                 {
-                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
+                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
                 Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, this->physics);
                 }
                 break;
             case SDLK_u:
                 {
-                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner*Volume::Chunk::RENDER_VOXEL_SIZE);
+                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
                 Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, this->physics);
                 }
                 break;
