@@ -84,7 +84,7 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
     shapeDef.density = avarageDensity;
 
     b2Vec2 centerOffset = b2Vec2(
-        (this->width - 1) / 2.0f, 
+        (this->width) / 2.0f, 
         (this->height) / 2.0f);
 
     for(Triangle t : triangles){
