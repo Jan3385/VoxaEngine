@@ -7,6 +7,11 @@ GLuint Shader::Shader::activeShaderID = 0;
 
 void Shader::Shader::Use() const
 {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "[OnUSE-" << this->name << "] GL error: [" << err << "]" << std::endl;
+    }
+
     if (ID == 0)
         throw std::runtime_error("Shader program with ID 0 is not valid.");
     

@@ -187,6 +187,11 @@ GameRenderer::~GameRenderer()
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "[PreRender] GL error: [" << err << "]" << std::endl;
+    }
+
     // clear screen with a light blue color
     glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -236,9 +241,8 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
 
     Shader::Shader::UnsetActiveShaderCache();
 
-    GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "GL error: [" << err << "]" << std::endl;
+        std::cerr << "[Render] GL error: [" << err << "]" << std::endl;
     }
 }
 
@@ -366,6 +370,8 @@ void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projec
     for (VoxelObject* object : chunkMatrix.voxelObjects) {
         if(object == nullptr) continue;
         if(!object->ShouldRender()) continue;
+
+        auto pos = object->GetPosition();
 
         unsigned int voxelCount = object->UpdateRenderBuffer();
 

@@ -12,6 +12,7 @@ Shader::ComputeShader::ComputeShader(const char *shaderPathName)
 
 Shader::ComputeShader::ComputeShader(const char *computePath, std::string shaderName)
 {
+    this->name = shaderName.empty() ? "Unnamed Compute Shader" : shaderName;
     std::string printShaderName = shaderName.empty() ? "[Unnamed Compute Shader] " : "[" + shaderName + "] ";
 
     std::string trueComputePathStr = shaderDirectory + std::string(computePath);
@@ -58,10 +59,19 @@ Shader::ComputeShader::ComputeShader(const char *computePath, std::string shader
 
 void Shader::ComputeShader::Run(GLuint workGroupX, GLuint workGroupY, GLuint workGroupZ) const
 {
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "[PRE-" << this->name << "] GL error: [" << err << "]" << std::endl;
+    }
+
     this->Use();
 
     glDispatchCompute(workGroupX, workGroupY, workGroupZ);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "[" << this->name << "] GL error: [" << err << "]" << std::endl;
+    }
 }
 
 void Shader::ComputeShader::BindBufferAt(GLuint bindingPoint, GLuint buffer)

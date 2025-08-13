@@ -36,6 +36,7 @@ namespace Shader
         void SetVec3(const std::string &name, glm::vec3 value);
         void SetVec4(const std::string &name, glm::vec4 value);
     protected:
+        std::string name;
         GLuint CompileShader(const char* shaderSource, const std::string& shaderName, GLenum shaderType);
     private:
         std::unordered_map<std::string, GLint> uniformLocationCache;

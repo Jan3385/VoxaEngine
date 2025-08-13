@@ -14,6 +14,7 @@ Shader::RenderShader::RenderShader(const char* shaderPathName)
 
 Shader::RenderShader::RenderShader(const char* vertexPath, const char* fragmentPath, std::string shaderName)
 {
+    this->name = shaderName.empty() ? "Unnamed Render Shader" : shaderName;
     std::string printShaderName = shaderName.empty() ? "[Unnamed Render Shader] " : "[" + shaderName + "] ";
 
     std::string trueVertexPathStr = shaderDirectory + std::string(vertexPath);
