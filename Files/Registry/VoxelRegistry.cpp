@@ -376,16 +376,6 @@ void Registry::VoxelRegistry::CloseRegistry()
 		return a.fromID < b.fromID;
 	});
 
-	// print the reactions
-	for (const auto& reaction : reactions) {
-		std::cout << "Reaction: fromID=" << reaction.fromID
-				  << ", catalystID=" << reaction.catalystID
-				  << ", toID=" << reaction.toID
-				  << ", speed=" << reaction.reactionSpeed
-				  << ", preserveCatalyst=" << reaction.preserveCatalyst
-				  << ", minTemp=" << reaction.minTemperatureC << std::endl;
-	}
-
 	// Upload chemical reactions to a GPU buffer
 	glGenBuffers(1, &VoxelRegistry::chemicalReactionsBuffer);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, VoxelRegistry::chemicalReactionsBuffer);

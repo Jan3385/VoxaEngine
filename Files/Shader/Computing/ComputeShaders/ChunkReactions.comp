@@ -220,6 +220,16 @@ void main(){ //TODO: IDs have a flag which breaks everything
 
             uint newVoxelIndex = atomicCounterIncrement(outputCounter);
             changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, localX, localY, c);
+
+            if(!bool(reactions[j].preserveCatalyst)){
+                break;
+                newVoxelIndex = atomicCounterIncrement(outputCounter);
+
+                // TODO: get local position of the neighbour with its chunk
+                
+                changes[newVoxelIndex] = NewVoxelChange(reactions[j].catalystID, localX, localY, c);
+            }
+
             break;
         }
     }
