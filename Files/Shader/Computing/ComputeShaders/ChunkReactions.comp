@@ -66,11 +66,11 @@ uint GetVoxelIndex(uint x, uint y, uint chunk) {
     return chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 }
 
-// output 0 means bad transfer, skip
+// output uint(-1) means bad transfer, skip
 uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) {
     // forbid diagonals
     if((localPos.x < 0 || localPos.x >= CHUNK_SIZE) && (localPos.y < 0 || localPos.y >= CHUNK_SIZE))
-        return 0;
+        return uint(-1);
 
     uint index = 0;
     
@@ -85,7 +85,7 @@ uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) 
                     break;
                 }
             }
-            if(nC == -1) return 0;
+            if(nC == -1) return uint(-1);
             // x = CHUNK_SIZE-1 in neighbor, y stays the same
             index = GetVoxelIndex(CHUNK_SIZE - 1, localPos.y, nC);
 
@@ -96,7 +96,7 @@ uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) 
                     break;
                 }
             }
-            if(nC == -1) return 0;
+            if(nC == -1) return uint(-1);
             // x = 0 in neighbor, y stays the same
             index = GetVoxelIndex(0, localPos.y, nC);
 
@@ -107,7 +107,7 @@ uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) 
                     break;
                 }
             }
-            if(nC == -1) return 0;
+            if(nC == -1) return uint(-1);
             // y = CHUNK_SIZE-1 in neighbor, x stays the same
             index = GetVoxelIndex(localPos.x, CHUNK_SIZE - 1, nC);
 
@@ -118,7 +118,7 @@ uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) 
                     break;
                 }
             }
-            if(nC == -1) return 0;
+            if(nC == -1) return uint(-1);
             // y = 0 in neighbor, x stays the same
             index = GetVoxelIndex(localPos.x, 0, nC);
 
@@ -133,7 +133,7 @@ uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) 
 ivec3 GetLocalPosAndChunkFromOOBLocalPos(ivec2 localPos, uint chunk, uint numberOfChunks) {
     // forbid diagonals
     if((localPos.x < 0 || localPos.x >= CHUNK_SIZE) && (localPos.y < 0 || localPos.y >= CHUNK_SIZE))
-        return ivec3(0, 0, 0);
+        return ivec3(-1, -1, -1);
 
     int nC = -1;
     if(localPos.x < 0){ // left neighbor chunk
@@ -250,7 +250,7 @@ void main(){
         // get index from position
         uint nIndex = GetIndexFromLocalPosition(testPos, c, numberOfChunks);
 
-        if (nIndex <= 0 || nIndex >= NumberOfVoxels)
+        if (nIndex == uint(-1) || nIndex >= NumberOfVoxels)
             continue;
 
         // check reactions
@@ -272,11 +272,12 @@ void main(){
             changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, localX, localY, c);
 
             if((reactions[j].preserveCatalyst & 1) == 0){
-                newVoxelIndex = atomicCounterIncrement(outputCounter);
-
                 ivec3 neighborPos = GetLocalPosAndChunkFromOOBLocalPos(testPos, c, numberOfChunks);
 
-                changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, neighborPos.x, neighborPos.y, neighborPos.z);
+                if(neighborPos != ivec3(-1, -1, -1)){
+                    newVoxelIndex = atomicCounterIncrement(outputCounter);
+                    changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, neighborPos.x, neighborPos.y, neighborPos.z);
+                }
             }
 
             break;
