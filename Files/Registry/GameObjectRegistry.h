@@ -51,7 +51,9 @@ namespace Registry
 
         static void RegisterGameObject(const std::string &name, GameObjectProperty property);
         static void SetVoxelsFromFile(GameObjectProperty &property, const std::string &fileName);
+
         static void RegisterObjects();
+        static void CloseRegistry();
 
         static std::string GetVoxelFromColorID(uint32_t colorId);
 
@@ -59,6 +61,6 @@ namespace Registry
 		static std::unordered_map<uint32_t, GameObjectProperty*> idRegistry;
     private:
         static uint32_t idCounter;
-		static bool registriesClosed;
+		static bool registryClosed;
     };
 }

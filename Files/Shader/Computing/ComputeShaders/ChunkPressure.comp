@@ -10,6 +10,16 @@ layout(std430, binding = 1) buffer IdBuffer {
 layout(std430, binding = 2) buffer PressureBuffer {
     float voxelPressures[];
 };
+
+struct ChunkConnectivityData{
+    int chunk;
+    int chunkUp;
+    int chunkDown;
+    int chunkLeft;
+    int chunkRight;
+    int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
+};
+
 layout(std430, binding = 3) buffer ChunkBuffer {
     ChunkConnectivityData chunkData[];
 };
@@ -29,14 +39,6 @@ const ivec2 directions[DIRECTION_COUNT] = {
     ivec2(-1, 0),
     ivec2(1, 0),
     ivec2(0, 1),
-};
-struct ChunkConnectivityData{
-    int chunk;
-    int chunkUp;
-    int chunkDown;
-    int chunkLeft;
-    int chunkRight;
-    int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
 };
 
 uint GetVoxelIndex(uint x, uint y, uint chunk) {

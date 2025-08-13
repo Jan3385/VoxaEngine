@@ -19,10 +19,13 @@ GameEngine::GameEngine()
 {
     this->physics = new GamePhysics();
 
-    Registry::VoxelRegistry::RegisterVoxels();
-    Registry::GameObjectRegistry::RegisterObjects();
-    
     this->renderer = new GameRenderer(&glContext);
+
+    Registry::VoxelRegistry::RegisterVoxels();
+    Registry::VoxelRegistry::CloseRegistry();
+
+    Registry::GameObjectRegistry::RegisterObjects();
+    Registry::GameObjectRegistry::CloseRegistry();
 }
 
 void GameEngine::Initialize(){

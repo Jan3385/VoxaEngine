@@ -1,18 +1,40 @@
 #version 460 core
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
+struct ChemicalReactionID {
+    uint fromID;
+    uint catalystID;
+    uint toID;
+    float reactionSpeed;
+    uint preserveCatalyst;
+    float minTemperatureC;
+};
+struct NewVoxelChange {
+    uint newID;
+    uint localPosX;
+    uint localPosY;
+    uint chunk;
+};
+
 // flattened arrays (c = chunk, x = x, y = y)
 layout(std430, binding = 0) buffer OutputBuffer {
-    float voxelTempsOut[];
+    NewVoxelChange changes[];
 };
-layout(std430, binding = 1) buffer TemperatureBuffer {
+layout(binding = 1, offset = 0) uniform atomic_uint outputCounter;
+
+uniform uint NumberOfVoxels; // total number of voxels in the simulation
+uniform uint randomNumber;
+
+layout(std430, binding = 2) buffer TemperatureBuffer {
     float voxelTemps[];
 };
-layout(std430, binding = 2) buffer HeatCapacityBuffer {
-    float voxelHeatCapacity[];
+
+layout(std430, binding = 3) buffer IdBuffer {
+    uint voxelIds[];
 };
-layout(std430, binding = 3) buffer ConductivityBuffer {
-    float voxelConductivity[];
+
+layout(std430, binding = 4) buffer ChemicalReactionsBuffer {
+    ChemicalReactionID reactions[];
 };
 
 struct ChunkConnectivityData{
@@ -24,12 +46,9 @@ struct ChunkConnectivityData{
     int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
 };
 
-layout(std430, binding = 4) buffer ChunkBuffer {
+layout(std430, binding = 5) buffer ChunkBuffer {
     ChunkConnectivityData chunkData[];
 };
-uniform uint NumberOfVoxels; // total number of voxels in the simulation
-
-#define TEMPERATURE_TRANSITION_SPEED 80
 
 #define CHUNK_SIZE 64
 #define CHUNK_SIZE_SQUARED 4096
@@ -111,23 +130,70 @@ uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) 
     return index;
 }
 
-void main(){
+// a random number between 0 and 1
+float randomFloat(uint seed) {
+    seed = (seed ^ 61u) ^ (seed >> 16u);
+    seed *= 9u;
+    seed = seed ^ (seed >> 4u);
+    seed *= 0x27d4eb2du;
+    seed = seed ^ (seed >> 15u);
+    return float(seed) / float(0xffffffffu);
+}
+
+// gets first index for a reaction array using binary search
+int GetReactionIndexStart(uint voxelID) {
+    int index = -1;
+
+    int left = 0;
+    int right = reactions.length() - 1;
+
+    while(left <= right) {
+        int mid = (left + right) / 2;
+
+        if(reactions[mid].fromID == voxelID){
+            index = mid;
+            break;
+        } else if(reactions[mid].fromID < voxelID) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+
+    while(index > 0 && reactions[index-1].fromID == voxelID) {
+        index--;
+    }
+
+    return index;
+}
+
+uint RemoveFlagsFromID(uint id) {
+    // Remove the flags from the ID
+    return id & 0x3FFFFFFF; // Keep only the lower 30 bits
+}
+
+void main(){ //TODO: IDs have a flag which breaks everything
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
     uint c = gl_GlobalInvocationID.z;   // current chunk
 
-    uint localX = x % CHUNK_SIZE;
-    uint localY = y % CHUNK_SIZE;
-
     uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
+    uint voxelID = RemoveFlagsFromID(voxelIds[index]);
+
+    int reactionStart = GetReactionIndexStart(voxelID);
+    if(reactionStart == -1) {
+        // No reactions for this voxel, nothing to do
+        return;
+    }
+
+    float temperature = voxelTemps[index];
     uint numberOfChunks = NumberOfVoxels / CHUNK_SIZE_SQUARED;
 
-    float sum = 0.0;
-
+    uint localX = x % CHUNK_SIZE;
+    uint localY = y % CHUNK_SIZE;
     ivec2 localPos = ivec2(localX, localY);
 
-    uint NumOfValidDirections = 0;
     for(int i = 0; i < DIRECTION_COUNT; ++i){
         ivec2 testPos = localPos + directions[i];
 
@@ -137,19 +203,24 @@ void main(){
         if (nIndex <= 0 || nIndex >= NumberOfVoxels)
             continue;
 
-        ++NumOfValidDirections;
-        
-        float heatCapacity = voxelHeatCapacity[index]/TEMPERATURE_TRANSITION_SPEED;
-        float heatDiff = voxelTemps[nIndex] - voxelTemps[index];
-        float heatTrans = heatDiff * voxelConductivity[nIndex] / heatCapacity;
+        // check reactions
+        for(int j = reactionStart; j < reactions.length(); ++j) {
+            if(reactions[j].fromID != voxelID)
+                break; // no more reactions for this voxel
 
-        if(heatCapacity <= 0.0f)
-            heatTrans = 0.0f;
+            if(temperature < reactions[j].minTemperatureC)
+                continue; // temperature too low
 
-        sum += heatTrans;
+            if(reactions[j].catalystID != 0 && RemoveFlagsFromID(voxelIds[nIndex]) != reactions[j].catalystID)
+                continue; // catalyst not present
+
+            float random = randomFloat(randomNumber * (x + c) + y);
+            if(random > reactions[j].reactionSpeed)
+                continue; // reaction not triggered
+
+            uint newVoxelIndex = atomicCounterIncrement(outputCounter);
+            changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, localX, localY, c);
+            break;
+        }
     }
-
-    if(NumOfValidDirections == 0) NumOfValidDirections = 1;
-    
-    voxelTempsOut[index] = voxelTemps[index] + (sum / NumOfValidDirections);
 }

@@ -18,6 +18,7 @@ namespace Shader{
 
               void BindHeatShaderBuffers();
               void BindPressureShaderBuffers();
+              void BindReactionShaderBuffers();
 
               void ClearOutputBuffer(GLuint size);
        private:
@@ -39,11 +40,14 @@ namespace Shader{
               // Output buffer for any output
               GLuint outputDataBuffer = 0;
 
+              GLuint atomicCounterBuffer = 0;
+
               // -------------------
 
 
               ComputeShader *heatShader = nullptr;
               ComputeShader *pressureShader = nullptr;
+              ComputeShader *reactionShader = nullptr;
               ComputeShader *clearBufferShader = nullptr;
        };
 }

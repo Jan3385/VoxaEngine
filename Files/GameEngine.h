@@ -76,6 +76,7 @@ public:
 
     bool runHeatSimulation = true;
     bool runPressureSimulation = true;
+    bool runChemicalReactions = true;
 
     std::string placeVoxelType = "Sand";
     float placeVoxelTemperature = 21.0;

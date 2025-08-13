@@ -15,12 +15,16 @@ namespace Shader{
         void Run(GLuint workGroupX, GLuint workGroupY, GLuint workGroupZ) const;
 
         static void BindBufferAt(GLuint bindingPoint, GLuint buffer);
+        static void BindAtomicCounterAt(GLuint bindingPoint, GLuint atomicCounter);
 
         template<typename T>
         static void UploadDataToBuffer(GLuint buffer, const T* data, size_t size);
 
         template<typename T>
         static T *ReadDataFromBuffer(GLuint buffer, size_t size);
+
+         template<typename T>
+        static T ReadDataFromAtomicCounter(GLuint counter);
     private:
         static const std::string shaderDirectory;
     };
@@ -47,6 +51,8 @@ T *Shader::ComputeShader::ReadDataFromBuffer(GLuint buffer, size_t size)
     if(buffer == 0) {
         throw std::runtime_error("Cannot read from a NULL compute shader buffer");
     }
+    if(size == 0)
+        return nullptr;
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
 
@@ -58,5 +64,15 @@ T *Shader::ComputeShader::ReadDataFromBuffer(GLuint buffer, size_t size)
     T* result = new T[size];
     std::memcpy(result, data, size * sizeof(T));
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    return result;
+}
+
+template <typename T>
+inline T Shader::ComputeShader::ReadDataFromAtomicCounter(GLuint counter)
+{
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, counter);
+    T result = T();
+    glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(T), &result);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
     return result;
 }

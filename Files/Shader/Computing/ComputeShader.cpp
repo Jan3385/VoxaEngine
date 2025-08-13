@@ -68,3 +68,8 @@ void Shader::ComputeShader::BindBufferAt(GLuint bindingPoint, GLuint buffer)
 {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, buffer);
 }
+
+void Shader::ComputeShader::BindAtomicCounterAt(GLuint bindingPoint, GLuint atomicCounter)
+{
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, bindingPoint, atomicCounter);
+}

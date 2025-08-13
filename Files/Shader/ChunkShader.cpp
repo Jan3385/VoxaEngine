@@ -28,10 +28,13 @@ Shader::ChunkShaderManager::ChunkShaderManager()
 
     glGenBuffers(1, &this->outputDataBuffer);
 
+    glGenBuffers(1, &this->atomicCounterBuffer);
+
     std::cout << "Compiling chunk compute shaders... ";
 
     this->heatShader = new ComputeShader("ChunkHeat");
     this->pressureShader = new ComputeShader("ChunkPressure");
+    this->reactionShader = new ComputeShader("ChunkReactions");
     this->clearBufferShader = new ComputeShader("ClearOutputBuffer.comp", "Output buffer clearing");
 
     std::cout << "[Done]" << std::endl;
@@ -137,6 +140,32 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         pressureOutput = ComputeShader::ReadDataFromBuffer<float>(this->outputDataBuffer, numberOfVoxels);
     }
 
+    struct VoxelChanges {
+        uint32_t voxelID;
+        uint32_t localPosX;
+        uint32_t localPosY;
+        uint32_t chunk;
+    };
+
+    VoxelChanges *reactionOutput = nullptr;
+    uint32_t reactionsSize = 0;
+    if(GameEngine::instance->runChemicalReactions)
+    {
+        this->ClearOutputBuffer(numberOfVoxels);
+        this->BindReactionShaderBuffers();
+        this->reactionShader->Use();
+
+        this->reactionShader->SetUnsignedInt("NumberOfVoxels", numberOfVoxels);
+        uint32_t randomNumber = static_cast<uint32_t>(rand() % 1000);
+        this->reactionShader->SetUnsignedInt("randomNumber", randomNumber);
+
+        this->reactionShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
+
+        // Read the output data
+        reactionsSize = ComputeShader::ReadDataFromAtomicCounter<uint32_t>(this->atomicCounterBuffer);
+        reactionOutput = ComputeShader::ReadDataFromBuffer<VoxelChanges>(this->outputDataBuffer, reactionsSize);
+    }
+
     #pragma omp parallel for
     for (uint32_t i = 0; i < numberOfVoxels; i++) {
         uint16_t chunkIndex = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
@@ -153,9 +182,32 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
             chunk->voxels[y][x]->DieAndReplace(chunkMatrix, newId);
         }
     }
+    std::map<uint16_t, Vec2i> chunkIndexToPosOffset;
+    for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
+        chunkIndexToPosOffset[i] = chunkMatrix.Grid[i]->GetPos() * Volume::Chunk::CHUNK_SIZE;
+    }
+
+    //#pragma omp parallel for
+    for(uint32_t i = 0; i < reactionsSize; i++) {
+        VoxelChanges& change = reactionOutput[i];
+        std::string stringID = Registry::VoxelRegistry::GetStringID(change.voxelID);
+        Vec2i voxelPos =  Vec2i(change.localPosX, change.localPosY) + chunkIndexToPosOffset[change.chunk];
+
+        Volume::VoxelElement* oldVoxel = chunkMatrix.VirtualGetAt(voxelPos, false);
+        Volume::VoxelElement* voxel = CreateVoxelElement(
+            stringID, 
+            voxelPos, 
+            oldVoxel->amount, 
+            oldVoxel->temperature,
+            oldVoxel->IsUnmoveableSolid()
+        );
+
+        chunkMatrix.PlaceVoxelAt(voxel, true, false);
+    }
 
     delete[] heatOutput;
     delete[] pressureOutput;
+    delete[] reactionOutput;
 }
 
 void Shader::ChunkShaderManager::BindHeatShaderBuffers()
@@ -173,6 +225,20 @@ void Shader::ChunkShaderManager::BindPressureShaderBuffers()
     ComputeShader::BindBufferAt(1, this->voxelIdBuffer);
     ComputeShader::BindBufferAt(2, this->voxelPressureBuffer);
     ComputeShader::BindBufferAt(3, this->chunkConnectivityBuffer);
+}
+
+void Shader::ChunkShaderManager::BindReactionShaderBuffers()
+{
+    GLuint zero = 0;
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, this->atomicCounterBuffer);
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), &zero, GL_DYNAMIC_COPY);
+
+    ComputeShader::BindBufferAt(0, this->outputDataBuffer);
+    ComputeShader::BindAtomicCounterAt(1, this->atomicCounterBuffer);
+    ComputeShader::BindBufferAt(2, this->voxelTemperatureBuffer);
+    ComputeShader::BindBufferAt(3, this->voxelIdBuffer);
+    ComputeShader::BindBufferAt(4, Registry::VoxelRegistry::chemicalReactionsBuffer);
+    ComputeShader::BindBufferAt(5, this->chunkConnectivityBuffer);
 }
 
 void Shader::ChunkShaderManager::ClearOutputBuffer(GLuint size)

@@ -3,14 +3,26 @@
 #include <unordered_map>
 #include <string>
 #include <optional>
+#include <vector>
+
+#include "GL/glew.h"
+
 #include "Math/Color.h"
 #include "Math/Temperature.h"
 #include "Math/Vector.h"
 
 namespace Registry{
+	struct ChemicalReaction{
+		std::string from;
+		std::string catalyst;
+		std::string to;
+		float reactionSpeed;			// range from 0 - 1 where 1 is an instant reaction and 0 is no reaction
+		bool preserveCatalyst = true;
+		float minTemperatureC = Volume::Temperature::absoluteZero.GetCelsius();
+	};
 	struct PhaseChange{
-		Volume::Temperature TemperatureAt;
-		std::string To;
+		Volume::Temperature temperatureAt;
+		std::string to;
 	};
 
 	enum class DefaultVoxelConstructor {
@@ -61,6 +73,7 @@ namespace Registry{
 		VoxelBuilder& SetColor(RGBA Color);
 		VoxelBuilder& PhaseUp(std::string To, float Temperature);
 		VoxelBuilder& PhaseDown(std::string To, float Temperature);
+		VoxelBuilder& Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst = true, float MinTemperatureC = Volume::Temperature::absoluteZero.GetCelsius());
 		VoxelBuilder& SetSolidInertiaResistance(float resistance);
 		VoxelBuilder& SetFluidDispursionRate(uint8_t rate);
 		VoxelBuilder& SetFlamability(uint8_t flamability);
@@ -90,11 +103,23 @@ namespace Registry{
 		static bool CanBeMovedByLiquid(Volume::State state);
 
 		static void RegisterVoxel(const std::string& name, Volume::VoxelProperty property);
+		static void RegisterReaction(Registry::ChemicalReaction reaction);
 		static void RegisterVoxels();
+		static void CloseRegistry();
 		static std::unordered_map<std::string, Volume::VoxelProperty> registry;
 		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
+
+		/// Data stored as following:
+		/// uint32_t fromID;
+		/// uint32_t catalystID;
+		/// uint32_t toID;
+		/// float reactionSpeed;
+		/// bool preserveCatalyst;
+		/// float minTemperatureC;
+		static GLuint chemicalReactionsBuffer;
+		static std::vector<Registry::ChemicalReaction> reactionRegistry;  // cleared after inserted into a OpenGL buffer
 	private:
 		static uint32_t idCounter;
-		static bool registriesClosed;
+		static bool registryClosed;
 	};
 }

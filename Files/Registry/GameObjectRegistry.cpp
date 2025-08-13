@@ -9,11 +9,11 @@ using namespace Registry;
 std::unordered_map<std::string, GameObjectProperty> GameObjectRegistry::registry = {};
 std::unordered_map<uint32_t, GameObjectProperty*> GameObjectRegistry::idRegistry = {};
 uint32_t GameObjectRegistry::idCounter = 1;
-bool GameObjectRegistry::registriesClosed = false;
+bool GameObjectRegistry::registryClosed = false;
 
 void GameObjectRegistry::RegisterGameObject(const std::string &name, GameObjectProperty property)
 {
-    if (registriesClosed) 
+    if (registryClosed) 
         throw std::runtime_error("GameObject registered after designated time window: " + name);
     
     property.id = ++idCounter;
@@ -101,8 +101,15 @@ void GameObjectRegistry::RegisterObjects()
             .Build()
     );
 
-    registriesClosed = true;
     std::cout << "[ OK ]" << std::endl;
+}
+
+void Registry::GameObjectRegistry::CloseRegistry()
+{
+    if (registryClosed)
+        throw std::runtime_error("Registry already closed");
+
+    registryClosed = true;
 }
 
 std::string Registry::GameObjectRegistry::GetVoxelFromColorID(uint32_t colorId)

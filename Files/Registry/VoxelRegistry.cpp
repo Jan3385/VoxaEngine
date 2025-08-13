@@ -1,6 +1,7 @@
 #include "Registry/VoxelRegistry.h"
 #include <stdexcept>
 #include <iostream>
+#include <algorithm>
 
 #include "World/voxelTypes.h"
 #include "GameObjectRegistry.h"
@@ -13,19 +14,29 @@ using namespace Registry;
 
 std::unordered_map<std::string, VoxelProperty> VoxelRegistry::registry = {};
 std::unordered_map<uint32_t, VoxelProperty*> VoxelRegistry::idRegistry = {};
+std::vector<Registry::ChemicalReaction> VoxelRegistry::reactionRegistry = {};
+GLuint Registry::VoxelRegistry::chemicalReactionsBuffer = 0;
 uint32_t VoxelRegistry::idCounter = 1;
-bool VoxelRegistry::registriesClosed = false;
+bool VoxelRegistry::registryClosed = false;
 
 void VoxelRegistry::RegisterVoxel(const std::string &name, VoxelProperty property)
 {
-	if(registriesClosed) 
+	if(registryClosed) 
 		throw std::runtime_error("Voxel registered after designated time window: " + name);
 	
 	property.id = ++idCounter;
 
 	registry[name] = property;
 
-	idRegistry[property.id] = &property;
+	idRegistry[property.id] = &registry[name];
+}
+
+void Registry::VoxelRegistry::RegisterReaction(Registry::ChemicalReaction reaction)
+{
+	if (registryClosed)
+		throw std::runtime_error("Reaction registered after designated time window");
+
+	Registry::VoxelRegistry::reactionRegistry.push_back(reaction);
 }
 
 void VoxelRegistry::RegisterVoxels()
@@ -255,6 +266,9 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 450, 5, 7874)
 			.SetName("Iron")
 			.SetColor(RGBA(130, 130, 130, 255))
+			.Reaction("Rust", "Water", 0.01f, true)
+			.Reaction("Rust", "Oxygen", 0.0001f, true)
+			.Reaction("Rust", "Liquid_Oxygen", 0.1f, true)
 			.PhaseUp("Molten_Iron", 1538)
 			.SetSolidInertiaResistance(1)
 			.Build()
@@ -278,6 +292,33 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
+		"Copper",
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 300, 12, 8960)
+			.SetName("Copper")
+			.SetColor(RGBA(184, 115, 51, 255))
+			.PhaseUp("Molten_Copper", 1085)
+			.SetSolidInertiaResistance(0.8)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Molten_Copper",
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 300, 12, 8960)
+			.SetName("Molten Copper")
+			.SetColor(RGBA(184, 115, 51, 240))
+			.PhaseDown("Copper", 1085)
+			.SetFluidDispursionRate(4)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"CopperOxide",
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 410, 0.7, 6315)
+			.SetName("Copper Oxide")
+			.SetColor(RGBA(50, 184, 115, 255))
+			.PhaseUp("Molten_Copper", 1085)
+			.SetSolidInertiaResistance(0.3)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
 		"Wood",
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 2000, 0.7, 700)
 			.SetName("Wood")
@@ -297,8 +338,62 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 
-	registriesClosed = true;
 	std::cout << "[ OK ]" << std::endl;
+}
+
+void Registry::VoxelRegistry::CloseRegistry()
+{
+	registryClosed = true;
+	
+	struct ChemicalReactionID{
+		uint32_t fromID;
+		uint32_t catalystID;
+		uint32_t toID;
+		float reactionSpeed;
+		uint32_t preserveCatalyst;
+		float minTemperatureC;
+	};
+
+	// get IDs for chemical reactions
+	std::vector<ChemicalReactionID> reactions;
+	for(ChemicalReaction reaction : VoxelRegistry::reactionRegistry){
+		uint32_t from = VoxelRegistry::GetProperties(reaction.from)->id;
+		uint32_t catalyst = VoxelRegistry::GetProperties(reaction.catalyst)->id;
+		uint32_t to = VoxelRegistry::GetProperties(reaction.to)->id;
+
+		reactions.push_back({
+			from,
+			catalyst,
+			to,
+			reaction.reactionSpeed,
+			reaction.preserveCatalyst,
+			reaction.minTemperatureC
+		});
+	}
+
+	// sort reactions by "from" ID to be able to quickly search them thru later on the GPU
+	std::sort(reactions.begin(), reactions.end(), [](const ChemicalReactionID& a, const ChemicalReactionID& b) {
+		return a.fromID < b.fromID;
+	});
+
+	// print the reactions
+	for (const auto& reaction : reactions) {
+		std::cout << "Reaction: fromID=" << reaction.fromID
+				  << ", catalystID=" << reaction.catalystID
+				  << ", toID=" << reaction.toID
+				  << ", speed=" << reaction.reactionSpeed
+				  << ", preserveCatalyst=" << reaction.preserveCatalyst
+				  << ", minTemp=" << reaction.minTemperatureC << std::endl;
+	}
+
+	// Upload chemical reactions to a GPU buffer
+	glGenBuffers(1, &VoxelRegistry::chemicalReactionsBuffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, VoxelRegistry::chemicalReactionsBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, reactions.size() * sizeof(ChemicalReactionID), reactions.data(), GL_STATIC_DRAW);
+
+	// Clear reaction registry to free up memory
+	VoxelRegistry::reactionRegistry.clear();
+	std::vector<ChemicalReactionID>().swap(reactions); // free memory
 }
 
 VoxelProperty* VoxelRegistry::GetProperties(std::string id)
@@ -389,6 +484,20 @@ VoxelBuilder &VoxelBuilder::PhaseDown(std::string To, float Temperature)
 	return *this;
 }
 
+VoxelBuilder &Registry::VoxelBuilder::Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst, float MinTemperatureC)
+{
+	VoxelRegistry::reactionRegistry.push_back({ 
+		this->Name, 
+		Catalyst, 
+		To, 
+		ReactionSpeed, 
+		PreserveCatalyst, 
+		MinTemperatureC 
+	});
+
+	return *this;
+}
+
 // Between 0 and 1, 0 being no resistance and 1 being full resistance
 VoxelBuilder &VoxelBuilder::SetSolidInertiaResistance(float resistance)
 {
@@ -468,6 +577,7 @@ Volume::VoxelElement *CreateVoxelElement(Volume::VoxelProperty *property, std::s
 
 		return voxel;
 	}
+	
 	if(property->Constructor == DefaultVoxelConstructor::GasVoxel)
 		voxel = new VoxelGas(id, position, temp, amount);
 	else if(property->Constructor == DefaultVoxelConstructor::LiquidVoxel)

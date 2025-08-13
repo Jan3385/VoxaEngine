@@ -19,5 +19,7 @@ namespace Volume{
 
 		Temperature() : Temperature_C(0) {}
 		Temperature(float celsius) : Temperature_C(celsius) {}
-    };
+
+		static const Temperature absoluteZero;
+	};
 }
