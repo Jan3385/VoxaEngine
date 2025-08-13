@@ -271,13 +271,12 @@ void main(){
             uint newVoxelIndex = atomicCounterIncrement(outputCounter);
             changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, localX, localY, c);
 
-            if(!bool(reactions[j].preserveCatalyst)){
-                break;
+            if((reactions[j].preserveCatalyst & 1) == 0){
                 newVoxelIndex = atomicCounterIncrement(outputCounter);
 
                 ivec3 neighborPos = GetLocalPosAndChunkFromOOBLocalPos(testPos, c, numberOfChunks);
 
-                changes[newVoxelIndex] = NewVoxelChange(reactions[j].catalystID, neighborPos.x, neighborPos.y, neighborPos.z);
+                changes[newVoxelIndex] = NewVoxelChange(reactions[j].toID, neighborPos.x, neighborPos.y, neighborPos.z);
             }
 
             break;
