@@ -266,9 +266,7 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 450, 5, 7874)
 			.SetName("Iron")
 			.SetColor(RGBA(130, 130, 130, 255))
-			.Reaction("Rust", "Water", 0.01f, true)
-			.Reaction("Rust", "Oxygen", 0.0001f, true)
-			.Reaction("Rust", "Liquid_Oxygen", 0.1f, true)
+			.ReactionOxidation("Rust", 0.0001f)
 			.PhaseUp("Molten_Iron", 1538)
 			.SetSolidInertiaResistance(1)
 			.Build()
@@ -296,6 +294,7 @@ void VoxelRegistry::RegisterVoxels()
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 300, 12, 8960)
 			.SetName("Copper")
 			.SetColor(RGBA(184, 115, 51, 255))
+			.ReactionOxidation("Copper_Oxide", 0.00017f)
 			.PhaseUp("Molten_Copper", 1085)
 			.SetSolidInertiaResistance(0.8)
 			.Build()
@@ -310,7 +309,7 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
-		"CopperOxide",
+		"Copper_Oxide",
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 410, 0.7, 6315)
 			.SetName("Copper Oxide")
 			.SetColor(RGBA(50, 184, 115, 255))
@@ -486,6 +485,33 @@ VoxelBuilder &Registry::VoxelBuilder::Reaction(std::string To, std::string Catal
 	});
 
 	return *this;
+}
+
+VoxelBuilder &Registry::VoxelBuilder::ReactionOxidation(std::string To, float OxygenReactionSpeed)
+{
+	VoxelRegistry::reactionRegistry.push_back({ 
+		this->Name, 
+		"Oxygen", 
+		To, 
+		OxygenReactionSpeed, 
+		true
+	});
+	VoxelRegistry::reactionRegistry.push_back({ 
+		this->Name, 
+		"Water", 
+		To, 
+		OxygenReactionSpeed * 100, 
+		true 
+	});
+	VoxelRegistry::reactionRegistry.push_back({ 
+		this->Name, 
+		"Liquid_Oxygen", 
+		To, 
+		OxygenReactionSpeed * 1000, 
+		true 
+	});
+	
+    return *this;
 }
 
 // Between 0 and 1, 0 being no resistance and 1 being full resistance

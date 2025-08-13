@@ -74,6 +74,7 @@ namespace Registry{
 		VoxelBuilder& PhaseUp(std::string To, float Temperature);
 		VoxelBuilder& PhaseDown(std::string To, float Temperature);
 		VoxelBuilder& Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst = true, float MinTemperatureC = Volume::Temperature::absoluteZero.GetCelsius());
+		VoxelBuilder& ReactionOxidation(std::string To, float OxygenReactionSpeed);
 		VoxelBuilder& SetSolidInertiaResistance(float resistance);
 		VoxelBuilder& SetFluidDispursionRate(uint8_t rate);
 		VoxelBuilder& SetFlamability(uint8_t flamability);
