@@ -72,7 +72,10 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     // Load data for shaders
     uint16_t chunkIndex = 0;
     std::vector<Volume::Chunk*> chunksToUpdate;
+    std::unordered_map<Volume::Chunk*, int> chunkToPositionIndexMap;
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
+        chunkToPositionIndexMap[chunkMatrix.Grid[i]] = chunkIndex;
+
         chunkMatrix.Grid[i]->GetShadersData(
             temperatureBuffer.data(), 
             heatCapacityBuffer.data(), 
@@ -106,6 +109,40 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         }
     }
 
+    // add physicsObjects to the buffers, entering GPU simulations
+    for(PhysicsObject *obj : GameEngine::instance->physics->physicsObjects) {
+        #pragma omp parallel for collapse(2)
+        for(unsigned int y = 0; y < obj->rotatedVoxelBuffer.size(); y++) {
+            for(unsigned int x = 0; x < obj->rotatedVoxelBuffer[0].size(); x++) {
+                Volume::VoxelElement *voxel = obj->rotatedVoxelBuffer[y][x];
+                if(voxel == nullptr) continue; // skip empty voxels
+
+                Vec2i worldPos = obj->GetWorldPositionFromLocalRotatedIndex(x, y);
+
+                Volume::Chunk *c = chunkMatrix.GetChunkAtWorldPosition(worldPos);
+
+                if(!c) continue;
+
+                Vec2i localPos = Vec2i(worldPos.x % Volume::Chunk::CHUNK_SIZE, worldPos.y % Volume::Chunk::CHUNK_SIZE);
+
+                unsigned int index =
+                    chunkToPositionIndexMap[c] * Volume::Chunk::CHUNK_SIZE_SQUARED +
+                    localPos.y * Volume::Chunk::CHUNK_SIZE +
+                    localPos.x;
+                
+                temperatureBuffer[index] = voxel->temperature.GetCelsius();
+                heatCapacityBuffer[index] = voxel->properties->HeatCapacity;
+                heatConductivityBuffer[index] = voxel->properties->HeatConductivity;
+                pressureBuffer[index] = voxel->amount;
+                
+                idBuffer[index] = voxel->properties->id |
+                    (static_cast<uint32_t>(voxel->GetState() != Volume::State::Gas) << 31) |
+                    (static_cast<uint32_t>(voxel->GetState() == Volume::State::Liquid) << 30);
+
+            }
+        }
+    }
+
     ComputeShader::UploadDataToBuffer(this->voxelTemperatureBuffer, temperatureBuffer.data(), numberOfVoxels);
     ComputeShader::UploadDataToBuffer(this->voxelHeatCapacityBuffer, heatCapacityBuffer.data(), numberOfVoxels);
     ComputeShader::UploadDataToBuffer(this->voxelConductivityBuffer, heatConductivityBuffer.data(), numberOfVoxels);
@@ -117,7 +154,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     float *heatOutput = nullptr;
     if(GameEngine::instance->runHeatSimulation)
     {
-        this->ClearOutputBuffer(numberOfVoxels); //TODO: fix
+        this->ClearOutputBuffer(numberOfVoxels);
         this->BindHeatShaderBuffers();
         this->heatShader->Use();
 
@@ -201,8 +238,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
             oldVoxel->temperature,
             oldVoxel->IsUnmoveableSolid()
         );
-
-        chunkMatrix.PlaceVoxelAt(voxel, true, false);
+        chunkMatrix.PlaceVoxelAt(voxel, true, true);
     }
 
     delete[] heatOutput;

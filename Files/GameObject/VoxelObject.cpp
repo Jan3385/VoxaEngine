@@ -340,3 +340,19 @@ Vec2f VoxelObject::GetRotatedLocalPosition(const Vec2f &localPos) const
     // Translate back
     return Vec2f(rotatedX + centerX, rotatedY + centerY);
 }
+
+Vec2i VoxelObject::GetWorldPositionFromLocalRotatedIndex(int x, int y) const
+{
+    // Calculate the center of the voxel object
+    float centerX = (static_cast<float>(this->rotatedVoxelBuffer[0].size()) - 1) / 2.0f;
+    float centerY = (static_cast<float>(this->rotatedVoxelBuffer.size()) - 1) / 2.0f;
+
+    // Translate local index to be relative to the center
+    float relX = x - centerX;
+    float relY = y - centerY;
+
+    Vec2i worldPos = Vec2i(static_cast<int>(std::round(relX + this->position.x)),
+                           static_cast<int>(std::round(relY + this->position.y)));
+
+    return worldPos;
+}
