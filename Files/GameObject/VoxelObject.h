@@ -58,6 +58,9 @@ public:
 	GLuint renderVoxelVAO = 0;
 
     std::vector<std::vector<Volume::VoxelElement*>> voxels;
+    // VoxelElement buffer for rotated voxels
+    // Includes empty pointers for empty voxels
+    std::vector<std::vector<Volume::VoxelElement*>> rotatedVoxelBuffer;
 protected:
     bool enabled = false;
     Vec2f position;
@@ -66,10 +69,6 @@ protected:
     AABB boundingBox;
 
     float ExchangeHeatBetweenVoxels(Volume::VoxelElement* v1, Volume::VoxelElement* v2);
-
-    // VoxelElement buffer for rotated voxels
-    // Includes empty pointers for empty voxels
-    std::vector<std::vector<Volume::VoxelElement*>> rotatedVoxelBuffer;
 
     bool dirtyRotation = true;
 

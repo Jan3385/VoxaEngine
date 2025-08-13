@@ -295,6 +295,7 @@ void VoxelRegistry::RegisterVoxels()
 			.SetName("Copper")
 			.SetColor(RGBA(184, 115, 51, 255))
 			.ReactionOxidation("Copper_Oxide", 0.00017f)
+			.Reaction("Copper_Oxide", "Copper_Oxide", 0.0003f, true, Temperature(0).GetCelsius())
 			.PhaseUp("Molten_Copper", 1085)
 			.SetSolidInertiaResistance(0.8)
 			.Build()
@@ -489,26 +490,43 @@ VoxelBuilder &Registry::VoxelBuilder::Reaction(std::string To, std::string Catal
 
 VoxelBuilder &Registry::VoxelBuilder::ReactionOxidation(std::string To, float OxygenReactionSpeed)
 {
+	// rusting is minimal at temperatures below freezing point
+	Temperature minOxidationTemp(0);
+
+
 	VoxelRegistry::reactionRegistry.push_back({ 
 		this->Name, 
 		"Oxygen", 
 		To, 
 		OxygenReactionSpeed, 
-		true
+		true,
+		minOxidationTemp.GetCelsius()
 	});
 	VoxelRegistry::reactionRegistry.push_back({ 
 		this->Name, 
 		"Water", 
 		To, 
 		OxygenReactionSpeed * 100, 
-		true 
+		true,
+		minOxidationTemp.GetCelsius()
 	});
+	VoxelRegistry::reactionRegistry.push_back({ 
+		this->Name, 
+		"Steam", 
+		To, 
+		OxygenReactionSpeed * 300, 
+		true,
+		minOxidationTemp.GetCelsius()
+	});
+
+	// if "hot" enough, achieves extremely fast oxidation
 	VoxelRegistry::reactionRegistry.push_back({ 
 		this->Name, 
 		"Liquid_Oxygen", 
 		To, 
 		OxygenReactionSpeed * 1000, 
-		true 
+		true,
+		minOxidationTemp.GetCelsius()
 	});
 	
     return *this;

@@ -187,7 +187,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         chunkIndexToPosOffset[i] = chunkMatrix.Grid[i]->GetPos() * Volume::Chunk::CHUNK_SIZE;
     }
 
-    //#pragma omp parallel for
+    //#pragma omp parallel for ( crashes :( )
     for(uint32_t i = 0; i < reactionsSize; i++) {
         VoxelChanges& change = reactionOutput[i];
         std::string stringID = Registry::VoxelRegistry::GetStringID(change.voxelID);

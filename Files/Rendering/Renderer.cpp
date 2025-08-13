@@ -300,7 +300,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player)
     
     const char* voxelTypeNames[] = {
         "Dirt", "Grass", "Stone", "Sand", "Oxygen",
-        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron", "Rust", "Wood", "Empty", "Uncarium"
+        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron", "Rust", "Wood", "Empty", "Uncarium", "Copper"
     };
     // Find the index of placeVoxelType in voxelTypeNames
     static int current_item = 0;
