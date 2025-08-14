@@ -83,7 +83,7 @@ Build the project into executable binaries with:
 
 `cmake --build build` 
 
-After that, run `VoxaEngine.exe` inside the build folder.
+After that, run `VoxaEngine.exe` from **inside** the build folder.
 
 ## UNIX Linux
 
@@ -110,7 +110,7 @@ Build the project into executable binaries with:
 
 `cmake --build build` 
 
-After that, run `VoxaEngine` inside the *build* folder.
+After that, run `VoxaEngine` from **inside** the *build* folder.
 
 # Controls
 
