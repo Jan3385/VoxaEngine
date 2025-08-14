@@ -31,6 +31,10 @@ uniform uint NumberOfVoxels; // total number of voxels in the simulation
 
 #define TEMPERATURE_TRANSITION_SPEED 80
 
+const float MAX_HEAT_TRANSFER = 500.0;
+const float MIN_TEMP = -273.15;
+const float MAX_TEMP = 50000.0;
+
 #define CHUNK_SIZE 64
 #define CHUNK_SIZE_SQUARED 4096
 
@@ -141,15 +145,19 @@ void main(){
         
         float heatCapacity = voxelHeatCapacity[index]/TEMPERATURE_TRANSITION_SPEED;
         float heatDiff = voxelTemps[nIndex] - voxelTemps[index];
-        float heatTrans = heatDiff * voxelConductivity[nIndex] / heatCapacity;
 
-        if(heatCapacity <= 0.0f)
-            heatTrans = 0.0f;
+        float heatTrans = clamp(heatDiff * voxelConductivity[nIndex] / heatCapacity, -MAX_HEAT_TRANSFER, MAX_HEAT_TRANSFER);
 
         sum += heatTrans;
     }
 
     if(NumOfValidDirections == 0) NumOfValidDirections = 1;
     
-    voxelTempsOut[index] = voxelTemps[index] + (sum / NumOfValidDirections);
+    float newTemp = voxelTemps[index] + (sum / NumOfValidDirections);
+    newTemp = clamp(newTemp, MIN_TEMP, MAX_TEMP);
+
+    if(isnan(newTemp) || isinf(newTemp))
+        newTemp = voxelTemps[index];
+
+    voxelTempsOut[index] = newTemp;
 }
