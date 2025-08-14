@@ -1,1 +1,2 @@
 GLEW/** linguist-vendored
+*.h linguist-language=C++
