@@ -70,6 +70,7 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 > You will need to have `vcpkg` installed somewhere to use its path to get *vcpkg.cmake*
 
 (All commands are inside the *PROJECT* folder)
+
 To prepare the project for compilation run:
 
 `cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH\TO\VCPKG\CMAKE\vcpkg.cmake"`
@@ -96,6 +97,7 @@ You need to install these packages before compiling (package name depends on you
 
 
 (All commands are inside the *PROJECT* folder)
+
 To prepare the project for compilation run:
 
 `cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
