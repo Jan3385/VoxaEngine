@@ -69,15 +69,16 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 > You need to have installed `CMake` v3.10 or more, `g++` compiler with `Ninja` generator.
 > You will need to have `vcpkg` installed somewhere to use its path to get *vcpkg.cmake*
 
-To compile run following in the project folder:
-
-`cmake --preset release` 
-
-to select a build preset. Afterwards run
+(All commands are inside the *PROJECT* folder)
+To prepare the project for compilation run:
 
 `cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH\TO\VCPKG\CMAKE\vcpkg.cmake"`
 
-to set up cmake and prepare it to build. To finish building the project run
+Afterwards run following to set the release preset:
+
+`cmake --preset release` 
+
+Build the project into executable binaries with:
 
 `cmake --build build` 
 
@@ -93,21 +94,21 @@ You need to install these packages before compiling (package name depends on you
 - `libglew-dev` or `glew`
 - `libgl1-mesa-dev` & `libgl-dev` or `mesa`
 
-To compile run following in the project folder:
 
-`cmake --preset release` 
-
-to select a build preset. Afterwards run
+(All commands are inside the *PROJECT* folder)
+To prepare the project for compilation run:
 
 `cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
 
-to set up cmake and prepare it to build. To finish building the project run
+Afterwards run following to set the release preset:
+
+`cmake --preset release` 
+
+Build the project into executable binaries with:
 
 `cmake --build build` 
 
-in the project folder.
-
-After that, run `VoxaEngine` inside the build folder.
+After that, run `VoxaEngine` inside the *build* folder.
 
 # Controls
 
