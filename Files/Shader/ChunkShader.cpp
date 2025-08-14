@@ -70,19 +70,24 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     std::vector<ChunkConnectivityData> connectivityDataBuffer(chunkCount);
 
     // Load data for shaders
-    uint16_t chunkIndex = 0;
     std::vector<Volume::Chunk*> chunksToUpdate;
     std::unordered_map<Volume::Chunk*, int> chunkToPositionIndexMap;
+    
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
-        chunkToPositionIndexMap[chunkMatrix.Grid[i]] = chunkIndex;
+        chunkToPositionIndexMap[chunkMatrix.Grid[i]] = i;
+        chunkMatrix.Grid[i]->UpdateInnerTemperatureBuffer();
+    }
 
+    #pragma omp parallel for
+    for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
+        //TODO: huge performance cost: somehow rework one day
         chunkMatrix.Grid[i]->GetShadersData(
             temperatureBuffer.data(), 
             heatCapacityBuffer.data(), 
             heatConductivityBuffer.data(), 
             pressureBuffer.data(), 
             idBuffer.data(), 
-            chunkIndex++
+            i
         );
 
         // Set up chunk connectivity data
@@ -98,17 +103,18 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         Vec2i posLeft = pos + vector::LEFT;
         Vec2i posRight = pos + vector::RIGHT;
         for(uint16_t j = 0; j < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++j){
-            if(chunkMatrix.Grid[j]->GetPos() == posUp)
+            Vec2i otherPos = chunkMatrix.Grid[j]->GetPos();
+            if(otherPos == posUp)
                 data->chunkUp = j;
-            else if(chunkMatrix.Grid[j]->GetPos() == posDown)
+            else if(otherPos == posDown)
                 data->chunkDown = j;
-            else if(chunkMatrix.Grid[j]->GetPos() == posLeft)
+            else if(otherPos == posLeft)
                 data->chunkLeft = j;
-            else if(chunkMatrix.Grid[j]->GetPos() == posRight)
+            else if(otherPos == posRight)
                 data->chunkRight = j;
         }
     }
-
+    
     // add physicsObjects to the buffers, entering GPU simulations
     for(PhysicsObject *obj : GameEngine::instance->physics->physicsObjects) {
         #pragma omp parallel for collapse(2)

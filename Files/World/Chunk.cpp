@@ -243,9 +243,8 @@ void Volume::Chunk::GetShadersData(
     float heatConductivityBuffer[], 
     float pressureBuffer[], 
     uint32_t idBuffer[], 
-    int chunkNumber)
+    int chunkNumber) const
 {
-    float temperatureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
     #pragma omp parallel for
     for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
         for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
@@ -254,8 +253,7 @@ void Volume::Chunk::GetShadersData(
             Volume::VoxelElement* voxel = this->voxels[y][x];
             const Volume::VoxelProperty* props = voxel->properties;
 
-            temperatureVBOBuffer[y][x] = voxel->temperature.GetCelsius();
-            temperatureBuffer[index] = temperatureVBOBuffer[y][x];
+            temperatureBuffer[index] = voxel->temperature.GetCelsius();
 
             heatCapacityBuffer[index] = props->HeatCapacity;
             heatConductivityBuffer[index] = props->HeatConductivity;
@@ -266,6 +264,19 @@ void Volume::Chunk::GetShadersData(
                 (static_cast<uint32_t>(voxel->GetState() == State::Liquid) << 30);
         }
     }
+}
+
+void Volume::Chunk::UpdateInnerTemperatureBuffer()
+{
+    float temperatureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+
+    #pragma omp parallel for collapse(2)
+    for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
+        for (int x = 0; x < Chunk::CHUNK_SIZE; ++x) {
+            temperatureVBOBuffer[y][x] = this->voxels[y][x]->temperature.GetCelsius();
+        }
+    }
+
     // Update the temperature VBO with the new data
     glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * CHUNK_SIZE_SQUARED, temperatureVBOBuffer);

@@ -83,7 +83,8 @@ namespace Volume
 			float pressureBuffer[],
 			uint32_t idBuffer[],
 			int chunkNumber
-		);
+		) const;
+		void UpdateInnerTemperatureBuffer();
 
 
     	void SIM_ResetVoxelUpdateData();

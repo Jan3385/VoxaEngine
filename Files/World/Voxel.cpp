@@ -39,19 +39,21 @@ VoxelElement::~VoxelElement()
 
 std::string Volume::VoxelElement::ShouldTransitionToID()
 {
+	float tempC = this->temperature.GetCelsius();
+
 	if(this->properties->HeatedChange.has_value()){
-		if (this->temperature.GetCelsius() > 
-			this->properties->HeatedChange.value().temperatureAt.GetCelsius() + Volume::TEMP_TRANSITION_THRESHOLD)
+		const auto& heated = this->properties->HeatedChange.value();
+		if (tempC > heated.temperatureAt.GetCelsius() + Volume::TEMP_TRANSITION_THRESHOLD)
 		{
-			return this->properties->HeatedChange.value().to;
+			return heated.to;
 		}
 	}
 
 	if(this->properties->CooledChange.has_value()){
-		if (this->temperature.GetCelsius() < 
-			this->properties->CooledChange.value().temperatureAt.GetCelsius() - Volume::TEMP_TRANSITION_THRESHOLD)
+		const auto& cooled = this->properties->CooledChange.value();
+		if (tempC < cooled.temperatureAt.GetCelsius() - Volume::TEMP_TRANSITION_THRESHOLD)
 		{
-			return this->properties->CooledChange.value().to;
+			return cooled.to;
 		}
 	}
 
