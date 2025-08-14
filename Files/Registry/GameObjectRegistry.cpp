@@ -112,10 +112,22 @@ void Registry::GameObjectRegistry::CloseRegistry()
     registryClosed = true;
 }
 
+// Color Pallete:
+// 255, 0, 0        -> metal
+// 255, 255, 0      -> gold
+// 150, 75, 0       -> wood
+// 0, 255, 0        -> rust
+// 0, 0, 255        -> stone
+// 255, 255, 255    -> glass
+// 0, 0, 0          -> charcoal
+// 255, 165, 0      -> organics
+
 std::string Registry::GameObjectRegistry::GetVoxelFromColorID(uint32_t colorId)
 {
     switch (colorId) {
+        // Format: 0xAARRGGBB
         case 0xFFFF0000: return "Iron";         // Solid red    -> metal
+        case 0xFFFFFF00: return "Gold";          // Solid yellow -> gold
         case 0xFF964B00: return "Wood";         // Brown        -> wood
         case 0xFF00FF00: return "Rust";         // Solid green  -> rust
         case 0xFF0000FF: return "Stone";        // Solid blue   -> stone

@@ -109,7 +109,8 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 
                 voxel->Step(&chunkMatrix);
                 
-                // heat transfer between voxels
+                // heat transfer between voxels (unused thanks to GPU simulation)
+                /*
                 if(calculateHeat){
                     std::string transitionId = voxel->ShouldTransitionToID();
                     if(!transitionId.empty()){
@@ -163,6 +164,7 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
                         maxHeatTransfer = std::max(maxHeatTransfer, ExchangeHeatBetweenVoxels(voxel, neighbor));
                     }
                 }
+                */
             }
         }
     }

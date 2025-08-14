@@ -319,6 +319,24 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
+		"Gold",
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 130, 70, 19300)
+			.SetName("Gold")
+			.SetColor(RGBA(255, 215, 0, 255))
+			.PhaseUp("Molten_Gold", 1064)
+			.SetSolidInertiaResistance(0.6)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
+		"Molten_Gold",
+		VoxelBuilder(DefaultVoxelConstructor::LiquidVoxel, 130, 70, 19300)
+			.SetName("Molten Gold")
+			.SetColor(RGBA(255, 215, 0, 240))
+			.PhaseDown("Gold", 1064)
+			.SetFluidDispursionRate(4)
+			.Build()
+	);
+	VoxelRegistry::RegisterVoxel(
 		"Wood",
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 2000, 0.7, 700)
 			.SetName("Wood")
