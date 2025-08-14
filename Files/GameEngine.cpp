@@ -321,7 +321,6 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     chunkMatrix.voxelMutex.lock();
-    //Render
     renderer->Render(chunkMatrix, this->mousePos);
     chunkMatrix.voxelMutex.unlock();
 }

@@ -356,6 +356,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
     }
 
     // Set the new voxel and mark for update
+    voxel->partOfObject = false;
     chunk->voxels[localPos.y][localPos.x] = voxel;
 
     chunk->dirtyRect.Include(localPos);
@@ -407,6 +408,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
         chunk->dirtyColliders = true;
 
     // Set the new voxel and mark for update
+    voxel->partOfObject = false;
     chunk->voxels[localPos.y][localPos.x] = voxel;
 
     chunk->dirtyRect.Include(localPos);
@@ -609,7 +611,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
             }
             else if(j <= radius) {
                 //destroy gas and immovable solids.. create particles for other
-    			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid()) 
+    			if (voxel->GetState() == State::Gas || voxel->IsUnmoveableSolid() || voxel->partOfObject) 
                 {
                     PlaceVoxelAt(currentPos, "Fire", Temperature(radius * 100), false, 1.3f, true, true);
                 }

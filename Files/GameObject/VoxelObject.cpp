@@ -28,7 +28,7 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
                     Volume::Temperature(21.0f), 
                     true
                 );
-
+                this->voxels[y][x]->partOfObject = true;
                 this->voxels[y][x]->color = data.color;
             }
         }
@@ -279,6 +279,7 @@ bool VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel,
         delete this->voxels[localPos.y][localPos.x];
     }
 
+    voxel->partOfObject = true;
     this->voxels[localPos.y][localPos.x] = voxel;
     this->rotatedVoxelBuffer[iy][ix] = voxel;
 

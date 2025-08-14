@@ -50,6 +50,8 @@ namespace Volume {
 		Temperature temperature;
 		bool updatedThisFrame = false;
 
+		bool partOfObject = false;
+
 		float amount;
 
 		// Functions

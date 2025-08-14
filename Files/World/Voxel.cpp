@@ -331,6 +331,7 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 				}
 			}
 			Vec2i localPos = Vec2i(this->position.x % Chunk::CHUNK_SIZE, this->position.y % Chunk::CHUNK_SIZE);
+			
 			matrix->GetChunkAtWorldPosition(this->position)->dirtyRect.Include(localPos);
 			return true;
 		}
