@@ -1,32 +1,17 @@
 {
+  "name": "voxa-engine",
+  "version": "0.1.0",
+  "description": "A voxel-based game engine",
   "dependencies": [
-    "sdl2",
+    {
+      "name": "sdl2",
+      "version>=": "2.32.2#0",
+      "features": [] 
+    },
     "box2d",
     "glm",
     "freetype",
     "imgui"
   ],
-  "builtin-baseline": "b91c3336aee7f32412508f7dd351ae2cabdb8819",
-  "overrides": [
-    {
-      "name": "sdl2",
-      "version": "2.32.2#0"
-    },
-    {
-      "name": "box2d",
-      "version": "3.1.1#0"
-    },
-    {
-      "name": "glm",
-      "version": "1.0.1#3"
-    },
-    {
-      "name": "freetype",
-      "version": "2.13.3#0"
-    },
-    {
-      "name": "imgui",
-      "version": "1.91.9#0"
-    }
-  ]
+  "builtin-baseline": "b91c3336aee7f32412508f7dd351ae2cabdb8819"
 }

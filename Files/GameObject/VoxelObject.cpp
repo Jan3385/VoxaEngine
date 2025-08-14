@@ -96,7 +96,7 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
     bool calculateHeat = GameEngine::instance->runHeatSimulation && maxHeatTransfer > 0.1f;
     if(calculateHeat) maxHeatTransfer = 0.0f;
 
-    PhysicsObject* thisPhys = dynamic_cast<PhysicsObject*>(this);
+    //PhysicsObject* thisPhys = dynamic_cast<PhysicsObject*>(this);
 
     bool foundVoxel = false;
 
