@@ -114,7 +114,7 @@ After that, run `VoxaEngine` from **inside** the *build* folder.
 
 # Controls
 
- - `w` `a` `s` `d` - movement (`w` and `s` - swim up or jump and down when not using noclip)
+ - `w` `a` `s` `d` - movement (`w` and `s` - swim up and down or jump when not using noclip)
  - `left click` - place or shoot
  - `right click` - explode
  - `t` `z` `u` - place a physics barrel, physics sphere, static crate
