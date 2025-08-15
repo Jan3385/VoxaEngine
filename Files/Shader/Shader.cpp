@@ -74,8 +74,9 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
                         includePath = Shader::SHADER_INCLUDE_DIRECTORY + includePath;
                         source << LoadFileWithShaderPreprocessor(includePath, shaderName) << "\n";
                     }
+                }else{
+                    std::cerr << shaderName << " Warning: Invalid include (skipped): " << line << std::endl;
                 }
-
             } else if(line.rfind("#get", 0) == 0){
                 // Handle #get directive
                 size_t spacePos = line.find(' ');
