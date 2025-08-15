@@ -1,4 +1,3 @@
-#version 460 core
 layout (location = 0) in vec2 quadVertex;   // Quad vertex (0-1)
 
 uniform vec2 size;

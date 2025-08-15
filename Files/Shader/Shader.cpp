@@ -9,6 +9,7 @@
 
 using namespace Shader;
 
+const std::string Shader::Shader::SHADER_VERSION = "460";
 const std::string Shader::Shader::SHADER_DEFAULT_DIRECTORY = "Shaders/";
 const std::string Shader::Shader::SHADER_INCLUDE_EXTENSION = ".glsl";
 const std::string Shader::Shader::SHADER_INCLUDE_DIRECTORY = Shader::SHADER_DEFAULT_DIRECTORY + "Includes/";
@@ -54,6 +55,7 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
         shaderFile.open(filePath);
         
         std::string line;
+        source << "#version " << SHADER_VERSION << " core" << "\n";
         while (std::getline(shaderFile, line))
         {
             // if line starts with #include

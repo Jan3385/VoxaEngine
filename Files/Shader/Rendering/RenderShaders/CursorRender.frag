@@ -1,4 +1,3 @@
-#version 460 core
 #define VOXEL_PIXEL_SIZE 4
 
 layout(location = 0) in vec2 uv;

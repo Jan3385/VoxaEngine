@@ -43,6 +43,8 @@ namespace Shader
         std::string name;
         GLuint CompileShader(const char* shaderSource, const std::string& shaderName, GLenum shaderType);
     private:
+        //format: ###
+        static const std::string SHADER_VERSION;
         static const std::string SHADER_INCLUDE_EXTENSION;
         static const std::string SHADER_INCLUDE_DIRECTORY;
         std::unordered_set<std::string> includedFiles;

@@ -1,4 +1,3 @@
-#version 460 core
 layout (location = 0) in vec2 quadVertex;          // Quad vertex (0-1)
 layout (location = 1) in vec2 instancePos;  // Voxel position
 layout (location = 2) in vec4 instanceColor;
