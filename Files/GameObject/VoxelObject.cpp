@@ -264,7 +264,7 @@ bool VoxelObject::SetVoxelAt(const Vec2i &worldPos, Volume::VoxelElement *voxel,
 
     // get the correct position from the rotated buffer
     if(this->rotatedVoxelBuffer[iy][ix] == nullptr) {
-        return false; // No voxel at this position TODO: somehow recalculate the position instead of returning
+        return false; // No voxel at this position
     }
     Vec2i localPos = this->rotatedVoxelBuffer[iy][ix]->position;
 
