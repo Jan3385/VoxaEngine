@@ -16,7 +16,7 @@ namespace Registry {
 class VoxelObject{
 public:
     VoxelObject() = default;
-    VoxelObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData);
+    VoxelObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData, std::string name);
     virtual ~VoxelObject();
 
     void SetEnabled(bool enabled) { this->enabled = enabled; }
@@ -63,6 +63,8 @@ public:
     // Includes empty pointers for empty voxels
     std::vector<std::vector<Volume::VoxelElement*>> rotatedVoxelBuffer;
 protected:
+    std::string name;
+
     bool enabled = false;
     Vec2f position;
     int width = 0;

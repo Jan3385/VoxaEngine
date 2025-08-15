@@ -11,11 +11,11 @@ namespace Game{
     constexpr int CAMERA_CHUNK_PADDING = 12;
     class Player  : public PhysicsObject {
     public:
-        static constexpr float DOWN_MOVEMENT_ACCELERATION = 9.81f * 600;
+        static constexpr float DOWN_MOVEMENT_ACCELERATION = 9.81f * 30;
         static constexpr int SPEED = 10;
         static constexpr int NOCLIP_SPEED = 200;
         Player();
-        Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData);
+        Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData, float densityOverride);
         ~Player();
 
         // Disable copy and move semantics
@@ -57,7 +57,7 @@ namespace Game{
         static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;
         static constexpr int WAIST_HEIGHT = PLAYER_HEIGHT / 2;
         static constexpr int STEP_HEIGHT = 3;
-        static constexpr float JUMP_ACCELERATION = 70000000.0f; //will be a lot smaller once densities for organics get adjusted
+        static constexpr float JUMP_ACCELERATION = 1300000.0f;
 
         Particle::LaserParticleGenerator *gunLaserParticleGenerator;
 

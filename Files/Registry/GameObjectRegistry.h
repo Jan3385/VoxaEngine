@@ -21,7 +21,7 @@ namespace Registry
     };
     struct GameObjectProperty{
         GameObjectType type;
-        int mass;
+        float densityOverride;  // 0 = no override, KG/m^3
 
         std::vector<std::vector<VoxelData>> voxelData;
 
@@ -33,13 +33,13 @@ namespace Registry
     class GameObjectBuilder{
     public:
         GameObjectBuilder(GameObjectType objectType);
-        GameObjectBuilder& SetMass(int mass);
+        GameObjectBuilder& SetDensityOverride(float density);
         GameObjectBuilder& SetVoxelFileName(std::string fileName);
         GameObjectProperty Build();
     private:
         GameObjectType type;
         std::string voxelPath;
-        int mass = 1;
+        float densityOverride = 0.0f;
     };
 
     void CreateGameObject(std::string id, Vec2f position, ChunkMatrix *matrix, GamePhysics *gamePhysics);

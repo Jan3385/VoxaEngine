@@ -9,8 +9,9 @@ class PhysicsObject: public VoxelObject
 {
 public:
     PhysicsObject() = default;
-    PhysicsObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData)
-        : VoxelObject(position, voxelData) { }
+    PhysicsObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData, 
+        float densityOverride, std::string name)
+        : VoxelObject(position, voxelData, name), densityOverride(densityOverride) { }
 
     ~PhysicsObject();
 
@@ -45,6 +46,8 @@ protected:
 
     void CreatePhysicsBody(b2WorldId worldId);
     void DestroyPhysicsBody();
+
+    float densityOverride = 0.0f;
 private:
     b2Vec2 velocity = b2Vec2(0.0f, 0.0f);
     float angularVelocity = 0.0f;

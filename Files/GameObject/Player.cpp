@@ -10,10 +10,12 @@
 
 Game::Player::Player() = default;
 
-Game::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData)
+Game::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData, float densityOverride)
     : PhysicsObject(
         Vec2f(100.0f, 0.0f),
-        voxelData
+        voxelData,
+        densityOverride,
+        "Player"
     )
 {
     this->Camera = AABB(

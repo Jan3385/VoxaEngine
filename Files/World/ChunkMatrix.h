@@ -5,7 +5,6 @@
 #include <list>
 
 #include "World/Chunk.h"
-#include "GameObject/Player.h"
 #include "Shader/ChunkShader.h"
 
 class ChunkMatrix {

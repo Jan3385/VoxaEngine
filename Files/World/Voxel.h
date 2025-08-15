@@ -21,7 +21,7 @@ namespace Volume {
 		uint32_t id; // Voxel ID (last two bit reserved for voxel type (00 - gas, 01 - liquid, 10 - solid))
 	};
 
-	static constexpr float VOXEL_SIZE_METERS = 0.1f;
+	static constexpr float VOXEL_SIZE_METERS = 0.125f;
 	//Interfaces
 	class IGravity {
 	public:

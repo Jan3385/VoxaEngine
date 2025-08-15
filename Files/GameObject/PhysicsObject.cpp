@@ -71,15 +71,18 @@ void PhysicsObject::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.material = b2DefaultSurfaceMaterial();
 
-    float avarageDensity = 0.0f;
-    for (const auto& row : this->voxels) {
-        for (const auto& voxel : row) {
-            if (voxel) {
-                avarageDensity += voxel->properties->Density * voxel->amount;
+    float avarageDensity = densityOverride;
+    if(densityOverride == 0.0f){
+        for (const auto& row : this->voxels) {
+            for (const auto& voxel : row) {
+                if (voxel) {
+                    avarageDensity += voxel->properties->Density * voxel->amount;
+                }
             }
         }
+        avarageDensity /= this->GetSize().x * this->GetSize().y;
+        avarageDensity *= Volume::VOXEL_SIZE_METERS;
     }
-    avarageDensity /= this->GetSize().x * this->GetSize().y;
 
     shapeDef.density = avarageDensity;
 

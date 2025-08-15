@@ -75,28 +75,26 @@ void GameObjectRegistry::RegisterObjects()
     GameObjectRegistry::RegisterGameObject(
         "Player",
         GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetMass(10)
+            .SetDensityOverride(985.0f)
             .SetVoxelFileName("Player")
             .Build()
     );
     GameObjectRegistry::RegisterGameObject(
         "Barrel",
         GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetMass(10)
+            .SetDensityOverride(400.0f)
             .SetVoxelFileName("Barrel")
             .Build()
     );
     GameObjectRegistry::RegisterGameObject(
         "Ball",
         GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetMass(20)
             .SetVoxelFileName("Ball")
             .Build()
     );
     GameObjectRegistry::RegisterGameObject(
         "Crate",
         GameObjectBuilder(GameObjectType::GameObject)
-            .SetMass(10)
             .SetVoxelFileName("Crate")
             .Build()
     );
@@ -146,11 +144,11 @@ void Registry::CreateGameObject(std::string id, Vec2f position, ChunkMatrix *mat
     }
 
     if (property->type == GameObjectType::GameObject) {
-        VoxelObject *gameObject = new VoxelObject(position, property->voxelData);
+        VoxelObject *gameObject = new VoxelObject(position, property->voxelData, id);
         matrix->voxelObjects.push_back(gameObject);
 
     } else if (property->type == GameObjectType::PhysicsObject) {
-        PhysicsObject *physicsObject = new PhysicsObject(position, property->voxelData);
+        PhysicsObject *physicsObject = new PhysicsObject(position, property->voxelData, property->densityOverride, id);
         matrix->voxelObjects.push_back(physicsObject);
         gamePhysics->physicsObjects.push_back(physicsObject);
     }
@@ -159,9 +157,10 @@ void Registry::CreateGameObject(std::string id, Vec2f position, ChunkMatrix *mat
 GameObjectBuilder::GameObjectBuilder(GameObjectType objectType)
     : type(objectType) { }
 
-GameObjectBuilder &GameObjectBuilder::SetMass(int mass)
+// density in KG/m^3
+GameObjectBuilder &GameObjectBuilder::SetDensityOverride(float density)
 {
-    this->mass = mass;
+    this->densityOverride = density;
     return *this;
 }
 
@@ -174,7 +173,7 @@ GameObjectProperty GameObjectBuilder::Build()
 {
     GameObjectProperty property;
     property.type = this->type;
-    property.mass = this->mass;
+    property.densityOverride = this->densityOverride;
 
     GameObjectRegistry::SetVoxelsFromFile(property, this->voxelPath);
 

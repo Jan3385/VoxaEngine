@@ -8,9 +8,10 @@
 #include <iostream>
 #include <algorithm>
 
-VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData)
+VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::VoxelData>> &voxelData, std::string name)
 {
     this->position = position;
+    this->name = name;
 
     this->voxels.resize(voxelData.size());
     for (size_t y = 0; y < voxelData.size(); ++y)

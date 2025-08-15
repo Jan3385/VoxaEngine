@@ -29,7 +29,8 @@ GameEngine::GameEngine()
 }
 
 void GameEngine::Initialize(){
-    this->Player = new Game::Player(&this->chunkMatrix, Registry::GameObjectRegistry::GetProperties("Player")->voxelData);
+    Registry::GameObjectProperty *playerProperty = Registry::GameObjectRegistry::GetProperties("Player");
+    this->Player = new Game::Player(&this->chunkMatrix, playerProperty->voxelData, playerProperty->densityOverride);
     physics->physicsObjects.push_back(this->Player);
 }
 

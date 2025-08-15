@@ -81,7 +81,7 @@ void VoxelRegistry::RegisterVoxels()
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Organics",
-		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 2000, 0.4, 7000)
+		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 2000, 0.4, 700)
 			.SetName("Organic goo")
 			.SetColor(RGBA(90, 80, 19, 255))
 			.SetSolidInertiaResistance(0.5)

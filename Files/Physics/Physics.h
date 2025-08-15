@@ -12,7 +12,7 @@
 class GamePhysics{
 private:
     static constexpr float PHYS_OBJECT_GRAVITY = 9.81f;
-    static constexpr float SIMULATION_SPEED = 5.0f;
+    static constexpr float SIMULATION_SPEED = 6.0f;
     static constexpr int SIMULATION_STEP_COUNT = 4;
     b2WorldId worldId;
 public:
