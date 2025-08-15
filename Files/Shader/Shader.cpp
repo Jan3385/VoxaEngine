@@ -57,8 +57,8 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
         
         std::string line;
 
+        // Add version at the start of each shader
         if(this->preprocessorAtFirstLine){
-            std::cout << "Loading shader: " << shaderName << std::endl;
             source << "#version " << SHADER_VERSION << " core" << "\n";
             this->preprocessorAtFirstLine = false;    
         }
@@ -86,16 +86,23 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
                 }else{
                     std::cerr << shaderName << " Warning: Invalid include (skipped): " << line << std::endl;
                 }
-            } else if(line.rfind("#get", 0) == 0){
+            }
+            // handle #get to define constants
+            else if(line.rfind("#get", 0) == 0){
                 // Handle #get directive
                 size_t spacePos = line.find(' ');
                 if (spacePos != std::string::npos) {
                     std::string variableName = line.substr(spacePos + 1);
+
+                    source << "#define ";
                     
                     if (variableName == "CHUNK_SIZE") {
-                        source << "#define CHUNK_SIZE " << Volume::Chunk::CHUNK_SIZE << "\n";
+                        source << "CHUNK_SIZE " << Volume::Chunk::CHUNK_SIZE << "\n";
                     } else if (variableName == "CHUNK_SIZE_SQUARED") {
-                        source << "#define CHUNK_SIZE_SQUARED " << Volume::Chunk::CHUNK_SIZE_SQUARED << "\n";
+                        source << "CHUNK_SIZE_SQUARED " << Volume::Chunk::CHUNK_SIZE_SQUARED << "\n";
+                    } else{
+                        source << "UNKNOWN_VARIABLE " << variableName << "\n";
+                        std::cerr << shaderName << " Warning: Unknown variable requested with #get: " << variableName << std::endl;
                     }
                 }
             } else {
