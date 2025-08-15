@@ -28,6 +28,8 @@ RenderShader::RenderShader(const char* vertexPath, const char* fragmentPath, std
 
     // Load shader from files
     std::string vertexCode = this->LoadFileWithShaderPreprocessor(trueVertexPath, printShaderName);
+
+    this->preprocessorAtFirstLine = true;   //reset preprocessor to compile another shader
     std::string fragmentCode = this->LoadFileWithShaderPreprocessor(trueFragmentPath, printShaderName);
 
     const char* vertexCodeCStr = vertexCode.c_str();

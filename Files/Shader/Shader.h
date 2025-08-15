@@ -39,6 +39,7 @@ namespace Shader
         void SetVec3(const std::string &name, glm::vec3 value);
         void SetVec4(const std::string &name, glm::vec4 value);
     protected:
+        bool preprocessorAtFirstLine = true;
         static const std::string SHADER_DEFAULT_DIRECTORY;
         std::string name;
         GLuint CompileShader(const char* shaderSource, const std::string& shaderName, GLenum shaderType);

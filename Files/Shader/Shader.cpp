@@ -44,6 +44,7 @@ Shader::Shader::~Shader()
 /// @brief Loads a shader file with support for includes
 /// @param filePath The path to the shader file (must include extension and directory)
 /// @param shaderName The name of the shader
+/// @note Reset Shader::preprocessorAtFirstLine before executing another time
 /// @return The shader source code
 std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &filePath, const std::string &shaderName)
 {
@@ -55,7 +56,13 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
         shaderFile.open(filePath);
         
         std::string line;
-        source << "#version " << SHADER_VERSION << " core" << "\n";
+
+        if(this->preprocessorAtFirstLine){
+            std::cout << "Loading shader: " << shaderName << std::endl;
+            source << "#version " << SHADER_VERSION << " core" << "\n";
+            this->preprocessorAtFirstLine = false;    
+        }
+
         while (std::getline(shaderFile, line))
         {
             // if line starts with #include
@@ -74,7 +81,7 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
                         includedFiles.insert(includePath);
 
                         includePath = Shader::SHADER_INCLUDE_DIRECTORY + includePath;
-                        source << LoadFileWithShaderPreprocessor(includePath, shaderName) << "\n";
+                        source << this->LoadFileWithShaderPreprocessor(includePath, shaderName) << "\n";
                     }
                 }else{
                     std::cerr << shaderName << " Warning: Invalid include (skipped): " << line << std::endl;
