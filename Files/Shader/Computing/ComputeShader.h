@@ -26,7 +26,8 @@ namespace Shader{
          template<typename T>
         static T ReadDataFromAtomicCounter(GLuint counter);
     private:
-        static const std::string shaderDirectory;
+        static const std::string SHADER_EXTENSION;
+        static const std::string SHADER_DIRECTORY;
     };
 }
 

@@ -3,41 +3,28 @@
 #include <fstream>
 #include <sstream>
 
-const std::string Shader::ComputeShader::shaderDirectory = "Shaders/ComputeShaders/";
+using namespace Shader;
 
-Shader::ComputeShader::ComputeShader(const char *shaderPathName)
+const std::string ComputeShader::SHADER_EXTENSION = ".comp";
+const std::string ComputeShader::SHADER_DIRECTORY = Shader::SHADER_DEFAULT_DIRECTORY + "ComputeShaders/";
+
+ComputeShader::ComputeShader(const char *shaderPathName)
     : ComputeShader(
-        (shaderPathName + std::string(".comp")).c_str(),
+        (shaderPathName + SHADER_EXTENSION).c_str(),
         std::string(shaderPathName)) { }
 
-Shader::ComputeShader::ComputeShader(const char *computePath, std::string shaderName)
+ComputeShader::ComputeShader(const char *computePath, std::string shaderName)
 {
     this->name = shaderName.empty() ? "Unnamed Compute Shader" : shaderName;
     std::string printShaderName = shaderName.empty() ? "[Unnamed Compute Shader] " : "[" + shaderName + "] ";
 
-    std::string trueComputePathStr = shaderDirectory + std::string(computePath);
-    const char *trueComputePath = trueComputePathStr.c_str();
+    std::string trueComputePath = SHADER_DIRECTORY + std::string(computePath);
 
     // Load shader from file
-    std::string computeCode;
-    
-    std::ifstream computeFile;
-    computeFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try{
-        computeFile.open(trueComputePath);
-        std::stringstream computeStream;
-
-        computeStream << computeFile.rdbuf();
-        
-        computeCode = computeStream.str();
-    }
-    catch (const std::ifstream::failure& e) {
-        std::cerr << printShaderName << "Error reading compute shader file: " << e.what() << std::endl;
-    }
-
-    const char *computeCodeCStr = computeCode.c_str();
+    std::string computeCode = this->LoadFileWithShaderPreprocessor(trueComputePath, printShaderName);
 
     // Compile loaded shader
+    const char *computeCodeCStr = computeCode.c_str();
     GLuint computeShader = this->CompileShader(computeCodeCStr, printShaderName, GL_COMPUTE_SHADER);
 
     // Create shader program
@@ -57,7 +44,7 @@ Shader::ComputeShader::ComputeShader(const char *computePath, std::string shader
     glDeleteShader(computeShader);
 }
 
-void Shader::ComputeShader::Run(GLuint workGroupX, GLuint workGroupY, GLuint workGroupZ) const
+void ComputeShader::Run(GLuint workGroupX, GLuint workGroupY, GLuint workGroupZ) const
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -74,12 +61,12 @@ void Shader::ComputeShader::Run(GLuint workGroupX, GLuint workGroupY, GLuint wor
     }
 }
 
-void Shader::ComputeShader::BindBufferAt(GLuint bindingPoint, GLuint buffer)
+void ComputeShader::BindBufferAt(GLuint bindingPoint, GLuint buffer)
 {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, buffer);
 }
 
-void Shader::ComputeShader::BindAtomicCounterAt(GLuint bindingPoint, GLuint atomicCounter)
+void ComputeShader::BindAtomicCounterAt(GLuint bindingPoint, GLuint atomicCounter)
 {
     glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, bindingPoint, atomicCounter);
 }

@@ -4,6 +4,7 @@
 #include <string>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <unordered_set>
 
 namespace Shader
 {
@@ -21,6 +22,8 @@ namespace Shader
         Shader(Shader&&) = delete;
         Shader& operator=(Shader&&) = delete;
 
+        std::string LoadFileWithShaderPreprocessor(const std::string& filePath, const std::string& shaderName);
+
         static void UnsetActiveShaderCache();
         void Use() const;
 
@@ -36,9 +39,13 @@ namespace Shader
         void SetVec3(const std::string &name, glm::vec3 value);
         void SetVec4(const std::string &name, glm::vec4 value);
     protected:
+        static const std::string SHADER_DEFAULT_DIRECTORY;
         std::string name;
         GLuint CompileShader(const char* shaderSource, const std::string& shaderName, GLenum shaderType);
     private:
+        static const std::string SHADER_INCLUDE_EXTENSION;
+        static const std::string SHADER_INCLUDE_DIRECTORY;
+        std::unordered_set<std::string> includedFiles;
         std::unordered_map<std::string, GLint> uniformLocationCache;
         static GLuint activeShaderID;
     };

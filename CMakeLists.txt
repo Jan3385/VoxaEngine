@@ -6,6 +6,7 @@ set(FONTS_FOLDER "${CMAKE_SOURCE_DIR}/Fonts")
 set(TEXTURES_FOLDER "${CMAKE_SOURCE_DIR}/Textures")
 set(RENDER_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Files/Shader/Rendering/RenderShaders")
 set(COMPUTE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Files/Shader/Computing/ComputeShaders")
+set(INCLUDE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Files/Shader/Includes")
 
 # Use vcpkg for dependencies
 find_package(SDL2 CONFIG REQUIRED)
@@ -135,5 +136,6 @@ add_custom_target(copy_assets ALL
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaEngine>/Shaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${RENDER_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Shaders/RenderShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Shaders/ComputeShaders
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${INCLUDE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaEngine>/Shaders/Includes
   DEPENDS VoxaEngine
 )

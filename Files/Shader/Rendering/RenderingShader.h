@@ -10,6 +10,8 @@ namespace Shader{
         RenderShader(const char* vertexPath, const char* fragmentPath, std::string shaderName);
         ~RenderShader() = default;
     private:
-        static const std::string shaderDirectory;
+        static const std::string SHADER_EXTENSION_VERT;
+        static const std::string SHADER_EXTENSION_FRAG;
+        static const std::string SHADER_DIRECTORY;
     };
 }

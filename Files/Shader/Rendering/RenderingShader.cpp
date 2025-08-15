@@ -4,47 +4,31 @@
 #include <fstream>
 #include <sstream>
 
-const std::string Shader::RenderShader::shaderDirectory = "Shaders/RenderShaders/";
+using namespace Shader;
 
-Shader::RenderShader::RenderShader(const char* shaderPathName)
+const std::string RenderShader::SHADER_EXTENSION_VERT = ".vert";
+const std::string RenderShader::SHADER_EXTENSION_FRAG = ".frag";
+const std::string RenderShader::SHADER_DIRECTORY = Shader::SHADER_DEFAULT_DIRECTORY + "RenderShaders/";
+
+RenderShader::RenderShader(const char* shaderPathName)
     : RenderShader(
-        (shaderPathName + std::string(".vert")).c_str(),
-        (shaderPathName + std::string(".frag")).c_str(),
+        (shaderPathName + SHADER_EXTENSION_VERT).c_str(),
+        (shaderPathName + SHADER_EXTENSION_FRAG).c_str(),
         std::string(shaderPathName)) { }
 
-Shader::RenderShader::RenderShader(const char* vertexPath, const char* fragmentPath, std::string shaderName)
+RenderShader::RenderShader(const char* vertexPath, const char* fragmentPath, std::string shaderName)
 {
     this->name = shaderName.empty() ? "Unnamed Render Shader" : shaderName;
     std::string printShaderName = shaderName.empty() ? "[Unnamed Render Shader] " : "[" + shaderName + "] ";
 
-    std::string trueVertexPathStr = shaderDirectory + std::string(vertexPath);
-    std::string trueFragmentPathStr = shaderDirectory + std::string(fragmentPath);
+    std::string trueVertexPathStr = SHADER_DIRECTORY + std::string(vertexPath);
+    std::string trueFragmentPathStr = SHADER_DIRECTORY + std::string(fragmentPath);
     const char* trueVertexPath = trueVertexPathStr.c_str();
     const char* trueFragmentPath = trueFragmentPathStr.c_str();
 
     // Load shader from files
-    std::string vertexCode;
-    std::string fragmentCode;
-
-    std::ifstream vertexFile;
-    vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    std::ifstream fragmentFile;
-    fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try{
-        vertexFile.open(trueVertexPath);
-        fragmentFile.open(trueFragmentPath);
-
-        std::stringstream vertexStream, fragmentStream;
-
-        vertexStream << vertexFile.rdbuf();
-        fragmentStream << fragmentFile.rdbuf();
-
-        vertexCode = vertexStream.str();
-        fragmentCode = fragmentStream.str();
-    }
-    catch (const std::ifstream::failure& e) {
-        std::cerr << printShaderName << "Error reading rendering shader files: " << e.what() << std::endl;
-    }
+    std::string vertexCode = this->LoadFileWithShaderPreprocessor(trueVertexPath, printShaderName);
+    std::string fragmentCode = this->LoadFileWithShaderPreprocessor(trueFragmentPath, printShaderName);
 
     const char* vertexCodeCStr = vertexCode.c_str();
     const char* fragmentCodeCStr = fragmentCode.c_str();

@@ -29,85 +29,10 @@ uniform uint NumberOfVoxels; // total number of voxels in the simulation
 // bigger number = slower
 #define PRESSURE_TRANSITION_SPEED 1.1
 
-#define CHUNK_SIZE 64
-#define CHUNK_SIZE_SQUARED 4096
+#get CHUNK_SIZE
+#get CHUNK_SIZE_SQUARED
 
-#define DIRECTION_COUNT 4
-
-const ivec2 directions[DIRECTION_COUNT] = {
-    ivec2(0, -1),
-    ivec2(-1, 0),
-    ivec2(1, 0),
-    ivec2(0, 1),
-};
-
-uint GetVoxelIndex(uint x, uint y, uint chunk) {
-    return chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
-}
-
-// output uint(-1) means bad transfer, skip
-uint GetIndexFromLocalPosition(ivec2 localPos, uint chunk, uint numberOfChunks) {
-    // forbid diagonals
-    if((localPos.x < 0 || localPos.x >= CHUNK_SIZE) && (localPos.y < 0 || localPos.y >= CHUNK_SIZE))
-        return uint(-1);
-
-    uint index = 0;
-    
-    // if out of bounds from current chunk
-    if(localPos.x < 0 || localPos.x >= CHUNK_SIZE || localPos.y < 0 || localPos.y >= CHUNK_SIZE) {
-        int nC = -1;
-        if(localPos.x < 0){ // left neighbor chunk
-            // Find the left neighbor chunk
-            for(int j = 0; j < numberOfChunks; ++j){
-                if(chunkData[j].chunkRight == chunk){
-                    nC = chunkData[j].chunk;
-                    break;
-                }
-            }
-            if(nC == -1) return uint(-1);
-            // x = CHUNK_SIZE-1 in neighbor, y stays the same
-            index = GetVoxelIndex(CHUNK_SIZE - 1, localPos.y, nC);
-
-        }else if (localPos.x >= CHUNK_SIZE){ // right neighbor chunk
-            for(int j = 0; j < numberOfChunks; ++j){
-                if(chunkData[j].chunkLeft == chunk){
-                    nC = chunkData[j].chunk;
-                    break;
-                }
-            }
-            if(nC == -1) return uint(-1);
-            // x = 0 in neighbor, y stays the same
-            index = GetVoxelIndex(0, localPos.y, nC);
-
-        }else if(localPos.y < 0){ // top neighbor chunk
-            for(int j = 0; j < numberOfChunks; ++j){
-                if(chunkData[j].chunkDown == chunk){
-                    nC = chunkData[j].chunk;
-                    break;
-                }
-            }
-            if(nC == -1) return uint(-1);
-            // y = CHUNK_SIZE-1 in neighbor, x stays the same
-            index = GetVoxelIndex(localPos.x, CHUNK_SIZE - 1, nC);
-
-        }else if(localPos.y >= CHUNK_SIZE){ // bottom neighbor chunk
-            for(int j = 0; j < numberOfChunks; ++j){
-                if(chunkData[j].chunkUp == chunk){
-                    nC = chunkData[j].chunk;
-                    break;
-                }
-            }
-            if(nC == -1) return uint(-1);
-            // y = 0 in neighbor, x stays the same
-            index = GetVoxelIndex(localPos.x, 0, nC);
-
-        }
-    }else{ // if in bounds
-        index = GetVoxelIndex(localPos.x, localPos.y, chunk);
-    }
-
-    return index;
-}
+#include "IndexFromLocalPos.glsl"
 
 void main(){
 	uint x = gl_GlobalInvocationID.x;
@@ -135,7 +60,7 @@ void main(){
 	for(int i = 0; i < DIRECTION_COUNT; ++i){
 		ivec2 testPos = localPos + directions[i];
 
-        uint nIndex = GetIndexFromLocalPosition(testPos, c, numberOfChunks);
+        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, c, numberOfChunks);
 
         if (nIndex == uint(-1) || nIndex >= NumberOfVoxels)
             continue;

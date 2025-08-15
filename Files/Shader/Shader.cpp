@@ -2,7 +2,16 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
+#include "World/Chunk.h"
+
+using namespace Shader;
+
+const std::string Shader::Shader::SHADER_DEFAULT_DIRECTORY = "Shaders/";
+const std::string Shader::Shader::SHADER_INCLUDE_EXTENSION = ".glsl";
+const std::string Shader::Shader::SHADER_INCLUDE_DIRECTORY = Shader::SHADER_DEFAULT_DIRECTORY + "Includes/";
 GLuint Shader::Shader::activeShaderID = 0;
 
 void Shader::Shader::Use() const
@@ -29,6 +38,66 @@ Shader::Shader::~Shader()
         glDeleteProgram(ID);
         ID = 0; // Reset ID to prevent accidental use after deletion
     }
+}
+
+/// @brief Loads a shader file with support for includes
+/// @param filePath The path to the shader file (must include extension and directory)
+/// @param shaderName The name of the shader
+/// @return The shader source code
+std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &filePath, const std::string &shaderName)
+{
+    std::ifstream shaderFile;
+    shaderFile.exceptions(std::ifstream::badbit);
+
+    std::stringstream source;
+    try{
+        shaderFile.open(filePath);
+        
+        std::string line;
+        while (std::getline(shaderFile, line))
+        {
+            // if line starts with #include
+            if (line.rfind("#include", 0) == 0) {
+                size_t firstQuote = line.find('"');
+                size_t lastQuote = line.find_last_of('"');
+
+                // if quotes are valid and found
+                if (firstQuote != std::string::npos && 
+                    lastQuote != std::string::npos && 
+                    firstQuote < lastQuote) {
+
+                    // Load the included file into the shader source
+                    std::string includePath = line.substr(firstQuote + 1, lastQuote - firstQuote - 1);
+                    if(includedFiles.count(includePath) <= 0) {
+                        includedFiles.insert(includePath);
+
+                        includePath = Shader::SHADER_INCLUDE_DIRECTORY + includePath;
+                        source << LoadFileWithShaderPreprocessor(includePath, shaderName) << "\n";
+                    }
+                }
+
+            } else if(line.rfind("#get", 0) == 0){
+                // Handle #get directive
+                size_t spacePos = line.find(' ');
+                if (spacePos != std::string::npos) {
+                    std::string variableName = line.substr(spacePos + 1);
+                    
+                    if (variableName == "CHUNK_SIZE") {
+                        source << "#define CHUNK_SIZE " << Volume::Chunk::CHUNK_SIZE << "\n";
+                    } else if (variableName == "CHUNK_SIZE_SQUARED") {
+                        source << "#define CHUNK_SIZE_SQUARED " << Volume::Chunk::CHUNK_SIZE_SQUARED << "\n";
+                    }
+                }
+            } else {
+                source << line << "\n";
+            }
+        }   
+    }
+    catch (const std::ifstream::failure& e) {
+        std::cerr << shaderName << " Error reading shader files: \n" << e.what() << std::endl;
+    }
+
+    return source.str();
 }
 
 /// @brief Unsets the active shader cache
