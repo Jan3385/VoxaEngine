@@ -54,6 +54,7 @@ public:
     bool showHeatAroundCursor = false;
     bool debugRendering = false;
     bool renderMeshData = false;
+    bool fullImGui = false;
 
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos);
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);

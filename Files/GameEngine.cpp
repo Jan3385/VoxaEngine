@@ -353,7 +353,13 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
 
 void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
 {
-
+    switch (event.keysym.sym)
+    {
+    case SDLK_F1:
+        this->renderer->fullImGui = !this->renderer->fullImGui;
+    default:
+        break;
+    }
 }
 
 void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
