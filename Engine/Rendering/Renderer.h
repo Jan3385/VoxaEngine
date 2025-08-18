@@ -56,7 +56,7 @@ public:
     bool renderMeshData = false;
     bool fullImGui = false;
 
-    void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos);
+    void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor);
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
     void DrawClosedShape(const GLuint VAO, const GLsizei size, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
 

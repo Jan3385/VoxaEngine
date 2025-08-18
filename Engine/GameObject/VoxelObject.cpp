@@ -45,7 +45,7 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
     glGenVertexArrays(1, &renderVoxelVAO);
     glBindVertexArray(renderVoxelVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::instance->renderer->quadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::renderer->quadVBO);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 

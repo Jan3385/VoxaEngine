@@ -205,7 +205,7 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
     this->Grid.push_back(chunk);
 
     // Set chunks colliders
-    GameEngine::instance->physics->Generate2DCollidersForChunk(chunk);
+    GameEngine::physics->Generate2DCollidersForChunk(chunk);
 
     return chunk;
 }
@@ -247,7 +247,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeOb
     if(!chunk){
         chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
 
@@ -342,7 +342,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
     if (!chunk) {
         chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
 
@@ -399,7 +399,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     if (!chunk) {
         chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+        GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
 
@@ -588,7 +588,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
     eDef.impulsePerLength = 4000.0f * std::sqrt(radius);
 
     b2World_Explode(
-        GameEngine::instance->physics->GetWorldId(),
+        GameEngine::physics->GetWorldId(),
         &eDef
     );
     

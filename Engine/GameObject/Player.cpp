@@ -33,9 +33,9 @@ GameEntities::Player::~Player()
     this->gunLaserParticleGenerator = nullptr;
     
     // Clean up the player object from the physics objects
-    auto it = std::find(GameEngine::instance->physics->physicsObjects.begin(), GameEngine::instance->physics->physicsObjects.end(), this);
-    if (it != GameEngine::instance->physics->physicsObjects.end()) {
-        GameEngine::instance->physics->physicsObjects.erase(it);
+    auto it = std::find(GameEngine::physics->physicsObjects.begin(), GameEngine::physics->physicsObjects.end(), this);
+    if (it != GameEngine::physics->physicsObjects.end()) {
+        GameEngine::physics->physicsObjects.erase(it);
     }
 }
 

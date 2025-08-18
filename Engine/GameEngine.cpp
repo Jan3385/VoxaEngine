@@ -20,9 +20,9 @@ GameEngine::GameEngine()
     //init srand
     std::srand(static_cast<unsigned>(time(NULL)));
 
-    this->physics = new GamePhysics();
+    GameEngine::physics = new GamePhysics();
 
-    this->renderer = new GameRenderer(&glContext);
+    GameEngine::renderer = new GameRenderer(&glContext);
 
     Registry::VoxelRegistry::RegisterVoxels();
     Registry::VoxelRegistry::CloseRegistry();
@@ -33,6 +33,7 @@ GameEngine::GameEngine()
 
 void GameEngine::Initialize(const EngineConfig& config){
     GameEngine::instance = this;
+    this->running = true;
     this->config = config;
 
     Registry::GameObjectProperty *playerProperty = Registry::GameObjectRegistry::GetProperties("Player");
@@ -66,16 +67,22 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
 GameEngine::~GameEngine()
 {
     this->running = false;
-    if (simulationThread.joinable())
-        simulationThread.join();
+    
+    simulationThread.join();
 
     delete this->Player;
 
     SDL_GL_DeleteContext(glContext);
 
-    delete this->renderer;
+    if(GameEngine::renderer){
+        delete GameEngine::renderer;
+        GameEngine::renderer = nullptr;
+    }
 
-    delete this->physics;
+    if(GameEngine::physics){
+        delete GameEngine::physics;
+        GameEngine::physics = nullptr;
+    }
 
     chunkMatrix.cleanup();
 }
@@ -138,7 +145,7 @@ void GameEngine::Update(IGame& game)
     simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
-        m_FixedUpdate(game);
+        FixedUpdate(game);
         game.FixedUpdate();
         fixedUpdateTimer -= fixedDeltaTime;
     }
@@ -149,7 +156,7 @@ void GameEngine::Update(IGame& game)
     if(simulationUpdateTimer > simulationFixedDeltaTime*2.5f)
         std::cout << "Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
 }
-void GameEngine::m_UpdateGridVoxel(int pass)
+void GameEngine::UpdateGridVoxel(int pass)
 {    
     #pragma omp parallel for
     for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
@@ -160,7 +167,7 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         chunk->dirtyRect.Update();
     }
 }
-void GameEngine::m_SimulationThread(IGame& game)
+void GameEngine::SimulationThread(IGame& game)
 {
     while (this->running)
     {
@@ -182,7 +189,7 @@ void GameEngine::m_SimulationThread(IGame& game)
 
                     PhysicsObject* physicsObject = dynamic_cast<PhysicsObject*>(voxelObject);
                     if (physicsObject) {
-                        this->physics->physicsObjects.remove(physicsObject);
+                        GameEngine::physics->physicsObjects.remove(physicsObject);
                     }
 
                     delete voxelObject;
@@ -216,7 +223,7 @@ void GameEngine::m_SimulationThread(IGame& game)
         //Voxel update logic
         for(uint8_t i = 0; i < 4; ++i)
         {
-            m_UpdateGridVoxel(i);
+            UpdateGridVoxel(i);
         }
 
         // Update colliders for all chunks
@@ -232,7 +239,7 @@ void GameEngine::m_SimulationThread(IGame& game)
         game.PhysicsUpdate();
     }
 }
-void GameEngine::m_FixedUpdate(IGame& game)
+void GameEngine::FixedUpdate(IGame& game)
 {
     this->chunkMatrix.voxelMutex.lock();
     // Run heat and pressure simulation
@@ -255,7 +262,7 @@ void GameEngine::PollEvents()
                     this->mousePos.y = this->windowEvent.motion.y;
                     break;
                 case SDL_MOUSEBUTTONDOWN:
-                    m_OnMouseButtonDown(this->windowEvent.button);
+                    OnMouseButtonDown(this->windowEvent.button);
                     break;
                 case SDL_MOUSEWHEEL:
                     this->placementRadius += this->windowEvent.wheel.y;
@@ -283,7 +290,7 @@ void GameEngine::PollEvents()
                     MovementKeysHeld[3] = true;
                     break;
                 default:
-                    m_OnKeyboardInput(this->windowEvent.key);
+                    OnKeyboardInput(this->windowEvent.key);
                     break;
                 }
                 break;
@@ -330,19 +337,19 @@ void GameEngine::PollEvents()
             case SDLK_t:
                 {
                 Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
-                Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, this->physics);
+                Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             case SDLK_z:
                 {
                 Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
-                Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, this->physics);
+                Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             case SDLK_u:
                 {
                 Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
-                Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, this->physics);
+                Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             }
@@ -354,21 +361,13 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     chunkMatrix.voxelMutex.lock();
-    renderer->Render(chunkMatrix, this->mousePos);
+    GameEngine::renderer->Render(chunkMatrix, this->mousePos, config.backgroundColor);
     chunkMatrix.voxelMutex.unlock();
 }
 
 void GameEngine::StartSimulationThread(IGame& game)
 {
-    this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this, std::ref(game));
-}
-
-void GameEngine::StopSimulationThread()
-{
-    std::cout << "Stopping simulation thread..." << std::endl;
-    this->running = false;
-    simulationThread.join();
-    std::cout << "Simulation thread stopped." << std::endl;
+    this->simulationThread = std::thread(&GameEngine::SimulationThread, this, std::ref(game));
 }
 
 Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
@@ -378,23 +377,23 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
 
     chunkMatrix.chunkCreationMutex.lock();
     Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
-    GameEngine::instance->renderer->chunkCreateBuffer.push_back(chunk);
+    GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
     chunkMatrix.chunkCreationMutex.unlock();
     return chunk;
 }
 
-void GameEngine::m_OnKeyboardInput(SDL_KeyboardEvent event)
+void GameEngine::OnKeyboardInput(SDL_KeyboardEvent event)
 {
     switch (event.keysym.sym)
     {
     case SDLK_F1:
-        this->renderer->fullImGui = !this->renderer->fullImGui;
+        GameEngine::renderer->fullImGui = !GameEngine::renderer->fullImGui;
     default:
         break;
     }
 }
 
-void GameEngine::m_OnMouseButtonDown(SDL_MouseButtonEvent event)
+void GameEngine::OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
     chunkMatrix.voxelMutex.lock();
     

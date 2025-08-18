@@ -185,7 +185,7 @@ GameRenderer::~GameRenderer()
     SDL_Quit();
 }
 
-void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
+void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -193,7 +193,12 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     }
 
     // clear screen with a light blue color
-    glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
+    glClearColor(
+        backgroundColor.r / 255.0f,
+        backgroundColor.g / 255.0f,
+        backgroundColor.b / 255.0f,
+        backgroundColor.a / 255.0f
+    );
     glClear(GL_COLOR_BUFFER_BIT);
 
     GameEntities::Player *player = GameEngine::instance->Player;
@@ -626,7 +631,7 @@ void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, GameEntities::Player
         }
     }
 
-    for (PhysicsObject* physObj : GameEngine::instance->physics->physicsObjects) {
+    for (PhysicsObject* physObj : GameEngine::physics->physicsObjects) {
         float rot = physObj->GetRotation();
         float cosR = std::cos(rot);
         float sinR = std::sin(rot);

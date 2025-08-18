@@ -54,20 +54,30 @@ private:
     float fixedUpdateTimer = 0;
     std::atomic<float> simulationUpdateTimer = 0;
 
-    void m_OnKeyboardInput(SDL_KeyboardEvent event);
-    void m_OnMouseButtonDown(SDL_MouseButtonEvent event);
+    void OnKeyboardInput(SDL_KeyboardEvent event);
+    void OnMouseButtonDown(SDL_MouseButtonEvent event);
 
     //Deletes old chunks and updates steps for voxel celluar automata simulation
-    void m_UpdateGridVoxel(int pass);
+    void UpdateGridVoxel(int pass);
 
     //Fixed update, Handles heat and pressure simulation
-    void m_FixedUpdate(IGame& game);
+    void FixedUpdate(IGame& game);
 
     //Simulation thread, handles voxel simulation
-    void m_SimulationThread(IGame& game);
+    void SimulationThread(IGame& game);
+
+    void StartFrame();
+    void EndFrame();
+    void Update(IGame& game);
+    void PollEvents();
+    void Render();
+
+    void StartSimulationThread(IGame& game);
+
+    void Initialize(const EngineConfig& config);
 public:
-    GameRenderer* renderer;
-    GamePhysics* physics;
+    static GameRenderer* renderer;
+    static GamePhysics* physics;
     static GameEngine* instance;
 
     static constexpr int MAX_FRAME_RATE = 60;
@@ -82,7 +92,7 @@ public:
 
     GameEntities::Player *Player;
 
-    bool running = true;
+    bool running = false;
     float deltaTime = 1/60.0;    // time between frames in seconds
 
     float FPS = 60;
@@ -105,17 +115,8 @@ public:
 
     GameEngine();
 
-    void Initialize(const EngineConfig& config);
     void Run(IGame& game, const EngineConfig& config);
     ~GameEngine();
-    void StartFrame();
-    void EndFrame();
-    void Update(IGame& game);
-    void PollEvents();
-    void Render();
-
-    void StartSimulationThread(IGame& game);
-    void StopSimulationThread();
 
     Volume::Chunk* LoadChunkInView(Vec2i pos);
 

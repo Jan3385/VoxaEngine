@@ -116,7 +116,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     }
     
     // add physicsObjects to the buffers, entering GPU simulations
-    for(PhysicsObject *obj : GameEngine::instance->physics->physicsObjects) {
+    for(PhysicsObject *obj : GameEngine::physics->physicsObjects) {
         #pragma omp parallel for collapse(2)
         for(unsigned int y = 0; y < obj->rotatedVoxelBuffer.size(); y++) {
             for(unsigned int x = 0; x < obj->rotatedVoxelBuffer[0].size(); x++) {
