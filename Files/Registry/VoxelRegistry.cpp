@@ -356,7 +356,7 @@ void VoxelRegistry::RegisterVoxels()
 			.Build()
 	);
 
-	std::cout << "[ OK ]" << std::endl;
+	std::cout << "[ \033[32mOK\033[0m ]" << std::endl;
 }
 
 void Registry::VoxelRegistry::CloseRegistry()
