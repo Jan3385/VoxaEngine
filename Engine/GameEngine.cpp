@@ -17,6 +17,9 @@ GameEngine* GameEngine::instance = nullptr;
 
 GameEngine::GameEngine()
 {
+    //init srand
+    std::srand(static_cast<unsigned>(time(NULL)));
+
     this->physics = new GamePhysics();
 
     this->renderer = new GameRenderer(&glContext);
@@ -28,10 +31,36 @@ GameEngine::GameEngine()
     Registry::GameObjectRegistry::CloseRegistry();
 }
 
-void GameEngine::Initialize(){
+void GameEngine::Initialize(const EngineConfig& config){
+    GameEngine::instance = this;
+    this->config = config;
+
     Registry::GameObjectProperty *playerProperty = Registry::GameObjectRegistry::GetProperties("Player");
-    this->Player = new Game::Player(&this->chunkMatrix, playerProperty->voxelData, playerProperty->densityOverride);
+    this->Player = new GameEntities::Player(&this->chunkMatrix, playerProperty->voxelData, playerProperty->densityOverride);
     physics->physicsObjects.push_back(this->Player);
+}
+
+void GameEngine::Run(IGame &game, const EngineConfig& config)
+{
+    this->Initialize(config);
+    game.OnInitialize();
+
+    GameEngine::instance->StartSimulationThread(game);
+
+    //Main game loop
+    while (this->running)
+    {
+        this->StartFrame();
+
+        this->Update(game);
+
+        this->Render();
+        game.Render();
+
+        this->EndFrame();
+    }
+
+    game.OnShutdown();
 }
 
 GameEngine::~GameEngine()
@@ -54,12 +83,11 @@ GameEngine::~GameEngine()
 void GameEngine::StartFrame()
 {
     this->FrameStartTime = SDL_GetPerformanceCounter();
-
-    //SDL_Delay(max(((1000.0 / MAX_FRAME_RATE) - deltaTime*1000), 0.0));
 }
 
 void GameEngine::EndFrame()
 {
+    //TODO: instead of startframe get the previous frame's end time
     Uint64 FrameEndTime = SDL_GetPerformanceCounter();
 
     float FrameTime = (FrameEndTime - this->FrameStartTime) / (float)SDL_GetPerformanceFrequency();
@@ -78,7 +106,7 @@ void GameEngine::EndFrame()
     this->avgFPS /= this->FPSHistory.size();
 }
 
-void GameEngine::Update()
+void GameEngine::Update(IGame& game)
 {
     //Polls events - e.g. window close, keyboard input..
     this->PollEvents();
@@ -104,12 +132,14 @@ void GameEngine::Update()
     }
     this->chunkMatrix.voxelMutex.unlock();
 
+    game.Update();
 
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
-        m_FixedUpdate();
+        m_FixedUpdate(game);
+        game.FixedUpdate();
         fixedUpdateTimer -= fixedDeltaTime;
     }
 
@@ -130,7 +160,7 @@ void GameEngine::m_UpdateGridVoxel(int pass)
         chunk->dirtyRect.Update();
     }
 }
-void GameEngine::m_SimulationThread()
+void GameEngine::m_SimulationThread(IGame& game)
 {
     while (this->running)
     {
@@ -198,9 +228,11 @@ void GameEngine::m_SimulationThread()
         chunkMatrix.voxelMutex.unlock();
 
         chunkMatrix.UpdateParticles();
+
+        game.PhysicsUpdate();
     }
 }
-void GameEngine::m_FixedUpdate()
+void GameEngine::m_FixedUpdate(IGame& game)
 {
     this->chunkMatrix.voxelMutex.lock();
     // Run heat and pressure simulation
@@ -326,9 +358,9 @@ void GameEngine::Render()
     chunkMatrix.voxelMutex.unlock();
 }
 
-void GameEngine::StartSimulationThread()
+void GameEngine::StartSimulationThread(IGame& game)
 {
-    this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this);
+    this->simulationThread = std::thread(&GameEngine::m_SimulationThread, this, std::ref(game));
 }
 
 void GameEngine::StopSimulationThread()

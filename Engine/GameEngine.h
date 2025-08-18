@@ -25,9 +25,26 @@
 
 #define AVG_FPS_SIZE_COUNT 25
 
+struct IGame{
+    virtual void OnInitialize() = 0;
+    virtual void OnShutdown() = 0;
+    virtual void Update() = 0;
+    virtual void FixedUpdate() = 0;
+    virtual void PhysicsUpdate() = 0;
+    virtual void Render() = 0;
+
+    virtual ~IGame() = default;
+};
+
+struct EngineConfig{
+    RGBA backgroundColor;
+};
+
 class GameEngine
 {
 private:
+    EngineConfig config;
+
     SDL_GLContext glContext;
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
@@ -44,10 +61,10 @@ private:
     void m_UpdateGridVoxel(int pass);
 
     //Fixed update, Handles heat and pressure simulation
-    void m_FixedUpdate();
+    void m_FixedUpdate(IGame& game);
 
     //Simulation thread, handles voxel simulation
-    void m_SimulationThread();
+    void m_SimulationThread(IGame& game);
 public:
     GameRenderer* renderer;
     GamePhysics* physics;
@@ -63,7 +80,7 @@ public:
 
     static bool MovementKeysHeld[4]; //W, S, A, D
 
-    Game::Player *Player;
+    GameEntities::Player *Player;
 
     bool running = true;
     float deltaTime = 1/60.0;    // time between frames in seconds
@@ -87,16 +104,22 @@ public:
     ChunkMatrix chunkMatrix;
 
     GameEngine();
-    void Initialize();
+
+    void Initialize(const EngineConfig& config);
+    void Run(IGame& game, const EngineConfig& config);
     ~GameEngine();
     void StartFrame();
     void EndFrame();
-    void Update();
+    void Update(IGame& game);
     void PollEvents();
     void Render();
 
-    void StartSimulationThread();
+    void StartSimulationThread(IGame& game);
     void StopSimulationThread();
 
     Volume::Chunk* LoadChunkInView(Vec2i pos);
+
+    // disallow copying
+    GameEngine(const GameEngine&) = delete;
+    GameEngine& operator=(const GameEngine&) = delete;
 };

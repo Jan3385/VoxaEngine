@@ -7,7 +7,7 @@
 #include "World/ChunkMatrix.h"
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
 
-namespace Game{
+namespace GameEntities{
     constexpr int CAMERA_CHUNK_PADDING = 12;
     class Player  : public PhysicsObject {
     public:

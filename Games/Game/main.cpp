@@ -1,11 +1,36 @@
 #include <iostream>
 #include <GameEngine.h>
 
-int main()
+class Game : public IGame {
+    void OnInitialize() override {
+        
+    }
+    void OnShutdown() override {
+        
+    }
+    void Update() override {
+        
+    }
+    void FixedUpdate() override {
+        
+    }
+    void PhysicsUpdate() override {
+        
+    }
+    void Render() override {
+        
+    }
+};
+
+int main(int argc, char* argv[])
 {
-    std::cout << "Running!" << std::endl;
+    GameEngine engine;
 
-    //GameEngine engine;
+    EngineConfig config;
+    engine.Initialize(config);
 
-    return 0;
+    Game game;
+    engine.Run(game, config);
+
+    return EXIT_SUCCESS;
 }

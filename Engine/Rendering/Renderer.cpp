@@ -196,7 +196,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos)
     glClearColor(0.1f, 0.77f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    Game::Player *player = GameEngine::instance->Player;
+    GameEntities::Player *player = GameEngine::instance->Player;
 
     // set up projections
     glm::mat4 voxelProj = glm::ortho(
@@ -287,7 +287,7 @@ void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const g
     glDrawArrays(GL_LINE_LOOP, 0, size);
 }
 
-void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player)
+void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, GameEntities::Player *player)
 {
     constexpr int ITEM_WIDTH = 150;
 
@@ -402,7 +402,7 @@ void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projec
     }
 }
 
-void GameRenderer::RenderPlayer(Game::Player *player, glm::mat4 projection)
+void GameRenderer::RenderPlayer(GameEntities::Player *player, glm::mat4 projection)
 {
     this->voxelRenderProgram->Use();
     this->voxelRenderProgram->SetMat4("projection", projection);
@@ -418,7 +418,7 @@ void GameRenderer::RenderPlayer(Game::Player *player, glm::mat4 projection)
     }
 }
 
-void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, Game::Player *player, glm::mat4 projection)
+void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection)
 {
     // set up new VBOs for newly created chunks
     for(auto& chunk : this->chunkCreateBuffer) {
@@ -442,7 +442,7 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, Game::Player *player, 
     }
 }
 
-void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, Game::Player *player,  glm::mat4 projection)
+void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, GameEntities::Player *player,  glm::mat4 projection)
 {
     this->temperatureRenderProgram->Use();
     this->temperatureRenderProgram->SetMat4("projection", projection);
@@ -474,7 +474,7 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
     }
 }
 
-void GameRenderer::RenderCursor(glm::vec2 mousePos, Game::Player *player, glm::mat4 projection)
+void GameRenderer::RenderCursor(glm::vec2 mousePos, GameEntities::Player *player, glm::mat4 projection)
 {
     int cursorSize = GameEngine::instance->placementRadius * 2 + 1;
 
@@ -491,7 +491,7 @@ void GameRenderer::RenderCursor(glm::vec2 mousePos, Game::Player *player, glm::m
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, Game::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj)
+void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj)
 {
     glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
     glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -582,7 +582,7 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, Game::Player *playe
     }
 }
 
-void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, Game::Player *player, glm::mat4 projection)
+void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection)
 {
     // Draw chunk mesh data as before
     for (auto& chunk : chunkMatrix.Grid) {

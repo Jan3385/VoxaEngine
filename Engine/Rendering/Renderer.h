@@ -26,16 +26,16 @@ private:
     void ToggleDebugRendering();
 
     void RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projection);
-    void RenderPlayer(Game::Player *player, glm::mat4 projection);
-    void RenderChunks(ChunkMatrix &chunkMatrix, Game::Player *player, glm::mat4 projection);
-    void RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, Game::Player *player, glm::mat4 projection);
+    void RenderPlayer(GameEntities::Player *player, glm::mat4 projection);
+    void RenderChunks(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection);
+    void RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, GameEntities::Player *player, glm::mat4 projection);
     void RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projection);
-    void RenderCursor(glm::vec2 mousePos, Game::Player *player, glm::mat4 projection);
+    void RenderCursor(glm::vec2 mousePos, GameEntities::Player *player, glm::mat4 projection);
 
-    void RenderDebugMode(ChunkMatrix &chunkMatrix, Game::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj);
-    void RenderMeshData(ChunkMatrix &chunkMatrix, Game::Player *player, glm::mat4 projection);
+    void RenderDebugMode(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj);
+    void RenderMeshData(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection);
     
-    void RenderIMGUI(ChunkMatrix &chunkMatrix, Game::Player *player);
+    void RenderIMGUI(ChunkMatrix &chunkMatrix, GameEntities::Player *player);
 
     void UpdateParticleVBO(ChunkMatrix &chunkMatrix);
 
