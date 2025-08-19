@@ -58,7 +58,6 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
     //Main game loop
     while (this->running)
     {
-        std::cout << "test" << std::endl;
         this->StartFrame();
 
         this->Update(game);
