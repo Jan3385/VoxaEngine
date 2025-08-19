@@ -5,6 +5,7 @@
 
 #include <Registry/GameObjectRegistry.h>
 
+
 Player *Game::player = nullptr;
 
 void Game::OnInitialize()
@@ -62,6 +63,43 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
     );
 
     ImGuiRenderer::RenderDebugPanel();
+}
+
+void Game::RegisterVoxels()
+{
+    using namespace Registry;
+}
+
+void Game::RegisterVoxelObjects()
+{
+    using namespace Registry;
+    
+    GameObjectRegistry::RegisterGameObject(
+        "Player",
+        GameObjectBuilder(GameObjectType::PhysicsObject)
+            .SetDensityOverride(985.0f)
+            .SetVoxelFileName("Player")
+            .Build()
+    );
+    GameObjectRegistry::RegisterGameObject(
+        "Barrel",
+        GameObjectBuilder(GameObjectType::PhysicsObject)
+            .SetDensityOverride(400.0f)
+            .SetVoxelFileName("Barrel")
+            .Build()
+    );
+    GameObjectRegistry::RegisterGameObject(
+        "Ball",
+        GameObjectBuilder(GameObjectType::PhysicsObject)
+            .SetVoxelFileName("Ball")
+            .Build()
+    );
+    GameObjectRegistry::RegisterGameObject(
+        "Crate",
+        GameObjectBuilder(GameObjectType::GameObject)
+            .SetVoxelFileName("Crate")
+            .Build()
+    );
 }
 
 void Game::OnMouseScroll(int yOffset)

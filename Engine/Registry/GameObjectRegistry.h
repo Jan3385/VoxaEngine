@@ -9,6 +9,8 @@
 #include "Physics/Physics.h"
 #include "World/Voxel.h"
 
+struct IGame;
+
 namespace Registry
 {
     enum class GameObjectType{
@@ -52,7 +54,7 @@ namespace Registry
         static void RegisterGameObject(const std::string &name, GameObjectProperty property);
         static void SetVoxelsFromFile(GameObjectProperty &property, const std::string &fileName);
 
-        static void RegisterObjects();
+        static void RegisterObjects(IGame *game);
         static void CloseRegistry();
 
         static std::string GetVoxelFromColorID(uint32_t colorId);

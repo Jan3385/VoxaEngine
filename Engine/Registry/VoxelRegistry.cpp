@@ -6,6 +6,7 @@
 #include "World/voxelTypes.h"
 #include "GameObjectRegistry.h"
 #include "VoxelRegistry.h"
+#include "GameEngine.h"
 
 using namespace Volume;
 using namespace Registry;
@@ -39,7 +40,7 @@ void Registry::VoxelRegistry::RegisterReaction(Registry::ChemicalReaction reacti
 	Registry::VoxelRegistry::reactionRegistry.push_back(reaction);
 }
 
-void VoxelRegistry::RegisterVoxels()
+void VoxelRegistry::RegisterVoxels(IGame *game)
 {
 	std::cout << "Registering voxels ";
 	using namespace Volume;
@@ -236,7 +237,6 @@ void VoxelRegistry::RegisterVoxels()
 		"Carbon_Dioxide",
 		VoxelBuilder(DefaultVoxelConstructor::GasVoxel, 850, 0.016, 1.98)
 			.SetName("Carbon Dioxide")
-			//.SetColor(RGBA(4, 4, 4, 50))
 			.SetColor(RGBA(4, 4, 4, 70))
 			.PhaseDown("Liquid_Carbon_Dioxide", -56.6)
 			.SetFluidDispursionRate(3)
@@ -355,6 +355,8 @@ void VoxelRegistry::RegisterVoxels()
 			.SetFlamability(200)
 			.Build()
 	);
+
+	game->RegisterVoxels();
 
 	std::cout << "[ \033[32mOK\033[0m ]" << std::endl;
 }

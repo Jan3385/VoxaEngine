@@ -1,6 +1,7 @@
 #include "Registry/GameObjectRegistry.h"
 #include "GameObjectRegistry.h"
 #include "Physics/Physics.h"
+#include "GameEngine.h"
 
 #include <iostream>
 
@@ -69,35 +70,11 @@ void Registry::GameObjectRegistry::SetVoxelsFromFile(GameObjectProperty &propert
     SDL_FreeSurface(colorSurface);
     SDL_FreeSurface(materialSurface);
 }
-void GameObjectRegistry::RegisterObjects()
+void GameObjectRegistry::RegisterObjects(IGame *game)
 {
     std::cout << "Registering game objects ";
-    GameObjectRegistry::RegisterGameObject(
-        "Player",
-        GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetDensityOverride(985.0f)
-            .SetVoxelFileName("Player")
-            .Build()
-    );
-    GameObjectRegistry::RegisterGameObject(
-        "Barrel",
-        GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetDensityOverride(400.0f)
-            .SetVoxelFileName("Barrel")
-            .Build()
-    );
-    GameObjectRegistry::RegisterGameObject(
-        "Ball",
-        GameObjectBuilder(GameObjectType::PhysicsObject)
-            .SetVoxelFileName("Ball")
-            .Build()
-    );
-    GameObjectRegistry::RegisterGameObject(
-        "Crate",
-        GameObjectBuilder(GameObjectType::GameObject)
-            .SetVoxelFileName("Crate")
-            .Build()
-    );
+
+    game->RegisterVoxelObjects();
 
     std::cout << "[ \033[32mOK\033[0m ]" << std::endl;
 }

@@ -11,6 +11,8 @@
 #include "Math/Temperature.h"
 #include "Math/Vector.h"
 
+struct IGame;
+
 namespace Registry{
 	struct ChemicalReaction{
 		std::string from;
@@ -105,7 +107,7 @@ namespace Registry{
 
 		static void RegisterVoxel(const std::string& name, Volume::VoxelProperty property);
 		static void RegisterReaction(Registry::ChemicalReaction reaction);
-		static void RegisterVoxels();
+		static void RegisterVoxels(IGame *game);
 		static void CloseRegistry();
 		static std::unordered_map<std::string, Volume::VoxelProperty> registry;
 		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;

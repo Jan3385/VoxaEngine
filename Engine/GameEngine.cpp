@@ -27,12 +27,6 @@ GameEngine::GameEngine()
     GameEngine::physics = new GamePhysics();
 
     GameEngine::renderer = new GameRenderer(&glContext);
-
-    Registry::VoxelRegistry::RegisterVoxels();
-    Registry::VoxelRegistry::CloseRegistry();
-
-    Registry::GameObjectRegistry::RegisterObjects();
-    Registry::GameObjectRegistry::CloseRegistry();
 }
 
 void GameEngine::Initialize(const EngineConfig& config){
@@ -51,6 +45,13 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
 {
     this->Initialize(config);
     this->currentGame = &game;
+
+    Registry::VoxelRegistry::RegisterVoxels(this->currentGame);
+    Registry::VoxelRegistry::CloseRegistry();
+
+    Registry::GameObjectRegistry::RegisterObjects(this->currentGame);
+    Registry::GameObjectRegistry::CloseRegistry();
+
     game.OnInitialize();
 
     GameEngine::instance->StartSimulationThread(game);

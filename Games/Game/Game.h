@@ -15,6 +15,9 @@ private:
     void PhysicsUpdate(float deltaTime) override;
     void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) override;
 
+    void RegisterVoxels() override;
+    void RegisterVoxelObjects() override;
+
     void OnMouseScroll(int yOffset) override;
     void OnMouseButtonDown(int button) override;
     void OnMouseButtonUp(int button) override;
