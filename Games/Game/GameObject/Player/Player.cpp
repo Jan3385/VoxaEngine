@@ -1,16 +1,12 @@
-#include "GameObject/Player.h"
+#include "Player.h"
 #include "GameEngine.h"
-
 #include "World/Particles/BulletParticle.h"
 
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-#include "Player.h"
 
-GameEntities::Player::Player() = default;
-
-GameEntities::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData, float densityOverride)
+Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>> &voxelData, float densityOverride)
     : PhysicsObject(
         Vec2f(100.0f, 0.0f),
         voxelData,
@@ -27,7 +23,7 @@ GameEntities::Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Regist
     this->gunLaserParticleGenerator->enabled = false;
 }
 
-GameEntities::Player::~Player()
+Player::~Player()
 {
     delete this->gunLaserParticleGenerator;
     this->gunLaserParticleGenerator = nullptr;
@@ -39,7 +35,7 @@ GameEntities::Player::~Player()
     }
 }
 
-void GameEntities::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
+void Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 {
     if(!b2Body_IsValid(m_physicsBody)) return;
 
@@ -121,12 +117,12 @@ void GameEntities::Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTim
     chunkMatrix.voxelMutex.unlock();
 }
 
-bool GameEntities::Player::Update(ChunkMatrix &chunkMatrix)
+bool Player::Update(ChunkMatrix &chunkMatrix)
 {
     return true;
 }
 
-void GameEntities::Player::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)
+void Player::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec2> &edges, b2WorldId worldId)
 {
     PhysicsObject::UpdateColliders(triangles, edges, worldId);
 
@@ -137,7 +133,7 @@ void GameEntities::Player::UpdateColliders(std::vector<Triangle> &triangles, std
         b2Body_Enable(m_physicsBody);
 }
 
-void GameEntities::Player::FireGun(ChunkMatrix &chunkMatrix)
+void Player::FireGun(ChunkMatrix &chunkMatrix)
 {
     if(!this->gunEnabled) return;
 
@@ -153,11 +149,11 @@ void GameEntities::Player::FireGun(ChunkMatrix &chunkMatrix)
         this->position
     );
 }
-bool GameEntities::Player::ShouldRender() const
+bool Player::ShouldRender() const
 {
     return !noClip;
 }
-void GameEntities::Player::SetNoClip(bool value)
+void Player::SetNoClip(bool value)
 {
     if(this->noClip == value) return;
 
@@ -174,12 +170,12 @@ void GameEntities::Player::SetNoClip(bool value)
         b2Body_SetTransform(m_physicsBody, b2Vec2(this->position.x, this->position.y), b2Rot{1.0f, 0.0f});
     }
 }
-Vec2f GameEntities::Player::GetCameraPos() const
+Vec2f Player::GetCameraPos() const
 {
     return Vec2f(Camera.corner + Vec2f(Camera.size.x/2, Camera.size.y/2));
 }
 
-std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsUnder(ChunkMatrix &chunkMatrix)
+std::vector<Volume::VoxelElement*> Player::GetVoxelsUnder(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int x = -PLAYER_WIDTH/2+1; x < PLAYER_WIDTH/2-1; ++x) {
@@ -191,7 +187,7 @@ std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsUnder(ChunkMat
     return voxels;
 }
 
-std::vector<Volume::VoxelElement *> GameEntities::Player::GetVoxelsAbove(ChunkMatrix &chunkMatrix)
+std::vector<Volume::VoxelElement *> Player::GetVoxelsAbove(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
@@ -203,7 +199,7 @@ std::vector<Volume::VoxelElement *> GameEntities::Player::GetVoxelsAbove(ChunkMa
     return voxels;
 }
 
-std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsLeft(ChunkMatrix &chunkMatrix)
+std::vector<Volume::VoxelElement*> Player::GetVoxelsLeft(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y <= PLAYER_HEIGHT/2; ++y) {
@@ -216,7 +212,7 @@ std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsLeft(ChunkMatr
     return voxels;
 }
 
-std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsRight(ChunkMatrix &chunkMatrix)
+std::vector<Volume::VoxelElement*> Player::GetVoxelsRight(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y <= PLAYER_HEIGHT/2; ++y) {
@@ -229,7 +225,7 @@ std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsRight(ChunkMat
     return voxels;
 }
 
-std::vector<Volume::VoxelElement *> GameEntities::Player::GetVoxelsAtWaist(ChunkMatrix &chunkMatrix)
+std::vector<Volume::VoxelElement *> Player::GetVoxelsAtWaist(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int x = -PLAYER_WIDTH/2; x < PLAYER_WIDTH/2; ++x) {
@@ -241,7 +237,7 @@ std::vector<Volume::VoxelElement *> GameEntities::Player::GetVoxelsAtWaist(Chunk
     return voxels;
 }
 
-std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsVerticalSlice(ChunkMatrix &chunkMatrix)
+std::vector<Volume::VoxelElement*> Player::GetVoxelsVerticalSlice(ChunkMatrix &chunkMatrix)
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y < PLAYER_HEIGHT/2; ++y) {
@@ -253,7 +249,7 @@ std::vector<Volume::VoxelElement*> GameEntities::Player::GetVoxelsVerticalSlice(
     return voxels;
 }
 
-bool GameEntities::Player::isOnGround(ChunkMatrix &chunkMatrix)
+bool Player::isOnGround(ChunkMatrix &chunkMatrix)
 {
     if(this->noClip) return false;
 
@@ -267,7 +263,7 @@ bool GameEntities::Player::isOnGround(ChunkMatrix &chunkMatrix)
     return false;
 }
 
-int GameEntities::Player::touchLeftWall(ChunkMatrix &chunkMatrix)
+int Player::touchLeftWall(ChunkMatrix &chunkMatrix)
 {
     if(this->noClip) return 0;
 
@@ -283,7 +279,7 @@ int GameEntities::Player::touchLeftWall(ChunkMatrix &chunkMatrix)
     return highest;
 }
 
-int GameEntities::Player::touchRightWall(ChunkMatrix &chunkMatrix)
+int Player::touchRightWall(ChunkMatrix &chunkMatrix)
 {
     if(this->noClip) return 0;
 
@@ -298,7 +294,7 @@ int GameEntities::Player::touchRightWall(ChunkMatrix &chunkMatrix)
     return highest;
 }
 
-void GameEntities::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
+void Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
     using namespace Volume;
 
@@ -328,7 +324,7 @@ void GameEntities::Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
     }
 }
 
-void GameEntities::Player::MoveCameraTowards(Vec2f to, ChunkMatrix &chunkMatrix)
+void Player::MoveCameraTowards(Vec2f to, ChunkMatrix &chunkMatrix)
 {
     Vec2f from = GetCameraPos();
 

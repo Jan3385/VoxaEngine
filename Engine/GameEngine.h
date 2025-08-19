@@ -20,7 +20,7 @@
 #include "Math/Vector.h"
 #include "Math/AABB.h"
 #include "World/Chunk.h"
-#include "GameObject/Player.h"
+#include "World/ChunkMatrix.h"
 #include "Physics/Physics.h"
 
 #define AVG_FPS_SIZE_COUNT 25
@@ -28,10 +28,18 @@
 struct IGame{
     virtual void OnInitialize() = 0;
     virtual void OnShutdown() = 0;
-    virtual void Update() = 0;
-    virtual void FixedUpdate() = 0;
-    virtual void PhysicsUpdate() = 0;
+    virtual void Update(float deltaTime) = 0;
+    virtual void FixedUpdate(float fixedDeltaTime) = 0;
+    virtual void PhysicsUpdate(float deltaTime) = 0;
     virtual void Render() = 0;
+
+    virtual void OnMouseButtonDown(int button) = 0;
+    virtual void OnMouseButtonUp(int button) = 0;
+    virtual void OnMouseMove(int x, int y) = 0;
+    virtual void OnKeyboardDown(int key) = 0;
+    virtual void OnKeyboardUp(int key) = 0;
+
+    virtual void OnWindowResize(int newX, int newY) = 0;
 
     virtual ~IGame() = default;
 };
@@ -44,12 +52,15 @@ class GameEngine
 {
 private:
     EngineConfig config;
+    IGame *currentGame = nullptr;
 
     SDL_GLContext glContext;
     SDL_Event windowEvent;
     Uint64 FrameStartTime;
     
     std::thread simulationThread;
+
+    VoxelObject *player = nullptr;
 
     float fixedUpdateTimer = 0;
     std::atomic<float> simulationUpdateTimer = 0;
@@ -90,7 +101,8 @@ public:
 
     static bool MovementKeysHeld[4]; //W, S, A, D
 
-    GameEntities::Player *Player;
+    static bool NoClip;
+    static bool GunEnabled;
 
     bool running = false;
     float deltaTime = 1/60.0;    // time between frames in seconds
@@ -116,6 +128,9 @@ public:
     GameEngine();
 
     void Run(IGame& game, const EngineConfig& config);
+
+    void SetPlayer(VoxelObject *player);
+    VoxelObject *GetPlayer() const { return player; };
     ~GameEngine();
 
     Volume::Chunk* LoadChunkInView(Vec2i pos);

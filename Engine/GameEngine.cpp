@@ -13,12 +13,20 @@ bool GameEngine::placeUnmovableSolidVoxels = false;
 int GameEngine::placementRadius = 5;
 int GameEngine::placeVoxelAmount = 20;
 bool GameEngine::MovementKeysHeld[4] = {false, false, false, false};
+
+bool GameEngine::NoClip = false;
+bool GameEngine::GunEnabled = false;
+
 GameEngine* GameEngine::instance = nullptr;
 GameRenderer* GameEngine::renderer = nullptr;
 GamePhysics* GameEngine::physics = nullptr;
 
 GameEngine::GameEngine()
 {
+    if(GameEngine::instance != nullptr){
+        throw std::runtime_error("GameEngine is already initialized! Cannot run more than one instance.");
+    }
+
     //init srand
     std::srand(static_cast<unsigned>(time(NULL)));
 
@@ -34,18 +42,20 @@ GameEngine::GameEngine()
 }
 
 void GameEngine::Initialize(const EngineConfig& config){
+    if(GameEngine::instance != nullptr){
+        throw std::runtime_error("GameEngine is already initialized! Cannot run more than one instance.");
+    }
+
     GameEngine::instance = this;
+
     this->running = true;
     this->config = config;
-
-    Registry::GameObjectProperty *playerProperty = Registry::GameObjectRegistry::GetProperties("Player");
-    this->Player = new GameEntities::Player(&this->chunkMatrix, playerProperty->voxelData, playerProperty->densityOverride);
-    physics->physicsObjects.push_back(this->Player);
 }
 
 void GameEngine::Run(IGame &game, const EngineConfig& config)
 {
     this->Initialize(config);
+    this->currentGame = &game;
     game.OnInitialize();
 
     GameEngine::instance->StartSimulationThread(game);
@@ -66,13 +76,16 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
     game.OnShutdown();
 }
 
+void GameEngine::SetPlayer(VoxelObject *player)
+{
+    this->player = player;
+}
+
 GameEngine::~GameEngine()
 {
     this->running = false;
     
     simulationThread.join();
-
-    delete this->Player;
 
     SDL_GL_DeleteContext(glContext);
 
@@ -120,9 +133,6 @@ void GameEngine::Update(IGame& game)
     //Polls events - e.g. window close, keyboard input..
     this->PollEvents();
 
-    //Update Player
-    this->Player->UpdatePlayer(this->chunkMatrix, this->deltaTime);
-
     this->chunkMatrix.voxelMutex.lock();
     // Run physics simulation
     physics->Step(this->deltaTime, this->chunkMatrix);
@@ -141,14 +151,14 @@ void GameEngine::Update(IGame& game)
     }
     this->chunkMatrix.voxelMutex.unlock();
 
-    game.Update();
+    game.Update(this->deltaTime);
 
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
         FixedUpdate(game);
-        game.FixedUpdate();
+        game.FixedUpdate(this->fixedDeltaTime);
         fixedUpdateTimer -= fixedDeltaTime;
     }
 
@@ -216,7 +226,7 @@ void GameEngine::SimulationThread(IGame& game)
 
         //delete all chunks marked for deletion
         for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
-            if(chunkMatrix.Grid[i]->ShouldChunkDelete(this->Player->Camera))
+            if(chunkMatrix.Grid[i]->ShouldChunkDelete(GameEngine::renderer->Camera))
             {
                 chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
             }
@@ -238,7 +248,7 @@ void GameEngine::SimulationThread(IGame& game)
 
         chunkMatrix.UpdateParticles();
 
-        game.PhysicsUpdate();
+        game.PhysicsUpdate(this->simulationFixedDeltaTime);
     }
 }
 void GameEngine::FixedUpdate(IGame& game)
@@ -262,9 +272,14 @@ void GameEngine::PollEvents()
                 case SDL_MOUSEMOTION:
                     this->mousePos.x = this->windowEvent.motion.x;
                     this->mousePos.y = this->windowEvent.motion.y;
+                    currentGame->OnMouseMove(this->mousePos.x, this->mousePos.y);
                     break;
                 case SDL_MOUSEBUTTONDOWN:
                     OnMouseButtonDown(this->windowEvent.button);
+                    currentGame->OnMouseButtonDown(this->windowEvent.button.button);
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    currentGame->OnMouseButtonUp(this->windowEvent.button.button);
                     break;
                 case SDL_MOUSEWHEEL:
                     this->placementRadius += this->windowEvent.wheel.y;
@@ -280,16 +295,16 @@ void GameEngine::PollEvents()
                 switch (this->windowEvent.key.keysym.sym)
                 {
                 case SDLK_w:
-                    MovementKeysHeld[0] = true;
+                    GameEngine::MovementKeysHeld[0] = true;
                     break;
                 case SDLK_s:
-                    MovementKeysHeld[1] = true;
+                    GameEngine::MovementKeysHeld[1] = true;
                     break;
                 case SDLK_a:
-                    MovementKeysHeld[2] = true;
+                    GameEngine::MovementKeysHeld[2] = true;
                     break;
                 case SDLK_d:
-                    MovementKeysHeld[3] = true;
+                    GameEngine::MovementKeysHeld[3] = true;
                     break;
                 default:
                     OnKeyboardInput(this->windowEvent.key);
@@ -297,6 +312,7 @@ void GameEngine::PollEvents()
                 }
                 break;
             }
+            currentGame->OnKeyboardDown(this->windowEvent.key.keysym.sym);
         }
 
         //other events (including keyUp)
@@ -309,15 +325,13 @@ void GameEngine::PollEvents()
             switch (this->windowEvent.window.event)
             {
                 case SDL_WINDOWEVENT_RESIZED:
-                    this->Player->Camera.size = Vec2f(
-                        this->windowEvent.window.data1/Volume::Chunk::RENDER_VOXEL_SIZE, 
-                        this->windowEvent.window.data2/Volume::Chunk::RENDER_VOXEL_SIZE);
                     glViewport(0, 0, 
                         this->windowEvent.window.data1, 
                         this->windowEvent.window.data2
                     );
                     this->WindowSize.x = this->windowEvent.window.data1;
                     this->WindowSize.y = this->windowEvent.window.data2;
+                    this->currentGame->OnWindowResize(this->WindowSize.x, this->WindowSize.y);
                 break;
             }
             break;
@@ -325,36 +339,37 @@ void GameEngine::PollEvents()
             switch (this->windowEvent.key.keysym.sym)
             {
             case SDLK_w:
-                MovementKeysHeld[0] = false;
+                GameEngine::MovementKeysHeld[0] = false;
                 break;
             case SDLK_s:
-                MovementKeysHeld[1] = false;
+                GameEngine::MovementKeysHeld[1] = false;
                 break;
             case SDLK_a:
-                MovementKeysHeld[2] = false;
+                GameEngine::MovementKeysHeld[2] = false;
                 break;
             case SDLK_d:
-                MovementKeysHeld[3] = false;
+                GameEngine::MovementKeysHeld[3] = false;
                 break;
             case SDLK_t:
                 {
-                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
+                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->Camera.corner);
                 Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             case SDLK_z:
                 {
-                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
+                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->Camera.corner);
                 Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             case SDLK_u:
                 {
-                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), this->Player->Camera.corner);
+                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->Camera.corner);
                 Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             }
+            this->currentGame->OnKeyboardUp(this->windowEvent.key.keysym.sym);
             break;
         }
     }
@@ -395,6 +410,7 @@ void GameEngine::OnKeyboardInput(SDL_KeyboardEvent event)
     }
 }
 
+//TODO: game should be handling this
 void GameEngine::OnMouseButtonDown(SDL_MouseButtonEvent event)
 {
     chunkMatrix.voxelMutex.lock();
@@ -402,13 +418,11 @@ void GameEngine::OnMouseButtonDown(SDL_MouseButtonEvent event)
     switch (event.button)
     {
     case SDL_BUTTON_LEFT:
-        if(this->Player->gunEnabled)
-            this->Player->FireGun(this->chunkMatrix);
-        else
-            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, this->Player->Camera.corner, Volume::Temperature(this->placeVoxelTemperature));
+        if(!GameEngine::GunEnabled)
+            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, GameEngine::renderer->Camera.corner, Volume::Temperature(this->placeVoxelTemperature));
         break;
     case SDL_BUTTON_RIGHT:
-        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, this->Player->Camera.corner);
+        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, GameEngine::renderer->Camera.corner);
     }
     chunkMatrix.voxelMutex.unlock();
 }

@@ -2,7 +2,6 @@
 
 #include "World/Chunk.h"
 #include "Math/Vector.h"
-#include "GameObject/Player.h"
 #include "Shader/Rendering/RenderingShader.h"
 #include "Rendering/FontRenderer.h"
 #include "Rendering/SpriteRenderer.h"
@@ -26,16 +25,16 @@ private:
     void ToggleDebugRendering();
 
     void RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projection);
-    void RenderPlayer(GameEntities::Player *player, glm::mat4 projection);
-    void RenderChunks(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection);
-    void RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, GameEntities::Player *player, glm::mat4 projection);
+    void RenderPlayer(VoxelObject *player, glm::mat4 projection);
+    void RenderChunks(ChunkMatrix &chunkMatrix, glm::mat4 projection);
+    void RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, glm::mat4 projection);
     void RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projection);
-    void RenderCursor(glm::vec2 mousePos, GameEntities::Player *player, glm::mat4 projection);
+    void RenderCursor(glm::vec2 mousePos, glm::mat4 projection);
 
-    void RenderDebugMode(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj);
-    void RenderMeshData(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection);
-    
-    void RenderIMGUI(ChunkMatrix &chunkMatrix, GameEntities::Player *player);
+    void RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj);
+    void RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection);
+
+    void RenderIMGUI(ChunkMatrix &chunkMatrix);
 
     void UpdateParticleVBO(ChunkMatrix &chunkMatrix);
 
@@ -55,6 +54,8 @@ public:
     bool debugRendering = false;
     bool renderMeshData = false;
     bool fullImGui = false;
+
+    AABB Camera;
 
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor);
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);

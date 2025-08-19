@@ -43,4 +43,6 @@ if(WIN32)
   )
 endif()
 
+# TODO: linux support
+
 

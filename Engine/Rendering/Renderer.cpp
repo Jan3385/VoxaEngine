@@ -10,9 +10,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-
+#include "World/ChunkMatrix.h"
 #include "Math/AABB.h"
-#include "GameObject/Player.h"
 
 #include "World/Particle.h"
 #include "World/ParticleGenerators/LaserParticleGenerator.h"
@@ -201,46 +200,45 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgro
     );
     glClear(GL_COLOR_BUFFER_BIT);
 
-    GameEntities::Player *player = GameEngine::instance->Player;
 
     // set up projections
     glm::mat4 voxelProj = glm::ortho(
-        player->Camera.corner.x, player->Camera.corner.x + player->Camera.size.x, 
-        player->Camera.corner.y + player->Camera.size.y, player->Camera.corner.y,
+        this->Camera.corner.x, this->Camera.corner.x + this->Camera.size.x, 
+        this->Camera.corner.y + this->Camera.size.y, this->Camera.corner.y,
         -1.0f, 1.0f
     );
     glm::mat4 screenProj = glm::ortho(
-        0.0f, player->Camera.size.x, 
-        player->Camera.size.y, 0.0f,
+        0.0f, this->Camera.size.x, 
+        this->Camera.size.y, 0.0f,
         -1.0f, 1.0f
     );
 
     this->RenderVoxelObjects(chunkMatrix, voxelProj);
 
-    this->RenderPlayer(player, voxelProj);
+    this->RenderPlayer(GameEngine::instance->GetPlayer(), voxelProj);
     
-    this->RenderChunks(chunkMatrix, player, voxelProj);
+    this->RenderChunks(chunkMatrix, voxelProj);
 
     //glm::vec2 mousePosInWorld = {
-    //    mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + static_cast<int>(player->Camera.corner.x),
-    //    mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + static_cast<int>(player->Camera.corner.y)
+    //    mousePos.x / Volume::Chunk::RENDER_VOXEL_SIZE + static_cast<int>(this->Camera.corner.x),
+    //    mousePos.y / Volume::Chunk::RENDER_VOXEL_SIZE + static_cast<int>(this->Camera.corner.y)
     //};
-    Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(mousePos, player->Camera.corner);
+    Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(mousePos, this->Camera.corner);
     glm::vec2 mousePosInWorldInt = glm::vec2(static_cast<int>(mousePosInWorldF.x), static_cast<int>(mousePosInWorldF.y));
 
-    this->RenderHeat(chunkMatrix, mousePosInWorldInt, player, voxelProj);
+    this->RenderHeat(chunkMatrix, mousePosInWorldInt, voxelProj);
 
     this->RenderParticles(chunkMatrix, voxelProj);
 
     if (this->debugRendering)
-        this->RenderDebugMode(chunkMatrix, player, mousePosInWorldInt, voxelProj, screenProj);
+        this->RenderDebugMode(chunkMatrix, mousePosInWorldInt, voxelProj, screenProj);
 
     if(this->renderMeshData)
-        this->RenderMeshData(chunkMatrix, player, voxelProj);
+        this->RenderMeshData(chunkMatrix, voxelProj);
 
-    this->RenderCursor(mousePosInWorldInt, player, voxelProj);
+    this->RenderCursor(mousePosInWorldInt, voxelProj);
 
-    this->RenderIMGUI(chunkMatrix, player);
+    this->RenderIMGUI(chunkMatrix);
 
     SDL_GL_SwapWindow(r_window);
 
@@ -292,7 +290,7 @@ void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const g
     glDrawArrays(GL_LINE_LOOP, 0, size);
 }
 
-void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, GameEntities::Player *player)
+void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
 {
     constexpr int ITEM_WIDTH = 150;
 
@@ -363,7 +361,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, GameEntities::Player *p
     ImGui::Checkbox("Render Mesh Data", &this->renderMeshData);
     ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
 
-    if(ImGui::Button("Toggle NoClip")) player->SetNoClip(!player->GetNoClip());
+    if(ImGui::Button("Toggle NoClip")) GameEngine::NoClip = !GameEngine::NoClip;
     ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
     ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
     ImGui::Checkbox("Chemical Simulation", &GameEngine::instance->runChemicalReactions);
@@ -374,7 +372,7 @@ void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix, GameEntities::Player *p
 
     ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
 
-    ImGui::Checkbox("Player Gun", &player->gunEnabled);
+    ImGui::Checkbox("Player Gun", &GameEngine::GunEnabled);
 
     ImGui::End();
     ImGui::Render();
@@ -407,7 +405,7 @@ void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projec
     }
 }
 
-void GameRenderer::RenderPlayer(GameEntities::Player *player, glm::mat4 projection)
+void GameRenderer::RenderPlayer(VoxelObject *player, glm::mat4 projection)
 {
     this->voxelRenderProgram->Use();
     this->voxelRenderProgram->SetMat4("projection", projection);
@@ -423,7 +421,7 @@ void GameRenderer::RenderPlayer(GameEntities::Player *player, glm::mat4 projecti
     }
 }
 
-void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection)
+void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix,  glm::mat4 projection)
 {
     // set up new VBOs for newly created chunks
     for(auto& chunk : this->chunkCreateBuffer) {
@@ -435,7 +433,7 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, GameEntities::Player *
     this->voxelRenderProgram->SetMat4("projection", projection);
 
     for (auto& chunk : chunkMatrix.Grid) {
-        if(chunk->GetAABB().Overlaps(player->Camera)){
+        if(chunk->GetAABB().Overlaps(this->Camera)){
             chunk->Render(false);
 
             glBindVertexArray(chunk->renderVoxelVAO);
@@ -447,7 +445,7 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix, GameEntities::Player *
     }
 }
 
-void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, GameEntities::Player *player,  glm::mat4 projection)
+void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,  glm::mat4 projection)
 {
     this->temperatureRenderProgram->Use();
     this->temperatureRenderProgram->SetMat4("projection", projection);
@@ -455,7 +453,7 @@ void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, Game
     this->temperatureRenderProgram->SetVec2("cursorPosition", mousePos);
 
     for (auto& chunk : chunkMatrix.Grid) {
-        if(chunk->GetAABB().Overlaps(player->Camera)) {
+        if(chunk->GetAABB().Overlaps(this->Camera)) {
             glBindVertexArray(chunk->heatRenderingVAO);
             glDrawArraysInstanced(
                 GL_TRIANGLE_FAN, 0, 4, 
@@ -479,11 +477,11 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
     }
 }
 
-void GameRenderer::RenderCursor(glm::vec2 mousePos, GameEntities::Player *player, glm::mat4 projection)
+void GameRenderer::RenderCursor(glm::vec2 mousePos, glm::mat4 projection)
 {
     int cursorSize = GameEngine::instance->placementRadius * 2 + 1;
 
-    cursorSize = player->gunEnabled ? 1 : cursorSize;
+    cursorSize = GameEngine::GunEnabled ? 1 : cursorSize;
 
     this->cursorRenderProgram->Use();
     this->cursorRenderProgram->SetVec2("size", glm::vec2(cursorSize, cursorSize));
@@ -496,13 +494,13 @@ void GameRenderer::RenderCursor(glm::vec2 mousePos, GameEntities::Player *player
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj)
+void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj)
 {
     glm::vec4 green = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
     glm::vec4 red = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     for (auto& chunk : chunkMatrix.Grid) {
         // draw chunk AABBs
-        if(chunk->GetAABB().Overlaps(player->Camera)) {
+        if(chunk->GetAABB().Overlaps(this->Camera)) {
             glm::vec2 start = {
                 chunk->GetAABB().corner.x,
                 chunk->GetAABB().corner.y
@@ -587,11 +585,11 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, GameEntities::Playe
     }
 }
 
-void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, GameEntities::Player *player, glm::mat4 projection)
+void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection)
 {
     // Draw chunk mesh data as before
     for (auto& chunk : chunkMatrix.Grid) {
-        if(chunk->GetAABB().Overlaps(player->Camera)) {
+        if(chunk->GetAABB().Overlaps(this->Camera)) {
             for (const Triangle& t : chunk->GetColliders()) {
                 std::vector<glm::vec2> points = {
                     glm::vec2(t.a.x, t.a.y) + glm::vec2(chunk->GetAABB().corner.x, chunk->GetAABB().corner.y),
