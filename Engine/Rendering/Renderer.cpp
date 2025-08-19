@@ -56,8 +56,6 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     }
     r_GLContext = glContext;
 
-    SDL_GL_SetSwapInterval(0); // Disable VSync
-
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
@@ -442,6 +440,18 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
             GL_TRIANGLE_FAN, 0, 4, 
             static_cast<GLsizei>(chunkMatrix.particles.size())
         );
+    }
+}
+
+void GameRenderer::SetVSYNC(bool enabled)
+{
+    if(!enabled)
+        SDL_GL_SetSwapInterval(0);
+    else{
+        bool failed = SDL_GL_SetSwapInterval(-1) == -1;
+        
+        if(!failed)
+            SDL_GL_SetSwapInterval(1);
     }
 }
 

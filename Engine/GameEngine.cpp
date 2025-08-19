@@ -9,13 +9,7 @@
 
 using namespace std;
 
-bool GameEngine::placeUnmovableSolidVoxels = false;
-int GameEngine::placementRadius = 5;
-int GameEngine::placeVoxelAmount = 20;
 bool GameEngine::MovementKeysHeld[4] = {false, false, false, false};
-
-bool GameEngine::NoClip = false;
-bool GameEngine::GunEnabled = false;
 
 GameEngine* GameEngine::instance = nullptr;
 GameRenderer* GameEngine::renderer = nullptr;
@@ -47,6 +41,7 @@ void GameEngine::Initialize(const EngineConfig& config){
     }
 
     GameEngine::instance = this;
+    GameEngine::renderer->SetVSYNC(config.vsync);
 
     this->running = true;
     this->config = config;
@@ -274,19 +269,18 @@ void GameEngine::PollEvents()
                     currentGame->OnMouseMove(this->mousePos.x, this->mousePos.y);
                     break;
                 case SDL_MOUSEBUTTONDOWN:
-                    OnMouseButtonDown(this->windowEvent.button);
                     currentGame->OnMouseButtonDown(this->windowEvent.button.button);
                     break;
                 case SDL_MOUSEBUTTONUP:
                     currentGame->OnMouseButtonUp(this->windowEvent.button.button);
                     break;
                 case SDL_MOUSEWHEEL:
-                    this->placementRadius += this->windowEvent.wheel.y;
-                    this->placementRadius = std::clamp(this->placementRadius, 0, 10);
+                    currentGame->OnMouseScroll(this->windowEvent.wheel.y);
                     break;
             }
         }
-        //keyboard (except keyUp)
+
+        //keyboard
         if(!io.WantCaptureKeyboard){
             switch (this->windowEvent.type)
             {
@@ -305,13 +299,10 @@ void GameEngine::PollEvents()
                 case SDLK_d:
                     GameEngine::MovementKeysHeld[3] = true;
                     break;
-                default:
-                    break;
                 }
                 break;
-            }
-            if(this->windowEvent.type == SDL_KEYDOWN)
                 currentGame->OnKeyboardDown(this->windowEvent.key.keysym.sym);
+            }
         }
 
         //other events (including keyUp)
@@ -325,9 +316,11 @@ void GameEngine::PollEvents()
             {
                 case SDL_WINDOWEVENT_RESIZED:
                     GameEngine::renderer->SetCameraSize(
-                        Vec2f(this->windowEvent.window.data1 / Volume::Chunk::RENDER_VOXEL_SIZE,
+                        Vec2f(
+                            this->windowEvent.window.data1 / Volume::Chunk::RENDER_VOXEL_SIZE,
                             this->windowEvent.window.data2 / Volume::Chunk::RENDER_VOXEL_SIZE
-                        ));
+                    ));
+
                     glViewport(0, 0, 
                         this->windowEvent.window.data1, 
                         this->windowEvent.window.data2
@@ -352,24 +345,6 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_d:
                 GameEngine::MovementKeysHeld[3] = false;
-                break;
-            case SDLK_t:
-                {
-                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->GetCameraOffset());
-                Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, GameEngine::physics);
-                }
-                break;
-            case SDLK_z:
-                {
-                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->GetCameraOffset());
-                Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, GameEngine::physics);
-                }
-                break;
-            case SDLK_u:
-                {
-                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->GetCameraOffset());
-                Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, GameEngine::physics);
-                }
                 break;
             }
             this->currentGame->OnKeyboardUp(this->windowEvent.key.keysym.sym);
@@ -400,21 +375,4 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
     GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
     chunkMatrix.chunkCreationMutex.unlock();
     return chunk;
-}
-
-//TODO: game should be handling this
-void GameEngine::OnMouseButtonDown(SDL_MouseButtonEvent event)
-{
-    chunkMatrix.voxelMutex.lock();
-    
-    switch (event.button)
-    {
-    case SDL_BUTTON_LEFT:
-        if(!GameEngine::GunEnabled)
-            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, GameEngine::renderer->GetCameraOffset(), Volume::Temperature(this->placeVoxelTemperature));
-        break;
-    case SDL_BUTTON_RIGHT:
-        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, GameEngine::renderer->GetCameraOffset());
-    }
-    chunkMatrix.voxelMutex.unlock();
 }

@@ -1,6 +1,7 @@
 #include "Game.h"
 
 #include "Rendering/ImGuiRenderer.h"
+#include "Input/InputHandler.h"
 
 #include <Registry/GameObjectRegistry.h>
 
@@ -27,9 +28,6 @@ void Game::Update(float deltaTime)
 {
     GameEngine::renderer->SetCameraPosition(Game::player->GetPosition());
     Game::player->UpdatePlayer(GameEngine::instance->chunkMatrix, deltaTime);
-
-    if(GameEngine::NoClip != Game::player->GetNoClip())
-        Game::player->SetNoClip(GameEngine::NoClip);
 }
 
 void Game::FixedUpdate(float fixedDeltaTime)
@@ -54,7 +52,7 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
         static_cast<int>(mousePosInWorldF.y)
     );
 
-    int cursorSize = GameEngine::instance->placementRadius * 2 + 1;
+    int cursorSize = Input::mouseData.placementRadius * 2 + 1;
     cursorSize = Game::player->gunEnabled ? 1 : cursorSize;
 
     GameEngine::renderer->RenderCursor(
@@ -66,31 +64,34 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
     ImGuiRenderer::RenderDebugPanel();
 }
 
+void Game::OnMouseScroll(int yOffset)
+{
+    Input::OnMouseScroll(yOffset);
+}
+
 void Game::OnMouseButtonDown(int button)
 {
+    Input::OnMouseButtonDown(button);
 }
 
 void Game::OnMouseButtonUp(int button)
 {
+    Input::OnMouseButtonUp(button);
 }
 
 void Game::OnMouseMove(int x, int y)
 {
+    Input::OnMouseMove(x, y);
 }
 
 void Game::OnKeyboardDown(int key)
 {
-    
+    Input::OnKeyboardDown(key);
 }
 
 void Game::OnKeyboardUp(int key)
 {
-    switch (key)
-    {
-    case SDLK_F1:
-        ImGuiRenderer::fullImGui = !ImGuiRenderer::fullImGui;
-        break;
-    }
+    Input::OnKeyboardUp(key);
 }
 
 void Game::OnWindowResize(int newX, int newY)

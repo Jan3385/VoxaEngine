@@ -111,20 +111,18 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
     return nullptr;
 }
 
-void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp)
+void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
 
     if(!IsValidWorldPosition(MouseWorldPos)) return;
 
-    const int size = GameEngine::placementRadius;
-
     for (int x = -size; x <= size; x++)
     {
         for (int y = -size; y <= size; y++)
         {
-            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, GameEngine::placeUnmovableSolidVoxels, GameEngine::placeVoxelAmount, false);
+            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, size, false);
         }
     }
 }

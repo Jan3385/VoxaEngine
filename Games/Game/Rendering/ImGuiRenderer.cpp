@@ -6,6 +6,8 @@
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_opengl3.h>
 
+#include "Input/InputHandler.h"
+
 bool ImGuiRenderer::fullImGui = false;
 
 void ImGuiRenderer::RenderDebugPanel()
@@ -32,7 +34,7 @@ void ImGuiRenderer::RenderDebugPanel()
     // Find the index of placeVoxelType in voxelTypeNames
     static int currentItem = 0;
     for (int i = 0; i < IM_ARRAYSIZE(voxelTypeNames); ++i) {
-        if (voxelTypeNames[i] == GameEngine::instance->placeVoxelType) {
+        if (voxelTypeNames[i] == Input::mouseData.placeVoxelType) {
             currentItem = i;
             break;
         }
@@ -47,7 +49,7 @@ void ImGuiRenderer::RenderDebugPanel()
             if (ImGui::Selectable(voxelTypeNames[i], isSelected))
             {
                 currentItem = i;
-                GameEngine::instance->placeVoxelType = voxelTypeNames[i];
+                Input::mouseData.placeVoxelType = voxelTypeNames[i];
             }
 
             if (isSelected)
@@ -56,17 +58,18 @@ void ImGuiRenderer::RenderDebugPanel()
         ImGui::EndCombo();
     }
     ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::SliderInt("Placement Radius", &GameEngine::instance->placementRadius, 0, 10);
+    ImGui::SliderInt("Placement Radius", &Input::mouseData.placementRadius, 0, 10);
     ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragFloat("Placement Temperature", &GameEngine::instance->placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
+    ImGui::DragFloat("Placement Temperature", &Input::mouseData.placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
     ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 10, 1, 2000);
-    ImGui::Checkbox("Place Unmovable Solid Voxels", &GameEngine::instance->placeUnmovableSolidVoxels);
+    ImGui::DragInt("Placement Amount", &Input::mouseData.placeVoxelAmount, 10, 1, 2000);
+    ImGui::Checkbox("Place Unmovable Solid Voxels", &Input::mouseData.placeUnmovableSolidVoxels);
     if(ImGui::Button("Toggle Debug Rendering")) GameEngine::renderer->ToggleDebugRendering();
     ImGui::Checkbox("Render Mesh Data", &GameEngine::renderer->renderMeshData);
     ImGui::Checkbox("Show Heat Around Cursor", &GameEngine::renderer->showHeatAroundCursor);
+    
+    if(ImGui::Button("Toggle NoClip")) Game::player->SetNoClip(!Game::player->GetNoClip());
 
-    if(ImGui::Button("Toggle NoClip")) GameEngine::NoClip = !GameEngine::NoClip;
     ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
     ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
     ImGui::Checkbox("Chemical Simulation", &GameEngine::instance->runChemicalReactions);

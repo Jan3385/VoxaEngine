@@ -58,6 +58,8 @@ public:
     Vec2f GetCameraOffset() const { return this->Camera.corner; }
     AABB GetCameraAABB() const { return this->Camera; }
 
+    void SetVSYNC(bool enabled);
+
     void RenderCursor(glm::vec2 mousePos, glm::mat4 projection, int cursorSize);
 
     void ToggleDebugRendering();
