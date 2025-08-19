@@ -58,5 +58,5 @@ message(STATUS "Dependencies prepared")
 add_subdirectory(Engine)
 
 # Select which subprojects to build
-set(PROJECT "Game" CACHE STRING "Select the project to build (eg. Game)")
+set(PROJECT "Game" CACHE STRING "Select the project to build (eg. -DPROJECT=Game)")
 add_subdirectory(Games/${PROJECT})
