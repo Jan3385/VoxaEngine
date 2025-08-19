@@ -1,5 +1,6 @@
 #include "ImGuiRenderer.h"
 
+#include "Game.h"
 #include <GameEngine.h>
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
@@ -76,6 +77,13 @@ void ImGuiRenderer::RenderDebugPanel()
 
     ImGui::Text("Loaded chunks: %lld", GameEngine::instance->chunkMatrix.Grid.size());
 
-    ImGui::Checkbox("Player Gun", &GameEngine::GunEnabled);
+    ImGui::Checkbox("Player Gun", &Game::player->gunEnabled);
     ImGui::End();
+
+    // Set mouse based on if hovering over an element
+    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+    if(mouseOverUI)
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    else
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }

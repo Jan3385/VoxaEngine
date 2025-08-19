@@ -14,7 +14,6 @@
 #include "Math/AABB.h"
 
 #include "World/Particle.h"
-#include "World/ParticleGenerators/LaserParticleGenerator.h"
 
 GameRenderer::GameRenderer()
 {
@@ -285,25 +284,17 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgro
     if(this->renderMeshData)
         this->RenderMeshData(chunkMatrix, voxelProj);
 
-    this->RenderCursor(mousePosInWorldInt, voxelProj);
 
     // prepare IMGUI for the game renderer
     ImGui_ImplSDL2_NewFrame();
     ImGui_ImplOpenGL3_NewFrame();
     ImGui::NewFrame();
 
-    game->Render();
+    game->Render(voxelProj, screenProj);
 
     // Render the ImGui frame
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-    
-    // Set mouse based on if hovering over an element
-    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
-    if(mouseOverUI)
-        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-    else
-        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 
     SDL_GL_SwapWindow(r_window);
 
@@ -454,12 +445,8 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
     }
 }
 
-void GameRenderer::RenderCursor(glm::vec2 mousePos, glm::mat4 projection)
+void GameRenderer::RenderCursor(glm::vec2 mousePos, glm::mat4 projection, int cursorSize)
 {
-    int cursorSize = GameEngine::instance->placementRadius * 2 + 1;
-
-    cursorSize = GameEngine::GunEnabled ? 1 : cursorSize;
-
     this->cursorRenderProgram->Use();
     this->cursorRenderProgram->SetVec2("size", glm::vec2(cursorSize, cursorSize));
     this->cursorRenderProgram->SetVec2("cursorPosition", mousePos);

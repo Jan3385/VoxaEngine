@@ -29,7 +29,6 @@ private:
     void RenderChunks(ChunkMatrix &chunkMatrix, glm::mat4 projection);
     void RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, glm::mat4 projection);
     void RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projection);
-    void RenderCursor(glm::vec2 mousePos, glm::mat4 projection);
 
     void RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj);
     void RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection);
@@ -58,6 +57,8 @@ public:
     void SetCameraSize(Vec2f size);
     Vec2f GetCameraOffset() const { return this->Camera.corner; }
     AABB GetCameraAABB() const { return this->Camera; }
+
+    void RenderCursor(glm::vec2 mousePos, glm::mat4 projection, int cursorSize);
 
     void ToggleDebugRendering();
 

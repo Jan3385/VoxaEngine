@@ -31,7 +31,7 @@ struct IGame{
     virtual void Update(float deltaTime) = 0;
     virtual void FixedUpdate(float fixedDeltaTime) = 0;
     virtual void PhysicsUpdate(float deltaTime) = 0;
-    virtual void Render() = 0;
+    virtual void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) = 0;
 
     virtual void OnMouseButtonDown(int button) = 0;
     virtual void OnMouseButtonUp(int button) = 0;

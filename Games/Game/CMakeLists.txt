@@ -4,6 +4,8 @@ file(GLOB_RECURSE GAME_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 add_executable(VoxaGame ${GAME_SOURCES})
 
+target_include_directories(VoxaEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(VoxaGame PRIVATE VoxaEngine)
 
 set_property(TARGET VoxaGame PROPERTY CXX_STANDARD 20)

@@ -4,14 +4,16 @@
 #include "GameObject/Player/Player.h"
 
 class Game : public IGame {
+public:
     static Player *player;
 
+private:
     void OnInitialize() override;
     void OnShutdown() override;
     void Update(float deltaTime) override;
     void FixedUpdate(float fixedDeltaTime) override;
     void PhysicsUpdate(float deltaTime) override;
-    void Render() override;
+    void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) override;
 
     void OnMouseButtonDown(int button) override;
     void OnMouseButtonUp(int button) override;

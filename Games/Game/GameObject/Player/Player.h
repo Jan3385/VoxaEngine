@@ -2,7 +2,7 @@
 
 #include <GameObject/PhysicsObject.h>
 #include "World/ChunkMatrix.h"
-#include "World/ParticleGenerators/LaserParticleGenerator.h"
+#include "Particle/ParticleGenerators/LaserGenerator.h"
 
 class Player : public PhysicsObject{
 public:
@@ -56,7 +56,7 @@ private:
     static constexpr int STEP_HEIGHT = 3;
     static constexpr float JUMP_ACCELERATION = 1300000.0f;
 
-    Particle::LaserParticleGenerator *gunLaserParticleGenerator;
+    Particle::LaserGenerator *gunLaserParticleGenerator;
 
     float acceleration = 0;
 

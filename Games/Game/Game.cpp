@@ -42,8 +42,27 @@ void Game::PhysicsUpdate(float deltaTime)
 
 }
 
-void Game::Render()
+void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 {
+    Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(
+        GameEngine::instance->mousePos, 
+        GameEngine::renderer->GetCameraOffset()
+    );
+
+    glm::vec2 mousePosInWorldInt = glm::vec2(
+        static_cast<int>(mousePosInWorldF.x), 
+        static_cast<int>(mousePosInWorldF.y)
+    );
+
+    int cursorSize = GameEngine::instance->placementRadius * 2 + 1;
+    cursorSize = Game::player->gunEnabled ? 1 : cursorSize;
+
+    GameEngine::renderer->RenderCursor(
+        mousePosInWorldInt,
+        voxelProjection,
+        cursorSize
+    );
+
     ImGuiRenderer::RenderDebugPanel();
 }
 

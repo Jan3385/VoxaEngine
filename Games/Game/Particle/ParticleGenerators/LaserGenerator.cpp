@@ -1,11 +1,11 @@
-#include "LaserParticleGenerator.h"
+#include "LaserGenerator.h"
 
-#include "Math/Vector.h"
-#include "World/ChunkMatrix.h"
+#include <Math/Vector.h>
+#include <World/ChunkMatrix.h>
 #include <cmath>
 #include <iostream>
 
-void Particle::LaserParticleGenerator::TickParticles()
+void Particle::LaserGenerator::TickParticles()
 {
     //get end position based on angle and length
     Vec2i currentPos = Vec2i(position);
@@ -22,6 +22,7 @@ void Particle::LaserParticleGenerator::TickParticles()
     int particleCount = 0;
     while(true){
         particleCount++;
+        
         // Particle generation ------
         int alphaOffset = 0;
         Volume::VoxelElement *voxel = matrix->VirtualGetAt_NoLoad(currentPos, true);

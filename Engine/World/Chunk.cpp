@@ -9,7 +9,6 @@
 
 #include "GameEngine.h"
 #include "World/Particles/SolidFallingParticle.h"
-#include "World/ParticleGenerators/LaserParticleGenerator.h"
 #include "Physics/Physics.h"
 
 

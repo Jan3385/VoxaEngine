@@ -14,7 +14,7 @@ Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>
         "Player"
     )
 {
-    this->gunLaserParticleGenerator = new Particle::LaserParticleGenerator(matrix);
+    this->gunLaserParticleGenerator = new Particle::LaserGenerator(matrix);
     this->gunLaserParticleGenerator->length = 50;
     this->gunLaserParticleGenerator->enabled = false;
 }
