@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(Voxa LANGUAGES C CXX)
 
-if(UNIX)
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # vcpkg dependencies
 find_package(SDL2 CONFIG REQUIRED)
