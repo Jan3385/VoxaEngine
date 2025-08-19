@@ -113,6 +113,7 @@ void GamePhysics::Generate2DCollidersForChunk(Volume::Chunk *chunk)
 
 void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, ChunkMatrix* chunkMatrix)
 {
+    std::cout << "A" << std::endl;
     // STEP 1: flood fill
     std::vector<std::vector<int>> labels(
         object->GetSize().y + GRID_PADDING_FILL,
@@ -122,6 +123,7 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
         object->GetSize().y + GRID_PADDING_FILL,
         std::vector<bool>(object->GetSize().x + GRID_PADDING_FILL, false)
     );
+    std::cout << "B" << std::endl;
     for(int y = 0; y < static_cast<int>(labels.size()); ++y) {
         for(int x = 0; x < static_cast<int>(labels[0].size()); ++x) {
             if(y < object->GetSize().y && x < object->GetSize().x &&
@@ -131,6 +133,7 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
             }
         }
     }
+    std::cout << "C" << std::endl;
     // Fill the grid with the flood fill algorithm
     unsigned short int currentLabel = 1;
     for(int x = 0; x < object->GetSize().x; ++x) {
@@ -141,6 +144,7 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
             }
         }
     }
+    std::cout << "D" << std::endl;
 
     // find the most prominent label
     int maxLabel = 1;
@@ -158,6 +162,7 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
             }
         }
     }
+    std::cout << "E" << std::endl;
     
     // remove all non-prominent voxel groups
     if(object->CanBreakIntoParts()){
@@ -187,6 +192,7 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
             }
         }
     }
+    std::cout << "F" << std::endl;
 
     std::vector<Triangle> allTriangleColliders;
     std::vector<b2Vec2> allEdges;
@@ -248,17 +254,15 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
 /// @param deltaTime        time step for the simulation
 void GamePhysics::Step(float deltaTime, ChunkMatrix& chunkMatrix)
 {
-    std::cout << "A" << std::endl;
-    for(PhysicsObject* obj : physicsObjects) {
+    for(PhysicsObject* obj : this->physicsObjects) {
+        std::cout << "size: " << this->physicsObjects.size() << std::endl;
         if(obj->dirtyColliders) {
+            std::cout << "Updating colliders for object: " << obj->name << std::endl;
             this->Generate2DCollidersForVoxelObject(obj, &chunkMatrix);
         }
     }
-    std::cout << "B" << std::endl;
     
     b2World_Step(worldId, deltaTime*SIMULATION_SPEED, this->SIMULATION_STEP_COUNT);
-
-    std::cout << "C" << std::endl;
 
     // Update all physics object locations
     for(PhysicsObject* obj : physicsObjects) {
@@ -266,6 +270,4 @@ void GamePhysics::Step(float deltaTime, ChunkMatrix& chunkMatrix)
             obj->UpdatePhysicPosition(worldId);
         }
     }
-
-    std::cout << "D" << std::endl;
 }
