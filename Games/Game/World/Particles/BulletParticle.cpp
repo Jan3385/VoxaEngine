@@ -1,8 +1,7 @@
-#include "World/Particles/BulletParticle.h"
-#include "World/Particles/FallingParticle.h"
-#include "World/ChunkMatrix.h"
 #include "BulletParticle.h"
-#include "Math/Temperature.h"
+
+#include <World/Particles/FallingParticle.h>
+#include <World/ChunkMatrix.h>
 
 #include <cmath>
 

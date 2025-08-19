@@ -1,6 +1,6 @@
 #pragma once
 
-#include "World/Particle.h"
+#include <World/Particle.h>
 
 namespace Particle{
     class BulletParticle : public Particle::VoxelParticle {

@@ -2,7 +2,7 @@
 
 #include <GameObject/PhysicsObject.h>
 #include "World/ChunkMatrix.h"
-#include "Particle/ParticleGenerators/LaserGenerator.h"
+#include "World/ParticleGenerators/LaserGenerator.h"
 
 class Player : public PhysicsObject{
 public:
