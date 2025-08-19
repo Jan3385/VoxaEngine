@@ -54,6 +54,10 @@ endif()
 
 message(STATUS "Dependencies prepared")
 
+if(UNIX)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 # Subprojects
 add_subdirectory(Engine)
 
