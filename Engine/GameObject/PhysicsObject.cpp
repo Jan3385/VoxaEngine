@@ -145,6 +145,7 @@ void PhysicsObject::DestroyPhysicsBody()
 }
 void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
 {
+    //FIXME: linux cant create the physics body for some reason
     if (b2Body_IsValid(m_physicsBody)) {
         std::cerr << "Physics body already exists for Physics Body at (" << this->position.x << ", " << this->position.y << ")." << std::endl;
         return;
