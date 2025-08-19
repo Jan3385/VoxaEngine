@@ -15,6 +15,7 @@ using namespace Registry;
 
 std::unordered_map<std::string, VoxelProperty> VoxelRegistry::registry = {};
 std::unordered_map<uint32_t, VoxelProperty*> VoxelRegistry::idRegistry = {};
+std::unordered_map<std::string, VoxelFactory> VoxelRegistry::voxelFactories = {};
 std::vector<Registry::ChemicalReaction> VoxelRegistry::reactionRegistry = {};
 GLuint Registry::VoxelRegistry::chemicalReactionsBuffer = 0;
 uint32_t VoxelRegistry::idCounter = 1;
@@ -30,6 +31,14 @@ void VoxelRegistry::RegisterVoxel(const std::string &name, VoxelProperty propert
 	registry[name] = property;
 
 	idRegistry[property.id] = &registry[name];
+}
+
+void Registry::VoxelRegistry::RegisterVoxelFactory(const std::string &name, VoxelFactory factory)
+{
+	if(registryClosed) 
+		throw std::runtime_error("Voxel factory registered after designated time window: " + name);
+
+	voxelFactories[name] = factory;
 }
 
 void Registry::VoxelRegistry::RegisterReaction(Registry::ChemicalReaction reaction)
@@ -52,6 +61,13 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 			.SetFluidDispursionRate(0)
 			.Build()
 	);
+	VoxelRegistry::RegisterVoxelFactory(
+		"Empty",
+		[](Vec2i position, Volume::Temperature temp, float amount, bool placeUnmovableSolids) {
+			return new EmptyVoxel(position);
+		}
+	);
+
 	VoxelRegistry::RegisterVoxel(
 		"Oxygen",
 		VoxelBuilder(DefaultVoxelConstructor::GasVoxel, 919, 0.026, 1.429)
@@ -197,6 +213,12 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 			.SetFluidDispursionRate(5)
 			.Build()
 	);
+	VoxelRegistry::RegisterVoxelFactory(
+		"Fire",
+		[](Vec2i position, Volume::Temperature temp, float amount, bool placeUnmovableSolids) {
+			return new FireVoxel(position, temp, amount);
+		}
+	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire_Solid",
 		VoxelBuilder(DefaultVoxelConstructor::Custom, 100, 0.1, 1)
@@ -206,6 +228,12 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 			.SetSolidInertiaResistance(0.1)
 			.Build()
 	);
+	VoxelRegistry::RegisterVoxelFactory(
+		"Fire_Solid",
+		[](Vec2i position, Volume::Temperature temp, float amount, bool placeUnmovableSolids) {
+			return new FireSolidVoxel(position, temp, amount, placeUnmovableSolids);
+		}
+	);
 	VoxelRegistry::RegisterVoxel(
 		"Fire_Liquid",
 		VoxelBuilder(DefaultVoxelConstructor::Custom, 100, 0.1, 1)
@@ -214,6 +242,12 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 			.PhaseDown("Carbon_Dioxide", 100)
 			.SetFluidDispursionRate(2)
 			.Build()
+	);
+	VoxelRegistry::RegisterVoxelFactory(
+		"Fire_Liquid",
+		[](Vec2i position, Volume::Temperature temp, float amount, bool placeUnmovableSolids) {
+			return new FireLiquidVoxel(position, temp, amount);
+		}
 	);
 	VoxelRegistry::RegisterVoxel(
 		"Ash",
@@ -617,18 +651,13 @@ Volume::VoxelElement *CreateVoxelElement(Volume::VoxelProperty *property, std::s
 	VoxelElement *voxel;
 
     if(property->Constructor == DefaultVoxelConstructor::Custom){
-		if(id == "Empty")
-			voxel = new EmptyVoxel(position);
-		else if(id == "Fire")
-			voxel = new FireVoxel(position, temp, amount);
-		else if(id == "Fire_Liquid")
-			voxel = new FireLiquidVoxel(position, temp, amount);
-		else if(id == "Fire_Solid")
-			voxel = new FireSolidVoxel(position, temp, amount, placeUnmovableSolids);
-		else{
-			throw std::runtime_error("Called a custom voxel constructor with unset constructor: " + id);
+		auto it = VoxelRegistry::voxelFactories.find(id);
+
+		if(it == VoxelRegistry::voxelFactories.end()){
+			throw std::runtime_error("Voxel factory not found for id: " + id + ". Did you forget use RegisterVoxelFactory?");
 		}
 
+		voxel = it->second(position, temp, amount, placeUnmovableSolids);
 		return voxel;
 	}
 	

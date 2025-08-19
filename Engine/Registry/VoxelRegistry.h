@@ -4,6 +4,7 @@
 #include <string>
 #include <optional>
 #include <vector>
+#include <functional>
 
 #include "GL/glew.h"
 
@@ -95,6 +96,8 @@ namespace Registry{
 		uint8_t Flamability = 0;		// 0 - 255 (0 being no flamability and 255 being full flamability)
 	};
 
+	using VoxelFactory = std::function<Volume::VoxelElement*(Vec2i pos, Volume::Temperature temp, float amount, bool placeUnmovableSolids)>;
+
 	class VoxelRegistry {
 	public:
 		static Volume::VoxelProperty* GetProperties(std::string id);
@@ -106,11 +109,13 @@ namespace Registry{
 		static bool CanBeMovedByLiquid(Volume::State state);
 
 		static void RegisterVoxel(const std::string& name, Volume::VoxelProperty property);
+		static void RegisterVoxelFactory(const std::string& name, VoxelFactory factory);
 		static void RegisterReaction(Registry::ChemicalReaction reaction);
 		static void RegisterVoxels(IGame *game);
 		static void CloseRegistry();
 		static std::unordered_map<std::string, Volume::VoxelProperty> registry;
 		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
+		static std::unordered_map<std::string, VoxelFactory> voxelFactories;
 
 		/// Data stored as following:
 		/// uint32_t fromID;
@@ -120,6 +125,7 @@ namespace Registry{
 		/// bool preserveCatalyst;
 		/// float minTemperatureC;
 		static GLuint chemicalReactionsBuffer;
+
 		static std::vector<Registry::ChemicalReaction> reactionRegistry;  // cleared after inserted into a OpenGL buffer
 	private:
 		static uint32_t idCounter;
