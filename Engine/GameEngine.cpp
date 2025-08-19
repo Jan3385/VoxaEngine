@@ -126,11 +126,10 @@ void GameEngine::Update(IGame& game)
 {
     //Polls events - e.g. window close, keyboard input..
     this->PollEvents();
-    std::cout << "a" << std::endl;
+    
     this->chunkMatrix.voxelMutex.lock();
     // Run physics simulation
     physics->Step(this->deltaTime, this->chunkMatrix);
-    std::cout << "b" << std::endl;
 
     // update voxelobjects rotation
     for(VoxelObject* object : chunkMatrix.voxelObjects) {
@@ -138,29 +137,24 @@ void GameEngine::Update(IGame& game)
             object->UpdateRotatedVoxelBuffer();
         }
     }
-    std::cout << "c" << std::endl;
 
     for(PhysicsObject* object : physics->physicsObjects) {
         if(object->IsEnabled()) {
             object->UpdatePhysicsEffects(chunkMatrix, deltaTime);
         }
     }
-    std::cout << "d" << std::endl;
     this->chunkMatrix.voxelMutex.unlock();
 
     game.Update(this->deltaTime);
-    std::cout << "e" << std::endl;
 
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
-        std::cout << "f" << std::endl;
         FixedUpdate(game);
         game.FixedUpdate(this->fixedDeltaTime);
         fixedUpdateTimer -= fixedDeltaTime;
     }
-    std::cout << "g" << std::endl;
 
     if(fixedUpdateTimer > fixedDeltaTime*2.5f)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;

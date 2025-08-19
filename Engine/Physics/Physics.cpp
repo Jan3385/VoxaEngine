@@ -248,13 +248,17 @@ void GamePhysics::Generate2DCollidersForVoxelObject(PhysicsObject *object, Chunk
 /// @param deltaTime        time step for the simulation
 void GamePhysics::Step(float deltaTime, ChunkMatrix& chunkMatrix)
 {
+    std::cout << "A" << std::endl;
     for(PhysicsObject* obj : physicsObjects) {
         if(obj->dirtyColliders) {
             this->Generate2DCollidersForVoxelObject(obj, &chunkMatrix);
         }
     }
+    std::cout << "B" << std::endl;
     
     b2World_Step(worldId, deltaTime*SIMULATION_SPEED, this->SIMULATION_STEP_COUNT);
+
+    std::cout << "C" << std::endl;
 
     // Update all physics object locations
     for(PhysicsObject* obj : physicsObjects) {
@@ -262,4 +266,6 @@ void GamePhysics::Step(float deltaTime, ChunkMatrix& chunkMatrix)
             obj->UpdatePhysicPosition(worldId);
         }
     }
+
+    std::cout << "D" << std::endl;
 }
