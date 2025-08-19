@@ -63,6 +63,13 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
     );
 
     ImGuiRenderer::RenderDebugPanel();
+
+    // Set mouse based on if hovering over an element
+    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+    if(mouseOverUI)
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    else
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }
 
 void Game::RegisterVoxels()

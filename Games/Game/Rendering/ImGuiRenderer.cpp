@@ -82,11 +82,4 @@ void ImGuiRenderer::RenderDebugPanel()
 
     ImGui::Checkbox("Player Gun", &Game::player->gunEnabled);
     ImGui::End();
-
-    // Set mouse based on if hovering over an element
-    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
-    if(mouseOverUI)
-        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-    else
-        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }

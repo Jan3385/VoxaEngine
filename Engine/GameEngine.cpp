@@ -59,8 +59,6 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
     //Main game loop
     while (this->running)
     {
-        this->StartFrame();
-
         this->Update(game);
 
         this->Render();
@@ -97,17 +95,11 @@ GameEngine::~GameEngine()
     chunkMatrix.cleanup();
 }
 
-void GameEngine::StartFrame()
-{
-    this->FrameStartTime = SDL_GetPerformanceCounter();
-}
-
 void GameEngine::EndFrame()
 {
-    //TODO: instead of startframe get the previous frame's end time
     Uint64 FrameEndTime = SDL_GetPerformanceCounter();
 
-    float FrameTime = (FrameEndTime - this->FrameStartTime) / (float)SDL_GetPerformanceFrequency();
+    float FrameTime = (FrameEndTime - this->LastFrameEndTime) / (float)SDL_GetPerformanceFrequency();
 
     this->deltaTime = FrameTime;
     this->FPS = 1.0f / FrameTime;
@@ -121,6 +113,8 @@ void GameEngine::EndFrame()
     for(auto& fps : this->FPSHistory)
         this->avgFPS += fps;
     this->avgFPS /= this->FPSHistory.size();
+
+    this->LastFrameEndTime = FrameEndTime;
 }
 
 void GameEngine::Update(IGame& game)

@@ -61,8 +61,8 @@ private:
 
     SDL_GLContext glContext;
     SDL_Event windowEvent;
-    Uint64 FrameStartTime;
-    
+    Uint64 LastFrameEndTime = SDL_GetPerformanceCounter();
+
     std::thread simulationThread;
 
     VoxelObject *player = nullptr;
@@ -79,7 +79,6 @@ private:
     //Simulation thread, handles voxel simulation
     void SimulationThread(IGame& game);
 
-    void StartFrame();
     void EndFrame();
     void Update(IGame& game);
     void PollEvents();
