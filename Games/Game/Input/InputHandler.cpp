@@ -18,7 +18,23 @@ void Input::OnMouseScroll(int yOffset)
 
 void Input::OnKeyboardDown(int key)
 {
-    
+    Vec2f worldMousePos = ChunkMatrix::MousePosToWorldPos(
+        GameEngine::instance->mousePos, 
+        GameEngine::renderer->GetCameraOffset()
+    );
+
+    switch(key){
+        case SDLK_t:
+            std::cout << "Creating barrel" << std::endl;
+            Registry::CreateGameObject("Barrel", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            break;
+        case SDLK_z:
+            Registry::CreateGameObject("Ball", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            break;
+        case SDLK_u:
+            Registry::CreateGameObject("Crate", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            break;
+    }
 }
 void Input::OnKeyboardUp(int key)
 {
@@ -64,22 +80,7 @@ void Input::OnMouseButtonDown(int button)
 }
 void Input::OnMouseButtonUp(int button)
 {
-    Vec2f worldMousePos = ChunkMatrix::MousePosToWorldPos(
-        GameEngine::instance->mousePos, 
-        GameEngine::renderer->GetCameraOffset()
-    );
 
-    switch(button){
-        case SDLK_t:
-            Registry::CreateGameObject("Barrel", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
-            break;
-        case SDLK_z:
-            Registry::CreateGameObject("Ball", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
-            break;
-        case SDLK_u:
-            Registry::CreateGameObject("Crate", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
-            break;
-    }
 }
 void Input::OnMouseMove(int x, int y)
 {

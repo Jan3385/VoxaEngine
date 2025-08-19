@@ -300,8 +300,8 @@ void GameEngine::PollEvents()
                     GameEngine::MovementKeysHeld[3] = true;
                     break;
                 }
-                break;
                 currentGame->OnKeyboardDown(this->windowEvent.key.keysym.sym);
+                break;
             }
         }
 
