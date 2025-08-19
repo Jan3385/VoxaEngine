@@ -25,7 +25,6 @@ void Input::OnKeyboardDown(int key)
 
     switch(key){
         case SDLK_t:
-            std::cout << "Creating barrel" << std::endl;
             Registry::CreateGameObject("Barrel", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
             break;
         case SDLK_z:
