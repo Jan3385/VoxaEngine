@@ -123,10 +123,10 @@ void Player::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec
     PhysicsObject::UpdateColliders(triangles, edges, worldId);
 
     // enable/disable based on noClip
-    //if(this->noClip)
-    //    b2Body_Disable(m_physicsBody);
-    //else 
-    //    b2Body_Enable(m_physicsBody);
+    if(this->noClip)
+        b2Body_Disable(m_physicsBody);
+    else 
+        b2Body_Enable(m_physicsBody);
 }
 
 void Player::FireGun(ChunkMatrix &chunkMatrix)
