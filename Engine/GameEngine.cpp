@@ -60,8 +60,10 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
     {
         this->StartFrame();
 
+        std::cout << "Update: " << this->deltaTime << " seconds" << std::endl;
         this->Update(game);
 
+        std::cout << "Render: " << this->deltaTime << " seconds" << std::endl;
         this->Render();
 
         this->EndFrame();
