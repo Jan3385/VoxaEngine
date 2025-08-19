@@ -12,6 +12,8 @@ find_package(glm CONFIG REQUIRED)
 find_package(Freetype CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 
+message(STATUS "Fetching libraries (this might take a minute)")
+
 # Poly2Tri (not in vcpkg)
 include(FetchContent)
 FetchContent_Declare(
