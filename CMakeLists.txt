@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(Voxa LANGUAGES C CXX)
 
+if(UNIX)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 # vcpkg dependencies
 find_package(SDL2 CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
@@ -53,10 +57,6 @@ elseif(TARGET SDL2::SDL2)
 endif()
 
 message(STATUS "Dependencies prepared")
-
-if(UNIX)
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
 
 # Subprojects
 add_subdirectory(Engine)
