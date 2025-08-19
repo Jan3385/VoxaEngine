@@ -173,4 +173,6 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
     // Set origin to center of object
     bodyDef.position = b2Vec2(position.x, position.y);
     m_physicsBody = b2CreateBody(worldId, &bodyDef);
+
+    assert(b2Body_IsValid(m_physicsBody) && "Failed to create physics body for object");
 }
