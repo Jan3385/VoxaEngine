@@ -68,7 +68,6 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
         this->Update(game);
 
         this->Render();
-        game.Render();
 
         this->EndFrame();
     }
@@ -307,12 +306,12 @@ void GameEngine::PollEvents()
                     GameEngine::MovementKeysHeld[3] = true;
                     break;
                 default:
-                    OnKeyboardInput(this->windowEvent.key);
                     break;
                 }
                 break;
             }
-            currentGame->OnKeyboardDown(this->windowEvent.key.keysym.sym);
+            if(this->windowEvent.type == SDL_KEYDOWN)
+                currentGame->OnKeyboardDown(this->windowEvent.key.keysym.sym);
         }
 
         //other events (including keyUp)
@@ -382,7 +381,7 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     chunkMatrix.voxelMutex.lock();
-    GameEngine::renderer->Render(chunkMatrix, this->mousePos, config.backgroundColor);
+    GameEngine::renderer->Render(chunkMatrix, this->mousePos, config.backgroundColor, this->currentGame);
     chunkMatrix.voxelMutex.unlock();
 }
 
@@ -401,17 +400,6 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
     GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
     chunkMatrix.chunkCreationMutex.unlock();
     return chunk;
-}
-
-void GameEngine::OnKeyboardInput(SDL_KeyboardEvent event)
-{
-    switch (event.keysym.sym)
-    {
-    case SDLK_F1:
-        GameEngine::renderer->fullImGui = !GameEngine::renderer->fullImGui;
-    default:
-        break;
-    }
 }
 
 //TODO: game should be handling this

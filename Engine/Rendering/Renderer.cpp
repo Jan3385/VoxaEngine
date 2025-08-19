@@ -231,7 +231,7 @@ void GameRenderer::SetCameraSize(Vec2f size)
     this->Camera.size = size;
 }
 
-void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor)
+void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor, IGame *game)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -262,8 +262,10 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgro
 
     this->RenderVoxelObjects(chunkMatrix, voxelProj);
 
-    this->RenderPlayer(GameEngine::instance->GetPlayer(), voxelProj);
-    
+    VoxelObject *player = GameEngine::instance->GetPlayer();
+    if(player)
+        this->RenderPlayer(player, voxelProj);
+
     this->RenderChunks(chunkMatrix, voxelProj);
 
     //glm::vec2 mousePosInWorld = {
@@ -285,10 +287,27 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgro
 
     this->RenderCursor(mousePosInWorldInt, voxelProj);
 
-    this->RenderIMGUI(chunkMatrix);
+    // prepare IMGUI for the game renderer
+    ImGui_ImplSDL2_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui::NewFrame();
+
+    game->Render();
+
+    // Render the ImGui frame
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
+    // Set mouse based on if hovering over an element
+    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
+    if(mouseOverUI)
+        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+    else
+        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 
     SDL_GL_SwapWindow(r_window);
 
+    //TODO: undo later to see if it fucks up something
     Shader::Shader::UnsetActiveShaderCache();
 
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -335,95 +354,6 @@ void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const g
     glLineWidth(lineWidth);
 
     glDrawArrays(GL_LINE_LOOP, 0, size);
-}
-
-void GameRenderer::RenderIMGUI(ChunkMatrix &chunkMatrix)
-{
-    constexpr int ITEM_WIDTH = 150;
-
-    ImGui_ImplSDL2_NewFrame();
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui::NewFrame();
-
-    bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
-    if(mouseOverUI)
-        ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-    else
-        ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-
-    ImGui::Begin("VoxaEngine Debug Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
-    if(!this->fullImGui){
-        ImGui::Text("Press F1 to expand panel");
-
-        ImGui::End();
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        return;
-    }
-
-    ImGui::Text("Press F1 to hide panel");
-
-    ImGui::Text("FPS: %lf", GameEngine::instance->FPS);
-    ImGui::Text("LAST %d FPS AVG: %lf", AVG_FPS_SIZE_COUNT, GameEngine::instance->avgFPS);
-    
-    const char* voxelTypeNames[] = {
-        "Dirt", "Grass", "Stone", "Sand", "Oxygen",
-        "Water", "Fire", "Plasma", "Carbon_Dioxide", "Iron", "Rust", "Wood", "Empty", "Uncarium", "Copper"
-    };
-    // Find the index of placeVoxelType in voxelTypeNames
-    static int current_item = 0;
-    for (int i = 0; i < IM_ARRAYSIZE(voxelTypeNames); ++i) {
-        if (voxelTypeNames[i] == GameEngine::instance->placeVoxelType) {
-            current_item = i;
-            break;
-        }
-    }
-
-    ImGui::SetNextItemWidth(ITEM_WIDTH);
-    if (ImGui::BeginCombo("Placement Voxel", voxelTypeNames[current_item]))
-    {
-        for (int i = 0; i < IM_ARRAYSIZE(voxelTypeNames); ++i)
-        {
-            bool is_selected = (current_item == i);
-            if (ImGui::Selectable(voxelTypeNames[i], is_selected))
-            {
-                current_item = i;
-                GameEngine::instance->placeVoxelType = voxelTypeNames[i];
-            }
-
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
-    }
-    ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::SliderInt("Placement Radius", &GameEngine::instance->placementRadius, 0, 10);
-    ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragFloat("Placement Temperature", &GameEngine::instance->placeVoxelTemperature, 0.5f, -200.0f, 2500.0f);
-    ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragInt("Placement Amount", &GameEngine::instance->placeVoxelAmount, 10, 1, 2000);
-    ImGui::Checkbox("Place Unmovable Solid Voxels", &GameEngine::instance->placeUnmovableSolidVoxels);
-    if(ImGui::Button("Toggle Debug Rendering")) ToggleDebugRendering();
-    ImGui::Checkbox("Render Mesh Data", &this->renderMeshData);
-    ImGui::Checkbox("Show Heat Around Cursor", &showHeatAroundCursor);
-
-    if(ImGui::Button("Toggle NoClip")) GameEngine::NoClip = !GameEngine::NoClip;
-    ImGui::Checkbox("Heat Simulation", &GameEngine::instance->runHeatSimulation);
-    ImGui::Checkbox("Pressure Simulation", &GameEngine::instance->runPressureSimulation);
-    ImGui::Checkbox("Chemical Simulation", &GameEngine::instance->runChemicalReactions);
-    ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragFloat("CA sim speed", &GameEngine::instance->fixedDeltaTime, 0.05f, 1/30.0, 4);
-    ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragFloat("Heat sim speed", &GameEngine::instance->simulationFixedDeltaTime, 0.05f, 1/30.0, 4);
-
-    ImGui::Text("Loaded chunks: %lld", chunkMatrix.Grid.size());
-
-    ImGui::Checkbox("Player Gun", &GameEngine::GunEnabled);
-
-    ImGui::End();
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void GameRenderer::ToggleDebugRendering()

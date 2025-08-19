@@ -1,5 +1,7 @@
 #include "Game.h"
 
+#include "Rendering/ImGuiRenderer.h"
+
 #include <Registry/GameObjectRegistry.h>
 
 Player *Game::player = nullptr;
@@ -42,7 +44,7 @@ void Game::PhysicsUpdate(float deltaTime)
 
 void Game::Render()
 {
-
+    ImGuiRenderer::RenderDebugPanel();
 }
 
 void Game::OnMouseButtonDown(int button)
@@ -59,10 +61,17 @@ void Game::OnMouseMove(int x, int y)
 
 void Game::OnKeyboardDown(int key)
 {
+    
 }
 
 void Game::OnKeyboardUp(int key)
 {
+    switch (key)
+    {
+    case SDLK_F1:
+        ImGuiRenderer::fullImGui = !ImGuiRenderer::fullImGui;
+        break;
+    }
 }
 
 void Game::OnWindowResize(int newX, int newY)

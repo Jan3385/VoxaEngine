@@ -65,7 +65,6 @@ private:
     float fixedUpdateTimer = 0;
     std::atomic<float> simulationUpdateTimer = 0;
 
-    void OnKeyboardInput(SDL_KeyboardEvent event);
     void OnMouseButtonDown(SDL_MouseButtonEvent event);
 
     //Deletes old chunks and updates steps for voxel celluar automata simulation

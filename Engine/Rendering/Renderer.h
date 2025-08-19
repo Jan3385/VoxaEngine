@@ -6,6 +6,8 @@
 #include "Rendering/FontRenderer.h"
 #include "Rendering/SpriteRenderer.h"
 
+struct IGame;
+
 class GameRenderer{
 private:
     FontRenderer fontRenderer;
@@ -22,8 +24,6 @@ private:
     Shader::RenderShader *closedShapeRenderProgram = nullptr;
     Shader::RenderShader *cursorRenderProgram = nullptr;
 
-    void ToggleDebugRendering();
-
     void RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projection);
     void RenderPlayer(VoxelObject *player, glm::mat4 projection);
     void RenderChunks(ChunkMatrix &chunkMatrix, glm::mat4 projection);
@@ -33,8 +33,6 @@ private:
 
     void RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos, glm::mat4 voxelProj, glm::mat4 screenProj);
     void RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection);
-
-    void RenderIMGUI(ChunkMatrix &chunkMatrix);
 
     void UpdateParticleVBO(ChunkMatrix &chunkMatrix);
 
@@ -55,14 +53,15 @@ public:
     bool showHeatAroundCursor = false;
     bool debugRendering = false;
     bool renderMeshData = false;
-    bool fullImGui = false;
 
     void SetCameraPosition(Vec2f centerPos);
     void SetCameraSize(Vec2f size);
     Vec2f GetCameraOffset() const { return this->Camera.corner; }
     AABB GetCameraAABB() const { return this->Camera; }
 
-    void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor);
+    void ToggleDebugRendering();
+
+    void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor, IGame *game);
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
     void DrawClosedShape(const GLuint VAO, const GLsizei size, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
 
