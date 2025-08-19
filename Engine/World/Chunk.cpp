@@ -137,7 +137,7 @@ void Volume::Chunk::SetVBOData()
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VoxelRenderData) * CHUNK_SIZE_SQUARED, renderData);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
-bool Volume::Chunk::ShouldChunkDelete(AABB &Camera) const
+bool Volume::Chunk::ShouldChunkDelete(AABB Camera) const
 {
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;

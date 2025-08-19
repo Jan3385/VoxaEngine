@@ -33,6 +33,11 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
 
     IMGUI_CHECKVERSION();
 
+    this->Camera = AABB(
+        Vec2f((800.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2, (600.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2), 
+        Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE)
+    );
+
     r_window = SDL_CreateWindow("VoxaEngine",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         800, 600,
@@ -182,6 +187,48 @@ GameRenderer::~GameRenderer()
     SDL_DestroyWindow(r_window);
     
     SDL_Quit();
+}
+
+void GameRenderer::SetCameraPosition(Vec2f centerPos)
+{
+    static constexpr float halfChunk = Volume::Chunk::CHUNK_SIZE / 2.0f;
+    Vec2f prevPosition = this->Camera.corner;
+
+    this->Camera.corner.x = centerPos.x - this->Camera.size.x / 2.0f;
+    this->Camera.corner.y = centerPos.y - this->Camera.size.y / 2.0f;
+
+    // Camera position changed
+    if(prevPosition != this->Camera.corner) {
+        // Generate any new chunks
+        Vec2f cameraMin = Camera.corner;
+        Vec2f cameraMax = Camera.corner + Camera.size;
+
+        Vec2f adjustedMin = cameraMin - Vec2f(halfChunk, halfChunk);
+        Vec2f adjustedMax = cameraMax + Vec2f(halfChunk, halfChunk);
+
+        Vec2i chunkMin = ChunkMatrix::WorldToChunkPosition(adjustedMin);
+        Vec2i chunkMax = ChunkMatrix::WorldToChunkPosition(adjustedMax);
+
+        std::vector<Vec2i> chunksToLoad;
+        for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
+            for (int y = chunkMin.y; y <= chunkMax.y; ++y) {
+                if(!GameEngine::instance->chunkMatrix.IsValidChunkPosition(Vec2i(x, y))) continue;    // Skip invalid chunk positions
+                if(GameEngine::instance->chunkMatrix.GetChunkAtChunkPosition(Vec2i(x, y))) continue;  // If the chunk already exists, skip it
+                chunksToLoad.push_back(Vec2i(x, y));
+            }
+        }
+
+        for (const auto& chunkPos : chunksToLoad) {
+            GameEngine::instance->LoadChunkInView(chunkPos);
+        }
+    }
+}
+
+/// @brief Set when the window is resized
+/// @param size size in voxels
+void GameRenderer::SetCameraSize(Vec2f size)
+{
+    this->Camera.size = size;
 }
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor)

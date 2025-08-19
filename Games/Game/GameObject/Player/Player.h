@@ -44,12 +44,12 @@ public:
     std::vector<Volume::VoxelElement*> GetVoxelsRight(ChunkMatrix& chunkMatrix);
     std::vector<Volume::VoxelElement*> GetVoxelsAtWaist(ChunkMatrix& chunkMatrix);
     std::vector<Volume::VoxelElement*> GetVoxelsVerticalSlice(ChunkMatrix& chunkMatrix);
-
-    AABB Camera;
 protected:
     bool IsAbleToRotate() const override { return false; }
     bool noClip = true;
 private:
+    Vec2f cameraCenterPos;
+
     static constexpr int PLAYER_WIDTH = 8;
     static constexpr int PLAYER_HEIGHT = PLAYER_WIDTH * 2;
     static constexpr int WAIST_HEIGHT = PLAYER_HEIGHT / 2;

@@ -226,7 +226,7 @@ void GameEngine::SimulationThread(IGame& game)
 
         //delete all chunks marked for deletion
         for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
-            if(chunkMatrix.Grid[i]->ShouldChunkDelete(GameEngine::renderer->Camera))
+            if(chunkMatrix.Grid[i]->ShouldChunkDelete(GameEngine::renderer->GetCameraAABB()))
             {
                 chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
             }
@@ -325,6 +325,10 @@ void GameEngine::PollEvents()
             switch (this->windowEvent.window.event)
             {
                 case SDL_WINDOWEVENT_RESIZED:
+                    GameEngine::renderer->SetCameraSize(
+                        Vec2f(this->windowEvent.window.data1 / Volume::Chunk::RENDER_VOXEL_SIZE,
+                            this->windowEvent.window.data2 / Volume::Chunk::RENDER_VOXEL_SIZE
+                        ));
                     glViewport(0, 0, 
                         this->windowEvent.window.data1, 
                         this->windowEvent.window.data2
@@ -352,19 +356,19 @@ void GameEngine::PollEvents()
                 break;
             case SDLK_t:
                 {
-                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->Camera.corner);
+                Vec2f worldMousePos = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->GetCameraOffset());
                 Registry::CreateGameObject("Barrel", worldMousePos, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             case SDLK_z:
                 {
-                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->Camera.corner);
+                Vec2f worldMousePos2 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->GetCameraOffset());
                 Registry::CreateGameObject("Ball", worldMousePos2, &chunkMatrix, GameEngine::physics);
                 }
                 break;
             case SDLK_u:
                 {
-                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->Camera.corner);
+                Vec2f worldMousePos3 = chunkMatrix.MousePosToWorldPos(Vec2f(this->mousePos), GameEngine::renderer->GetCameraOffset());
                 Registry::CreateGameObject("Crate", worldMousePos3, &chunkMatrix, GameEngine::physics);
                 }
                 break;
@@ -419,10 +423,10 @@ void GameEngine::OnMouseButtonDown(SDL_MouseButtonEvent event)
     {
     case SDL_BUTTON_LEFT:
         if(!GameEngine::GunEnabled)
-            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, GameEngine::renderer->Camera.corner, Volume::Temperature(this->placeVoxelTemperature));
+            this->chunkMatrix.PlaceVoxelsAtMousePosition(this->mousePos, this->placeVoxelType, GameEngine::renderer->GetCameraOffset(), Volume::Temperature(this->placeVoxelTemperature));
         break;
     case SDL_BUTTON_RIGHT:
-        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, GameEngine::renderer->Camera.corner);
+        this->chunkMatrix.ExplodeAtMousePosition(this->mousePos, 15, GameEngine::renderer->GetCameraOffset());
     }
     chunkMatrix.voxelMutex.unlock();
 }

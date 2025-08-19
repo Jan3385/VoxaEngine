@@ -63,7 +63,7 @@ namespace Volume
 
 		void SetVBOData();
 
-		bool ShouldChunkDelete(AABB &Camera) const;
+		bool ShouldChunkDelete(AABB Camera) const;
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;
 

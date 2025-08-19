@@ -59,6 +59,16 @@ Vec2f Vec2f::operator/(const float &other) const
     );
 }
 
+bool Vec2f::operator==(const Vec2f &other) const
+{
+    return this->x == other.x && this->y == other.y;
+}
+
+bool Vec2f::operator!=(const Vec2f &other) const
+{
+    return this->x != other.x || this->y != other.y;
+}
+
 Vec2i::Vec2i()
 {
 }

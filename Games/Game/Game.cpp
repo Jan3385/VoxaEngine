@@ -23,7 +23,7 @@ void Game::OnShutdown()
 
 void Game::Update(float deltaTime)
 {
-    GameEngine::renderer->Camera = Game::player->Camera;
+    GameEngine::renderer->SetCameraPosition(Game::player->GetPosition());
     Game::player->UpdatePlayer(GameEngine::instance->chunkMatrix, deltaTime);
 
     if(GameEngine::NoClip != Game::player->GetNoClip())
@@ -67,8 +67,5 @@ void Game::OnKeyboardUp(int key)
 
 void Game::OnWindowResize(int newX, int newY)
 {
-    Game::player->Camera.size = Vec2f(
-        newX / Volume::Chunk::RENDER_VOXEL_SIZE, 
-        newY / Volume::Chunk::RENDER_VOXEL_SIZE
-    );
+
 }

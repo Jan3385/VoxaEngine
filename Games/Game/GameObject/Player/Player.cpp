@@ -14,10 +14,6 @@ Player::Player(ChunkMatrix *matrix, std::vector<std::vector<Registry::VoxelData>
         "Player"
     )
 {
-    this->Camera = AABB(
-        Vec2f((800.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2, (600.0/Volume::Chunk::RENDER_VOXEL_SIZE)/2), 
-        Vec2f(800.0/Volume::Chunk::RENDER_VOXEL_SIZE, 600.0/Volume::Chunk::RENDER_VOXEL_SIZE));
-
     this->gunLaserParticleGenerator = new Particle::LaserParticleGenerator(matrix);
     this->gunLaserParticleGenerator->length = 50;
     this->gunLaserParticleGenerator->enabled = false;
@@ -109,7 +105,7 @@ void Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 
     //update player laser
     this->gunLaserParticleGenerator->position = Vec2f(this->position);
-    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, vector::ZERO) + Camera.corner;
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, vector::ZERO) + GameEngine::renderer->GetCameraOffset();
     Vec2f direction = mousePos - (this->position);
     float angle = std::atan2(direction.y, direction.x);
     this->gunLaserParticleGenerator->angle = angle;
@@ -137,7 +133,7 @@ void Player::FireGun(ChunkMatrix &chunkMatrix)
 {
     if(!this->gunEnabled) return;
 
-    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, this->Camera.corner);
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, GameEngine::renderer->GetCameraOffset());
     
     Vec2f direction = mousePos - this->position;
     
@@ -172,7 +168,7 @@ void Player::SetNoClip(bool value)
 }
 Vec2f Player::GetCameraPos() const
 {
-    return Vec2f(Camera.corner + Vec2f(Camera.size.x/2, Camera.size.y/2));
+    return this->cameraCenterPos;
 }
 
 std::vector<Volume::VoxelElement*> Player::GetVoxelsUnder(ChunkMatrix &chunkMatrix)
@@ -296,32 +292,7 @@ int Player::touchRightWall(ChunkMatrix &chunkMatrix)
 
 void Player::MoveCamera(Vec2f pos, ChunkMatrix &chunkMatrix)
 {
-    using namespace Volume;
-
-    Camera.corner = (pos-Vec2f(Camera.size.x/2, Camera.size.y/2));
-
-    Vec2f cameraMin = Camera.corner;
-    Vec2f cameraMax = Camera.corner + Camera.size;
-
-    float halfChunk = Chunk::CHUNK_SIZE / 2.0f;
-    Vec2f adjustedMin = cameraMin - Vec2f(halfChunk, halfChunk);
-    Vec2f adjustedMax = cameraMax + Vec2f(halfChunk, halfChunk);
-
-    Vec2i chunkMin = chunkMatrix.WorldToChunkPosition(adjustedMin);
-    Vec2i chunkMax = chunkMatrix.WorldToChunkPosition(adjustedMax);
-
-    std::vector<Vec2i> chunksToLoad;
-    for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
-        for (int y = chunkMin.y; y <= chunkMax.y; ++y) {
-            if(!chunkMatrix.IsValidChunkPosition(Vec2i(x, y))) continue;    // Skip invalid chunk positions
-            if(chunkMatrix.GetChunkAtChunkPosition(Vec2i(x, y))) continue;  // If the chunk already exists, skip it
-            chunksToLoad.push_back(Vec2i(x, y));
-        }
-    }
-
-    for (const auto& chunkPos : chunksToLoad) {
-        GameEngine::instance->LoadChunkInView(chunkPos);
-    }
+    this->cameraCenterPos = pos;
 }
 
 void Player::MoveCameraTowards(Vec2f to, ChunkMatrix &chunkMatrix)

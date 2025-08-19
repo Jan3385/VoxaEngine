@@ -38,6 +38,8 @@ private:
 
     void UpdateParticleVBO(ChunkMatrix &chunkMatrix);
 
+    AABB Camera;
+
     GLuint particleVAO = 0;
     GLuint particleVBO = 0;
 
@@ -55,7 +57,10 @@ public:
     bool renderMeshData = false;
     bool fullImGui = false;
 
-    AABB Camera;
+    void SetCameraPosition(Vec2f centerPos);
+    void SetCameraSize(Vec2f size);
+    Vec2f GetCameraOffset() const { return this->Camera.corner; }
+    AABB GetCameraAABB() const { return this->Camera; }
 
     void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor);
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
