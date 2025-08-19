@@ -199,7 +199,7 @@ std::vector<Volume::VoxelElement*> Player::GetVoxelsLeft(ChunkMatrix &chunkMatri
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y <= PLAYER_HEIGHT/2; ++y) {
-        Vec2f localPos = Vec2i(this->position) + Vec2i(-PLAYER_WIDTH/2 + 1, y); // +1 because the feet sprite isnt at the exact edge
+        Vec2f localPos = Vec2i(this->position) + Vec2i(-PLAYER_WIDTH/2 , y);
         auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.x), floor(localPos.y)));
         if (voxel) {
             voxels.push_back(voxel);
@@ -212,7 +212,7 @@ std::vector<Volume::VoxelElement*> Player::GetVoxelsRight(ChunkMatrix &chunkMatr
 {
     std::vector<Volume::VoxelElement*> voxels;
     for (int y = -PLAYER_HEIGHT/2; y <= PLAYER_HEIGHT/2; ++y) {
-        Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH/2 - 1, y); // -1 because the feet sprite isnt at the exact edge
+        Vec2f localPos = Vec2i(this->position) + Vec2i(PLAYER_WIDTH/2 , y);
         auto voxel = chunkMatrix.VirtualGetAt(Vec2i(floor(localPos.x), floor(localPos.y)));
         if (voxel) {
             voxels.push_back(voxel);
