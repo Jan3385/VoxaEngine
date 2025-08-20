@@ -15,6 +15,8 @@ GamePhysics::GamePhysics()
     worldDef.gravity = b2Vec2(0.0f, PHYS_OBJECT_GRAVITY);
     
     worldId = b2CreateWorld(&worldDef);
+
+    assert(worldId != nullptr && "Failed to create physics world");
 }
 
 GamePhysics::~GamePhysics()
