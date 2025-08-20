@@ -12,7 +12,7 @@ private:
     void OnShutdown() override;
     void Update(float deltaTime) override;
     void FixedUpdate(float fixedDeltaTime) override;
-    void PhysicsUpdate(float deltaTime) override;
+    void VoxelUpdate(float deltaTime) override;
     void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) override;
 
     void RegisterVoxels() override;

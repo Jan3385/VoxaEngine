@@ -155,7 +155,7 @@ void GameEngine::Update(IGame& game)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
     
     if(simulationUpdateTimer > simulationFixedDeltaTime*2.5f)
-        std::cout << "Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
+        std::cout << "Voxel Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
 }
 void GameEngine::UpdateGridVoxel(int pass)
 {    
@@ -237,7 +237,7 @@ void GameEngine::SimulationThread(IGame& game)
 
         chunkMatrix.UpdateParticles();
 
-        game.PhysicsUpdate(this->simulationFixedDeltaTime);
+        game.VoxelUpdate(this->simulationFixedDeltaTime);
     }
 }
 void GameEngine::FixedUpdate(IGame& game)

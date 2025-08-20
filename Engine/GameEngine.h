@@ -33,7 +33,7 @@ public:
     virtual void OnShutdown() = 0;
     virtual void Update(float deltaTime) = 0;
     virtual void FixedUpdate(float fixedDeltaTime) = 0;
-    virtual void PhysicsUpdate(float deltaTime) = 0;
+    virtual void VoxelUpdate(float deltaTime) = 0;
     virtual void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) = 0;
 
     virtual void RegisterVoxels() = 0;

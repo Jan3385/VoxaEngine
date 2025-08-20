@@ -36,7 +36,7 @@ void Game::FixedUpdate(float fixedDeltaTime)
 
 }
 
-void Game::PhysicsUpdate(float deltaTime)
+void Game::VoxelUpdate(float deltaTime)
 {
 
 }
