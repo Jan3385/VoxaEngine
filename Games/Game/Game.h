@@ -26,4 +26,6 @@ private:
     void OnKeyboardUp(int key) override;
 
     void OnWindowResize(int newX, int newY) override;
+
+    ~Game() override = default;
 };
