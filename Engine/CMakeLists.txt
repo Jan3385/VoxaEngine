@@ -3,7 +3,7 @@ project(VoxaEngine VERSION 0.2.1 LANGUAGES C CXX)
 # Collect sources
 file(GLOB_RECURSE ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-add_library(VoxaEngine SHARED ${ENGINE_SOURCES})
+add_library(VoxaEngine STATIC ${ENGINE_SOURCES})
 
 # Engine include path
 target_include_directories(VoxaEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

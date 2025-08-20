@@ -29,36 +29,18 @@ add_custom_target(copy_assets ALL
   DEPENDS VoxaEngine
 )
 
-# Windows support DLL's
-if(WIN32)
-  file(GLOB VCPKG_DLLS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/*.dll")
-  add_custom_target(copy_dlls ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      ${VCPKG_DLLS}
-      $<TARGET_FILE_DIR:VoxaGame>
-
-    COMMAND ${CMAKE_COMMAND} -E copy
-      $<TARGET_FILE_DIR:VoxaEngine>/libVoxaEngine.dll
-      $<TARGET_FILE_DIR:VoxaGame>
-
-    DEPENDS VoxaEngine
-  )
-endif()
-
-# Linux support SO's
-if(UNIX)
-  file(GLOB VCPKG_SOS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/*.so")
-  add_custom_target(copy_sos ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      ${VCPKG_SOS}
-      $<TARGET_FILE_DIR:VoxaGame>
-
-    COMMAND ${CMAKE_COMMAND} -E copy
-      $<TARGET_FILE_DIR:VoxaEngine>/libVoxaEngine.so
-      $<TARGET_FILE_DIR:VoxaGame>
-
-    DEPENDS VoxaEngine
-  )
-endif()
-
-
+# Windows support DLL's (UNUSED - for dynamic linking)
+#if(WIN32)
+#  file(GLOB VCPKG_DLLS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/*.dll")
+#  add_custom_target(copy_dlls ALL
+#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#      ${VCPKG_DLLS}
+#      $<TARGET_FILE_DIR:VoxaGame>
+#
+#    COMMAND ${CMAKE_COMMAND} -E copy
+#      $<TARGET_FILE_DIR:VoxaEngine>/libVoxaEngine.dll
+#      $<TARGET_FILE_DIR:VoxaGame>
+#
+#    DEPENDS VoxaEngine
+#  )
+#endif()
