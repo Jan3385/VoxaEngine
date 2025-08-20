@@ -154,12 +154,7 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
 
-    std::string name = "PhysOBJ:X" + std::to_string(this->position.x) + "_Y" + std::to_string(this->position.y);
-    // Circumsize the name to fit within 31 characters
-    if (name.length() > 31) {
-        name = name.substr(0, 31);
-    }
-    bodyDef.name = name.c_str();
+    bodyDef.name = this->name.c_str();
 
     bodyDef.isAwake = true;
     bodyDef.isEnabled = true;
