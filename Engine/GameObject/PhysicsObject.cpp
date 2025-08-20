@@ -150,6 +150,10 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
         std::cerr << "Physics body already exists for Physics Body at (" << this->position.x << ", " << this->position.y << ")." << std::endl;
         return;
     }
+
+    if(!b2World_IsValid(worldId)) {
+        throw std::runtime_error("Invalid b2WorldId provided to PhysicsObject::CreatePhysicsBody");
+    }
     
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
