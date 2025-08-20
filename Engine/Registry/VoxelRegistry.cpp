@@ -181,7 +181,7 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 		"Sand",
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 830, 0.25, 190)
 			.SetName("Sand")
-			.SetColor(RGBA(255, 193, 7, 255))
+			.SetColor(RGBA(236, 204, 162, 255))
 			.PhaseUp("Liquid_Glass", 1000)
 			.SetSolidInertiaResistance(0.1)
 			.Build()
