@@ -26,6 +26,9 @@
 #define AVG_FPS_SIZE_COUNT 25
 
 struct IGame{
+public:
+    virtual ~IGame() = default;
+
     virtual void OnInitialize() = 0;
     virtual void OnShutdown() = 0;
     virtual void Update(float deltaTime) = 0;
@@ -44,8 +47,6 @@ struct IGame{
     virtual void OnKeyboardUp(int key) = 0;
 
     virtual void OnWindowResize(int newX, int newY) = 0;
-
-    virtual ~IGame() = default;
 };
 
 struct EngineConfig{

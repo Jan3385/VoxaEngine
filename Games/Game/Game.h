@@ -5,8 +5,8 @@
 
 class Game : public IGame {
 public:
+    ~Game() override = default;
     static Player *player;
-
 private:
     void OnInitialize() override;
     void OnShutdown() override;
@@ -26,6 +26,4 @@ private:
     void OnKeyboardUp(int key) override;
 
     void OnWindowResize(int newX, int newY) override;
-
-    ~Game() override = default;
 };
