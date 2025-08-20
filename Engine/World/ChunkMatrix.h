@@ -36,6 +36,7 @@ public:
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 
+	Volume::Chunk* (*ChunkGeneratorFunction)(const Vec2i&) = nullptr;
 	Volume::Chunk* GenerateChunk(const Vec2i& pos);
 	void DeleteChunk(const Vec2i& pos);
 

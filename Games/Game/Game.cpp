@@ -2,6 +2,7 @@
 
 #include "Rendering/ImGuiRenderer.h"
 #include "Input/InputHandler.h"
+#include "World/ChunkGenerator.h"
 
 #include <Registry/GameObjectRegistry.h>
 
@@ -18,6 +19,8 @@ void Game::OnInitialize()
     );
     GameEngine::instance->SetPlayer(Game::player);
     GameEngine::physics->physicsObjects.push_back(Game::player);
+    
+    GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = ChunkGenerator::GenerateChunk;
 }
 
 void Game::OnShutdown()
