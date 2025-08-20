@@ -154,12 +154,12 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_dynamicBody;
 
-    std::string name = "PhysOBJ:X" + std::to_string(this->position.x) + "_Y" + std::to_string(this->position.y);
-    // Circumsize the name to fit within 31 characters
-    if (name.length() > 31) {
-        name = name.substr(0, 31);
-    }
-    bodyDef.name = name.c_str();
+    //std::string name = "PhysOBJ:X" + std::to_string(this->position.x) + "_Y" + std::to_string(this->position.y);
+    //// Circumsize the name to fit within 31 characters
+    //if (name.length() > 31) {
+    //    name = name.substr(0, 31);
+    //}
+    //bodyDef.name = name.c_str();
 
     bodyDef.isAwake = true;
     bodyDef.isEnabled = true;
@@ -173,7 +173,7 @@ void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
 
     // Set origin to center of object
     bodyDef.position = b2Vec2(position.x, position.y);
-    m_physicsBody = b2CreateBody(worldId, &bodyDef);
+    this->m_physicsBody = b2CreateBody(worldId, &bodyDef);
 
-    assert(b2Body_IsValid(m_physicsBody) && "Failed to create physics body for object");
+    assert(b2Body_IsValid(this->m_physicsBody) && "Failed to create physics body for object");
 }
