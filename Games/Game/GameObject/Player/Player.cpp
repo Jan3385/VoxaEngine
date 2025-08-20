@@ -122,11 +122,15 @@ void Player::UpdateColliders(std::vector<Triangle> &triangles, std::vector<b2Vec
 {
     PhysicsObject::UpdateColliders(triangles, edges, worldId);
 
+    if(!b2Body_IsValid(this->m_physicsBody)) {
+        throw std::runtime_error("Physics body for player is not valid");
+    }
+
     // enable/disable based on noClip
     if(this->noClip)
-        b2Body_Disable(m_physicsBody);
+        b2Body_Disable(this->m_physicsBody);
     else 
-        b2Body_Enable(m_physicsBody);
+        b2Body_Enable(this->m_physicsBody);
 }
 
 void Player::FireGun(ChunkMatrix &chunkMatrix)
