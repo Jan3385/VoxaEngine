@@ -37,7 +37,7 @@ public:
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 
 	Volume::Chunk* (*ChunkGeneratorFunction)(const Vec2i&) = nullptr;
-	Volume::Chunk* GenerateChunk(const Vec2i& pos);
+	Volume::Chunk* GenerateChunk(const Vec2i& chunkPos);
 	void DeleteChunk(const Vec2i& pos);
 
 	//Virtual setter / getter

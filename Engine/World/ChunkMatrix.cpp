@@ -153,19 +153,19 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
 }
 
 // Generates a chunk and inputs it into the grid, returns a pointer to it
-Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &pos)
+Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
 {
     if(this->ChunkGeneratorFunction == nullptr) {
         throw std::runtime_error("ChunkGenerator function for chunkMatrix not set!");
     }
 
-    Volume::Chunk* chunk = this->ChunkGeneratorFunction(pos);
+    Volume::Chunk* chunk = this->ChunkGeneratorFunction(chunkPos);
 
     chunk->lastCheckedCountDown = 20;
 
     uint8_t AssignedGridPass = 0;
-    if (pos.x % 2 != 0) AssignedGridPass += 1;
-    if (pos.y % 2 != 0) AssignedGridPass += 2;
+    if (chunkPos.x % 2 != 0) AssignedGridPass += 1;
+    if (chunkPos.y % 2 != 0) AssignedGridPass += 2;
 
     this->GridSegmented[AssignedGridPass].push_back(chunk);
 
