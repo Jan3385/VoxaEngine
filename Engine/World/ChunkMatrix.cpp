@@ -9,7 +9,7 @@ ChunkMatrix::ChunkMatrix()
     this->particleGenerators.reserve(15);
     this->particles.reserve(200);
 
-    this->ChunkGeneratorFunction = [](const Vec2i& pos) -> Volume::Chunk* {
+    this->ChunkGeneratorFunction = [](const Vec2i& pos, ChunkMatrix& chunkMatrix) -> Volume::Chunk* {
         throw std::runtime_error("ChunkGenerator function for chunkMatrix not set!");
         return (Volume::Chunk*)nullptr;
     };
@@ -159,7 +159,7 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
         throw std::runtime_error("ChunkGenerator function for chunkMatrix not set!");
     }
 
-    Volume::Chunk* chunk = this->ChunkGeneratorFunction(chunkPos);
+    Volume::Chunk* chunk = this->ChunkGeneratorFunction(chunkPos, *this);
 
     chunk->lastCheckedCountDown = 20;
 
