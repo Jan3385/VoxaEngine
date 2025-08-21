@@ -174,6 +174,10 @@ void Shader::Shader::SetVec2(const std::string &name, glm::vec2 value)
 {
     glUniform2fv(this->GetUniformLocation(name.c_str()), 1, &value[0]);
 }
+void Shader::Shader::SetIVec2(const std::string &name, glm::ivec2 value)
+{
+    glUniform2iv(this->GetUniformLocation(name.c_str()), 1, &value[0]);
+}
 
 void Shader::Shader::SetVec3(const std::string &name, glm::vec3 value)
 {

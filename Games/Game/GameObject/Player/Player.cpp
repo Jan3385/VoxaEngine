@@ -101,7 +101,7 @@ void Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
         b2Body_SetLinearVelocity(m_physicsBody, b2Vec2(velocity.x / 1.3f, velocity.y));
     }
 
-    this->MoveCamera(Vec2f(this->position), chunkMatrix);
+    this->MoveCameraTowards(Vec2f(this->position), chunkMatrix);
 
     //update player laser
     this->gunLaserParticleGenerator->position = Vec2f(this->position);

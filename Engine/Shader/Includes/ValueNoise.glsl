@@ -5,5 +5,5 @@ uint Hash(uvec2 p){
     return p.x ^ p.y;
 }
 float ValueNoise(uvec2 p) {
-    return float(hash(p) & 0xFFFFu) / float(0xFFFFu);
+    return float(Hash(p) & 0xFFFFu) / float(0xFFFFu);
 }

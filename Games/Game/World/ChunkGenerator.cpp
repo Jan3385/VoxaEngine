@@ -1,6 +1,7 @@
 #include "ChunkGenerator.h"
-#include "Math/Random.h"
-#include "World/ChunkMatrix.h"
+#include <Math/Random.h>
+#include <Math/Noise.h>
+#include <World/ChunkMatrix.h>
 
 using namespace Volume;
 
@@ -19,16 +20,13 @@ Chunk* ChunkGenerator::GenerateChunk(const Vec2i &chunkPos, ChunkMatrix &chunkMa
     else if (chunkPos.y < 5)
         return FillChunkWith("Oxygen", false, chunk);
 
-    ChunkBoolArray chunkData = FillChunkDataRandom(gen, chunkMatrix, chunkPos);
-    
-    for(int i = 0; i < 4; ++i)
-        chunkData = SmoothOutChunkData(chunkData, chunkPos, chunkMatrix);
+    ChunkBoolArray chunkData = GenerateArrayFromNoise(chunkPos, seed, chunkMatrix);
 
     for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
         for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
             if(chunkData[y][x]){
                 chunk->voxels[y][x] = CreateVoxelElement(
-                    "Dirt",
+                    GetMaterialAtYLevel(y + chunkPos.y * Chunk::CHUNK_SIZE, gen),
                     Vec2i(x + chunkPos.x * Chunk::CHUNK_SIZE, y + chunkPos.y * Chunk::CHUNK_SIZE),
                     20,
                     Temperature(21),
@@ -38,7 +36,7 @@ Chunk* ChunkGenerator::GenerateChunk(const Vec2i &chunkPos, ChunkMatrix &chunkMa
                 chunk->voxels[y][x] = CreateVoxelElement(
                     "Oxygen",
                     Vec2i(x + chunkPos.x * Chunk::CHUNK_SIZE, y + chunkPos.y * Chunk::CHUNK_SIZE),
-                    0,
+                    1,
                     Temperature(21),
                     true
                 );
@@ -68,88 +66,30 @@ Volume::Chunk *ChunkGenerator::FillChunkWith(std::string materialID, bool unmova
     return chunk;
 }
 
-ChunkGenerator::ChunkBoolArray ChunkGenerator::FillChunkDataRandom(Random &gen, ChunkMatrix &chunkMatrix, const Vec2i &chunkPos)
+std::string ChunkGenerator::GetMaterialAtYLevel(int yLevel, Random &gen)
 {
-    ChunkBoolArray chunkData = {};
-    for (int y = 0; y < Volume::Chunk::CHUNK_SIZE; ++y) {
-        for (int x = 0; x < Volume::Chunk::CHUNK_SIZE; ++x) {
-            chunkData[y][x] = gen.GetInt(0, 100) < GEN_FILL_PERCENTAGE;
-        }
-    }
+    if(yLevel < 380) return "Grass";
+    if(yLevel < 400) if(gen.GetInt(380, yLevel) < 390) return "Grass";
+    if(yLevel < 700) return "Dirt";
+    if(yLevel < 740) if(gen.GetInt(700, yLevel) < 720) return "Dirt";
 
-    // copy the edges of nearby chunk onto this chunks edges
-    Chunk *cUp = chunkMatrix.GetChunkAtChunkPosition(chunkPos + vector::UP);
-    if(cUp){
-        for(int i = 0; i < Chunk::CHUNK_SIZE; ++i){
-            bool solidOnEdge = cUp->voxels[Chunk::CHUNK_SIZE-1][i]->IsUnmoveableSolid();
-            chunkData[0][i] = solidOnEdge;
-        }
-    }
-    Chunk *cDown = chunkMatrix.GetChunkAtChunkPosition(chunkPos + vector::DOWN);
-    if(cDown){
-        for(int i = 0; i < Chunk::CHUNK_SIZE; ++i){
-            bool solidOnEdge = cDown->voxels[0][i]->IsUnmoveableSolid();
-            chunkData[Chunk::CHUNK_SIZE-1][i] = solidOnEdge;
-        }
-    }
-    Chunk *cLeft = chunkMatrix.GetChunkAtChunkPosition(chunkPos + vector::LEFT);
-    if(cLeft){
-        for(int i = 0; i < Chunk::CHUNK_SIZE; ++i){
-            bool solidOnEdge = cLeft->voxels[i][Chunk::CHUNK_SIZE-1]->IsUnmoveableSolid();
-            chunkData[i][0] = solidOnEdge;
-        }
-    }
-    Chunk *cRight = chunkMatrix.GetChunkAtChunkPosition(chunkPos + vector::RIGHT);
-    if(cRight){
-        for(int i = 0; i < Chunk::CHUNK_SIZE; ++i){
-            bool solidOnEdge = cRight->voxels[i][0]->IsUnmoveableSolid();
-            chunkData[i][Chunk::CHUNK_SIZE-1] = solidOnEdge;
+    return "Stone";
+}
+
+ChunkGenerator::ChunkBoolArray ChunkGenerator::GenerateArrayFromNoise(Vec2i chunkPos, int seed, ChunkMatrix &chunkMatrix)
+{
+    ChunkBoolArray chunkData;
+
+    for (int x = 0; x < Volume::Chunk::CHUNK_SIZE; ++x) {
+        for (int y = 0; y < Volume::Chunk::CHUNK_SIZE; ++y) {
+            Vec2f noisePos = Vec2f(x + chunkPos.x * Volume::Chunk::CHUNK_SIZE, y + chunkPos.y * Volume::Chunk::CHUNK_SIZE);
+            noisePos = noisePos / GEN_SCALE;
+
+            float noiseValue = Noise::ValueNoise(noisePos, seed);
+
+            chunkData[y][x] = noiseValue > GEN_AIR_PERCENTAGE/100.0f; 
         }
     }
 
     return chunkData;
-}
-
-constexpr int SEARCH_RADIUS = 8;
-constexpr int HALF_NEIGHBOR_COUNT = (SEARCH_RADIUS * 2) * (SEARCH_RADIUS * 2)/1.6f;
-ChunkGenerator::ChunkBoolArray ChunkGenerator::SmoothOutChunkData(const ChunkBoolArray &chunkData, Vec2i chunkPos, ChunkMatrix &chunkMatrix)
-{
-    ChunkBoolArray smoothData = chunkData;
-    for (int y = 0; y < Volume::Chunk::CHUNK_SIZE; ++y) {
-        for (int x = 0; x < Volume::Chunk::CHUNK_SIZE; ++x) {
-            int neighborCount = GetSurroundingSolidCount(chunkData, x, y, chunkPos, chunkMatrix);
-            smoothData[y][x] = neighborCount > HALF_NEIGHBOR_COUNT ? 1 : neighborCount < HALF_NEIGHBOR_COUNT ? 0 : smoothData[y][x];
-        }
-    }
-    return smoothData;
-}
-
-int ChunkGenerator::GetSurroundingSolidCount(const ChunkBoolArray &chunkData, int x, int y, Vec2i chunkPos, ChunkMatrix &chunkMatrix)
-{
-    int count = 0;
-    for(int ix = -SEARCH_RADIUS; ix <= SEARCH_RADIUS; ++ix){
-        for(int iy = -SEARCH_RADIUS; iy <= SEARCH_RADIUS; ++iy){
-            if(ix == 0 && iy == 0) continue;
-
-            int nx = x + ix;
-            int ny = y + iy;
-
-            //check for OOB
-            if(nx >= 0 && nx < Volume::Chunk::CHUNK_SIZE && ny >= 0 && ny < Volume::Chunk::CHUNK_SIZE){
-                if(chunkData[ny][nx]){
-                    count++;
-                }
-            }else{
-                if(rand() % 100 < 50){
-                    count++;
-                }
-                //VoxelElement *voxel = chunkMatrix.VirtualGetAt_NoLoad(Vec2i(nx + chunkPos.x * Volume::Chunk::CHUNK_SIZE, ny + chunkPos.y * Volume::Chunk::CHUNK_SIZE), true);
-                //if(!voxel || voxel->IsUnmoveableSolid()){
-                //    count++;
-                //}
-            }
-        }
-    }
-
-    return count;
 }
