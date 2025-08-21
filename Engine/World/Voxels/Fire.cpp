@@ -43,10 +43,10 @@ bool FireVoxel::Spread(ChunkMatrix *matrix, const VoxelElement *FireVoxel)
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(FireVoxel->position + dir);
         if(next){
             //ignite based on Flamability
-            if((rand()%256) - next->properties->Flamability < 0){
+            if((voxelRandomGenerator.GetInt(0, 255)) - next->properties->Flamability < 0){
 
                 // only 15% chance to ignite if there is no oxygen around
-                bool randomIgniteChance = rand() % 100 < 15;
+                bool randomIgniteChance = voxelRandomGenerator.GetInt(0, 100) < 15;
                 if(isAroundOxygen || randomIgniteChance){
                     matrix->SetFireAt(next->position);
                 }
@@ -86,7 +86,7 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
     }
 
     //15% chance to dissapear
-    if (rand() % 100 < 15 || forcedLifetimeTime <= 0 || this->amount <= 0)
+    if (voxelRandomGenerator.GetInt(0, 100) < 15 || forcedLifetimeTime <= 0 || this->amount <= 0)
     {
         if(this->amount <= 0)
             this->amount = 0.1f;
@@ -100,7 +100,7 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
     VoxelGas::Step(matrix);
 
     //set random fire color
-    this->color = FireVoxel::fireColors[rand() % fireColorCount];
+    this->color = FireVoxel::fireColors[voxelRandomGenerator.GetInt(0, fireColorCount-1)];
 
     //update the render buffer for chunk
     Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
@@ -154,7 +154,7 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
     VoxelLiquid::Step(matrix);
 
     //set random fire color
-    this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
+    this->color = FireVoxel::fireColors[voxelRandomGenerator.GetInt(0, FireVoxel::fireColorCount-1)];
 
     //update the render buffer for chunk
     Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
@@ -201,7 +201,7 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
     {
         this->amount = std::max(this->amount, 0.1f);
 
-        if(rand() % 100 < 10) // 10% chance to turn into ash
+        if(voxelRandomGenerator.GetInt(0, 100) < 10) // 10% chance to turn into ash
             this->DieAndReplace(*matrix, "Ash");
         else
             this->DieAndReplace(*matrix, "Carbon_Dioxide");
@@ -212,7 +212,7 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
     VoxelSolid::Step(matrix);
 
     //set random fire color
-    this->color = FireVoxel::fireColors[rand() % FireVoxel::fireColorCount];
+    this->color = FireVoxel::fireColors[voxelRandomGenerator.GetInt(0, FireVoxel::fireColorCount-1)];
 
     //update the render buffer for chunk
     Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));

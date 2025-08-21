@@ -7,6 +7,8 @@
 
 using namespace Volume;
 
+Random Volume::voxelRandomGenerator = Random();
+
 VoxelElement::VoxelElement()
 	:id("Oxygen")
 {
@@ -21,10 +23,8 @@ VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperatu
 	this->properties = Registry::VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;
 
-	srand(position.x + position.y * rand()); //TODO: temp fix
-
 	//tint the color factor 1 to 1.2
-	float factor = 1 + ((rand() % 20) / 100.0f);
+	float factor = Volume::voxelRandomGenerator.GetFloat(1.0f, 1.2f);
 	this->color = RGBA(
 		std::clamp(static_cast<int>(this->properties->pColor.r * factor), 0, 255),
 		std::clamp(static_cast<int>(this->properties->pColor.g * factor), 0, 255),
@@ -164,7 +164,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     	if (left && left->IsMoveableSolid())
     	{
     		VoxelSolid *leftMovable = dynamic_cast<VoxelSolid*>(left);
-    		if ((1 - leftMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
+    		if ((1 - leftMovable->properties->SolidInertiaResistance) * 1000 > voxelRandomGenerator.GetInt(0, 1000)) {
     			leftMovable->isFalling = true;
     			leftMovable->XVelocity = 1;
     		}
@@ -172,7 +172,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     	if (right && right->IsMoveableSolid())
     	{
     		VoxelSolid *rightMovable = dynamic_cast<VoxelSolid*>(right);
-    		if ((1 - rightMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
+    		if ((1 - rightMovable->properties->SolidInertiaResistance) * 1000 > voxelRandomGenerator.GetInt(0, 1000)) {
     			rightMovable->isFalling = true;
     			rightMovable->XVelocity = 1;
     		}
@@ -206,7 +206,7 @@ bool VoxelSolid::Step(ChunkMatrix *matrix)
     	if (below && below->IsMoveableSolid())
     	{
     		VoxelSolid *belowMovable = dynamic_cast<VoxelSolid*>(below);
-    		if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
+    		if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > voxelRandomGenerator.GetInt(0, 1000)) {
     			belowMovable->isFalling = true;
     			belowMovable->XVelocity = 1;
     		}
@@ -249,7 +249,7 @@ void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
     if (below && below->IsMoveableSolid())
     {
     	VoxelSolid* belowMovable = dynamic_cast<VoxelSolid*>(below);
-    	if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > rand() % 1000) {
+    	if ((1 - belowMovable->properties->SolidInertiaResistance) * 1000 > voxelRandomGenerator.GetInt(0, 1000)) {
     		belowMovable->isFalling = true;
     		belowMovable->XVelocity = 1;
     	}
@@ -270,7 +270,7 @@ bool Volume::VoxelSolid::IsSolidCollider() const
 
 void VoxelSolid::StopFalling()
 {
-    XVelocity = ((GetAcceleration() / 6) / (rand()%2 + 1)) + 1;
+    XVelocity = ((GetAcceleration() / 6) / voxelRandomGenerator.GetInt(1, 2)) + 1;
     isFalling = false;
     SetAcceleration(1);
 }
@@ -467,9 +467,10 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 	//try to fall down
 	if (MoveInDirection(matrix, vector::DOWN))
 		return true;
+
 	//try to randomly move to the sides
-	bool positiveX = rand() % 2;
-	if(this->StepAlongSide(matrix, positiveX, rand()%3 + 2))
+	Vec2i direction = voxelRandomGenerator.GetBool() ? vector::RIGHT : vector::LEFT;
+	if(MoveInDirection(matrix, direction))
 		return true;
 
     return false;

@@ -489,7 +489,7 @@ void ChunkMatrix::SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature>
     bool placeAsUnmovableSolid = ingitedVoxel->IsUnmoveableSolid();
     if(placeAsUnmovableSolid){
         // 15% chance of fire becoming movable
-        if(rand() % 100 < 15){
+        if(this->randomGenerator.GetInt(0, 100) < 15){
             placeAsUnmovableSolid = false;
         }
     }
@@ -584,7 +584,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
                 }
                 else {
                     // +- 0.05 degrees radian
-                    double smallAngleDeviation = ((rand() % 1000) / 10000.0f - 0.05f);
+                    double smallAngleDeviation = this->randomGenerator.GetFloat(-0.05f, 0.05f);
                     
                     voxel->position = Vec2f(currentPos);
                     Particle::AddSolidFallingParticle(this, voxel, angle + smallAngleDeviation, (radius*1.1f - j)*0.7f);

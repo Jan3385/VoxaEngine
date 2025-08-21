@@ -296,9 +296,6 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgro
 
     SDL_GL_SwapWindow(r_window);
 
-    //TODO: undo later to see if it fucks up something
-    Shader::Shader::UnsetActiveShaderCache();
-
     while ((err = glGetError()) != GL_NO_ERROR) {
         std::cerr << "[Render] GL error: [" << err << "]" << std::endl;
     }

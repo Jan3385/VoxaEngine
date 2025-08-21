@@ -6,11 +6,14 @@
 #include <GL/glew.h>
 #include "Math/Vector.h"
 #include "Registry/VoxelRegistry.h"
+#include "Math/Random.h"
 
 // Forward declaration of ChunkMatrix
 class ChunkMatrix;
 
 namespace Volume {
+	extern Random voxelRandomGenerator;
+
 	struct VoxelHeatData{
 		float temperature;
 		float capacity;
@@ -22,6 +25,7 @@ namespace Volume {
 	};
 
 	static constexpr float VOXEL_SIZE_METERS = 0.125f;
+
 	//Interfaces
 	class IGravity {
 	public:
@@ -34,6 +38,7 @@ namespace Volume {
 		short int Acceleration = 1;
 		static constexpr short int MAX_ACCELERATION = 10;
 	};
+
 	//Base class for all voxel elements
 	class VoxelElement
 	{
@@ -102,6 +107,7 @@ namespace Volume {
 	private:
 		void StopFalling();
 	};
+
 	//liquid voxels -> inherit from base voxel class
 	class VoxelLiquid : public VoxelElement, public IGravity {
 	public:
@@ -116,6 +122,7 @@ namespace Volume {
 	private:
 		static constexpr uint16_t DesiredDensity = 20;
 	};
+
 	//Gas voxels -> inherit from base voxel class
 	struct VoxelGas : public VoxelElement {
 	public:

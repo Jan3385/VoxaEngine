@@ -72,6 +72,7 @@ public:
 	static Vec2f ChunkToWorldPosition(const Vec2i& pos);
 	static Vec2f MousePosToWorldPos(const Vec2f& mousePos, const Vec2f &cameraOffset);
 private:
+	Random randomGenerator;
 	bool cleaned = false;
 
 	// Chunk shader manager for handling chunk-related shaders
