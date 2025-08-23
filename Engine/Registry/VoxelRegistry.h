@@ -15,6 +15,12 @@
 struct IGame;
 
 namespace Registry{
+	enum class TextureRotation {
+		None 			= 0b00,
+		FlipHorizontal 	= 0b01,
+		FlipVertical 	= 0b10,
+		Any 			= 0b11
+	};
 	struct ChemicalReaction{
 		std::string from;
 		std::string catalyst;
@@ -33,6 +39,30 @@ namespace Registry{
 		LiquidVoxel,
 		SolidVoxel,
 		Custom,
+	};
+
+	class VoxelTextureMap{
+	public:
+		VoxelTextureMap();
+		VoxelTextureMap(const std::string& textureName, Registry::TextureRotation possibleRotations);
+		~VoxelTextureMap();
+		
+		unsigned int GetWidth() { return this->width; }
+		unsigned int GetHeight() { return this->height; }
+
+		RGBA& operator()(unsigned int x, unsigned int y);
+
+		// disable copy
+		VoxelTextureMap(const VoxelTextureMap&) = delete;
+		VoxelTextureMap& operator=(const VoxelTextureMap&) = delete;
+		// Enable move
+		VoxelTextureMap(VoxelTextureMap&& other) noexcept = default;
+		VoxelTextureMap& operator=(VoxelTextureMap&& other) noexcept = default;
+	private:
+		Registry::TextureRotation possibleRotations;
+		std::string name;
+		unsigned int width, height;
+		RGBA* data;
 	};
 }
 
@@ -61,6 +91,9 @@ namespace Volume{
 		uint8_t Flamability = 0; // 0 - 255
 
 		uint32_t id = 0;
+
+		Registry::VoxelTextureMap* TextureMap = nullptr;
+		bool RandomColorTints = true;
 	};
 }
 
@@ -78,6 +111,7 @@ namespace Registry{
 		VoxelBuilder& PhaseDown(std::string To, float Temperature);
 		VoxelBuilder& Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst = true, float MinTemperatureC = Volume::Temperature::absoluteZero.GetCelsius());
 		VoxelBuilder& ReactionOxidation(std::string To, float OxygenReactionSpeed);
+		VoxelBuilder& VoxelTextureMap(const std::string& textureName, bool keepRandomTints);
 		VoxelBuilder& SetSolidInertiaResistance(float resistance);
 		VoxelBuilder& SetFluidDispursionRate(uint8_t rate);
 		VoxelBuilder& SetFlamability(uint8_t flamability);
@@ -94,6 +128,8 @@ namespace Registry{
 		float SolidInertiaResistance; 	// 0 - 1 (0 being no resistance and 1 being full resistance)
 		uint8_t FluidDispursionRate; 	// 0 - 255; how well does the fluid move from side to side (0 being no dispersion and 255 being full dispersion)
 		uint8_t Flamability = 0;		// 0 - 255 (0 being no flamability and 255 being full flamability)
+		std::string TextureMapName = "";
+		bool RandomColorTints = true;
 	};
 
 	using VoxelFactory = std::function<Volume::VoxelElement*(Vec2i pos, Volume::Temperature temp, float amount, bool placeUnmovableSolids)>;
@@ -110,12 +146,18 @@ namespace Registry{
 
 		static void RegisterVoxel(const std::string& name, Volume::VoxelProperty property);
 		static void RegisterVoxelFactory(const std::string& name, VoxelFactory factory);
+		static void RegisterTextureMap(const std::string& name, const std::string& texturePath, TextureRotation possibleRotations);
 		static void RegisterReaction(Registry::ChemicalReaction reaction);
 		static void RegisterVoxels(IGame *game);
 		static void CloseRegistry();
+
+		static void CleanupRegistry();
+
 		static std::unordered_map<std::string, Volume::VoxelProperty> registry;
 		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
 		static std::unordered_map<std::string, VoxelFactory> voxelFactories;
+
+		static std::unordered_map<std::string, VoxelTextureMap*> textureMaps;
 
 		/// Data stored as following:
 		/// uint32_t fromID;

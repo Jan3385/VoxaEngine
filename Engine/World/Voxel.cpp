@@ -23,14 +23,24 @@ VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperatu
 	this->properties = Registry::VoxelRegistry::GetProperties(id);
 	this->temperature = temperature;
 
-	//tint the color factor 1 to 1.2
-	float factor = Volume::voxelRandomGenerator.GetFloat(1.0f, 1.2f);
-	this->color = RGBA(
-		std::clamp(static_cast<int>(this->properties->pColor.r * factor), 0, 255),
-		std::clamp(static_cast<int>(this->properties->pColor.g * factor), 0, 255),
-		std::clamp(static_cast<int>(this->properties->pColor.b * factor), 0, 255),
-		std::clamp(static_cast<int>(this->properties->pColor.a), 0, 255)
-	);
+	this->color = this->properties->pColor;
+
+	if(this->properties->TextureMap){
+		RGBA tint = (*this->properties->TextureMap)(this->position.x, this->position.y);
+		if(tint.a == 0) tint = RGBA(255, 255, 255, 255);
+
+		this->color = this->color * tint;
+	}
+	if(this->properties->RandomColorTints){
+		//tint the color factor 1 to 1.2
+		float factor = Volume::voxelRandomGenerator.GetFloat(1.0f, 1.2f);
+		this->color = RGBA(
+			std::clamp(static_cast<int>(this->color.r * factor), 0, 255),
+			std::clamp(static_cast<int>(this->color.g * factor), 0, 255),
+			std::clamp(static_cast<int>(this->color.b * factor), 0, 255),
+			std::clamp(static_cast<int>(this->color.a), 0, 255)
+		);
+	}
 }
 
 VoxelElement::~VoxelElement()

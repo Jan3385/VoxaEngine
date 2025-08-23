@@ -16,6 +16,7 @@ using namespace Registry;
 std::unordered_map<std::string, VoxelProperty> VoxelRegistry::registry = {};
 std::unordered_map<uint32_t, VoxelProperty*> VoxelRegistry::idRegistry = {};
 std::unordered_map<std::string, VoxelFactory> VoxelRegistry::voxelFactories = {};
+std::unordered_map<std::string, VoxelTextureMap*> VoxelRegistry::textureMaps = {};
 std::vector<Registry::ChemicalReaction> VoxelRegistry::reactionRegistry = {};
 GLuint Registry::VoxelRegistry::chemicalReactionsBuffer = 0;
 uint32_t VoxelRegistry::idCounter = 1;
@@ -39,6 +40,15 @@ void Registry::VoxelRegistry::RegisterVoxelFactory(const std::string &name, Voxe
 		throw std::runtime_error("Voxel factory registered after designated time window: " + name);
 
 	voxelFactories[name] = factory;
+}
+void Registry::VoxelRegistry::RegisterTextureMap(const std::string &name, const std::string &texturePath, TextureRotation possibleRotations)
+{
+	if(registryClosed) 
+		throw std::runtime_error("Texture map registered after designated time window: " + name);
+
+	//FIXME: add unloading function to prevent memory leaks
+	VoxelTextureMap* map = new VoxelTextureMap(texturePath, possibleRotations);
+	VoxelRegistry::textureMaps[name] = map;
 }
 
 void Registry::VoxelRegistry::RegisterReaction(Registry::ChemicalReaction reaction)
@@ -75,6 +85,8 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 
 void Registry::VoxelRegistry::CloseRegistry()
 {
+	if(registryClosed) return;
+
 	registryClosed = true;
 	
 	struct ChemicalReactionID{
@@ -116,6 +128,20 @@ void Registry::VoxelRegistry::CloseRegistry()
 	// Clear reaction registry to free up memory
 	VoxelRegistry::reactionRegistry.clear();
 	std::vector<ChemicalReactionID>().swap(reactions); // free memory
+}
+
+/// @brief Prevents memory leaks at the end of the application
+void Registry::VoxelRegistry::CleanupRegistry()
+{
+	for(auto& pair : VoxelRegistry::textureMaps){
+		delete pair.second;
+	}
+	VoxelRegistry::textureMaps.clear();
+
+	if (chemicalReactionsBuffer != 0) {
+		glDeleteBuffers(1, &chemicalReactionsBuffer);
+		chemicalReactionsBuffer = 0;
+	}
 }
 
 VoxelProperty* VoxelRegistry::GetProperties(std::string id)
@@ -264,6 +290,13 @@ VoxelBuilder &Registry::VoxelBuilder::ReactionOxidation(std::string To, float Ox
     return *this;
 }
 
+VoxelBuilder &VoxelBuilder::VoxelTextureMap(const std::string &textureName, bool keepRandomTints)
+{
+	this->TextureMapName = textureName;
+	this->RandomColorTints = keepRandomTints;
+	return *this;
+}
+
 // Between 0 and 1, 0 being no resistance and 1 being full resistance
 VoxelBuilder &VoxelBuilder::SetSolidInertiaResistance(float resistance)
 {
@@ -288,6 +321,15 @@ VoxelBuilder &VoxelBuilder::SetFlamability(uint8_t flamability)
 
 VoxelProperty VoxelBuilder::Build()
 {
+	Registry::VoxelTextureMap *map = nullptr;
+	if(!this->TextureMapName.empty()){
+		auto it = VoxelRegistry::textureMaps.find(this->TextureMapName);
+		if(it == VoxelRegistry::textureMaps.end())
+			throw std::runtime_error("Texture map not found: " + this->TextureMapName);
+
+		map = it->second;
+	}
+
     return VoxelProperty{
 		.name = this->Name,
 		.Constructor = this->Constructor,
@@ -299,7 +341,9 @@ VoxelProperty VoxelBuilder::Build()
 		.HeatedChange = this->HeatedChange,
 		.SolidInertiaResistance = this->SolidInertiaResistance,
 		.FluidDispursionRate = this->FluidDispursionRate,
-		.Flamability = this->Flamability
+		.Flamability = this->Flamability,
+		.TextureMap = map,
+		.RandomColorTints = this->RandomColorTints
 	};
 }
 
@@ -348,4 +392,79 @@ Volume::VoxelElement *CreateVoxelElement(Volume::VoxelProperty *property, std::s
 	}
 	
 	return voxel;
+}
+
+Registry::VoxelTextureMap::VoxelTextureMap()
+	: name("Unnamed"), data(nullptr), width(0), height(0)
+{
+}
+
+Registry::VoxelTextureMap::VoxelTextureMap(const std::string &textureName, Registry::TextureRotation possibleRotations)
+    : name(textureName), possibleRotations(possibleRotations)
+{
+	const std::string path = "Textures/VoxelMaps/" + textureName + ".bmp";
+	SDL_Surface *surface = SDL_LoadBMP(path.c_str());
+
+	if (!surface)
+		throw std::runtime_error("Failed to load texture map for " + textureName + ": " + path + " SDL_Error: " + SDL_GetError());
+
+	if(surface->format->format != SDL_PIXELFORMAT_ARGB8888)
+		throw std::runtime_error("Texture map must be in ARGB8888 format for " + textureName + ": " + path);
+
+	width = surface->w;
+	height = surface->h;
+	data = new RGBA[width * height];
+
+	for (unsigned int y = 0; y < height; ++y) {
+		for (unsigned int x = 0; x < width; ++x) {
+			Uint32 pixel = ((Uint32*)surface->pixels)[y * width + x];
+			RGBA color = RGBA(pixel);
+
+			if(color.a == 0) color = RGBA(255, 255, 255, 255);
+			
+			data[y * width + x] = color;
+		}
+	}
+
+	SDL_FreeSurface(surface);
+}
+
+Registry::VoxelTextureMap::~VoxelTextureMap()
+{
+	if(data) delete[] data;
+	data = nullptr;
+}
+
+RGBA &Registry::VoxelTextureMap::operator()(unsigned int x, unsigned int y)
+{
+	if(!data)
+		throw std::runtime_error("Texture map data not loaded for " + name);
+
+	unsigned int overreachX = x / width;
+	unsigned int overreachY = y / height;
+
+	unsigned int localX = x % width;
+	unsigned int localY = y % height;
+	
+	// to not waste resources where not needed
+	if(this->possibleRotations == Registry::TextureRotation::None)
+		return data[localY * width + localX];
+
+	// seemingly random rotations with predictable outcome
+	std::string key = std::to_string(overreachX) + "," + std::to_string(overreachY);
+	size_t hashed = std::hash<std::string>{}(key);
+
+	// only lets us rotate within the bounds of possibleRotations
+	hashed = hashed & static_cast<size_t>(this->possibleRotations);
+
+	// flip horizontally
+	if((hashed & 0b01) != 0){
+		localX = width - localX - 1;
+	}
+	// flip vertically
+	if((hashed & 0b10) != 0){
+		localY = height - localY - 1;
+	}
+
+	return data[localY * width + localX];
 }

@@ -93,6 +93,8 @@ GameEngine::~GameEngine()
     }
 
     chunkMatrix.cleanup();
+
+    Registry::VoxelRegistry::CleanupRegistry();
 }
 
 void GameEngine::EndFrame()

@@ -10,11 +10,17 @@ void RegisterGameVoxels(){
     using namespace Registry;
     using namespace Volume;
 
+    VoxelRegistry::RegisterTextureMap("RockL", "Rock-low-detail", Registry::TextureRotation::None);
+    VoxelRegistry::RegisterTextureMap("SandR", "Sand-random-imperfections", Registry::TextureRotation::Any);
+    VoxelRegistry::RegisterTextureMap("DirtR", "Dirt-random-imperfections", Registry::TextureRotation::Any);
+    VoxelRegistry::RegisterTextureMap("Grass", "Grass", Registry::TextureRotation::None);
+
     VoxelRegistry::RegisterVoxel(
 		"Grass",
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 1100, 0.06, 200)
 			.SetName("Grass")
 			.SetColor(RGBA(34, 139, 34, 255))
+            .VoxelTextureMap("Grass", true)
 			.PhaseUp("Dirt", 200)
 			.SetSolidInertiaResistance(0.5)
 			.SetFlamability(70)
@@ -25,6 +31,7 @@ void RegisterGameVoxels(){
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 1000, 0.3, 200)
 			.SetName("Dirt")
 			.SetColor(RGBA(121, 85, 72, 255))
+            .VoxelTextureMap("DirtR", true)
 			.PhaseUp("Magma", 1400)
 			.SetSolidInertiaResistance(0.7)
 			.Build()
@@ -34,6 +41,7 @@ void RegisterGameVoxels(){
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 800, 2.5, 200)
 			.SetName("Stone")
 			.SetColor(RGBA(128, 128, 128, 255))
+            .VoxelTextureMap("RockL", false)
 			.PhaseUp("Magma", 1200)
 			.SetSolidInertiaResistance(0.8)
 			.Build()
@@ -114,6 +122,7 @@ void RegisterGameVoxels(){
 		VoxelBuilder(DefaultVoxelConstructor::SolidVoxel, 830, 0.25, 190)
 			.SetName("Sand")
 			.SetColor(RGBA(236, 204, 162, 255))
+            .VoxelTextureMap("SandR", true)
 			.PhaseUp("Liquid_Glass", 1000)
 			.SetSolidInertiaResistance(0.1)
 			.Build()

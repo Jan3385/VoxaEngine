@@ -81,8 +81,7 @@ void GameObjectRegistry::RegisterObjects(IGame *game)
 
 void Registry::GameObjectRegistry::CloseRegistry()
 {
-    if (registryClosed)
-        throw std::runtime_error("Registry already closed");
+    if (registryClosed) return;
 
     registryClosed = true;
 }
