@@ -26,7 +26,8 @@ void Game::OnInitialize()
 
 void Game::OnShutdown()
 {
-
+    delete Game::player;
+    Game::player = nullptr;
 }
 
 void Game::Update(float deltaTime)
