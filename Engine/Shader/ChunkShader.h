@@ -20,6 +20,7 @@ namespace Shader{
               void BindPressureShaderBuffers();
               void BindReactionShaderBuffers();
 
+              template<typename T>
               void ClearOutputBuffer(GLuint size);
        private:
               // ----- Buffers -----
