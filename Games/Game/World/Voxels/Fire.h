@@ -1,6 +1,6 @@
 #pragma once
-#include "World/Voxel.h"
-#include "Math/Vector.h"
+#include <World/Voxel.h>
+#include <Math/Vector.h>
 
 namespace Volume{
     class FireVoxel : public VoxelGas

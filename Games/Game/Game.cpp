@@ -3,6 +3,7 @@
 #include "Rendering/ImGuiRenderer.h"
 #include "Input/InputHandler.h"
 #include "World/ChunkGenerator.h"
+#include "World/RegisterVoxels.h"
 
 #include <Registry/GameObjectRegistry.h>
 
@@ -77,7 +78,7 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 
 void Game::RegisterVoxels()
 {
-    using namespace Registry;
+    Registry::RegisterGameVoxels();
 }
 
 void Game::RegisterVoxelObjects()

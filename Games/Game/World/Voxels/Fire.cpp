@@ -1,7 +1,6 @@
-#include "World/Voxels/Fire.h"
-#include "World/ChunkMatrix.h"
+#include "Fire.h"
 
-#include <iostream>
+#include <World/ChunkMatrix.h>
 
 using namespace Volume;
 
