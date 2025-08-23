@@ -84,6 +84,7 @@ ChunkGenerator::ChunkBoolArray ChunkGenerator::GenerateArrayFromNoise(Vec2i chun
         for (int y = 0; y < Volume::Chunk::CHUNK_SIZE; ++y) {
             Vec2f noisePos = Vec2f(x + chunkPos.x * Volume::Chunk::CHUNK_SIZE, y + chunkPos.y * Volume::Chunk::CHUNK_SIZE);
             noisePos = noisePos / GEN_SCALE;
+            noisePos.x /= GEN_X_MULTIPLIER;
 
             float noiseValue = Noise::ValueNoise(noisePos, seed);
 

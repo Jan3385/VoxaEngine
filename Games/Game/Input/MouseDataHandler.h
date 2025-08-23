@@ -8,6 +8,6 @@ namespace Input{
         int placementRadius = 5;
         int placeVoxelAmount = 20;
         std::string placeVoxelType = "Sand";
-        float placeVoxelTemperature = 0.0f;
+        float placeVoxelTemperature = 21.0f;
     };
 }
