@@ -40,10 +40,12 @@ namespace Shader{
         void BindBufferBase(GLuint binding) const;
 
         void ClearBuffer();
+        void ClearBuffer(const GLuint newSize, GLenum usage);
 
         void SetSize(GLuint size, bool silenceWarnings = false);
 
         T* ReadBuffer() const;
+        T* ReadBuffer(GLuint size) const;
 
     private:
         GLuint ID;

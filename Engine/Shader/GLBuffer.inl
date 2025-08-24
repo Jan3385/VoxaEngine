@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include "GLVertexArray.h"
+#include "GLBuffer.h"
 
 namespace Shader{
 
@@ -149,6 +150,7 @@ inline void GLBuffer<T, Target>::ClearBuffer()
     if constexpr (std::is_same_v<T, float>) {
         glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
     }else{
+        this->Bind();
         void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
         if (ptr) {
             memset(ptr, 0, this->bufferSize * sizeof(T));
@@ -157,6 +159,7 @@ inline void GLBuffer<T, Target>::ClearBuffer()
     }
     #else
     // Fallback - map and memset to zero
+    this->Bind();
     void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
     if (ptr) {
         memset(ptr, 0, size * sizeof(T));
@@ -165,6 +168,16 @@ inline void GLBuffer<T, Target>::ClearBuffer()
     #endif
 }
 
+template <typename T, GLenum Target>
+inline void GLBuffer<T, Target>::ClearBuffer(const GLuint newSize, GLenum usage)
+{
+    if(this->bufferSize == static_cast<GLint>(newSize))
+        this->ClearBuffer();
+    else{
+        std::vector<T> emptyData(newSize);
+        this->SetData(emptyData, usage);
+    }
+}
 /// @brief Sets the size variable inside the object
 /// @warning Does not reallocate the buffer. ! Only use this when you know what you are doing !
 /// @param size New size (in number of elements) of the buffer
@@ -203,4 +216,25 @@ inline T *GLBuffer<T, Target>::ReadBuffer() const
     return result;
 }
 
+template <typename T, GLenum Target>
+inline T *GLBuffer<T, Target>::ReadBuffer(GLuint size) const
+{
+    if(this->bufferSize < static_cast<GLint>(size)){
+        std::cerr << "[" << this->name << "] GLBuffer::ReadBuffer - Warning: Requested size is larger than current buffer size! Returning only available data." << std::endl;
+        size = this->bufferSize;
+    }
+
+    this->Bind();
+
+    T* data = static_cast<T*>(glMapBuffer(Target, GL_READ_ONLY));
+    if (!data) {
+        std::cerr << "[" << this->name << "] GLBuffer::ReadBuffer - Error: Failed to map buffer to client address space for reading!" << std::endl;
+        return nullptr;
+    }
+
+    T* result = new T[size];
+    std::memcpy(result, data, size * sizeof(T));
+    glUnmapBuffer(Target);
+    return result;
+}
 }

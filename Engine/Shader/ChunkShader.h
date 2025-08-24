@@ -21,9 +21,6 @@ namespace Shader{
               void BindHeatShaderBuffers();
               void BindPressureShaderBuffers();
               void BindReactionShaderBuffers();
-
-              template<typename T>
-              void ClearOutputBuffer(GLuint size);
        private:
               // ----- Buffers -----
               // Chunk connectivity buffer
@@ -39,8 +36,16 @@ namespace Shader{
               GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelPressureBuffer;
               // Buffer for storing voxel IDs in UINT
               GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER> voxelIdBuffer;
-              // Output buffer for any output
-              GLuint outputDataBuffer = 0;
+
+              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> floatOutputDataBuffer;
+
+              struct ChemicalVoxelChanges {
+                     uint32_t voxelID;
+                     uint32_t localPosX;
+                     uint32_t localPosY;
+                     uint32_t chunk;
+              };
+              GLBuffer<ChemicalVoxelChanges, GL_SHADER_STORAGE_BUFFER> chemicalOutputDataBuffer;
 
               GLBuffer<uint32_t, GL_ATOMIC_COUNTER_BUFFER> atomicCounterBuffer;
 

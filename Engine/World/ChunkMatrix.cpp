@@ -214,7 +214,6 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeOb
     if(!chunk){
         chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
 
@@ -309,7 +308,6 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
     if (!chunk) {
         chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
 
@@ -366,7 +364,6 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     if (!chunk) {
         chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
         chunkCreationMutex.unlock();
     }
 

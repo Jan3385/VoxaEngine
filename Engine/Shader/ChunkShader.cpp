@@ -26,7 +26,8 @@ Shader::ChunkShaderManager::ChunkShaderManager()
     this->voxelPressureBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Voxel Pressure Buffer");
     this->voxelIdBuffer = GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER>("Voxel ID Buffer");
 
-    glGenBuffers(1, &this->outputDataBuffer);
+    this->floatOutputDataBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Float Output Data Buffer");
+    this->chemicalOutputDataBuffer = GLBuffer<ChemicalVoxelChanges, GL_SHADER_STORAGE_BUFFER>("Chemical Output Data Buffer");
 
     this->atomicCounterBuffer = GLBuffer<uint32_t, GL_ATOMIC_COUNTER_BUFFER>("Atomic Counter Buffer");
 
@@ -42,8 +43,6 @@ Shader::ChunkShaderManager::ChunkShaderManager()
 
 Shader::ChunkShaderManager::~ChunkShaderManager()
 {
-    glDeleteBuffers(1, &this->outputDataBuffer);
-
     delete this->heatShader;
     delete this->pressureShader;
     delete this->clearBufferShader;
@@ -143,26 +142,27 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         }
     }
 
-    voxelTemperatureBuffer.SetData(temperatureBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
-    voxelHeatCapacityBuffer.SetData(heatCapacityBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
-    voxelConductivityBuffer.SetData(heatConductivityBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
-    voxelPressureBuffer.SetData(pressureBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
-    voxelIdBuffer.SetData(idBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
+    voxelTemperatureBuffer.SetData(temperatureBuffer, GL_DYNAMIC_DRAW);
+    voxelHeatCapacityBuffer.SetData(heatCapacityBuffer, GL_DYNAMIC_DRAW);
+    voxelConductivityBuffer.SetData(heatConductivityBuffer, GL_DYNAMIC_DRAW);
+    voxelPressureBuffer.SetData(pressureBuffer, GL_DYNAMIC_DRAW);
+    voxelIdBuffer.SetData(idBuffer, GL_DYNAMIC_DRAW);
 
-    chunkConnectivityBuffer.SetData(connectivityDataBuffer.data(), chunkCount, GL_STATIC_DRAW);
+    chunkConnectivityBuffer.SetData(connectivityDataBuffer, GL_DYNAMIC_DRAW);
 
     float *heatOutput = nullptr;
     if(GameEngine::instance->runHeatSimulation)
     {
-        this->ClearOutputBuffer<float>(numberOfVoxels);
+        floatOutputDataBuffer.ClearBuffer(numberOfVoxels, GL_DYNAMIC_DRAW);
         this->BindHeatShaderBuffers();
         this->heatShader->Use();
 
         this->heatShader->SetUnsignedInt("NumberOfVoxels", numberOfVoxels);
 
         this->heatShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
-        heatOutput = ComputeShader::ReadDataFromBuffer<float>(this->outputDataBuffer, numberOfVoxels);
-        this->ClearOutputBuffer<float>(numberOfVoxels);
+
+        heatOutput = floatOutputDataBuffer.ReadBuffer();
+        floatOutputDataBuffer.ClearBuffer();
     }
 
     float *pressureOutput = nullptr;
@@ -174,21 +174,15 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         this->pressureShader->SetUnsignedInt("NumberOfVoxels", numberOfVoxels);
 
         this->pressureShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
-        pressureOutput = ComputeShader::ReadDataFromBuffer<float>(this->outputDataBuffer, numberOfVoxels);
-        this->ClearOutputBuffer<float>(numberOfVoxels);
+        pressureOutput = floatOutputDataBuffer.ReadBuffer();
+        floatOutputDataBuffer.ClearBuffer();
     }
 
-    struct VoxelChanges {
-        uint32_t voxelID;
-        uint32_t localPosX;
-        uint32_t localPosY;
-        uint32_t chunk;
-    };
-
-    VoxelChanges *reactionOutput = nullptr;
+    ChemicalVoxelChanges *reactionOutput = nullptr;
     uint32_t reactionsSize = 0;
     if(GameEngine::instance->runChemicalReactions)
     {
+        chemicalOutputDataBuffer.ClearBuffer(numberOfVoxels, GL_DYNAMIC_DRAW);
         this->BindReactionShaderBuffers();
         this->reactionShader->Use();
 
@@ -203,8 +197,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         reactionsSize = *reactionsSizePointer;
         delete reactionsSizePointer;
 
-        reactionOutput = ComputeShader::ReadDataFromBuffer<VoxelChanges>(this->outputDataBuffer, reactionsSize);
-        this->ClearOutputBuffer<VoxelChanges>(numberOfVoxels);
+        reactionOutput = chemicalOutputDataBuffer.ReadBuffer(reactionsSize);
     }
 
     #pragma omp parallel for
@@ -230,7 +223,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
     //#pragma omp parallel for ( crashes :( )
     for(uint32_t i = 0; i < reactionsSize; i++) {
-        VoxelChanges& change = reactionOutput[i];
+        ChemicalVoxelChanges& change = reactionOutput[i];
         std::string stringID = Registry::VoxelRegistry::GetStringID(change.voxelID);
         Vec2i voxelPos =  Vec2i(change.localPosX, change.localPosY) + chunkIndexToPosOffset[change.chunk];
 
@@ -252,7 +245,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
 void Shader::ChunkShaderManager::BindHeatShaderBuffers()
 {
-    ComputeShader::BindBufferAt(0, this->outputDataBuffer);
+    floatOutputDataBuffer.BindBufferBase(0);
     voxelTemperatureBuffer.BindBufferBase(1);
     voxelHeatCapacityBuffer.BindBufferBase(2);
     voxelConductivityBuffer.BindBufferBase(3);
@@ -261,7 +254,7 @@ void Shader::ChunkShaderManager::BindHeatShaderBuffers()
 
 void Shader::ChunkShaderManager::BindPressureShaderBuffers()
 {
-    ComputeShader::BindBufferAt(0, this->outputDataBuffer);
+    floatOutputDataBuffer.BindBufferBase(0);
     voxelIdBuffer.BindBufferBase(1);
     voxelPressureBuffer.BindBufferBase(2);
     chunkConnectivityBuffer.BindBufferBase(3);
@@ -271,43 +264,10 @@ void Shader::ChunkShaderManager::BindReactionShaderBuffers()
 {
     atomicCounterBuffer.SetData(0, GL_DYNAMIC_COPY);
 
-    ComputeShader::BindBufferAt(0, this->outputDataBuffer);
+    chemicalOutputDataBuffer.BindBufferBase(0);
     atomicCounterBuffer.BindBufferBase(1);
     voxelTemperatureBuffer.BindBufferBase(2);
     voxelIdBuffer.BindBufferBase(3);
     Registry::VoxelRegistry::chemicalReactionsGLBuffer->BindBufferBase(4);
     chunkConnectivityBuffer.BindBufferBase(5);
-}
-
-template<typename T>
-void Shader::ChunkShaderManager::ClearOutputBuffer(GLuint size)
-{
-    static GLuint lastSize = 0;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, outputDataBuffer);
-
-    // Only reallocate if size changed
-    if (lastSize != size) {
-        glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(T), nullptr, GL_DYNAMIC_COPY);
-        lastSize = size;
-    }
-
-    // Clear buffer data
-    #ifdef GL_VERSION_4_3
-    if constexpr (std::is_same_v<T, float>) {
-        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
-    }else{
-        void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-        if (ptr) {
-            memset(ptr, 0, size * sizeof(T));
-            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-        }
-    }
-    #else
-    // Fallback - map and memset to zero
-    void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
-    if (ptr) {
-        memset(ptr, 0, size * sizeof(T));
-        glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-    }
-    #endif
 }

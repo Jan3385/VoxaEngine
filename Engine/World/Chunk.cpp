@@ -54,20 +54,7 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
         }
         this->UpdateRenderBufferRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
     }
-}
 
-Volume::Chunk::~Chunk()
-{
-    for (unsigned short int i = 0; i < Chunk::CHUNK_SIZE; i++)
-    {
-        for (unsigned short int  j = 0; j < Chunk::CHUNK_SIZE; j++)
-        {
-            delete voxels[i][j];
-        }
-    }
-}
-void Volume::Chunk::SetVBOData()
-{
     renderVBO = Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER>("Chunk Render VBO");
     VoxelRenderData tempData[CHUNK_SIZE_SQUARED];
     renderVBO.SetData(tempData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
@@ -101,6 +88,17 @@ void Volume::Chunk::SetVBOData()
 
     // Update the instance VBO with the new render data
     renderVBO.SetData(*renderData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
+}
+
+Volume::Chunk::~Chunk()
+{
+    for (unsigned short int i = 0; i < Chunk::CHUNK_SIZE; i++)
+    {
+        for (unsigned short int  j = 0; j < Chunk::CHUNK_SIZE; j++)
+        {
+            delete voxels[i][j];
+        }
+    }
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB Camera) const
 {

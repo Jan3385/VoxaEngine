@@ -369,7 +369,6 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
 
     chunkMatrix.chunkCreationMutex.lock();
     Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
-    GameEngine::renderer->chunkCreateBuffer.push_back(chunk);
     chunkMatrix.chunkCreationMutex.unlock();
     return chunk;
 }

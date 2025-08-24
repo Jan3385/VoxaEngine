@@ -369,12 +369,6 @@ void GameRenderer::RenderPlayer(VoxelObject *player, glm::mat4 projection)
 
 void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix,  glm::mat4 projection)
 {
-    // set up new VBOs for newly created chunks
-    for(auto& chunk : this->chunkCreateBuffer) {
-        chunk->SetVBOData();
-    }
-    this->chunkCreateBuffer.clear();
-
     this->voxelRenderProgram->Use();
     this->voxelRenderProgram->SetMat4("projection", projection);
 

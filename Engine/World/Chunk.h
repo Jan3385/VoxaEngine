@@ -61,8 +61,6 @@ namespace Volume
     	Chunk(const Vec2i& pos);
     	~Chunk();
 
-		void SetVBOData();
-
 		bool ShouldChunkDelete(AABB Camera) const;
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;

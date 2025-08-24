@@ -68,8 +68,5 @@ public:
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
     void DrawClosedShape(const GLuint VAO, const GLsizei size, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
 
-    // Chunks which dont have any VBO & VAO yet
-    std::vector<Volume::Chunk*> chunkCreateBuffer;
-
     Shader::GLBuffer<glm::vec2, GL_ARRAY_BUFFER> *quadBuffer;
 };
