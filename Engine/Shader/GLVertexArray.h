@@ -33,7 +33,7 @@ namespace Shader{
     template<> struct GLType<glm::bvec3>            { static constexpr GLenum value = GL_BOOL; };
     template<> struct GLType<glm::bvec4>            { static constexpr GLenum value = GL_BOOL; };
 
-
+    /// @brief OpenGL Vertex Array Object wrapper
     class GLVertexArray {
     public:
         GLVertexArray();

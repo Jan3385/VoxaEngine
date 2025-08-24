@@ -6,14 +6,18 @@
 #include <glm/glm.hpp>
 
 namespace Shader{
+    /// @brief Base class for OpenGL buffer objects
     class GLBufferBase {
     public:
         virtual ~GLBufferBase() = default;
 
         virtual void Bind() const = 0;
-        virtual void Unbind() const = 0;
+        static void Unbind();
     };
 
+    /// @brief OpenGL buffer object wrapper
+    /// @tparam T Data type stored in the buffer
+    /// @tparam Target OpenGL buffer target (e.g., GL_ARRAY_BUFFER)
     template<typename T, GLenum Target>
     class GLBuffer : public GLBufferBase {
     public:
@@ -29,7 +33,7 @@ namespace Shader{
         GLBuffer& operator=(GLBuffer&& other) noexcept;
 
         void Bind() const;
-        void Unbind() const;
+        static void Unbind();
 
         void SetData(const T& data, GLenum usage);
         void SetData(const T* data, GLuint size, GLenum usage);

@@ -53,15 +53,14 @@ inline GLBuffer<T, Target> &GLBuffer<T, Target>::operator=(GLBuffer<T, Target> &
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::Bind() const
 {
-    if(ID == 0){
+    if(ID == 0)
         throw std::runtime_error("Attempt to bind uninitialized GLBuffer: " + this->name);
-    }
 
     glBindBuffer(Target, ID);
 }
 
 template <typename T, GLenum Target>
-inline void GLBuffer<T, Target>::Unbind() const
+inline void GLBuffer<T, Target>::Unbind()
 {
     glBindBuffer(Target, 0);
 }
@@ -129,6 +128,8 @@ inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const T *data, GLuint
     glBufferSubData(Target, offset * sizeof(T), size * sizeof(T), data);
 }
 
+/// @brief Binds the buffer to a specific binding point
+/// @param binding Binding point to use
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::BindBufferBase(GLuint binding) const
 {
@@ -139,6 +140,7 @@ inline void GLBuffer<T, Target>::BindBufferBase(GLuint binding) const
     glBindBufferBase(Target, binding, ID);
 }
 
+/// @brief Clears the buffer data (sets to zero)
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::ClearBuffer()
 {
@@ -168,6 +170,7 @@ inline void GLBuffer<T, Target>::ClearBuffer()
     #endif
 }
 
+/// @brief Clears AND resizes (if needed) the buffer
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::ClearBuffer(const GLuint newSize, GLenum usage)
 {
@@ -217,6 +220,10 @@ inline T *GLBuffer<T, Target>::ReadBuffer() const
     return result;
 }
 
+/// @brief Reads the buffer data until the specified size
+/// @warning Pointer needs to be deleted after use (Memory leak!)
+/// @note If size > bufferSize, then size gets clamped to the bufferSize and prints an error
+/// @return Pointer to the buffer data
 template <typename T, GLenum Target>
 inline T *GLBuffer<T, Target>::ReadBuffer(GLuint size) const
 {
