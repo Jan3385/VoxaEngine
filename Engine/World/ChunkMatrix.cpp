@@ -116,7 +116,7 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
     return nullptr;
 }
 
-void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size)
+void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size, int amount)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
@@ -127,7 +127,7 @@ void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, V
     {
         for (int y = -size; y <= size; y++)
         {
-            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, size, false);
+            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false);
         }
     }
 }

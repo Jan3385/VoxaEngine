@@ -32,7 +32,7 @@ public:
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
 
-	void PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp, bool unmovable, int size);
+	void PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp, bool unmovable, int size, int amount);
 	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 

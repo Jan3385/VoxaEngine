@@ -62,7 +62,8 @@ void Input::OnMouseButtonDown(int button)
                 GameEngine::renderer->GetCameraOffset(),
                 Volume::Temperature(mouseData.placeVoxelTemperature),
                 mouseData.placeUnmovableSolidVoxels,
-                mouseData.placementRadius
+                mouseData.placementRadius,
+                mouseData.placeVoxelAmount
             );
         } 
         break;
