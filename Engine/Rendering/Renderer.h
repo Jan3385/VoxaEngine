@@ -37,13 +37,13 @@ private:
 
     AABB Camera;
 
-    GLuint particleVAO = 0;
-    GLuint particleVBO = 0;
+    Shader::GLVertexArray particleVAO;
+    Shader::GLBuffer<Particle::ParticleRenderData, GL_ARRAY_BUFFER> particleVBO;
 
-    GLuint closedShapeVAO = 0;
-    GLuint closedShapeVBO = 0;
+    Shader::GLVertexArray closedShapeVAO;
+    Shader::GLBuffer<glm::vec2, GL_ARRAY_BUFFER> closedShapeVBO;
 
-    GLuint cursorVAO = 0;
+    Shader::GLVertexArray cursorVAO;
 public:
     GameRenderer();
     GameRenderer(SDL_GLContext *glContext);

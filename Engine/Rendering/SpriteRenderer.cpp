@@ -16,8 +16,6 @@ SpriteRenderer::~SpriteRenderer()
     if(!initialized)
         return;
 
-    glDeleteVertexArrays(1, &quadVAO);
-    glDeleteBuffers(1, &quadVBO);
     initialized = false;
 }
 void SpriteRenderer::Initialize()
@@ -29,25 +27,22 @@ void SpriteRenderer::Initialize()
         "SpriteRender"
     );
 
-    float quadVertices[] = {
-        // Positions    // Texture Coords
-        -0.5f, -0.5f,   0.0f, 0.0f,
-         0.5f, -0.5f,   1.0f, 0.0f,
-         0.5f,  0.5f,   1.0f, 1.0f,
-        -0.5f,  0.5f,   0.0f, 1.0f
+    glm::vec4 quadVertices[] = {
+        // Positions        // Texture Coords
+        {-0.5f, -0.5f,      0.0f, 0.0f},
+        {0.5f, -0.5f,       1.0f, 0.0f},
+        {0.5f,  0.5f,       1.0f, 1.0f},
+        {-0.5f,  0.5f,      0.0f, 1.0f}
     };
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    quadVAO = Shader::GLVertexArray("Sprite Render VAO");
+    quadVBO = Shader::GLBuffer<glm::vec4, GL_ARRAY_BUFFER>("Sprite Render VBO");
+    quadVBO.SetData(quadVertices, 4, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    quadVAO.Bind();
+
+    quadVAO.AddAttribute<glm::vec4>(0, 4, quadVBO, GL_FALSE, 0, 0); // location 0: vec4 vertex
+    
+    quadVAO.Unbind();
 
     spriteRenderProgram->Use();
     spriteRenderProgram->SetInt("textureID", 0); // Set the texture sampler to use texture unit 0
@@ -75,9 +70,9 @@ void SpriteRenderer::RenderSprite(Vec2f position, Vec2i size, float rotation, GL
 
     spriteRenderProgram->SetMat4("model", model);
 
-    glBindVertexArray(quadVAO);
+    quadVAO.Bind();
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    glBindVertexArray(0);
+    quadVAO.Unbind();
 }
 
 /// @brief Takes in a .bmp file path and loads the texture into OpenGL GLuint

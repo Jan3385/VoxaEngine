@@ -2,7 +2,7 @@
 
 Shader::GLVertexArray::GLVertexArray()
 {
-    glGenVertexArrays(1, &ID);
+    this->ID = 0;
 }
 Shader::GLVertexArray::GLVertexArray(std::string name)
 {
@@ -22,6 +22,10 @@ Shader::GLVertexArray::~GLVertexArray()
 
 void Shader::GLVertexArray::Bind() const
 {
+    if(ID == 0){
+        throw std::runtime_error("Attempt to bind uninitialized GLVertexArray: " + this->name);
+    }
+    
     glBindVertexArray(ID);
 }
 

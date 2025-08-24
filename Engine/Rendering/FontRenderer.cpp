@@ -19,15 +19,12 @@ void FontRenderer::Initialize()
     );
 
     // Setup VAO and VBO for text rendering
-    glGenVertexArrays(1, &this->VAO);
-    glGenBuffers(1, &this->VBO);
-    glBindVertexArray(this->VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    textVAO = Shader::GLVertexArray("Text Render VAO");
+
+    textVAO.Bind();
+    textVBO = Shader::GLBuffer<glm::vec4, GL_ARRAY_BUFFER>("Text Render VBO");
+    textVAO.AddAttribute<glm::vec4>(0, 4, textVBO, GL_FALSE, 0, 0); // location 0: vec4 vertex
+    textVAO.Unbind();
 
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
@@ -49,8 +46,6 @@ FontRenderer::~FontRenderer()
     delete this->pixelFont;
     delete this->textRenderProgram;
 
-    glDeleteVertexArrays(1, &this->VAO);
-    glDeleteBuffers(1, &this->VBO);
     initialized = false;
 }
 
@@ -62,7 +57,7 @@ void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos,
     this->textRenderProgram->SetMat4("projection", projection);
     this->textRenderProgram->SetInt("textureID", 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(this->VAO);
+    textVAO.Bind();
 
     std::string::const_iterator c;
     for(c = text.begin(); c != text.end(); c++) {
@@ -74,7 +69,7 @@ void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos,
         float w = ch.Size.x * scale;
         float h = ch.Size.y * scale;
 
-        float vertices[6][4] = {
+        glm::vec4 vertices[6] = {
             { xpos,     ypos - h,   0.0f, 0.0f }, // Top-left
             { xpos,     ypos,       0.0f, 1.0f }, // Bottom-left
             { xpos + w, ypos,       1.0f, 1.0f }, // Bottom-right
@@ -86,16 +81,15 @@ void FontRenderer::RenderText(const std::string &text, Font *font, Vec2f pos,
 
         glBindTexture(GL_TEXTURE_2D, ch.TextureID);
 
-        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); // Update VBO with new data
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        textVBO.SetData(vertices, 6, GL_DYNAMIC_DRAW);
+        textVBO.Unbind();
 
         glDrawArrays(GL_TRIANGLES, 0, 6); // Render the quad
 
         // Advance the cursor for the next glyph
         pos.x += (ch.Advance >> 6) * scale;
     }
-    glBindVertexArray(0); // Unbind VAO
+    textVAO.Unbind();
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture
 }
 

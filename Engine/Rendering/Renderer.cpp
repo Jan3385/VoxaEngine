@@ -111,46 +111,35 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     quadBuffer->SetData(quad, 4, GL_STATIC_DRAW);
     // --------------------
 
-    glGenBuffers(1, &this->particleVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+    particleVBO = Shader::GLBuffer<Particle::ParticleRenderData, GL_ARRAY_BUFFER>("Particle Render VBO");
 
     //Particle VAO setup ----
-    glGenVertexArrays(1, &particleVAO);
-    glBindVertexArray(particleVAO);
+    particleVAO = Shader::GLVertexArray("Particle Render VAO");
+    particleVAO.Bind();
 
-    quadBuffer->Bind();
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    glEnableVertexAttribArray(0);
+    particleVAO.AddAttribute<glm::vec2>(0, 2, *quadBuffer, GL_FALSE, 0, 0); // location 0: vec2 texCoord
 
-    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Particle::ParticleRenderData), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribDivisor(1, 1); // instance attribute
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Particle::ParticleRenderData), (void*)(sizeof(glm::vec2)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
+    particleVAO.AddAttribute<glm::vec2>(1, 2, particleVBO, GL_FALSE, offsetof(Particle::ParticleRenderData, position), 1); // location 1: vec2 worldPos
+    particleVAO.AddAttribute<glm::vec4>(2, 4, particleVBO, GL_FALSE, offsetof(Particle::ParticleRenderData, color), 1);     // location 2: vec4 color
+    
+    particleVAO.Unbind();
     // --------------
 
     // Closed shape VAO setup ----
-    glGenVertexArrays(1, &closedShapeVAO);
-    glGenBuffers(1, &closedShapeVBO);
-    
-    glBindVertexArray(closedShapeVAO);
-    
-    glBindBuffer(GL_ARRAY_BUFFER, closedShapeVBO);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    closedShapeVAO = Shader::GLVertexArray("Closed Shape VAO");
+    closedShapeVBO = Shader::GLBuffer<glm::vec2, GL_ARRAY_BUFFER>("Closed Shape VBO");
+
+    closedShapeVAO.Bind();
+    closedShapeVAO.AddAttribute<glm::vec2>(0, 2, closedShapeVBO, GL_FALSE, 0, 0); // location 0: vec2 vertex
+
+    closedShapeVAO.Unbind();
     // --------------
 
     // Cursor VAO setup ----
-    glGenVertexArrays(1, &cursorVAO);
-    glBindVertexArray(cursorVAO);
+    cursorVAO = Shader::GLVertexArray("Cursor VAO");
+    cursorVAO.Bind();
 
-    quadBuffer->Bind();
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    glEnableVertexAttribArray(0);
+    cursorVAO.AddAttribute<glm::vec2>(0, 2, *quadBuffer, GL_FALSE, 0, 0);
     // --------------
 
     this->fontRenderer.Initialize();
@@ -169,10 +158,6 @@ GameRenderer::~GameRenderer()
         delete this->closedShapeRenderProgram;
     if(this->cursorRenderProgram)
         delete this->cursorRenderProgram;
-
-    // Cleanup OpenGL resources
-    glDeleteVertexArrays(1, &particleVAO);
-    glDeleteBuffers(1, &particleVBO);
 
     delete quadBuffer;
 
@@ -312,10 +297,9 @@ void GameRenderer::DrawClosedShape(const std::vector<glm::vec2> &points, const g
     closedShapeRenderProgram->SetVec4("uColor", color);
     closedShapeRenderProgram->SetMat4("uProjection", projection);
 
-    glBindBuffer(GL_ARRAY_BUFFER, closedShapeVBO);
-    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(glm::vec2), points.data(), GL_DYNAMIC_DRAW);
+    closedShapeVBO.SetData(points, GL_DYNAMIC_DRAW);
 
-    glBindVertexArray(closedShapeVAO);
+    closedShapeVAO.Bind();
 
     glLineWidth(lineWidth);
 
@@ -431,7 +415,8 @@ void GameRenderer::RenderParticles(ChunkMatrix &chunkMatrix, glm::mat4 projectio
         this->UpdateParticleVBO(chunkMatrix);
         this->particleRenderProgram->Use();
         this->particleRenderProgram->SetMat4("projection", projection);
-        glBindVertexArray(this->particleVAO);
+        
+        particleVAO.Bind();
         glDrawArraysInstanced(
             GL_TRIANGLE_FAN, 0, 4, 
             static_cast<GLsizei>(chunkMatrix.particles.size())
@@ -460,7 +445,7 @@ void GameRenderer::RenderCursor(glm::vec2 mousePos, glm::mat4 projection, int cu
 
     this->cursorRenderProgram->SetVec4("outlineColor", glm::vec4(1.0f, 1.0f, 1.0f, 0.9f));
 
-    glBindVertexArray(this->cursorVAO);
+    cursorVAO.Bind();
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
@@ -648,6 +633,6 @@ void GameRenderer::UpdateParticleVBO(ChunkMatrix &chunkMatrix)
         });
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
-    glBufferData(GL_ARRAY_BUFFER, particleData.size() * sizeof(Particle::ParticleRenderData), particleData.data(), GL_DYNAMIC_DRAW);
+    particleVBO.SetData(particleData, GL_DYNAMIC_DRAW);
+    particleVAO.Bind();
 }

@@ -6,7 +6,7 @@ namespace Shader{
 
 template<typename T, GLenum Target>
 GLBuffer<T, Target>::GLBuffer() {
-    glGenBuffers(1, &ID);
+    this->ID = 0;
 }
 
 template <typename T, GLenum Target>
@@ -52,6 +52,10 @@ inline GLBuffer<T, Target> &GLBuffer<T, Target>::operator=(GLBuffer<T, Target> &
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::Bind() const
 {
+    if(ID == 0){
+        throw std::runtime_error("Attempt to bind uninitialized GLBuffer: " + this->name);
+    }
+
     glBindBuffer(Target, ID);
 }
 
@@ -127,12 +131,20 @@ inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const T *data, GLuint
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::BindBufferBase(GLuint binding) const
 {
+    if(ID == 0){
+        throw std::runtime_error("Attempt to bind base uninitialized GLBuffer: " + this->name);
+    }
+
     glBindBufferBase(Target, binding, ID);
 }
 
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::ClearBuffer()
 {
+    if(ID == 0){
+        throw std::runtime_error("Attempt to clear uninitialized GLBuffer: " + this->name);
+    }
+
     #ifdef GL_VERSION_4_3
     if constexpr (std::is_same_v<T, float>) {
         glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
