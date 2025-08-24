@@ -43,6 +43,7 @@ namespace Shader{
         void ClearBuffer(const GLuint newSize, GLenum usage);
 
         void SetSize(GLuint size, bool silenceWarnings = false);
+        GLuint GetSize() const { return bufferSize; };
 
         T* ReadBuffer() const;
         T* ReadBuffer(GLuint size) const;

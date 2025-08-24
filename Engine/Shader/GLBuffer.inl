@@ -145,12 +145,12 @@ inline void GLBuffer<T, Target>::ClearBuffer()
     if(ID == 0){
         throw std::runtime_error("Attempt to clear uninitialized GLBuffer: " + this->name);
     }
+    this->Bind();
 
     #ifdef GL_VERSION_4_3
     if constexpr (std::is_same_v<T, float>) {
         glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
     }else{
-        this->Bind();
         void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
         if (ptr) {
             memset(ptr, 0, this->bufferSize * sizeof(T));
@@ -171,6 +171,7 @@ inline void GLBuffer<T, Target>::ClearBuffer()
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::ClearBuffer(const GLuint newSize, GLenum usage)
 {
+    this->Bind();
     if(this->bufferSize == static_cast<GLint>(newSize))
         this->ClearBuffer();
     else{
