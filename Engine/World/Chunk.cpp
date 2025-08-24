@@ -65,76 +65,42 @@ Volume::Chunk::~Chunk()
             delete voxels[i][j];
         }
     }
-
-    // Delete OpenGL resources
-    glDeleteVertexArrays(1, &renderVoxelVAO);
-    glDeleteBuffers(1, &renderVBO);
-    renderVoxelVAO = 0;
-    renderVBO = 0;
-
-    glDeleteVertexArrays(1, &heatRenderingVAO);
-    glDeleteBuffers(1, &temperatureVBO);
-    heatRenderingVAO = 0;
-    temperatureVBO = 0;
 }
 void Volume::Chunk::SetVBOData()
 {
-    glGenBuffers(1, &renderVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VoxelRenderData) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
+    renderVBO = Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER>("Chunk Render VBO");
+    VoxelRenderData tempData[CHUNK_SIZE_SQUARED];
+    renderVBO.SetData(tempData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
 
-    glGenBuffers(1, &temperatureVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * CHUNK_SIZE_SQUARED, nullptr, GL_DYNAMIC_DRAW);
+    temperatureVBO = Shader::GLBuffer<float, GL_ARRAY_BUFFER>("Chunk Temperature VBO");
+    float tempInit[CHUNK_SIZE_SQUARED] = { 0.0f };
+    temperatureVBO.SetData(tempInit, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
 
     // voxel rendering VAO setup ----
-    glGenVertexArrays(1, &renderVoxelVAO);
-    glBindVertexArray(renderVoxelVAO);
+    renderVoxelVAO = Shader::GLVertexArray("Chunk Render VAO");
+    renderVoxelVAO.Bind();
 
-    GameEngine::renderer->quadBuffer->Bind();
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    glEnableVertexAttribArray(0);
+    renderVoxelVAO.AddAttribute<glm::vec2>(0, 2, *GameEngine::renderer->quadBuffer, GL_FALSE, 0, 0); // location 0: vec2 quad
+    renderVoxelVAO.AddIntAttribute<glm::ivec2>(1, 2, renderVBO, offsetof(VoxelRenderData, position), 1); // location 1: ivec2 position
+    renderVoxelVAO.AddAttribute<glm::vec4>(2, 4, renderVBO, GL_FALSE, offsetof(VoxelRenderData, color), 1); // location 2: vec4 color
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
-    glVertexAttribIPointer(1, 2, GL_INT, sizeof(VoxelRenderData), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribDivisor(1, 1); // instance attribute
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VoxelRenderData), (void*)(sizeof(glm::ivec2)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
-
-    glBindVertexArray(0);
+    renderVoxelVAO.Unbind();
     // --------------
 
     // heat rendering VAO setup ----
-    glGenVertexArrays(1, &heatRenderingVAO);
-    glBindVertexArray(heatRenderingVAO);
+    heatRenderingVAO = Shader::GLVertexArray("Chunk Heat VAO");
+    heatRenderingVAO.Bind();
 
-    GameEngine::renderer->quadBuffer->Bind();
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0); // location 0
-    glEnableVertexAttribArray(0);
+    heatRenderingVAO.AddAttribute<glm::vec2>(0, 2, *GameEngine::renderer->quadBuffer, GL_FALSE, 0, 0); // location 0: vec2 quad
+    heatRenderingVAO.AddIntAttribute<glm::ivec2>(1, 2, renderVBO, offsetof(VoxelRenderData, position), 1); // location 1: ivec2 position
+    heatRenderingVAO.AddAttribute<glm::vec4>(2, 4, renderVBO, GL_FALSE, offsetof(VoxelRenderData, color), 1); // location 2: vec4 color
+    heatRenderingVAO.AddAttribute<float>(3, 1, temperatureVBO, GL_FALSE, 0, 1); // location 3: float temperature
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
-    glVertexAttribIPointer(1, 2, GL_INT, sizeof(VoxelRenderData), (void*)0); // location 1
-    glEnableVertexAttribArray(1);
-    glVertexAttribDivisor(1, 1);
-
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VoxelRenderData), (void*)(sizeof(glm::vec2))); // location 2
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(float), (void*)0); // location 3: heat
-    glEnableVertexAttribArray(3);
-    glVertexAttribDivisor(3, 1);
-
-    glBindVertexArray(0);
+    heatRenderingVAO.Unbind();
     // --------------
 
     // Update the instance VBO with the new render data
-    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(VoxelRenderData) * CHUNK_SIZE_SQUARED, renderData);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    renderVBO.SetData(*renderData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB Camera) const
 {
@@ -277,9 +243,7 @@ void Volume::Chunk::UpdateInnerTemperatureBuffer()
     }
 
     // Update the temperature VBO with the new data
-    glBindBuffer(GL_ARRAY_BUFFER, temperatureVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * CHUNK_SIZE_SQUARED, temperatureVBOBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    temperatureVBO.UpdateData(0, *temperatureVBOBuffer, CHUNK_SIZE_SQUARED);
 }
 
 // resets voxel update data, DO NOT CALL WITHOUT LOCKING THE VOXELMUTEX, main use for simulation thread
@@ -305,7 +269,6 @@ void Volume::Chunk::Render(bool debugRender)
     }
 
     // Update the instance VBO with the new render data
-    glBindBuffer(GL_ARRAY_BUFFER, renderVBO);
     for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
         if(this->UpdateRenderBufferRanges[y].IsEmpty()) continue;
 
@@ -317,10 +280,10 @@ void Volume::Chunk::Render(bool debugRender)
             continue;
         }
 
-        glBufferSubData(GL_ARRAY_BUFFER,
-            sizeof(VoxelRenderData) * (CHUNK_SIZE * y + this->UpdateRenderBufferRanges[y].Start()), 
-            sizeof(VoxelRenderData) * (this->UpdateRenderBufferRanges[y].End() - this->UpdateRenderBufferRanges[y].Start() + 1), 
-            &renderData[y][this->UpdateRenderBufferRanges[y].Start()]
+        renderVBO.UpdateData(
+            CHUNK_SIZE * y + this->UpdateRenderBufferRanges[y].Start(),
+            &renderData[y][this->UpdateRenderBufferRanges[y].Start()],
+            this->UpdateRenderBufferRanges[y].End() - this->UpdateRenderBufferRanges[y].Start() + 1
         );
 
         this->UpdateRenderBufferRanges[y].Reset();

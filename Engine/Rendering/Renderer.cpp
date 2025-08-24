@@ -382,7 +382,7 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix,  glm::mat4 projection)
         if(chunk->GetAABB().Overlaps(this->Camera)){
             chunk->Render(false);
 
-            glBindVertexArray(chunk->renderVoxelVAO);
+            chunk->renderVoxelVAO.Bind();
             glDrawArraysInstanced(
                 GL_TRIANGLE_FAN, 0, 4, 
                 Volume::Chunk::CHUNK_SIZE_SQUARED
@@ -400,7 +400,7 @@ void GameRenderer::RenderHeat(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,  glm
 
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(this->Camera)) {
-            glBindVertexArray(chunk->heatRenderingVAO);
+            chunk->heatRenderingVAO.Bind();
             glDrawArraysInstanced(
                 GL_TRIANGLE_FAN, 0, 4, 
                 Volume::Chunk::CHUNK_SIZE_SQUARED

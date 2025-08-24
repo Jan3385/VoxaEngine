@@ -98,8 +98,9 @@ namespace Volume
 		DirtyRect dirtyRect = DirtyRect();
 
 		// connectivity data
-		GLuint renderVoxelVAO;
-		GLuint heatRenderingVAO;
+		Shader::GLVertexArray renderVoxelVAO;
+		Shader::GLVertexArray heatRenderingVAO;
+		
 		// knows where to update render for chunk
 		Math::Range UpdateRenderBufferRanges[CHUNK_SIZE]; 
     private:
@@ -115,8 +116,8 @@ namespace Volume
 
 		// rendering data
 		VoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
-		GLuint renderVBO;
+		Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER> renderVBO;
 
-		GLuint temperatureVBO;
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> temperatureVBO;
     };
 }
