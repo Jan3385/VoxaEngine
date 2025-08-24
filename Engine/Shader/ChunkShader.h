@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader/Computing/ComputeShader.h"
+#include "Shader/GLBuffer.h"
 
 #include <cstdint>
 #include <GL/glew.h>

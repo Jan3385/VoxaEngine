@@ -159,7 +159,8 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
     float *heatOutput = nullptr;
     if(GameEngine::instance->runHeatSimulation)
-    {;
+    {
+        this->ClearOutputBuffer<float>(numberOfVoxels);
         this->BindHeatShaderBuffers();
         this->heatShader->Use();
 
