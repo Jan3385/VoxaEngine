@@ -31,6 +31,8 @@ namespace Shader{
 
         void BindBufferBase(GLuint binding) const;
 
+        void ClearBuffer();
+
         T* ReadBuffer() const;
 
     private:

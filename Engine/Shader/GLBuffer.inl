@@ -18,7 +18,6 @@ inline GLBuffer<T, Target>::~GLBuffer()
 {
     glDeleteBuffers(1, &ID);
     ID = 0;
-
 }
 
 template <typename T, GLenum Target>
@@ -124,6 +123,29 @@ template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::BindBufferBase(GLuint binding) const
 {
     glBindBufferBase(Target, binding, ID);
+}
+
+template <typename T, GLenum Target>
+inline void GLBuffer<T, Target>::ClearBuffer()
+{
+    #ifdef GL_VERSION_4_3
+    if constexpr (std::is_same_v<T, float>) {
+        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
+    }else{
+        void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+        if (ptr) {
+            memset(ptr, 0, this->bufferSize * sizeof(T));
+            glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+        }
+    }
+    #else
+    // Fallback - map and memset to zero
+    void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+    if (ptr) {
+        memset(ptr, 0, size * sizeof(T));
+        glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+    }
+    #endif
 }
 
 /// @brief Reads the buffer data

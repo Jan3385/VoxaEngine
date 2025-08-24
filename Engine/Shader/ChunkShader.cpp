@@ -18,17 +18,17 @@ struct ChunkConnectivityData{
 
 Shader::ChunkShaderManager::ChunkShaderManager()
 {
-    glGenBuffers(1, &this->chunkConnectivityBuffer);
+    this->chunkConnectivityBuffer = GLBuffer<ChunkConnectivityData, GL_SHADER_STORAGE_BUFFER>("Chunk Connectivity Buffer");
 
-    glGenBuffers(1, &this->voxelTemperatureBuffer);
-    glGenBuffers(1, &this->voxelHeatCapacityBuffer);
-    glGenBuffers(1, &this->voxelConductivityBuffer);
-    glGenBuffers(1, &this->voxelPressureBuffer);
-    glGenBuffers(1, &this->voxelIdBuffer);
+    this->voxelTemperatureBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Voxel Temperature Buffer");
+    this->voxelHeatCapacityBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Voxel Heat Capacity Buffer");
+    this->voxelConductivityBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Voxel Conductivity Buffer");
+    this->voxelPressureBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Voxel Pressure Buffer");
+    this->voxelIdBuffer = GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER>("Voxel ID Buffer");
 
     glGenBuffers(1, &this->outputDataBuffer);
 
-    glGenBuffers(1, &this->atomicCounterBuffer);
+    this->atomicCounterBuffer = GLBuffer<uint32_t, GL_ATOMIC_COUNTER_BUFFER>("Atomic Counter Buffer");
 
     std::cout << "Compiling chunk compute shaders... ";
 
@@ -42,12 +42,6 @@ Shader::ChunkShaderManager::ChunkShaderManager()
 
 Shader::ChunkShaderManager::~ChunkShaderManager()
 {
-    glDeleteBuffers(1, &this->chunkConnectivityBuffer);
-    glDeleteBuffers(1, &this->voxelTemperatureBuffer);
-    glDeleteBuffers(1, &this->voxelHeatCapacityBuffer);
-    glDeleteBuffers(1, &this->voxelConductivityBuffer);
-    glDeleteBuffers(1, &this->voxelPressureBuffer);
-    glDeleteBuffers(1, &this->voxelIdBuffer);
     glDeleteBuffers(1, &this->outputDataBuffer);
 
     delete this->heatShader;
@@ -149,13 +143,13 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         }
     }
 
-    ComputeShader::UploadDataToBuffer(this->voxelTemperatureBuffer, temperatureBuffer.data(), numberOfVoxels);
-    ComputeShader::UploadDataToBuffer(this->voxelHeatCapacityBuffer, heatCapacityBuffer.data(), numberOfVoxels);
-    ComputeShader::UploadDataToBuffer(this->voxelConductivityBuffer, heatConductivityBuffer.data(), numberOfVoxels);
-    ComputeShader::UploadDataToBuffer(this->voxelPressureBuffer, pressureBuffer.data(), numberOfVoxels);
-    ComputeShader::UploadDataToBuffer(this->voxelIdBuffer, idBuffer.data(), numberOfVoxels);
+    voxelTemperatureBuffer.SetData(temperatureBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
+    voxelHeatCapacityBuffer.SetData(heatCapacityBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
+    voxelConductivityBuffer.SetData(heatConductivityBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
+    voxelPressureBuffer.SetData(pressureBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
+    voxelIdBuffer.SetData(idBuffer.data(), numberOfVoxels, GL_STATIC_DRAW);
 
-    ComputeShader::UploadDataToBuffer(this->chunkConnectivityBuffer, connectivityDataBuffer.data(), chunkCount);
+    chunkConnectivityBuffer.SetData(connectivityDataBuffer.data(), chunkCount, GL_STATIC_DRAW);
 
     float *heatOutput = nullptr;
     if(GameEngine::instance->runHeatSimulation)
@@ -205,7 +199,10 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         this->reactionShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
 
         // Read the output data
-        reactionsSize = ComputeShader::ReadDataFromAtomicCounter<uint32_t>(this->atomicCounterBuffer);
+        uint32_t *reactionsSizePointer = atomicCounterBuffer.ReadBuffer();
+        reactionsSize = *reactionsSizePointer;
+        delete reactionsSizePointer;
+
         reactionOutput = ComputeShader::ReadDataFromBuffer<VoxelChanges>(this->outputDataBuffer, reactionsSize);
         this->ClearOutputBuffer<VoxelChanges>(numberOfVoxels);
     }
@@ -256,32 +253,30 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 void Shader::ChunkShaderManager::BindHeatShaderBuffers()
 {
     ComputeShader::BindBufferAt(0, this->outputDataBuffer);
-    ComputeShader::BindBufferAt(1, this->voxelTemperatureBuffer);
-    ComputeShader::BindBufferAt(2, this->voxelHeatCapacityBuffer);
-    ComputeShader::BindBufferAt(3, this->voxelConductivityBuffer);
-    ComputeShader::BindBufferAt(4, this->chunkConnectivityBuffer);
+    voxelTemperatureBuffer.BindBufferBase(1);
+    voxelHeatCapacityBuffer.BindBufferBase(2);
+    voxelConductivityBuffer.BindBufferBase(3);
+    chunkConnectivityBuffer.BindBufferBase(4);
 }
 
 void Shader::ChunkShaderManager::BindPressureShaderBuffers()
 {
     ComputeShader::BindBufferAt(0, this->outputDataBuffer);
-    ComputeShader::BindBufferAt(1, this->voxelIdBuffer);
-    ComputeShader::BindBufferAt(2, this->voxelPressureBuffer);
-    ComputeShader::BindBufferAt(3, this->chunkConnectivityBuffer);
+    voxelIdBuffer.BindBufferBase(1);
+    voxelPressureBuffer.BindBufferBase(2);
+    chunkConnectivityBuffer.BindBufferBase(3);
 }
 
 void Shader::ChunkShaderManager::BindReactionShaderBuffers()
 {
-    GLuint zero = 0;
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, this->atomicCounterBuffer);
-    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), &zero, GL_DYNAMIC_COPY);
+    atomicCounterBuffer.SetData(0, GL_DYNAMIC_COPY);
 
     ComputeShader::BindBufferAt(0, this->outputDataBuffer);
-    ComputeShader::BindAtomicCounterAt(1, this->atomicCounterBuffer);
-    ComputeShader::BindBufferAt(2, this->voxelTemperatureBuffer);
-    ComputeShader::BindBufferAt(3, this->voxelIdBuffer);
+    atomicCounterBuffer.BindBufferBase(1);
+    voxelTemperatureBuffer.BindBufferBase(2);
+    voxelIdBuffer.BindBufferBase(3);
     ComputeShader::BindBufferAt(4, Registry::VoxelRegistry::chemicalReactionsBuffer);
-    ComputeShader::BindBufferAt(5, this->chunkConnectivityBuffer);
+    chunkConnectivityBuffer.BindBufferBase(5);
 }
 
 template<typename T>

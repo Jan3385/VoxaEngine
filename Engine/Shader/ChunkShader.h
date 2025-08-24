@@ -7,6 +7,7 @@
 #include <GL/glew.h>
 
 class ChunkMatrix; // Forward declaration
+struct ChunkConnectivityData; // Forward declaration for template usage
 
 namespace Shader{
        class ChunkShaderManager {
@@ -25,24 +26,23 @@ namespace Shader{
               void ClearOutputBuffer(GLuint size);
        private:
               // ----- Buffers -----
-
               // Chunk connectivity buffer
-              GLuint chunkConnectivityBuffer = 0;
+              GLBuffer<ChunkConnectivityData, GL_SHADER_STORAGE_BUFFER> chunkConnectivityBuffer;
 
               // Buffer for storing temperature in FLOAT as Celsius
-              GLuint voxelTemperatureBuffer = 0;
+              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelTemperatureBuffer;
               // Buffer for storing heat capacity in FLOAT
-              GLuint voxelHeatCapacityBuffer = 0;
+              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelHeatCapacityBuffer;
               // Buffer for storing heat conductivity in FLOAT
-              GLuint voxelConductivityBuffer = 0;
+              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelConductivityBuffer;
               // Buffer for storing pressure in FLOAT
-              GLuint voxelPressureBuffer = 0;
+              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelPressureBuffer;
               // Buffer for storing voxel IDs in UINT
-              GLuint voxelIdBuffer = 0;
+              GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER> voxelIdBuffer;
               // Output buffer for any output
               GLuint outputDataBuffer = 0;
 
-              GLuint atomicCounterBuffer = 0;
+              GLBuffer<uint32_t, GL_ATOMIC_COUNTER_BUFFER> atomicCounterBuffer;
 
               // -------------------
 
