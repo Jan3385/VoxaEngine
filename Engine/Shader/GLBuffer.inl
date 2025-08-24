@@ -121,7 +121,7 @@ inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const std::vector<T> 
 template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const T *data, GLuint size) const
 {
-    if (offset + size > this->bufferSize) {
+    if (offset + size > static_cast<GLuint>(this->bufferSize)) {
         std::cerr << "[" << this->name << "] GLBuffer::UpdateData ARR - Error: Attempt to update buffer data out of bounds!" << std::endl;
     }
 
