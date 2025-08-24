@@ -14,7 +14,9 @@ inline GLBuffer<T, Target>::GLBuffer(std::string name)
 {
     glGenBuffers(1, &ID);
     this->name = name;
+    this->Bind();
     glObjectLabel(GL_BUFFER, ID, -1, this->name.c_str());
+    this->Unbind();
 }
 template <typename T, GLenum Target>
 inline GLBuffer<T, Target>::~GLBuffer()

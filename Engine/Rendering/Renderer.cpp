@@ -101,14 +101,14 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     std::cout << "[Done]" << std::endl;
 
     // Quad VBO setup ----
-    const float quad[] = {
-        0.0f, 0.0f,
-        1.0f, 0.0f,
-        1.0f, 1.0f,
-        0.0f, 1.0f
+    const glm::vec2 quad[] = {
+        { 0.0f, 0.0f },
+        { 1.0f, 0.0f },
+        { 1.0f, 1.0f },
+        { 0.0f, 1.0f }
     };
-    quadBuffer = new Shader::GLBuffer<float, GL_ARRAY_BUFFER>("Quad VBO");
-    quadBuffer->SetData(quad, 8, GL_STATIC_DRAW);
+    quadBuffer = new Shader::GLBuffer<glm::vec2, GL_ARRAY_BUFFER>("Quad VBO");
+    quadBuffer->SetData(quad, 4, GL_STATIC_DRAW);
     // --------------------
 
     glGenBuffers(1, &this->particleVBO);

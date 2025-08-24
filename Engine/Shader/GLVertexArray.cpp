@@ -8,7 +8,9 @@ Shader::GLVertexArray::GLVertexArray(std::string name)
 {
     glGenVertexArrays(1, &ID);
     this->name = name;
+    this->Bind();
     glObjectLabel(GL_VERTEX_ARRAY, ID, -1, this->name.c_str());
+    this->Unbind();
 }
 Shader::GLVertexArray::~GLVertexArray()
 {

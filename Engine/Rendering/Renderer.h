@@ -71,5 +71,5 @@ public:
     // Chunks which dont have any VBO & VAO yet
     std::vector<Volume::Chunk*> chunkCreateBuffer;
 
-    Shader::GLBuffer<float, GL_ARRAY_BUFFER> *quadBuffer;
+    Shader::GLBuffer<glm::vec2, GL_ARRAY_BUFFER> *quadBuffer;
 };
