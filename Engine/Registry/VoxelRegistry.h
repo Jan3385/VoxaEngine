@@ -11,6 +11,7 @@
 #include "Math/Color.h"
 #include "Math/Temperature.h"
 #include "Math/Vector.h"
+#include "Shader/GLBuffer.h"
 
 struct IGame;
 
@@ -159,14 +160,15 @@ namespace Registry{
 
 		static std::unordered_map<std::string, VoxelTextureMap*> textureMaps;
 
-		/// Data stored as following:
-		/// uint32_t fromID;
-		/// uint32_t catalystID;
-		/// uint32_t toID;
-		/// float reactionSpeed;
-		/// bool preserveCatalyst;
-		/// float minTemperatureC;
-		static GLuint chemicalReactionsBuffer;
+		struct ChemicalReactionID{
+			uint32_t fromID;
+			uint32_t catalystID;
+			uint32_t toID;
+			float reactionSpeed;
+			uint32_t preserveCatalyst;
+			float minTemperatureC;
+		};
+		static Shader::GLBuffer<ChemicalReactionID, GL_SHADER_STORAGE_BUFFER>* chemicalReactionsGLBuffer;
 
 		static std::vector<Registry::ChemicalReaction> reactionRegistry;  // cleared after inserted into a OpenGL buffer
 	private:

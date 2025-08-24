@@ -33,6 +33,8 @@ namespace Shader{
 
         void ClearBuffer();
 
+        void SetSize(GLuint size, bool silenceWarnings = false);
+
         T* ReadBuffer() const;
 
     private:

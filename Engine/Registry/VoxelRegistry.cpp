@@ -18,7 +18,9 @@ std::unordered_map<uint32_t, VoxelProperty*> VoxelRegistry::idRegistry = {};
 std::unordered_map<std::string, VoxelFactory> VoxelRegistry::voxelFactories = {};
 std::unordered_map<std::string, VoxelTextureMap*> VoxelRegistry::textureMaps = {};
 std::vector<Registry::ChemicalReaction> VoxelRegistry::reactionRegistry = {};
-GLuint Registry::VoxelRegistry::chemicalReactionsBuffer = 0;
+Shader::GLBuffer<Registry::VoxelRegistry::ChemicalReactionID, GL_SHADER_STORAGE_BUFFER>* 
+	Registry::VoxelRegistry::chemicalReactionsGLBuffer = nullptr;
+
 uint32_t VoxelRegistry::idCounter = 1;
 bool VoxelRegistry::registryClosed = false;
 
@@ -46,7 +48,6 @@ void Registry::VoxelRegistry::RegisterTextureMap(const std::string &name, const 
 	if(registryClosed) 
 		throw std::runtime_error("Texture map registered after designated time window: " + name);
 
-	//FIXME: add unloading function to prevent memory leaks
 	VoxelTextureMap* map = new VoxelTextureMap(texturePath, possibleRotations);
 	VoxelRegistry::textureMaps[name] = map;
 }
@@ -88,15 +89,6 @@ void Registry::VoxelRegistry::CloseRegistry()
 	if(registryClosed) return;
 
 	registryClosed = true;
-	
-	struct ChemicalReactionID{
-		uint32_t fromID;
-		uint32_t catalystID;
-		uint32_t toID;
-		float reactionSpeed;
-		uint32_t preserveCatalyst;
-		float minTemperatureC;
-	};
 
 	// get IDs for chemical reactions
 	std::vector<ChemicalReactionID> reactions;
@@ -121,9 +113,8 @@ void Registry::VoxelRegistry::CloseRegistry()
 	});
 
 	// Upload chemical reactions to a GPU buffer
-	glGenBuffers(1, &VoxelRegistry::chemicalReactionsBuffer);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, VoxelRegistry::chemicalReactionsBuffer);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, reactions.size() * sizeof(ChemicalReactionID), reactions.data(), GL_STATIC_DRAW);
+	VoxelRegistry::chemicalReactionsGLBuffer = new Shader::GLBuffer<ChemicalReactionID, GL_SHADER_STORAGE_BUFFER>("Chemical Reactions Buffer");
+	VoxelRegistry::chemicalReactionsGLBuffer->SetData(reactions, GL_STATIC_DRAW);
 
 	// Clear reaction registry to free up memory
 	VoxelRegistry::reactionRegistry.clear();
@@ -138,10 +129,7 @@ void Registry::VoxelRegistry::CleanupRegistry()
 	}
 	VoxelRegistry::textureMaps.clear();
 
-	if (chemicalReactionsBuffer != 0) {
-		glDeleteBuffers(1, &chemicalReactionsBuffer);
-		chemicalReactionsBuffer = 0;
-	}
+	delete VoxelRegistry::chemicalReactionsGLBuffer;
 }
 
 VoxelProperty* VoxelRegistry::GetProperties(std::string id)

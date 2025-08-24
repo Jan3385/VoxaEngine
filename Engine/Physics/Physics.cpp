@@ -16,7 +16,7 @@ GamePhysics::GamePhysics()
     
     worldId = b2CreateWorld(&worldDef);
 
-    assert(worldId != nullptr && "Failed to create physics world");
+    assert(b2World_IsValid(worldId) && "Failed to create physics world");
 }
 
 GamePhysics::~GamePhysics()

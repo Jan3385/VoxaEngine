@@ -1,4 +1,8 @@
 #include "GLBuffer.h"
+
+#include <iostream>
+#include <cstring>
+
 namespace Shader{
 
 template<typename T, GLenum Target>
@@ -146,6 +150,24 @@ inline void GLBuffer<T, Target>::ClearBuffer()
         glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     }
     #endif
+}
+
+/// @brief Sets the size variable inside the object
+/// @warning Does not reallocate the buffer. ! Only use this when you know what you are doing !
+/// @param size New size (in number of elements) of the buffer
+/// @param silenceWarnings suppresses warnings at undefined or dangerous behaviour
+template <typename T, GLenum Target>
+inline void GLBuffer<T, Target>::SetSize(GLuint size, bool silenceWarnings)
+{
+    if(!silenceWarnings) {
+        if (size == 0)
+            std::cerr << "[" << this->name << "] GLBuffer::SetSize - Warning: Setting buffer size to 0!" << std::endl;
+        
+        if(size > static_cast<GLuint>(this->bufferSize))
+            std::cerr << "[" << this->name << "] GLBuffer::SetSize - Warning: New size is larger than current buffer size! Without reallocation this may lead to undefined behaviour!" << std::endl;
+    }
+
+    this->bufferSize = size;
 }
 
 /// @brief Reads the buffer data

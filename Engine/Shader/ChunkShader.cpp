@@ -275,7 +275,7 @@ void Shader::ChunkShaderManager::BindReactionShaderBuffers()
     atomicCounterBuffer.BindBufferBase(1);
     voxelTemperatureBuffer.BindBufferBase(2);
     voxelIdBuffer.BindBufferBase(3);
-    ComputeShader::BindBufferAt(4, Registry::VoxelRegistry::chemicalReactionsBuffer);
+    Registry::VoxelRegistry::chemicalReactionsGLBuffer->BindBufferBase(4);
     chunkConnectivityBuffer.BindBufferBase(5);
 }
 
