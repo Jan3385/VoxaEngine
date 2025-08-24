@@ -56,7 +56,7 @@ public:
  
     Vec2i GetSize() const { return Vec2i(width, height); }
 
-	GLuint renderVoxelVAO = 0;
+    Shader::GLVertexArray renderVoxelArray;
 
     std::vector<std::vector<Volume::VoxelElement*>> voxels;
     // VoxelElement buffer for rotated voxels
@@ -75,7 +75,7 @@ protected:
 
     bool dirtyRotation = true;
 
-    GLuint renderVoxelVBO = 0;
+    Shader::GLBuffer<Volume::VoxelRenderData, GL_ARRAY_BUFFER> renderVoxelBuffer;
 private:
     float rotation = 0.0f; // in radians
     unsigned int renderVoxelCount = 0;

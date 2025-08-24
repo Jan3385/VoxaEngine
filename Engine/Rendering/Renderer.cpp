@@ -56,6 +56,13 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     }
     r_GLContext = glContext;
 
+    // Enables Alpha Blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Disables Depth Testing
+    glDisable(GL_DEPTH_TEST);
+
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
@@ -94,16 +101,14 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     std::cout << "[Done]" << std::endl;
 
     // Quad VBO setup ----
-    float quad[] = {
+    const float quad[] = {
         0.0f, 0.0f,
         1.0f, 0.0f,
         1.0f, 1.0f,
         0.0f, 1.0f
     };
-    glGenBuffers(1, &this->quadVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, this->quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    quadBuffer = new Shader::GLBuffer<float, GL_ARRAY_BUFFER>("Quad VBO");
+    quadBuffer->SetData(quad, 8, GL_STATIC_DRAW);
     // --------------------
 
     glGenBuffers(1, &this->particleVBO);
@@ -114,7 +119,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glGenVertexArrays(1, &particleVAO);
     glBindVertexArray(particleVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    quadBuffer->Bind();
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -143,20 +148,13 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext)
     glGenVertexArrays(1, &cursorVAO);
     glBindVertexArray(cursorVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    quadBuffer->Bind();
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
     // --------------
 
     this->fontRenderer.Initialize();
     this->spriteRenderer.Initialize();
-
-    // Enables Alpha Blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // Disables Depth Testing
-    glDisable(GL_DEPTH_TEST);
 }
 
 GameRenderer::~GameRenderer()
@@ -175,7 +173,8 @@ GameRenderer::~GameRenderer()
     // Cleanup OpenGL resources
     glDeleteVertexArrays(1, &particleVAO);
     glDeleteBuffers(1, &particleVBO);
-    glDeleteBuffers(1, &quadVBO);
+
+    delete quadBuffer;
 
     ImGui_ImplSDL2_Shutdown();
     ImGui_ImplOpenGL3_Shutdown();
@@ -360,7 +359,7 @@ void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projec
 
         unsigned int voxelCount = object->UpdateRenderBuffer();
 
-        glBindVertexArray(object->renderVoxelVAO);
+        object->renderVoxelArray.Bind();
         glDrawArraysInstanced(
             GL_TRIANGLE_FAN, 0, 4, 
             static_cast<GLsizei>(voxelCount)
@@ -376,7 +375,7 @@ void GameRenderer::RenderPlayer(VoxelObject *player, glm::mat4 projection)
     if(player->ShouldRender()) {
         unsigned int voxelCount = player->UpdateRenderBuffer();
 
-        glBindVertexArray(player->renderVoxelVAO);
+        player->renderVoxelArray.Bind();
         glDrawArraysInstanced(
             GL_TRIANGLE_FAN, 0, 4, 
             static_cast<GLsizei>(voxelCount)

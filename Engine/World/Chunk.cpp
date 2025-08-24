@@ -91,7 +91,7 @@ void Volume::Chunk::SetVBOData()
     glGenVertexArrays(1, &renderVoxelVAO);
     glBindVertexArray(renderVoxelVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::renderer->quadVBO);
+    GameEngine::renderer->quadBuffer->Bind();
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -110,7 +110,7 @@ void Volume::Chunk::SetVBOData()
     glGenVertexArrays(1, &heatRenderingVAO);
     glBindVertexArray(heatRenderingVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::renderer->quadVBO);
+    GameEngine::renderer->quadBuffer->Bind();
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0); // location 0
     glEnableVertexAttribArray(0);
 

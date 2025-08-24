@@ -6,8 +6,16 @@
 #include <glm/glm.hpp>
 
 namespace Shader{
+    class GLBufferBase {
+    public:
+        virtual ~GLBufferBase() = default;
+
+        virtual void Bind() const = 0;
+        virtual void Unbind() const = 0;
+    };
+
     template<typename T, GLenum Target>
-    class GLBuffer {
+    class GLBuffer : public GLBufferBase {
     public:
         GLBuffer();
         GLBuffer(std::string name);

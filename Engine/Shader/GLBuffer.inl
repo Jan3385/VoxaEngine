@@ -1,7 +1,6 @@
-#include "GLBuffer.h"
-
 #include <iostream>
 #include <cstring>
+#include "GLVertexArray.h"
 
 namespace Shader{
 

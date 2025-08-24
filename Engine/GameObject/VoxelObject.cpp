@@ -4,6 +4,7 @@
 #include "GameEngine.h"
 #include "Registry/GameObjectRegistry.h"
 #include "World/Voxel.h"
+#include "Shader/GLVertexArray.h"
 
 #include <iostream>
 #include <algorithm>
@@ -42,23 +43,16 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
     this->enabled = true;
 
     // Create VAO and VBO for rendering
-    glGenVertexArrays(1, &renderVoxelVAO);
-    glBindVertexArray(renderVoxelVAO);
+    renderVoxelArray = Shader::GLVertexArray("VoxelObject VAO");
+    renderVoxelArray.Bind();
 
-    glBindBuffer(GL_ARRAY_BUFFER, GameEngine::renderer->quadVBO);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-    glEnableVertexAttribArray(0);
+    renderVoxelArray.AddAttribute<glm::vec2>(0, 2, *GameEngine::renderer->quadBuffer, GL_FALSE, 0, 0);                           // location 0: vec2 texCoord
 
-    glGenBuffers(1, &renderVoxelVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, renderVoxelVBO);
-    glVertexAttribIPointer(1, 2, GL_INT, sizeof(Volume::VoxelRenderData), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribDivisor(1, 1); // instance attribute
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Volume::VoxelRenderData), (void*)(sizeof(glm::ivec2)));
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
-    
-    glBindVertexArray(0);
+    renderVoxelBuffer = Shader::GLBuffer<Volume::VoxelRenderData, GL_ARRAY_BUFFER>("VoxelObject VBO");
+    renderVoxelArray.AddIntAttribute<glm::ivec2>(1, 2, renderVoxelBuffer, offsetof(Volume::VoxelRenderData, position), 1);      // location 1: vec2 worldPos
+    renderVoxelArray.AddAttribute<glm::vec4>(2, 4, renderVoxelBuffer, GL_FALSE, offsetof(Volume::VoxelRenderData, color), 1);   // location 2: vec4 color
+
+    renderVoxelArray.Unbind();
 
     this->UpdateRotatedVoxelBuffer();
     this->UpdateRenderBuffer();
@@ -66,16 +60,6 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
 
 VoxelObject::~VoxelObject()
 {
-    if (renderVoxelVAO != 0) {
-        glDeleteVertexArrays(1, &renderVoxelVAO);
-        renderVoxelVAO = 0;
-    }
-
-    if (renderVoxelVBO != 0) {
-        glDeleteBuffers(1, &renderVoxelVBO);
-        renderVoxelVBO = 0;
-    }
-    
     for(int y = this->voxels.size() - 1; y >= 0; --y) {
         for(int x = this->voxels[y].size() - 1; x >= 0; --x) {
             Volume::VoxelElement* voxel = this->voxels[y][x];
@@ -214,11 +198,7 @@ unsigned int VoxelObject::UpdateRenderBuffer()
             }
         }
     }
-
-    glBindBuffer(GL_ARRAY_BUFFER, renderVoxelVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Volume::VoxelRenderData) * renderData.size(), renderData.data(), GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+    renderVoxelBuffer.SetData(renderData, GL_DYNAMIC_DRAW);
     return renderData.size();
 }
 
