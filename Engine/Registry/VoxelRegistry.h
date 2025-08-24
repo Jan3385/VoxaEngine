@@ -60,11 +60,11 @@ namespace Registry{
 		VoxelTextureMap(VoxelTextureMap&& other) noexcept = default;
 		VoxelTextureMap& operator=(VoxelTextureMap&& other) noexcept = default;
 	private:
-		Registry::TextureRotation possibleRotations;
 		std::string name;
-		unsigned int width, height;
 		RGBA* data;
-	};
+		unsigned int width, height;
+		Registry::TextureRotation possibleRotations;
+ 	};
 }
 
 namespace Volume{

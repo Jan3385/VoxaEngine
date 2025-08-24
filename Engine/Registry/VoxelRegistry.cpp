@@ -383,12 +383,12 @@ Volume::VoxelElement *CreateVoxelElement(Volume::VoxelProperty *property, std::s
 }
 
 Registry::VoxelTextureMap::VoxelTextureMap()
-	: name("Unnamed"), data(nullptr), width(0), height(0)
+	: name("Unnamed"), data(nullptr), width(0), height(0), possibleRotations(Registry::TextureRotation::None)
 {
 }
 
 Registry::VoxelTextureMap::VoxelTextureMap(const std::string &textureName, Registry::TextureRotation possibleRotations)
-    : name(textureName), possibleRotations(possibleRotations)
+    : name(textureName), data(nullptr), width(0), height(0), possibleRotations(possibleRotations)
 {
 	const std::string path = "Textures/VoxelMaps/" + textureName + ".bmp";
 	SDL_Surface *surface = SDL_LoadBMP(path.c_str());
