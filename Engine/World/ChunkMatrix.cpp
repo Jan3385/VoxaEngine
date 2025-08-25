@@ -325,7 +325,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
     chunk->voxels[localPos.y][localPos.x] = voxel;
 
     chunk->dirtyRect.Include(localPos);
-    chunk->UpdateRenderBufferRanges[localPos.y].AddValue(localPos.x);
+    chunk->UpdatedVoxelAt(localPos);
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
@@ -376,7 +376,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     chunk->voxels[localPos.y][localPos.x] = voxel;
 
     chunk->dirtyRect.Include(localPos);
-    chunk->UpdateRenderBufferRanges[localPos.y].AddValue(localPos.x);
+    chunk->UpdatedVoxelAt(localPos);
 
     chunk->forceHeatUpdate = true;
     chunk->forcePressureUpdate = true;
@@ -606,7 +606,7 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 
                 Chunk *chunk = GetChunkAtChunkPosition(WorldToChunkPosition(currentPos));
                 if(chunk){
-                    chunk->UpdateRenderBufferRanges[currentPosI.y % Chunk::CHUNK_SIZE].AddValue(currentPosI.x % Chunk::CHUNK_SIZE);
+                    chunk->UpdatedVoxelAt(currentPosI);
                 }
             }
     	}

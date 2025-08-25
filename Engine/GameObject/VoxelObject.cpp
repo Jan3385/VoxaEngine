@@ -292,9 +292,9 @@ float VoxelObject::ExchangeHeatBetweenVoxels(Volume::VoxelElement *v1, Volume::V
 {
     if(!v1 || !v2) return 0.0f;
 
-    float heatCapacity = v1->properties->HeatCapacity / 40;
+    float heatCapacity = v1->properties->heatCapacity / 40;
     float heatDiff = v2->temperature.GetCelsius() - v1->temperature.GetCelsius();
-    float heatTransfer = heatDiff * v2->properties->HeatConductivity / heatCapacity;
+    float heatTransfer = heatDiff * v2->properties->heatConductivity / heatCapacity;
     
     if (heatTransfer != 0.0f) {
         v1->temperature.SetCelsius(v1->temperature.GetCelsius() + heatTransfer);

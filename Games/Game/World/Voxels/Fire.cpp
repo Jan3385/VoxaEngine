@@ -75,10 +75,15 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
         amountChange = this->amount * 0.25f;
     }
 
+    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
+
     for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(this->position + dir);
         if(next && next->GetState() == State::Gas){
             this->amount -= amountChange;
+            if(chunk)
+                chunk->SetPressureAt(this->position, this->amount);
+
             matrix->PlaceVoxelAt(this->position + dir, "Carbon_Dioxide", this->temperature, false, amountChange, false);
             break;
         }
@@ -102,9 +107,8 @@ bool FireVoxel::Step(ChunkMatrix *matrix)
     this->color = FireVoxel::fireColors[voxelRandomGenerator.GetInt(0, fireColorCount-1)];
 
     //update the render buffer for chunk
-    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
     if(chunk)
-        chunk->UpdateRenderBufferRanges[this->position.y%Chunk::CHUNK_SIZE].AddValue(this->position.x%Chunk::CHUNK_SIZE);
+        chunk->UpdatedVoxelAt(this->position);
 
     return true;
 }
@@ -133,6 +137,10 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
 
     this->amount -= amountChange;
 
+    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
+    if(chunk)
+        chunk->SetPressureAt(this->position, this->amount);
+
     float temperatureChangePercent = 0;
     if(this->amount > 0 && amountChange > 0.5f)
         temperatureChangePercent = (amountChange / this->amount);
@@ -156,9 +164,8 @@ bool FireLiquidVoxel::Step(ChunkMatrix *matrix)
     this->color = FireVoxel::fireColors[voxelRandomGenerator.GetInt(0, FireVoxel::fireColorCount-1)];
 
     //update the render buffer for chunk
-    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
     if(chunk)
-        chunk->UpdateRenderBufferRanges[this->position.y%Chunk::CHUNK_SIZE].AddValue(this->position.x%Chunk::CHUNK_SIZE);
+        chunk->UpdatedVoxelAt(this->position);
 
     return true;
 }
@@ -187,6 +194,10 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
 
     this->amount -= amountChange;
 
+    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
+    if(chunk)
+        chunk->SetPressureAt(this->position, this->amount);
+
     float temperatureChangePercent = 0;
     if(this->amount > 0 && amountChange > 0.5f)
         temperatureChangePercent = (amountChange / this->amount);
@@ -214,9 +225,8 @@ bool FireSolidVoxel::Step(ChunkMatrix *matrix)
     this->color = FireVoxel::fireColors[voxelRandomGenerator.GetInt(0, FireVoxel::fireColorCount-1)];
 
     //update the render buffer for chunk
-    Chunk *chunk = matrix->GetChunkAtWorldPosition(Vec2f(this->position));
     if(chunk)
-        chunk->UpdateRenderBufferRanges[this->position.y%Chunk::CHUNK_SIZE].AddValue(this->position.x%Chunk::CHUNK_SIZE);
+        chunk->UpdatedVoxelAt(this->position);
 
     return true;
 }

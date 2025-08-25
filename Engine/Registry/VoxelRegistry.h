@@ -81,8 +81,8 @@ namespace Volume{
 		Registry::DefaultVoxelConstructor Constructor;
 		RGBA pColor;
 		float Density;              //g/L or kg/m^3
-		float HeatCapacity;         //J/kg*K
-		float HeatConductivity;     // W/m*K
+		float heatCapacity;         //J/kg*K
+		float heatConductivity;     // W/m*K
 
 		std::optional<Registry::PhaseChange> CooledChange;
 		std::optional<Registry::PhaseChange> HeatedChange;

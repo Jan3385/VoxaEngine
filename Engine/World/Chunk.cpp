@@ -47,12 +47,16 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
     for(uint8_t y = 0; y < CHUNK_SIZE; y++){
         for(uint8_t x = 0; x < CHUNK_SIZE; x++){
             renderData[y][x].position = glm::ivec2(
-                (chunkWorldPos.x + x),  //* RENDER_VOXEL_SIZE,
-                (chunkWorldPos.y + y)   //* RENDER_VOXEL_SIZE
+                (chunkWorldPos.x + x),
+                (chunkWorldPos.y + y)
             );
             renderData[y][x].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
         }
-        this->UpdateRenderBufferRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
+
+        this->updateRenderBufferRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
+        this->updateVoxelIdRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
+        this->updateVoxelPressureRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
+        this->updateVoxelTemperatureRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
     }
 
     renderVBO = Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER>("Chunk Render VBO");
@@ -88,6 +92,8 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
 
     // Update the instance VBO with the new render data
     renderVBO.SetData(*renderData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
+
+    this->UpdateComputeGPUBuffers();
 }
 
 Volume::Chunk::~Chunk()
@@ -117,6 +123,134 @@ bool Volume::Chunk::ShouldChunkCalculatePressure() const
     return true;
     //TODO: fix when the vibe is right
     //return forcePressureUpdate;
+}
+void Volume::Chunk::UpdateComputeGPUBuffers()
+{
+    if(!this->idVBO.IsInitialized()) return;
+
+    // Update pressure buffer
+    float pressureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+
+    for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
+        if(this->updateVoxelPressureRanges[y].IsEmpty()) continue;
+        for (int x = this->updateVoxelPressureRanges[y].Start(); x <= this->updateVoxelPressureRanges[y].End(); ++x) {
+            pressureVBOBuffer[y][x] = this->voxels[y][x]->amount;
+        }
+    }
+
+    for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
+        if(this->updateVoxelPressureRanges[y].IsEmpty()) continue;
+
+        pressureVBO.UpdateData(
+            CHUNK_SIZE * y + this->updateVoxelPressureRanges[y].Start(),
+            &pressureVBOBuffer[y][this->updateVoxelPressureRanges[y].Start()],
+            this->updateVoxelPressureRanges[y].End() - this->updateVoxelPressureRanges[y].Start() + 1
+        );
+
+        this->updateVoxelPressureRanges[y].Reset();
+    }
+
+    float idBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+    float heatCapacityBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+    float heatConductivityBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+
+    for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
+        if(this->updateVoxelIdRanges[y].IsEmpty()) continue;
+        for (int x = this->updateVoxelIdRanges[y].Start(); x <= this->updateVoxelIdRanges[y].End(); ++x) {
+            idBuffer[y][x] = this->voxels[y][x]->properties->id;
+            heatCapacityBuffer[y][x] = this->voxels[y][x]->properties->heatCapacity;
+            heatConductivityBuffer[y][x] = this->voxels[y][x]->properties->heatConductivity;
+        }
+    }
+
+    for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
+        if(this->updateVoxelIdRanges[y].IsEmpty()) continue;
+        int rangeStart = this->updateVoxelIdRanges[y].Start();
+        int rangeEnd = this->updateVoxelIdRanges[y].End();
+
+        idVBO.UpdateData(
+            CHUNK_SIZE * y + rangeStart,
+            &idBuffer[y][rangeStart],
+            rangeEnd - rangeStart + 1
+        );
+        heatCapacityVBO.UpdateData(
+            CHUNK_SIZE * y + rangeStart,
+            &heatCapacityBuffer[y][rangeStart],
+            rangeEnd - rangeStart + 1
+        );
+        heatConductivityVBO.UpdateData(
+            CHUNK_SIZE * y + rangeStart,
+            &heatConductivityBuffer[y][rangeStart],
+            rangeEnd - rangeStart + 1
+        );
+
+        this->updateVoxelIdRanges[y].Reset();
+    }
+}
+void Volume::Chunk::UpdateRenderGPUBuffers()
+{
+    if(!temperatureVBO.IsInitialized()) return;
+
+    // Update the temperature buffer
+    float temperatureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
+
+    for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
+        if(this->updateVoxelTemperatureRanges[y].IsEmpty()) continue;
+        for (int x = this->updateVoxelTemperatureRanges[y].Start(); x <= this->updateVoxelTemperatureRanges[y].End(); ++x) {
+            temperatureVBOBuffer[y][x] = this->voxels[y][x]->temperature.GetCelsius();
+        }
+    }
+
+    // Update the instance VBO with the new temperature data
+    for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
+        if(this->updateVoxelTemperatureRanges[y].IsEmpty()) continue;
+
+        temperatureVBO.UpdateData(
+            CHUNK_SIZE * y + this->updateVoxelTemperatureRanges[y].Start(),
+            &temperatureVBOBuffer[y][this->updateVoxelTemperatureRanges[y].Start()],
+            this->updateVoxelTemperatureRanges[y].End() - this->updateVoxelTemperatureRanges[y].Start() + 1
+        );
+
+        this->updateVoxelTemperatureRanges[y].Reset();
+    }
+
+    this->temperatureVBO.Unbind();
+}
+void Volume::Chunk::SetTemperatureAt(Vec2i pos, Temperature temperature)
+{
+    // normalize just in case
+    pos.x = pos.x % CHUNK_SIZE;
+    pos.y = pos.y % CHUNK_SIZE;
+
+    // set the temperature
+    voxels[pos.y][pos.x]->temperature = temperature;
+
+    // Update range
+    updateVoxelTemperatureRanges[pos.y].AddValue(pos.x);
+}
+void Volume::Chunk::SetPressureAt(Vec2i pos, float pressure)
+{
+    // normalize just in case
+    pos.x = pos.x % CHUNK_SIZE;
+    pos.y = pos.y % CHUNK_SIZE;
+
+    // set the pressure
+    voxels[pos.y][pos.x]->amount = pressure;
+
+    // Update range
+    updateVoxelPressureRanges[pos.y].AddValue(pos.x);
+}
+void Volume::Chunk::UpdatedVoxelAt(Vec2i pos)
+{
+    // normalize just in case
+    pos.x = pos.x % CHUNK_SIZE;
+    pos.y = pos.y % CHUNK_SIZE;
+
+    // Update range
+    updateVoxelIdRanges[pos.y].AddValue(pos.x);
+    updateRenderBufferRanges[pos.y].AddValue(pos.x);
+    updateVoxelTemperatureRanges[pos.y].AddValue(pos.x);
+    updateVoxelPressureRanges[pos.y].AddValue(pos.x);
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
@@ -218,8 +352,8 @@ void Volume::Chunk::GetShadersData(
 
             temperatureBuffer[index] = voxel->temperature.GetCelsius();
 
-            heatCapacityBuffer[index] = props->HeatCapacity;
-            heatConductivityBuffer[index] = props->HeatConductivity;
+            heatCapacityBuffer[index] = props->heatCapacity;
+            heatConductivityBuffer[index] = props->heatConductivity;
             pressureBuffer[index] = voxel->amount;
             
             idBuffer[index] = props->id |
@@ -227,21 +361,6 @@ void Volume::Chunk::GetShadersData(
                 (static_cast<uint32_t>(voxel->GetState() == State::Liquid) << 30);
         }
     }
-}
-
-void Volume::Chunk::UpdateInnerTemperatureBuffer()
-{
-    float temperatureVBOBuffer[Chunk::CHUNK_SIZE][Chunk::CHUNK_SIZE];
-
-    #pragma omp parallel for collapse(2)
-    for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
-        for (int x = 0; x < Chunk::CHUNK_SIZE; ++x) {
-            temperatureVBOBuffer[y][x] = this->voxels[y][x]->temperature.GetCelsius();
-        }
-    }
-
-    // Update the temperature VBO with the new data
-    temperatureVBO.UpdateData(0, *temperatureVBOBuffer, CHUNK_SIZE_SQUARED);
 }
 
 // resets voxel update data, DO NOT CALL WITHOUT LOCKING THE VOXELMUTEX, main use for simulation thread
@@ -259,34 +378,28 @@ void Volume::Chunk::SIM_ResetVoxelUpdateData()
 
 void Volume::Chunk::Render(bool debugRender)
 {
+    this->UpdateRenderGPUBuffers();
+
     for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
-        if(this->UpdateRenderBufferRanges[y].IsEmpty()) continue;
-        for(uint8_t x = this->UpdateRenderBufferRanges[y].Start(); x <= this->UpdateRenderBufferRanges[y].End(); ++x) {
+        if(this->updateRenderBufferRanges[y].IsEmpty()) continue;
+        for(uint8_t x = this->updateRenderBufferRanges[y].Start(); x <= this->updateRenderBufferRanges[y].End(); ++x) {
             renderData[y][x].color = voxels[y][x]->color.getGLMVec4();
         }
     }
 
     // Update the instance VBO with the new render data
     for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
-        if(this->UpdateRenderBufferRanges[y].IsEmpty()) continue;
-
-        if(this->UpdateRenderBufferRanges[y].Start() < 0 || 
-           this->UpdateRenderBufferRanges[y].End() >= CHUNK_SIZE) {
-            std::cerr << "Chunk " << m_x << ", " << m_y << " has invalid render range: "
-                      << this->UpdateRenderBufferRanges[y].Start() << " - "
-                      << this->UpdateRenderBufferRanges[y].End() << std::endl;
-            continue;
-        }
+        if(this->updateRenderBufferRanges[y].IsEmpty()) continue;
 
         renderVBO.UpdateData(
-            CHUNK_SIZE * y + this->UpdateRenderBufferRanges[y].Start(),
-            &renderData[y][this->UpdateRenderBufferRanges[y].Start()],
-            this->UpdateRenderBufferRanges[y].End() - this->UpdateRenderBufferRanges[y].Start() + 1
+            CHUNK_SIZE * y + this->updateRenderBufferRanges[y].Start(),
+            &renderData[y][this->updateRenderBufferRanges[y].Start()],
+            this->updateRenderBufferRanges[y].End() - this->updateRenderBufferRanges[y].Start() + 1
         );
 
-        this->UpdateRenderBufferRanges[y].Reset();
+        this->updateRenderBufferRanges[y].Reset();
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    renderVBO.Unbind();
 }
 Vec2i Volume::Chunk::GetPos() const
 {

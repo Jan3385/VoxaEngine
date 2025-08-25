@@ -5,6 +5,7 @@
 
 #include "GameEngine.h"
 #include "ChunkShader.h"
+#include "Math/Temperature.h"
 
 
 struct ChunkConnectivityData{
@@ -68,7 +69,6 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
         chunkToPositionIndexMap[chunkMatrix.Grid[i]] = i;
-        chunkMatrix.Grid[i]->UpdateInnerTemperatureBuffer();
     }
 
     #pragma omp parallel for
@@ -130,8 +130,8 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
                     localPos.x;
                 
                 temperatureBuffer[index] = voxel->temperature.GetCelsius();
-                heatCapacityBuffer[index] = voxel->properties->HeatCapacity;
-                heatConductivityBuffer[index] = voxel->properties->HeatConductivity;
+                heatCapacityBuffer[index] = voxel->properties->heatCapacity;
+                heatConductivityBuffer[index] = voxel->properties->heatConductivity;
                 pressureBuffer[index] = voxel->amount;
                 
                 idBuffer[index] = voxel->properties->id |
@@ -150,6 +150,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
     chunkConnectivityBuffer.SetData(connectivityDataBuffer, GL_DYNAMIC_DRAW);
 
+    // Run heat simulation
     float *heatOutput = nullptr;
     if(GameEngine::instance->runHeatSimulation)
     {
@@ -165,6 +166,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         floatOutputDataBuffer.ClearBuffer();
     }
 
+    // Run pressure simulation
     float *pressureOutput = nullptr;
     if(GameEngine::instance->runPressureSimulation)
     {
@@ -178,6 +180,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         floatOutputDataBuffer.ClearBuffer();
     }
 
+    // Run chemical simulation
     ChemicalVoxelChanges *reactionOutput = nullptr;
     uint32_t reactionsSize = 0;
     if(GameEngine::instance->runChemicalReactions)
@@ -200,6 +203,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         reactionOutput = chemicalOutputDataBuffer.ReadBuffer(reactionsSize);
     }
 
+    // Apply the heat and pressure updates
     #pragma omp parallel for
     for (uint32_t i = 0; i < numberOfVoxels; i++) {
         uint16_t chunkIndex = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
@@ -208,19 +212,22 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
         auto& chunk = chunkMatrix.Grid[chunkIndex];
-        if(heatOutput) chunk->voxels[y][x]->temperature.SetCelsius(heatOutput[i]);
-        if(pressureOutput) chunk->voxels[y][x]->amount = pressureOutput[i];
+        if(heatOutput) chunk->SetTemperatureAt(Vec2i(x, y), Volume::Temperature(heatOutput[i]));
+        if(pressureOutput) chunk->SetPressureAt(Vec2i(x, y), pressureOutput[i]);
 
         std::string newId = chunk->voxels[y][x]->ShouldTransitionToID();
         if(!newId.empty()){
             chunk->voxels[y][x]->DieAndReplace(chunkMatrix, newId);
         }
     }
-    std::map<uint16_t, Vec2i> chunkIndexToPosOffset;
+
+    // faster lookup for offsets
+    std::unordered_map<uint16_t, Vec2i> chunkIndexToPosOffset;
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
         chunkIndexToPosOffset[i] = chunkMatrix.Grid[i]->GetPos() * Volume::Chunk::CHUNK_SIZE;
     }
 
+    //Place voxels that underwent chemical reactions
     //#pragma omp parallel for ( crashes :( )
     for(uint32_t i = 0; i < reactionsSize; i++) {
         ChemicalVoxelChanges& change = reactionOutput[i];

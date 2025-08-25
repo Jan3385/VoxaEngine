@@ -32,6 +32,8 @@ namespace Shader{
         GLBuffer(GLBuffer&& other) noexcept;
         GLBuffer& operator=(GLBuffer&& other) noexcept;
 
+        bool IsInitialized() const { return ID != 0; }
+
         void Bind() const;
         static void Unbind();
 

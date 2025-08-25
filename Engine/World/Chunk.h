@@ -65,6 +65,12 @@ namespace Volume
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;
 
+		void UpdateComputeGPUBuffers();
+		void UpdateRenderGPUBuffers();
+		void SetTemperatureAt(Vec2i pos, Temperature temperature);
+		void SetPressureAt(Vec2i pos, float pressure);
+		void UpdatedVoxelAt(Vec2i pos);
+
     	void UpdateVoxels(ChunkMatrix* matrix);
 
 		// Physics
@@ -82,7 +88,6 @@ namespace Volume
 			uint32_t idBuffer[],
 			int chunkNumber
 		) const;
-		void UpdateInnerTemperatureBuffer();
 
 
     	void SIM_ResetVoxelUpdateData();
@@ -98,9 +103,6 @@ namespace Volume
 		// connectivity data
 		Shader::GLVertexArray renderVoxelVAO;
 		Shader::GLVertexArray heatRenderingVAO;
-		
-		// knows where to update render for chunk
-		Math::Range UpdateRenderBufferRanges[CHUNK_SIZE]; 
     private:
     	short int m_x;
     	short int m_y;	
@@ -115,7 +117,17 @@ namespace Volume
 		// rendering data
 		VoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
 		Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER> renderVBO;
+		// knows where to update render for chunk
+		Math::Range updateRenderBufferRanges[CHUNK_SIZE]; 
+		Math::Range updateVoxelIdRanges[CHUNK_SIZE];
+		Math::Range updateVoxelTemperatureRanges[CHUNK_SIZE];
+		Math::Range updateVoxelPressureRanges[CHUNK_SIZE];
 
 		Shader::GLBuffer<float, GL_ARRAY_BUFFER> temperatureVBO;
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> pressureVBO;
+
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> heatCapacityVBO;
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> heatConductivityVBO;
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> idVBO;
     };
 }

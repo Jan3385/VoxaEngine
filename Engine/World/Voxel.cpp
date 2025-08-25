@@ -83,16 +83,16 @@ void VoxelElement::Swap(Vec2i &toSwapPos, ChunkMatrix &matrix)
 	float heatDifference = this->temperature.GetCelsius() - swapVoxel->temperature.GetCelsius();
 	float maxHeatTransfer = 500;
 	float heatTransfer = std::clamp(
-		heatDifference * this->properties->HeatConductivity * 5,
+		heatDifference * this->properties->heatConductivity * 5,
 		-maxHeatTransfer,
 		maxHeatTransfer
 	);
 
-	bool anyHeatCapacityZero = this->properties->HeatCapacity == 0 || swapVoxel->properties->HeatCapacity == 0;
+	bool anyHeatCapacityZero = this->properties->heatCapacity == 0 || swapVoxel->properties->heatCapacity == 0;
 	
 	if(!anyHeatCapacityZero){
-		this->temperature.SetCelsius(this->temperature.GetCelsius() - heatTransfer / this->properties->HeatCapacity);
-		swapVoxel->temperature.SetCelsius(swapVoxel->temperature.GetCelsius() + heatTransfer / swapVoxel->properties->HeatCapacity);
+		this->temperature.SetCelsius(this->temperature.GetCelsius() - heatTransfer / this->properties->heatCapacity);
+		swapVoxel->temperature.SetCelsius(swapVoxel->temperature.GetCelsius() + heatTransfer / swapVoxel->properties->heatCapacity);
 	}
 
     // Get the position of the current voxel
@@ -313,13 +313,19 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 	if(this->amount > VoxelLiquid::DesiredDensity){
 		if(above && above->GetState() == State::Gas){
 			matrix->PlaceVoxelAt(this->position+vector::UP, this->id, this->temperature, false, this->amount/2, false);
-			this->amount /= 2;
+
+			Chunk *chunk = matrix->GetChunkAtWorldPosition(this->position);
+			chunk->SetPressureAt(this->position, this->amount/2);
 			return true;
 		}else if(above && above->properties == this->properties){
 			float missingAmount = std::max(VoxelLiquid::DesiredDensity - above->amount, 0.0f);
 			float transferAmount = std::min(missingAmount, this->amount);
-			above->amount += transferAmount;
-			this->amount -= transferAmount;
+
+			Chunk *chunk = matrix->GetChunkAtWorldPosition(this->position);
+			Chunk *chunkUP = matrix->GetChunkAtWorldPosition(this->position + vector::UP);
+			
+			chunk->SetPressureAt(this->position, this->amount - transferAmount);
+			chunkUP->SetPressureAt(this->position + vector::UP, above->amount + transferAmount);
 
 			if(missingAmount > 0.0f){
 				Vec2i localPos = Vec2i(this->position.x % Chunk::CHUNK_SIZE, this->position.y % Chunk::CHUNK_SIZE);
@@ -334,8 +340,12 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 		if(below->amount < VoxelLiquid::DesiredDensity){
 			float missingAmount = VoxelLiquid::DesiredDensity - below->amount;
 			float transferAmount = std::min(missingAmount, this->amount);
-			below->amount += transferAmount;
-			this->amount -= transferAmount;
+
+			Chunk *chunk = matrix->GetChunkAtWorldPosition(this->position);
+			Chunk *chunkBelow = matrix->GetChunkAtWorldPosition(this->position + vector::DOWN);
+
+			chunk->SetPressureAt(this->position, this->amount - transferAmount);
+			chunkBelow->SetPressureAt(this->position + vector::DOWN, below->amount + transferAmount);
 
 			if(this->amount <= 0){
 				if(above->GetState() == State::Gas){
@@ -466,7 +476,8 @@ bool VoxelGas::Step(ChunkMatrix *matrix)
 			if(this->amount - nextAmount > 0.3f){
 				// small amount of gas deletion happens.. no idea why
 				if(matrix->TryToDisplaceGas(this->position + dir, this->id, this->temperature, this->amount - nextAmount, false)){
-					this->amount = nextAmount;
+					Chunk *chunk = matrix->GetChunkAtWorldPosition(this->position);
+					chunk->SetPressureAt(this->position, nextAmount);
 					break;
 				}
 			}
