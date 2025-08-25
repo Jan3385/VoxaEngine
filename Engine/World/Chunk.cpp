@@ -118,7 +118,6 @@ Volume::Chunk::~Chunk()
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB Camera) const
 {
-    return false;
     if(lastCheckedCountDown > 0) return false;
     if(!this->dirtyRect.IsEmpty()) return false;
     if(Camera.Expand(Chunk::CHUNK_SIZE/2).Overlaps(this->GetAABB())) return false;
