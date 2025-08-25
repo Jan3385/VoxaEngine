@@ -15,6 +15,7 @@ public:
 
     RGB();
     RGB(uint8_t r, uint8_t g, uint8_t b);
+    RGB Mix(const RGB& other, float factor) const;
     ~RGB();
     RGBA toRGBA();
 };

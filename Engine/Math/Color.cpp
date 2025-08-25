@@ -13,6 +13,19 @@ RGB RGB::operator*(const RGB &other) const
 RGB::RGB() : r(0), g(0), b(0) {}
 RGB::RGB(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
 
+/// @brief Mix two RGB colors.
+/// @param other The other color to mix with.
+/// @param factor The factor to mix the colors <0.0 - 1.0>.
+/// @return The mixed color.
+RGB RGB::Mix(const RGB &other, float factor) const
+{
+    return RGB(
+        static_cast<uint8_t>(this->r * (1 - factor) + other.r * factor),
+        static_cast<uint8_t>(this->g * (1 - factor) + other.g * factor),
+        static_cast<uint8_t>(this->b * (1 - factor) + other.b * factor)
+    );
+}
+
 RGBA RGBA::operator*(const RGBA &other) const
 {
     return RGBA(

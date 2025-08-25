@@ -29,7 +29,9 @@ VoxelElement::VoxelElement(std::string id, Vec2i position, Temperature temperatu
 		RGBA tint = (*this->properties->TextureMap)(this->position.x, this->position.y);
 		if(tint.a == 0) tint = RGBA(255, 255, 255, 255);
 
+		int8_t alpha = this->color.a;
 		this->color = this->color * tint;
+		this->color.a = alpha;
 	}
 	if(this->properties->RandomColorTints){
 		//tint the color factor 1 to 1.2
