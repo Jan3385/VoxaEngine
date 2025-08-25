@@ -43,6 +43,9 @@ namespace Shader{
         void UpdateData(GLuint offset, const std::vector<T>& data) const;
         void UpdateData(GLuint offset, const T* data, GLuint size) const;
 
+        template <GLenum otherTarget>
+        void UploadBufferIn(GLuint copyOffset, GLuint writeOffset, GLBuffer<T, otherTarget>& buffer, GLuint size) const;
+
         void BindBufferBase(GLuint binding) const;
 
         void ClearBuffer();
@@ -53,6 +56,9 @@ namespace Shader{
 
         T* ReadBuffer() const;
         T* ReadBuffer(GLuint size) const;
+
+        template<typename, GLenum>
+        friend class GLBuffer;
 
     private:
         GLuint ID;

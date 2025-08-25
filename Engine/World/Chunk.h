@@ -103,6 +103,14 @@ namespace Volume
 		// connectivity data
 		Shader::GLVertexArray renderVoxelVAO;
 		Shader::GLVertexArray heatRenderingVAO;
+
+		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> temperatureVBO;
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> renderTemperatureVBO;
+		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> pressureVBO;
+
+		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> heatCapacityVBO;
+		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> heatConductivityVBO;
+		Shader::GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER> idVBO;
     private:
     	short int m_x;
     	short int m_y;	
@@ -122,12 +130,5 @@ namespace Volume
 		Math::Range updateVoxelIdRanges[CHUNK_SIZE];
 		Math::Range updateVoxelTemperatureRanges[CHUNK_SIZE];
 		Math::Range updateVoxelPressureRanges[CHUNK_SIZE];
-
-		Shader::GLBuffer<float, GL_ARRAY_BUFFER> temperatureVBO;
-		Shader::GLBuffer<float, GL_ARRAY_BUFFER> pressureVBO;
-
-		Shader::GLBuffer<float, GL_ARRAY_BUFFER> heatCapacityVBO;
-		Shader::GLBuffer<float, GL_ARRAY_BUFFER> heatConductivityVBO;
-		Shader::GLBuffer<float, GL_ARRAY_BUFFER> idVBO;
     };
 }

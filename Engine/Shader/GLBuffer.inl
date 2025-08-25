@@ -128,6 +128,34 @@ inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const T *data, GLuint
     glBufferSubData(Target, offset * sizeof(T), size * sizeof(T), data);
 }
 
+/// @brief Uploads a portion of the buffer from another buffer
+/// @param copyOffset Offset in the source buffer to copy from (`buffer`)
+/// @param writeOffset Offset in the destination buffer to write to (`this`)
+/// @param buffer Source buffer to copy from
+/// @param size Size of the data to copy (if 0, copy entire `buffer`)
+template <typename T, GLenum Target>
+template <GLenum otherTarget>
+inline void GLBuffer<T, Target>::UploadBufferIn(GLuint copyOffset, GLuint writeOffset, GLBuffer<T, otherTarget>& buffer, GLuint size) const
+{
+    if(size == 0){
+        size = buffer.bufferSize;
+    }
+
+    if (copyOffset + size > static_cast<GLuint>(buffer.bufferSize)) {
+        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(source)" << std::endl;
+        copyOffset = buffer.bufferSize - size;
+    }
+    if (writeOffset + size > static_cast<GLuint>(this->bufferSize)) {
+        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(destination)" << std::endl;
+    }
+
+    glBindBuffer(GL_COPY_READ_BUFFER, buffer.ID);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, this->ID);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, copyOffset * sizeof(T), writeOffset * sizeof(T), size * sizeof(T));
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+}
+
 /// @brief Binds the buffer to a specific binding point
 /// @param binding Binding point to use
 template <typename T, GLenum Target>
