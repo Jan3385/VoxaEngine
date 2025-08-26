@@ -44,8 +44,9 @@ public:
     void UpdateBoundingBox();
 
     void SetRotation(float rotation) {
-        if(this->rotation == rotation) return;
         this->rotation = rotation;
+        if(std::abs(this->rotation - this->bufferRotation) < ROTATION_BUFFER_THRESHOLD) return;
+        this->bufferRotation = this->rotation;
         this->dirtyRotation = true;
     }
 
@@ -74,9 +75,12 @@ protected:
     float ExchangeHeatBetweenVoxels(Volume::VoxelElement* v1, Volume::VoxelElement* v2);
 
     bool dirtyRotation = true;
+    float bufferRotation = 0.0f;
 
     Shader::GLBuffer<Volume::VoxelRenderData, GL_ARRAY_BUFFER> renderVoxelBuffer;
 private:
+    static constexpr float ROTATION_BUFFER_THRESHOLD = M_PI_2 * 0.03f; // 1.5 degrees
+
     float rotation = 0.0f; // in radians
     unsigned int renderVoxelCount = 0;
 
