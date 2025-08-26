@@ -155,7 +155,9 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
 // Generates a chunk and inputs it into the grid, returns a pointer to it
 Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
 {
+    this->chunkCreationMutex.lock();
     if(this->ChunkGeneratorFunction == nullptr) {
+        this->chunkCreationMutex.unlock();
         throw std::runtime_error("ChunkGenerator function for chunkMatrix not set!");
     }
 
@@ -168,11 +170,13 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
     if (chunkPos.y % 2 != 0) AssignedGridPass += 2;
 
     this->GridSegmented[AssignedGridPass].push_back(chunk);
-
     this->Grid.push_back(chunk);
+    this->newUninitializedChunks.push(chunk);
 
     // Set chunks colliders
     GameEngine::physics->Generate2DCollidersForChunk(chunk);
+
+    this->chunkCreationMutex.unlock();
 
     return chunk;
 }
@@ -212,9 +216,7 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeOb
 
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
     if(!chunk){
-        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        chunkCreationMutex.unlock();
     }
 
     Volume::VoxelElement *voxel = chunk->voxels[abs(pos.y % Chunk::CHUNK_SIZE)][abs(pos.x % Chunk::CHUNK_SIZE)];
@@ -306,9 +308,7 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
-        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        chunkCreationMutex.unlock();
     }
 
     // update physics if changing a solid voxel
@@ -362,9 +362,7 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
-        chunkCreationMutex.lock();
         chunk = GenerateChunk(chunkPos);
-        chunkCreationMutex.unlock();
     }
 
     // update physics if changing a solid voxel

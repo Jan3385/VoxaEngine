@@ -51,7 +51,14 @@ Shader::ChunkShaderManager::~ChunkShaderManager()
 
 void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 {
-    uint16_t chunkCount = static_cast<uint16_t>(chunkMatrix.Grid.size());
+    std::vector<Volume::Chunk*> chunksToUpdate;
+    for(Volume::Chunk* chunk : chunkMatrix.Grid){
+        if(chunk->IsInitialized()){
+            chunksToUpdate.push_back(chunk);
+        }
+    }
+
+    uint16_t chunkCount = static_cast<uint16_t>(chunksToUpdate.size());
     if(chunkCount == 0) return; // No chunks to process
 
     uint32_t numberOfVoxels = chunkCount * Volume::Chunk::CHUNK_SIZE_SQUARED;
@@ -59,11 +66,10 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     std::vector<ChunkConnectivityData> connectivityDataBuffer(chunkCount);
 
     // Load data for shaders
-    std::vector<Volume::Chunk*> chunksToUpdate;
     std::unordered_map<Volume::Chunk*, int> chunkToPositionIndexMap;
     
-    for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
-        chunkToPositionIndexMap[chunkMatrix.Grid[i]] = i;
+    for(uint16_t i = 0; i < static_cast<uint16_t>(chunksToUpdate.size()); ++i){
+        chunkToPositionIndexMap[chunksToUpdate[i]] = i;
     }
 
     voxelTemperatureBuffer.ClearBuffer(numberOfVoxels, GL_DYNAMIC_DRAW);
@@ -72,8 +78,8 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     voxelPressureBuffer.ClearBuffer(numberOfVoxels, GL_DYNAMIC_DRAW);
     voxelIdBuffer.ClearBuffer(numberOfVoxels, GL_DYNAMIC_DRAW);
 
-    for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
-        Volume::Chunk *c = chunkMatrix.Grid[i];
+    for(uint16_t i = 0; i < static_cast<uint16_t>(chunksToUpdate.size()); ++i){
+        Volume::Chunk *c = chunksToUpdate[i];
         c->UpdateComputeGPUBuffers();
 
         unsigned int offset = i * Volume::Chunk::CHUNK_SIZE_SQUARED;
@@ -86,7 +92,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     }
 
     #pragma omp parallel for
-    for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
+    for(uint16_t i = 0; i < static_cast<uint16_t>(chunksToUpdate.size()); ++i){
         // Set up chunk connectivity data
         ChunkConnectivityData *data = &connectivityDataBuffer[i];
         data->chunk = i;
@@ -94,13 +100,13 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         data->chunkDown = -1;
         data->chunkLeft = -1;
         data->chunkRight = -1;
-        Vec2i pos = chunkMatrix.Grid[i]->GetPos();
+        Vec2i pos = chunksToUpdate[i]->GetPos();
         Vec2i posUp = pos + vector::UP;
         Vec2i posDown = pos + vector::DOWN;
         Vec2i posLeft = pos + vector::LEFT;
         Vec2i posRight = pos + vector::RIGHT;
-        for(uint16_t j = 0; j < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++j){
-            Vec2i otherPos = chunkMatrix.Grid[j]->GetPos();
+        for(uint16_t j = 0; j < static_cast<uint16_t>(chunksToUpdate.size()); ++j){
+            Vec2i otherPos = chunksToUpdate[j]->GetPos();
             if(otherPos == posUp)
                 data->chunkUp = j;
             else if(otherPos == posDown)
@@ -165,9 +171,9 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         heatOutput = floatOutputDataBuffer.ReadBuffer(numberOfVoxels);
 
         // Update the GPU buffer of the chunk
-        for(uint16_t i = 0; i < chunkMatrix.Grid.size(); ++i){
+        for(uint16_t i = 0; i < chunksToUpdate.size(); ++i){
             unsigned int offset = i * Volume::Chunk::CHUNK_SIZE_SQUARED;
-            Volume::Chunk *c = chunkMatrix.Grid[i];
+            Volume::Chunk *c = chunksToUpdate[i];
 
             c->temperatureVBO.UploadBufferIn(offset, 0, floatOutputDataBuffer, Volume::Chunk::CHUNK_SIZE_SQUARED);
             c->renderTemperatureVBO.UploadBufferIn(offset, 0, floatOutputDataBuffer, Volume::Chunk::CHUNK_SIZE_SQUARED);
@@ -189,9 +195,9 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         pressureOutput = floatOutputDataBuffer.ReadBuffer(numberOfVoxels);
 
         // Update the GPU buffer of the chunk
-        for(uint16_t i = 0; i < chunkMatrix.Grid.size(); ++i){
+        for(uint16_t i = 0; i < chunksToUpdate.size(); ++i){
             unsigned int offset = i * Volume::Chunk::CHUNK_SIZE_SQUARED;
-            Volume::Chunk *c = chunkMatrix.Grid[i];
+            Volume::Chunk *c = chunksToUpdate[i];
 
             c->pressureVBO.UploadBufferIn(offset, 0, floatOutputDataBuffer, Volume::Chunk::CHUNK_SIZE_SQUARED);
         }
@@ -230,7 +236,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         uint16_t x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
-        auto& chunk = chunkMatrix.Grid[chunkIndex];
+        auto& chunk = chunksToUpdate[chunkIndex];
         if(heatOutput) chunk->voxels[y][x]->temperature = Volume::Temperature(heatOutput[i]);
         if(pressureOutput) chunk->voxels[y][x]->amount = pressureOutput[i];
 
@@ -242,8 +248,8 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
     // faster lookup for offsets
     std::unordered_map<uint16_t, Vec2i> chunkIndexToPosOffset;
-    for(uint16_t i = 0; i < static_cast<uint16_t>(chunkMatrix.Grid.size()); ++i){
-        chunkIndexToPosOffset[i] = chunkMatrix.Grid[i]->GetPos() * Volume::Chunk::CHUNK_SIZE;
+    for(uint16_t i = 0; i < static_cast<uint16_t>(chunksToUpdate.size()); ++i){
+        chunkIndexToPosOffset[i] = chunksToUpdate[i]->GetPos() * Volume::Chunk::CHUNK_SIZE;
     }
 
     //Place voxels that underwent chemical reactions

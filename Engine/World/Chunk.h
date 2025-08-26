@@ -61,6 +61,9 @@ namespace Volume
     	Chunk(const Vec2i& pos);
     	~Chunk();
 
+		void InitializeBuffers();
+		bool IsInitialized() const { return this->idVBO.IsInitialized(); };
+
 		bool ShouldChunkDelete(AABB Camera) const;
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;

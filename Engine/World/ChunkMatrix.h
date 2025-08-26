@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 
 #include <list>
+#include <queue>
 
 #include "World/Chunk.h"
 #include "Shader/ChunkShader.h"
@@ -38,6 +39,7 @@ public:
 
 	Volume::Chunk* (*ChunkGeneratorFunction)(const Vec2i&, ChunkMatrix&) = nullptr;
 	Volume::Chunk* GenerateChunk(const Vec2i& chunkPos);
+	std::queue<Volume::Chunk*> newUninitializedChunks = {};
 	void DeleteChunk(const Vec2i& pos);
 
 	//Virtual setter / getter

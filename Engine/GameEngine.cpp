@@ -125,6 +125,7 @@ void GameEngine::Update(IGame& game)
     this->PollEvents();
     
     this->chunkMatrix.voxelMutex.lock();
+    
     // Run physics simulation
     physics->Step(this->deltaTime, this->chunkMatrix);
 
@@ -135,6 +136,7 @@ void GameEngine::Update(IGame& game)
         }
     }
 
+    //Physics
     for(PhysicsObject* object : physics->physicsObjects) {
         if(object->IsEnabled()) {
             object->UpdatePhysicsEffects(chunkMatrix, deltaTime);
@@ -144,6 +146,7 @@ void GameEngine::Update(IGame& game)
 
     game.Update(this->deltaTime);
 
+    // Fixed update
     fixedUpdateTimer += deltaTime;
     simulationUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
@@ -151,6 +154,16 @@ void GameEngine::Update(IGame& game)
         FixedUpdate(game);
         game.FixedUpdate(this->fixedDeltaTime);
         fixedUpdateTimer -= fixedDeltaTime;
+    }
+
+    // Initialize any chunks that are not yet initialized
+    while (!chunkMatrix.newUninitializedChunks.empty()) {
+        auto chunk = chunkMatrix.newUninitializedChunks.front();
+        chunkMatrix.newUninitializedChunks.pop();
+
+        if (!chunk->IsInitialized()) {
+            chunk->InitializeBuffers();
+        }
     }
 
     if(fixedUpdateTimer > fixedDeltaTime*2.5f)
@@ -367,8 +380,6 @@ Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
     if(!chunkMatrix.IsValidChunkPosition(pos)) return nullptr;
     if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;
 
-    chunkMatrix.chunkCreationMutex.lock();
     Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
-    chunkMatrix.chunkCreationMutex.unlock();
     return chunk;
 }

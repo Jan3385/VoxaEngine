@@ -58,6 +58,27 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
         this->updateVoxelPressureRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
         this->updateVoxelTemperatureRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
     }
+}
+
+Volume::Chunk::~Chunk()
+{
+    for (unsigned short int i = 0; i < Chunk::CHUNK_SIZE; i++)
+    {
+        for (unsigned short int  j = 0; j < Chunk::CHUNK_SIZE; j++)
+        {
+            delete voxels[i][j];
+        }
+    }
+}
+
+/// @brief Initializes the buffers for the chunk
+/// @warning Only run on the main thread. Should by called by the engine in most cases
+void Volume::Chunk::InitializeBuffers()
+{
+    if(this->IsInitialized()){
+        std::cerr << "Warning: Duplicate initialization of chunk buffers (" << m_x << ", " << m_y << ")\n";
+        return;
+    }
 
     renderVBO = Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER>("Chunk Render VBO");
     VoxelRenderData tempData[CHUNK_SIZE_SQUARED];
@@ -104,17 +125,6 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
 
     // Update the instance VBO with the new render data
     renderVBO.SetData(*renderData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
-}
-
-Volume::Chunk::~Chunk()
-{
-    for (unsigned short int i = 0; i < Chunk::CHUNK_SIZE; i++)
-    {
-        for (unsigned short int  j = 0; j < Chunk::CHUNK_SIZE; j++)
-        {
-            delete voxels[i][j];
-        }
-    }
 }
 bool Volume::Chunk::ShouldChunkDelete(AABB Camera) const
 {
