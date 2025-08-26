@@ -373,6 +373,8 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix,  glm::mat4 projection)
     this->voxelRenderProgram->SetMat4("projection", projection);
 
     for (auto& chunk : chunkMatrix.Grid) {
+        if(!chunk->IsInitialized()) continue;
+        
         if(chunk->GetAABB().Overlaps(this->Camera)){
             chunk->Render(false);
 
