@@ -384,7 +384,11 @@ void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature tem
     bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects)
 {
     Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
-
+    PlaceVoxelAt(voxel, destructive, includeObjects);
+}
+void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, uint32_t id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects)
+{
+    Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
     PlaceVoxelAt(voxel, destructive, includeObjects);
 }
 void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects)

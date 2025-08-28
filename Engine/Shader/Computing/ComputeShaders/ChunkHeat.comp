@@ -66,6 +66,8 @@ void main(){
             continue;
 
         ++NumOfValidDirections;
+
+        //TODO: make more realistic
         
         // clamping to prevent extreme values
         float heatCapacity = clamp(voxelHeatCapacity[index] / TEMPERATURE_TRANSITION_SPEED, 0.01, 10000.0);

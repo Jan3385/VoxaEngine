@@ -12,7 +12,7 @@ set_property(TARGET VoxaGame PROPERTY CXX_STANDARD 20)
 
 set(FONTS_FOLDER "${CMAKE_SOURCE_DIR}/Fonts")
 set(RENDER_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Rendering/RenderShaders")
-set(COMPUTE_SHADERS_FOLDER_GAME "${CMAKE_SOURCE_DIR}/Games/Game/Shaders/ComputeShaders")
+# set(COMPUTE_SHADERS_FOLDER_GAME "${CMAKE_SOURCE_DIR}/Games/Game/Shaders/ComputeShaders")
 set(COMPUTE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Computing/ComputeShaders")
 set(INCLUDE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Includes")
 
@@ -31,7 +31,7 @@ add_custom_target(copy_assets ALL
   # Shaders
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaGame>/Shaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${RENDER_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/RenderShaders
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER_GAME} $<TARGET_FILE_DIR:VoxaGame>/Shaders/ComputeShaders
+  # COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER_GAME} $<TARGET_FILE_DIR:VoxaGame>/Shaders/ComputeShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/ComputeShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${INCLUDE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/Includes
   DEPENDS VoxaEngine

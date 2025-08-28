@@ -18,7 +18,7 @@ std::unordered_map<uint32_t, VoxelProperty*> VoxelRegistry::idRegistry = {};
 std::unordered_map<std::string, VoxelFactory> VoxelRegistry::voxelFactories = {};
 std::unordered_map<std::string, VoxelTextureMap*> VoxelRegistry::textureMaps = {};
 std::vector<Registry::ChemicalReaction> VoxelRegistry::reactionRegistry = {};
-Shader::GLBuffer<Registry::VoxelRegistry::ChemicalReactionID, GL_SHADER_STORAGE_BUFFER>* 
+Shader::GLBuffer<Registry::VoxelRegistry::ChemicalReactionGL, GL_SHADER_STORAGE_BUFFER>* 
 	Registry::VoxelRegistry::chemicalReactionsGLBuffer = nullptr;
 
 uint32_t VoxelRegistry::idCounter = 1;
@@ -91,7 +91,7 @@ void Registry::VoxelRegistry::CloseRegistry()
 	registryClosed = true;
 
 	// get IDs for chemical reactions
-	std::vector<ChemicalReactionID> reactions;
+	std::vector<ChemicalReactionGL> reactions;
 	for(ChemicalReaction reaction : VoxelRegistry::reactionRegistry){
 		uint32_t from = VoxelRegistry::GetProperties(reaction.from)->id;
 		uint32_t catalyst = VoxelRegistry::GetProperties(reaction.catalyst)->id;
@@ -105,20 +105,31 @@ void Registry::VoxelRegistry::CloseRegistry()
 			reaction.preserveCatalyst,
 			reaction.minTemperatureC
 		});
+
+		VoxelProperty *prop = VoxelRegistry::GetProperties(reaction.from);
+		if(!prop) continue;
+
+		prop->Reactions.push_back({
+			catalyst,
+			to,
+			reaction.reactionSpeed,
+			reaction.preserveCatalyst,
+			Temperature(reaction.minTemperatureC)
+		});
 	}
 
 	// sort reactions by "from" ID to be able to quickly search them thru later on the GPU
-	std::sort(reactions.begin(), reactions.end(), [](const ChemicalReactionID& a, const ChemicalReactionID& b) {
+	std::sort(reactions.begin(), reactions.end(), [](const ChemicalReactionGL& a, const ChemicalReactionGL& b) {
 		return a.fromID < b.fromID;
 	});
 
 	// Upload chemical reactions to a GPU buffer
-	VoxelRegistry::chemicalReactionsGLBuffer = new Shader::GLBuffer<ChemicalReactionID, GL_SHADER_STORAGE_BUFFER>("Chemical Reactions Buffer");
+	VoxelRegistry::chemicalReactionsGLBuffer = new Shader::GLBuffer<ChemicalReactionGL, GL_SHADER_STORAGE_BUFFER>("Chemical Reactions Buffer");
 	VoxelRegistry::chemicalReactionsGLBuffer->SetData(reactions, GL_STATIC_DRAW);
 
 	// Clear reaction registry to free up memory
 	VoxelRegistry::reactionRegistry.clear();
-	std::vector<ChemicalReactionID>().swap(reactions); // free memory
+	std::vector<ChemicalReactionGL>().swap(reactions); // free memory
 }
 
 /// @brief Prevents memory leaks at the end of the application

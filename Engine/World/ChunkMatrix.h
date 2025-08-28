@@ -51,6 +51,10 @@ public:
 
 	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, 
 		bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects = false);
+
+	void PlaceVoxelAt(const Vec2i &pos, uint32_t id, Volume::Temperature temp, 
+		bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects = false);
+		
 	void PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects = false);
 	void SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp = std::nullopt);
 	// returns true if the gas was displaced. False if no change accured

@@ -117,42 +117,6 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
                 data->chunkRight = j;
         }
     }
-    
-    // add physicsObjects to the buffers, entering GPU simulations
-    /*
-    for(PhysicsObject *obj : GameEngine::physics->physicsObjects) {
-        #pragma omp parallel for collapse(2)
-        for(unsigned int y = 0; y < obj->rotatedVoxelBuffer.size(); y++) {
-            for(unsigned int x = 0; x < obj->rotatedVoxelBuffer[0].size(); x++) {
-                Volume::VoxelElement *voxel = obj->rotatedVoxelBuffer[y][x];
-                if(voxel == nullptr) continue; // skip empty voxels
-
-                Vec2i worldPos = obj->GetWorldPositionFromLocalRotatedIndex(x, y);
-
-                Volume::Chunk *c = chunkMatrix.GetChunkAtWorldPosition(worldPos);
-
-                if(!c) continue;
-
-                Vec2i localPos = Vec2i(worldPos.x % Volume::Chunk::CHUNK_SIZE, worldPos.y % Volume::Chunk::CHUNK_SIZE);
-
-                unsigned int index =
-                    chunkToPositionIndexMap[c] * Volume::Chunk::CHUNK_SIZE_SQUARED +
-                    localPos.y * Volume::Chunk::CHUNK_SIZE +
-                    localPos.x;
-                
-                temperatureBuffer[index] = voxel->temperature.GetCelsius();
-                heatCapacityBuffer[index] = voxel->properties->heatCapacity;
-                heatConductivityBuffer[index] = voxel->properties->heatConductivity;
-                pressureBuffer[index] = voxel->amount;
-                
-                idBuffer[index] = voxel->properties->id |
-                    (static_cast<uint32_t>(voxel->GetState() != Volume::State::Gas) << 31) |
-                    (static_cast<uint32_t>(voxel->GetState() == Volume::State::Liquid) << 30);
-
-            }
-        }
-    }
-    */
 
     chunkConnectivityBuffer.SetData(connectivityDataBuffer, GL_DYNAMIC_DRAW);
 

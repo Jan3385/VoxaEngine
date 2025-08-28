@@ -30,6 +30,13 @@ namespace Registry{
 		bool preserveCatalyst = true;
 		float minTemperatureC = Volume::Temperature::absoluteZero.GetCelsius();
 	};
+	struct ChemicalReactionProperty{
+		uint32_t catalyst;
+		uint32_t to;
+		float reactionSpeed;
+		bool preserveCatalyst;
+		Volume::Temperature minTemperature;
+	};
 	struct PhaseChange{
 		Volume::Temperature temperatureAt;
 		std::string to;
@@ -95,6 +102,8 @@ namespace Volume{
 
 		Registry::VoxelTextureMap* TextureMap = nullptr;
 		bool RandomColorTints = true;
+
+		std::vector<Registry::ChemicalReactionProperty> Reactions;
 	};
 }
 
@@ -158,9 +167,7 @@ namespace Registry{
 		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
 		static std::unordered_map<std::string, VoxelFactory> voxelFactories;
 
-		static std::unordered_map<std::string, VoxelTextureMap*> textureMaps;
-
-		struct ChemicalReactionID{
+		struct ChemicalReactionGL{
 			uint32_t fromID;
 			uint32_t catalystID;
 			uint32_t toID;
@@ -168,10 +175,12 @@ namespace Registry{
 			uint32_t preserveCatalyst;
 			float minTemperatureC;
 		};
-		static Shader::GLBuffer<ChemicalReactionID, GL_SHADER_STORAGE_BUFFER>* chemicalReactionsGLBuffer;
+		static Shader::GLBuffer<ChemicalReactionGL, GL_SHADER_STORAGE_BUFFER>* chemicalReactionsGLBuffer;
 
-		static std::vector<Registry::ChemicalReaction> reactionRegistry;  // cleared after inserted into a OpenGL buffer
+		friend class VoxelBuilder;
 	private:
+		static std::unordered_map<std::string, VoxelTextureMap*> textureMaps;
+		static std::vector<Registry::ChemicalReaction> reactionRegistry;  // cleared after closing registries
 		static uint32_t idCounter;
 		static bool registryClosed;
 	};

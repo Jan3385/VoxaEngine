@@ -78,10 +78,12 @@ VoxelObject::~VoxelObject()
 /// @return returns true if the object should presist, false if it should be removed
 bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 {
-    bool calculateHeat = GameEngine::instance->runHeatSimulation && maxHeatTransfer > 0.1f;
+    bool runHeatSim = GameEngine::instance->runHeatSimulation;
+    bool runChemSim = GameEngine::instance->runChemicalReactions;
+    bool calculateHeat = runHeatSim && maxHeatTransfer > 0.1f;
     if(calculateHeat) maxHeatTransfer = 0.0f;
 
-    //PhysicsObject* thisPhys = dynamic_cast<PhysicsObject*>(this);
+    PhysicsObject* thisPhys = dynamic_cast<PhysicsObject*>(this);
 
     bool foundVoxel = false;
 
@@ -94,8 +96,7 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
 
                 voxel->Step(&chunkMatrix);
                 
-                // heat transfer between voxels (unused thanks to GPU simulation)
-                /*
+                // heat transfer between voxels
                 if(calculateHeat){
                     std::string transitionId = voxel->ShouldTransitionToID();
                     if(!transitionId.empty()){
@@ -149,7 +150,6 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
                         maxHeatTransfer = std::max(maxHeatTransfer, ExchangeHeatBetweenVoxels(voxel, neighbor));
                     }
                 }
-                */
             }
         }
     }
@@ -158,16 +158,52 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
     for(int y = 0; y < static_cast<int>(this->rotatedVoxelBuffer.size()); ++y) {
         for(int x = 0; x < static_cast<int>(this->rotatedVoxelBuffer[y].size()); ++x) {
             Volume::VoxelElement* objectVoxel = this->rotatedVoxelBuffer[y][x];
-            
+            if(!objectVoxel) continue;
+
             Vec2i worldPos = Vec2i(
-                static_cast<int>(this->position.x + x - (this->rotatedVoxelBuffer[0].size() / 2.0f)),
-                static_cast<int>(this->position.y + y - (this->rotatedVoxelBuffer.size() / 2.0f))
+                static_cast<int>(this->position.x + x - (this->rotatedVoxelBuffer[0].size() - 1) / 2),
+                static_cast<int>(this->position.y + y - (this->rotatedVoxelBuffer.size() - 1) / 2)
             );
 
             Volume::VoxelElement* worldVoxel = chunkMatrix.VirtualGetAt(worldPos, false);
+            if(!worldVoxel) continue;
 
-            maxHeatTransfer = std::max(maxHeatTransfer, ExchangeHeatBetweenVoxels(objectVoxel, worldVoxel));
+            if(runHeatSim) maxHeatTransfer = std::max(maxHeatTransfer, ExchangeHeatBetweenVoxels(objectVoxel, worldVoxel));
 
+            if(runChemSim) {
+                for (Registry::ChemicalReactionProperty reaction : objectVoxel->properties->Reactions)
+                {
+                    if(reaction.minTemperature.GetCelsius() > worldVoxel->temperature.GetCelsius()) continue;
+                    if(reaction.catalyst != worldVoxel->properties->id) continue;
+                    
+                    float random = Volume::voxelRandomGenerator.GetFloat(0.0f, 1.0f);
+                    if(reaction.reactionSpeed < random) break;
+
+                    Volume::VoxelElement* newVoxel = CreateVoxelElement(
+                        reaction.to,
+                        worldPos,
+                        objectVoxel->amount,
+                        objectVoxel->temperature,
+                        true
+                    );
+                    this->SetVoxelAt(
+                        worldPos,
+                        newVoxel
+                    );
+
+                    if(reaction.preserveCatalyst) break;
+                    chunkMatrix.PlaceVoxelAt(
+                        worldPos,
+                        reaction.to,
+                        worldVoxel->temperature,
+                        worldVoxel->IsUnmoveableSolid(),
+                        worldVoxel->amount,
+                        true,
+                        false
+                    );
+                }
+                
+            }
         }
     }
 
