@@ -518,7 +518,7 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,
             screenProj
         );
         fontRenderer.RenderText(
-            "Temperature: " + std::to_string(static_cast<int>(voxelAtMousePos->temperature.GetCelsius())) + "C",
+            "State: " + std::to_string(static_cast<int>(voxelAtMousePos->GetState())),
             fontRenderer.pixelFont,
             Vec2f(5, 20),
             1.0f,
@@ -526,9 +526,17 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,
             screenProj
         );
         fontRenderer.RenderText(
-            "Amount: " + std::to_string(static_cast<int>(voxelAtMousePos->amount)),
+            "Temperature: " + std::to_string(static_cast<int>(voxelAtMousePos->temperature.GetCelsius())) + "C",
             fontRenderer.pixelFont,
             Vec2f(5, 30),
+            1.0f,
+            fontColor,
+            screenProj
+        );
+        fontRenderer.RenderText(
+            "Amount: " + std::to_string(static_cast<int>(voxelAtMousePos->amount)),
+            fontRenderer.pixelFont,
+            Vec2f(5, 40),
             1.0f,
             fontColor,
             screenProj
