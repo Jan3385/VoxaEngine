@@ -37,6 +37,9 @@ void GameEngine::Initialize(const EngineConfig& config){
     GameEngine::instance = this;
     GameEngine::renderer->SetVSYNC(config.vsync);
 
+    //TODO: just a temp fix to stop fixed and simulation time from running at the same time, blocking each other
+    this->fixedUpdateTimer = fixedDeltaTime / 2.0f;
+
     this->running = true;
     this->config = config;
 }
@@ -259,7 +262,7 @@ void GameEngine::FixedUpdate(IGame& game)
 {
     this->chunkMatrix.voxelMutex.lock();
     // Run heat and pressure simulation
-    this->chunkMatrix.RunGPUSimulations();
+    this->chunkMatrix.RunGPUSimulations(); //FIXME: ~9ms runtime -> voxel cellular automata suffers
     this->chunkMatrix.voxelMutex.unlock();
 }
 
