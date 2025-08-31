@@ -11,7 +11,7 @@
 #include "Math/Color.h"
 #include "Math/Temperature.h"
 #include "Math/Vector.h"
-#include "Shader/GLBuffer.h"
+#include "Shader/Buffer/GLBuffer.h"
 
 struct IGame;
 

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstring>
-#include "GLVertexArray.h"
+#include "Shader/GLVertexArray.h"
 #include "GLBuffer.h"
 
 namespace Shader{
@@ -22,14 +22,17 @@ inline GLBuffer<T, Target>::GLBuffer(std::string name)
 template <typename T, GLenum Target>
 inline GLBuffer<T, Target>::~GLBuffer()
 {
-    glDeleteBuffers(1, &ID);
+    if(ID != 0)
+        glDeleteBuffers(1, &ID);
     ID = 0;
 }
 
 template <typename T, GLenum Target>
 inline GLBuffer<T, Target>::GLBuffer(GLBuffer &&other) noexcept
-    : ID(other.ID), bufferSize(other.bufferSize), name(std::move(other.name)) 
+    : bufferSize(other.bufferSize)
 {
+    this->name = std::move(other.name);
+    this->ID = other.ID;
     other.ID = 0;
     other.bufferSize = 0;
     other.name.clear();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Shader/GLBuffer.h"
+#include "Shader/Buffer/GLBuffer.h"
 
 namespace Shader{
     template<typename T>

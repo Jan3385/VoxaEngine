@@ -11,8 +11,13 @@ namespace Shader{
     public:
         virtual ~GLBufferBase() = default;
 
+        virtual bool IsInitialized() const { return ID != 0; }
+
         virtual void Bind() const = 0;
         static void Unbind();
+    protected:
+        GLuint ID;
+        std::string name;
     };
 
     /// @brief OpenGL buffer object wrapper
@@ -31,8 +36,6 @@ namespace Shader{
         // Movable
         GLBuffer(GLBuffer&& other) noexcept;
         GLBuffer& operator=(GLBuffer&& other) noexcept;
-
-        bool IsInitialized() const { return ID != 0; }
 
         void Bind() const;
         static void Unbind();
@@ -61,9 +64,7 @@ namespace Shader{
         friend class GLBuffer;
 
     private:
-        GLuint ID;
         GLint bufferSize = 0;
-        std::string name;
     };
 }
 

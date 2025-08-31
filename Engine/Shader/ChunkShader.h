@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Shader/Computing/ComputeShader.h"
-#include "Shader/GLBuffer.h"
+#include "Shader/Buffer/GLBuffer.h"
+#include "Shader/Buffer/GLGroupStorageBuffer.h"
 
 #include <cstdint>
 #include <GL/glew.h>
