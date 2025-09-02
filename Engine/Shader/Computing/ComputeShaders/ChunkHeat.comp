@@ -4,13 +4,16 @@ layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 layout(std430, binding = 0) buffer OutputBuffer {
     float voxelTempsOut[];
 };
-layout(std430, binding = 1) buffer TemperatureBuffer {
+layout(std430, binding = 1) buffer SegmentBuffer {
+    bool shouldUseSegment[];
+};
+layout(std430, binding = 2) buffer TemperatureBuffer {
     float voxelTemps[];
 };
-layout(std430, binding = 2) buffer HeatCapacityBuffer {
+layout(std430, binding = 3) buffer HeatCapacityBuffer {
     float voxelHeatCapacity[];
 };
-layout(std430, binding = 3) buffer ConductivityBuffer {
+layout(std430, binding = 4) buffer ConductivityBuffer {
     float voxelConductivity[];
 };
 
@@ -23,10 +26,10 @@ struct ChunkConnectivityData{
     int _pad[3]; // padding to 32 bytes - 8 * 4 = 32 bytes
 };
 
-layout(std430, binding = 4) buffer ChunkBuffer {
+layout(std430, binding = 5) buffer ChunkBuffer {
     ChunkConnectivityData chunkData[];
 };
-uniform uint NumberOfVoxels; // total number of voxels in the simulation
+uniform uint NumberOfChunks;
 
 #define TEMPERATURE_TRANSITION_SPEED 80
 
@@ -42,27 +45,26 @@ const float MAX_TEMP = 50000.0;
 void main(){
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
-    uint c = gl_GlobalInvocationID.z;   // current chunk
+    uint segment = gl_GlobalInvocationID.z;   // current chunk segment
 
-    uint localX = x % CHUNK_SIZE;
-    uint localY = y % CHUNK_SIZE;
+    if(!shouldUseSegment[segment]){
+        //return; //FIXME: idk doesnt work??
+    }
 
-    uint index = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
-
-    uint numberOfChunks = NumberOfVoxels / CHUNK_SIZE_SQUARED;
+    uint index = chunkData[segment].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
     float sum = 0.0;
 
-    ivec2 localPos = ivec2(localX, localY);
+    ivec2 localPos = ivec2(x, y);
 
     uint NumOfValidDirections = 0;
     for(int i = 0; i < DIRECTION_COUNT; ++i){
         ivec2 testPos = localPos + directions[i];
 
         // get index from position
-        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, c, numberOfChunks);
+        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, chunkData[segment].chunk, NumberOfChunks);
 
-        if (nIndex == uint(-1) || nIndex >= NumberOfVoxels)
+        if (nIndex == uint(-1) || nIndex >= NumberOfChunks * CHUNK_SIZE_SQUARED)
             continue;
 
         ++NumOfValidDirections;

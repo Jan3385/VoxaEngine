@@ -22,21 +22,24 @@ namespace Shader{
               void BindHeatShaderBuffers();
               void BindPressureShaderBuffers();
               void BindReactionShaderBuffers();
+
+              StorageBufferTicket GenerateChunkTicket();
+              void DiscardChunkTicket(StorageBufferTicket ticket);
        private:
               // ----- Buffers -----
               // Chunk connectivity buffer
               GLBuffer<ChunkConnectivityData, GL_SHADER_STORAGE_BUFFER> chunkConnectivityBuffer;
 
               // Buffer for storing temperature in FLOAT as Celsius
-              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelTemperatureBuffer;
+              GLGroupStorageBuffer<float> voxelTemperatureBuffer;
               // Buffer for storing heat capacity in FLOAT
-              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelHeatCapacityBuffer;
+              GLGroupStorageBuffer<float> voxelHeatCapacityBuffer;
               // Buffer for storing heat conductivity in FLOAT
-              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelConductivityBuffer;
+              GLGroupStorageBuffer<float> voxelConductivityBuffer;
               // Buffer for storing pressure in FLOAT
-              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> voxelPressureBuffer;
+              GLGroupStorageBuffer<float> voxelPressureBuffer;
               // Buffer for storing voxel IDs in UINT
-              GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER> voxelIdBuffer;
+              GLGroupStorageBuffer<uint32_t> voxelIdBuffer;
 
               GLBuffer<float, GL_SHADER_STORAGE_BUFFER> floatOutputDataBuffer;
 

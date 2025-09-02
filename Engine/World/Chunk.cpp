@@ -53,10 +53,11 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
             renderData[y][x].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
         }
 
-        this->updateRenderBufferRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
-        this->updateVoxelIdRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
-        this->updateVoxelPressureRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
-        this->updateVoxelTemperatureRanges[y] = Math::Range(0, CHUNK_SIZE - 1);
+        this->updatePressureBuffer = true;
+        this->updateTemperatureBuffer = true;
+        this->updateRenderTemperatureBuffer = true;
+        this->updateVoxelBuffer = true;
+        this->updateRenderBuffer = true;
     }
 }
 
@@ -111,18 +112,6 @@ void Volume::Chunk::InitializeBuffers()
     heatRenderingVAO.Unbind();
     // --------------
 
-    // Create compute shader buffers
-    temperatureVBO = Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Chunk Temperature Buffer");
-    pressureVBO = Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Chunk Pressure Buffer");
-    heatCapacityVBO = Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Chunk Heat Capacity Buffer");
-    heatConductivityVBO = Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Chunk Heat Conductivity Buffer");
-    idVBO = Shader::GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER>("Chunk ID Buffer");
-    temperatureVBO.ClearBuffer(CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
-    pressureVBO.ClearBuffer(CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
-    heatCapacityVBO.ClearBuffer(CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
-    heatConductivityVBO.ClearBuffer(CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
-    idVBO.ClearBuffer(CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
-
     // Update the instance VBO with the new render data
     renderVBO.SetData(*renderData, CHUNK_SIZE_SQUARED, GL_DYNAMIC_DRAW);
 }
@@ -144,6 +133,8 @@ bool Volume::Chunk::ShouldChunkCalculatePressure() const
     //TODO: fix when the vibe is right
     //return forcePressureUpdate;
 }
+
+/*
 void Volume::Chunk::UpdateComputeGPUBuffers()
 {   
     // Update pressure buffer
@@ -235,30 +226,82 @@ void Volume::Chunk::UpdateComputeGPUBuffers()
         this->updateVoxelTemperatureRanges[y].Reset();
     }
 }
+*/
+
+/// @brief Updates the compute GPU buffers for the chunk.
+/// @param pressureBuffer 
+/// @param temperatureBuffer 
+/// @param idBuffer 
+/// @param heatCapacityBuffer 
+/// @param heatConductivityBuffer 
+void Volume::Chunk::UpdateComputeGPUBuffers(
+    Shader::GLGroupStorageBuffer<float>     &pressureBuffer, 
+    Shader::GLGroupStorageBuffer<float>     &temperatureBuffer, 
+    Shader::GLGroupStorageBuffer<uint32_t>  &idBuffer, 
+    Shader::GLGroupStorageBuffer<float>     &heatCapacityBuffer, 
+    Shader::GLGroupStorageBuffer<float>     &heatConductivityBuffer)
+{
+    if(this->bufferTicket == Shader::InvalidTicket){
+        std::cerr << "Error: Trying to update compute GPU buffers of chunk without a valid ticket (" << m_x << ", " << m_y << ")" << std::endl;
+        return;
+    }
+
+    if(updatePressureBuffer){
+        float pressureBufferData[CHUNK_SIZE_SQUARED];
+        for (int y = 0; y < CHUNK_SIZE; ++y) {
+            for (int x = 0; x < CHUNK_SIZE; ++x) {
+                pressureBufferData[y * CHUNK_SIZE + x] = voxels[y][x]->amount;
+            }
+        }
+        pressureBuffer.SetData(this->bufferTicket, pressureBufferData);
+        updatePressureBuffer = false;
+    }
+
+    if(updateTemperatureBuffer){
+        float temperatureBufferData[CHUNK_SIZE_SQUARED];
+        for (int y = 0; y < CHUNK_SIZE; ++y) {
+            for (int x = 0; x < CHUNK_SIZE; ++x) {
+                temperatureBufferData[y * CHUNK_SIZE + x] = voxels[y][x]->temperature.GetCelsius();
+            }
+        }
+        temperatureBuffer.SetData(this->bufferTicket, temperatureBufferData);
+        updateTemperatureBuffer = false;
+    }
+
+    if(updateVoxelBuffer){
+        uint32_t idBufferData[CHUNK_SIZE_SQUARED];
+        float heatCapacityData[CHUNK_SIZE_SQUARED];
+        float heatConductivityData[CHUNK_SIZE_SQUARED];
+
+        for(int y = 0; y < CHUNK_SIZE; ++y) {
+            for(int x = 0; x < CHUNK_SIZE; ++x) {
+                idBufferData[y * CHUNK_SIZE + x] = voxels[y][x]->properties->id;
+                heatCapacityData[y * CHUNK_SIZE + x] = voxels[y][x]->properties->heatCapacity;
+                heatConductivityData[y * CHUNK_SIZE + x] = voxels[y][x]->properties->heatConductivity;
+            }
+        }
+        idBuffer.SetData(this->bufferTicket, idBufferData);
+        heatCapacityBuffer.SetData(this->bufferTicket, heatCapacityData);
+        heatConductivityBuffer.SetData(this->bufferTicket, heatConductivityData);
+        updateVoxelBuffer = false;
+    }
+}
+
 void Volume::Chunk::UpdateRenderGPUBuffers()
 {
     if(!renderVBO.IsInitialized()) return;
-
-    for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
-        if(this->updateRenderBufferRanges[y].IsEmpty()) continue;
-        for(uint8_t x = this->updateRenderBufferRanges[y].Start(); x <= this->updateRenderBufferRanges[y].End(); ++x) {
-            renderData[y][x].color = voxels[y][x]->color.getGLMVec4();
+    if(updateRenderBuffer){
+        for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
+            for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
+                renderData[y][x].color = voxels[y][x]->color.getGLMVec4();
+            }
         }
-    }
-
-    // Update the instance VBO with the new render data
-    for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
-        if(this->updateRenderBufferRanges[y].IsEmpty()) continue;
-
-        renderVBO.UpdateData(
-            CHUNK_SIZE * y + this->updateRenderBufferRanges[y].Start(),
-            &renderData[y][this->updateRenderBufferRanges[y].Start()],
-            this->updateRenderBufferRanges[y].End() - this->updateRenderBufferRanges[y].Start() + 1
+        renderVBO.SetData(
+            &renderData[0][0],
+            CHUNK_SIZE_SQUARED,
+            GL_DYNAMIC_DRAW
         );
-
-        this->updateRenderBufferRanges[y].Reset();
     }
-    renderVBO.Unbind();
 }
 void Volume::Chunk::SetTemperatureAt(Vec2i pos, Temperature temperature)
 {
@@ -269,8 +312,8 @@ void Volume::Chunk::SetTemperatureAt(Vec2i pos, Temperature temperature)
     // set the temperature
     voxels[pos.y][pos.x]->temperature = temperature;
 
-    // Update range
-    updateVoxelTemperatureRanges[pos.y].AddValue(pos.x);
+    updateTemperatureBuffer = true;
+    updateRenderTemperatureBuffer = true;
 }
 void Volume::Chunk::SetPressureAt(Vec2i pos, float pressure)
 {
@@ -281,8 +324,7 @@ void Volume::Chunk::SetPressureAt(Vec2i pos, float pressure)
     // set the pressure
     voxels[pos.y][pos.x]->amount = pressure;
 
-    // Update range
-    updateVoxelPressureRanges[pos.y].AddValue(pos.x);
+    updatePressureBuffer = true;
 }
 void Volume::Chunk::UpdatedVoxelAt(Vec2i pos)
 {
@@ -291,10 +333,10 @@ void Volume::Chunk::UpdatedVoxelAt(Vec2i pos)
     pos.y = pos.y % CHUNK_SIZE;
 
     // Update range
-    updateVoxelIdRanges[pos.y].AddValue(pos.x);
-    updateRenderBufferRanges[pos.y].AddValue(pos.x);
-    updateVoxelTemperatureRanges[pos.y].AddValue(pos.x);
-    updateVoxelPressureRanges[pos.y].AddValue(pos.x);
+    updatePressureBuffer = true;
+    updateTemperatureBuffer = true;
+    updateVoxelBuffer = true;
+    updateRenderBuffer = true;
 }
 void Volume::Chunk::UpdateVoxels(ChunkMatrix *matrix)
 {
@@ -373,41 +415,9 @@ void Volume::Chunk::UpdateColliders(std::vector<Triangle> &triangles, std::vecto
     m_edges.assign(edges.begin(), edges.end());
 }
 
-/**
- * Fills the provided buffers with data for compute shaders.
- * provides flattened arrays of voxel data for shaders
- * Updates the internal temperature OpenGL buffer for the chunk
- */
-void Volume::Chunk::GetShadersData(
-    float temperatureBuffer[], 
-    float heatCapacityBuffer[], 
-    float heatConductivityBuffer[], 
-    float pressureBuffer[], 
-    uint32_t idBuffer[], 
-    int chunkNumber) const
-{
-    #pragma omp parallel for
-    for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
-        for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
-            int index = chunkNumber * Chunk::CHUNK_SIZE_SQUARED + y * Chunk::CHUNK_SIZE + x;
-
-            Volume::VoxelElement* voxel = this->voxels[y][x];
-            const Volume::VoxelProperty* props = voxel->properties;
-
-            temperatureBuffer[index] = voxel->temperature.GetCelsius();
-
-            heatCapacityBuffer[index] = props->heatCapacity;
-            heatConductivityBuffer[index] = props->heatConductivity;
-            pressureBuffer[index] = voxel->amount;
-            
-            idBuffer[index] = props->id |
-                (static_cast<uint32_t>(voxel->GetState() != State::Gas) << 31) |
-                (static_cast<uint32_t>(voxel->GetState() == State::Liquid) << 30);
-        }
-    }
-}
-
-// resets voxel update data, DO NOT CALL WITHOUT LOCKING THE VOXELMUTEX, main use for simulation thread
+/// @brief Resets the voxel update data for the chunk
+/// @warning do not call without locking the voxel mutex
+/// @note main use only for simulation thread (called automatically)
 void Volume::Chunk::SIM_ResetVoxelUpdateData()
 {
     #pragma omp parallel for collapse(2)

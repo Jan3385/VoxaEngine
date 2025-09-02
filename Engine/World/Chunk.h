@@ -14,6 +14,8 @@
 
 #include "Math/Math.h"
 
+#include "Shader/Buffer/GLGroupStorageBuffer.h"
+
 #include "World/Voxel.h"
 #include "World/Particle.h"
 #include "World/ParticleGenerator.h"
@@ -62,13 +64,19 @@ namespace Volume
     	~Chunk();
 
 		void InitializeBuffers();
-		bool IsInitialized() const { return this->idVBO.IsInitialized(); };
+		bool IsInitialized() const { return this->renderTemperatureVBO.IsInitialized(); };
 
 		bool ShouldChunkDelete(AABB Camera) const;
 		bool ShouldChunkCalculateHeat() const;
 		bool ShouldChunkCalculatePressure() const;
 
-		void UpdateComputeGPUBuffers();
+		void UpdateComputeGPUBuffers(
+			Shader::GLGroupStorageBuffer<float> 	&pressureBuffer,
+			Shader::GLGroupStorageBuffer<float> 	&temperatureBuffer,
+			Shader::GLGroupStorageBuffer<uint32_t>	&idBuffer,
+			Shader::GLGroupStorageBuffer<float> 	&heatCapacityBuffer,
+			Shader::GLGroupStorageBuffer<float> 	&heatConductivityBuffer
+		);
 		void UpdateRenderGPUBuffers();
 		void SetTemperatureAt(Vec2i pos, Temperature temperature);
 		void SetPressureAt(Vec2i pos, float pressure);
@@ -82,16 +90,6 @@ namespace Volume
 		b2BodyId GetPhysicsBody() const { return m_physicsBody; }
 		std::vector<Triangle> &GetColliders() { return m_triangleColliders; }
 		std::vector<b2Vec2> &GetEdges() { return m_edges; }
-
-		void GetShadersData(
-			float temperatureBuffer[],
-			float heatCapacityBuffer[],
-			float heatConductivityBuffer[],
-			float pressureBuffer[],
-			uint32_t idBuffer[],
-			int chunkNumber
-		) const;
-
 
     	void SIM_ResetVoxelUpdateData();
     	void Render(bool debugRender);
@@ -107,13 +105,9 @@ namespace Volume
 		Shader::GLVertexArray renderVoxelVAO;
 		Shader::GLVertexArray heatRenderingVAO;
 
-		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> temperatureVBO;
-		Shader::GLBuffer<float, GL_ARRAY_BUFFER> renderTemperatureVBO;
-		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> pressureVBO;
+		Shader::StorageBufferTicket bufferTicket = Shader::InvalidTicket;
 
-		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> heatCapacityVBO;
-		Shader::GLBuffer<float, GL_SHADER_STORAGE_BUFFER> heatConductivityVBO;
-		Shader::GLBuffer<uint32_t, GL_SHADER_STORAGE_BUFFER> idVBO;
+		Shader::GLBuffer<float, GL_ARRAY_BUFFER> renderTemperatureVBO;
     private:
     	short int m_x;
     	short int m_y;	
@@ -129,9 +123,14 @@ namespace Volume
 		VoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
 		Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER> renderVBO;
 		// knows where to update render for chunk
-		Math::Range updateRenderBufferRanges[CHUNK_SIZE]; 
-		Math::Range updateVoxelIdRanges[CHUNK_SIZE];
-		Math::Range updateVoxelTemperatureRanges[CHUNK_SIZE];
-		Math::Range updateVoxelPressureRanges[CHUNK_SIZE];
+		//Math::Range updateRenderBufferRanges[CHUNK_SIZE]; 
+		//Math::Range updateVoxelIdRanges[CHUNK_SIZE];
+		//Math::Range updateVoxelTemperatureRanges[CHUNK_SIZE];
+		//Math::Range updateVoxelPressureRanges[CHUNK_SIZE];
+		bool updateRenderBuffer;
+		bool updateVoxelBuffer;
+		bool updateTemperatureBuffer;
+		bool updateRenderTemperatureBuffer;
+		bool updatePressureBuffer;
     };
 }

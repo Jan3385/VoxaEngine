@@ -85,7 +85,7 @@ Build the project into executable binaries with:
 
 After that, run `VoxaEngine.exe` from **inside** the *build/Games/Game* folder.
 
-## UNIX Linux
+## Linux
 
 > [!IMPORTANT]
 > You need to have installed `CMake` v3.10 or more, `g++` compiler with `Ninja` generator.

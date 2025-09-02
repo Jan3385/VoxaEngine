@@ -63,6 +63,9 @@ namespace Shader{
         template<typename, GLenum>
         friend class GLBuffer;
 
+        template<typename>
+        friend class GLGroupStorageBuffer;
+
     private:
         GLint bufferSize = 0;
     };

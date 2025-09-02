@@ -342,7 +342,8 @@ VoxelProperty VoxelBuilder::Build()
 		.FluidDispursionRate = this->FluidDispursionRate,
 		.Flamability = this->Flamability,
 		.TextureMap = map,
-		.RandomColorTints = this->RandomColorTints
+		.RandomColorTints = this->RandomColorTints,
+		.Reactions = {}
 	};
 }
 

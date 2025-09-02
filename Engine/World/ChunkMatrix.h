@@ -13,6 +13,14 @@ public:
 	ChunkMatrix();
 	~ChunkMatrix();
 
+	void Initialize();
+
+	//Disable copy/move
+	ChunkMatrix(const ChunkMatrix&) = delete;
+	ChunkMatrix& operator=(const ChunkMatrix&) = delete;
+	ChunkMatrix(ChunkMatrix&&) = delete;
+	ChunkMatrix& operator=(ChunkMatrix&&) = delete;
+
 	// cleans the chunkMatrix
 	void cleanup();
 

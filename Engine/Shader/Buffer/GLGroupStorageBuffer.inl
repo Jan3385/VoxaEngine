@@ -1,6 +1,7 @@
 #include "GLGroupStorageBuffer.h"
 template <typename T>
 Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer()
+    : staticSize(false), usage(GL_DYNAMIC_DRAW)
 {
     this->ID = 0;
 }
@@ -15,10 +16,12 @@ Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer()
 /// T -> float; segmentSize = 20; maxExpectedSegments = 8;
 template <typename T>
 inline Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer(std::string name, uint32_t segmentSize, uint32_t maxExpectedSegments, bool staticSize, GLenum usage)
-    : segmentSize(segmentSize), totalSize(segmentSize * maxExpectedSegments), staticSize(staticSize), usage(usage)
+    : staticSize(staticSize), usage(usage)
 {
-    glGenBuffers(1, &ID);
     this->name = name;
+    this->segmentSize = segmentSize;
+    this->totalSize = segmentSize * maxExpectedSegments;
+    glGenBuffers(1, &ID);
     this->Bind();
     glObjectLabel(GL_BUFFER, ID, -1, this->name.c_str());
     glBufferData(GL_SHADER_STORAGE_BUFFER, totalSize * sizeof(T), nullptr, usage);
@@ -31,50 +34,49 @@ inline Shader::GLGroupStorageBuffer<T>::~GLGroupStorageBuffer()
         glDeleteBuffers(1, &ID);
     ID = 0;
 
-    if(!this->SegmentBoolBuffer) return;
+    if(!this->DataStorage) return;
 
-    this->SegmentBoolBuffer->NumberOfLinks--;
-    if(this->SegmentBoolBuffer->NumberOfLinks == 0)
+    this->DataStorage->NumberOfLinks--;
+    if(this->DataStorage->NumberOfLinks == 0)
     {
-        delete this->SegmentBoolBuffer;
-        this->SegmentBoolBuffer = nullptr;
+        delete this->DataStorage;
+        this->DataStorage = nullptr;
     }
 }
 
-/// @brief Generates the segment bool buffer (an array of bools indicating if the segment is used)
-template <typename T>
-inline void Shader::GLGroupStorageBuffer<T>::GenerateSegmentBoolBuffer()
-{
-    this->SegmentBoolBuffer = new SegmentBoolBufferStruct();
-    this->SegmentBoolBuffer->SegmentBoolSSBO = GLBuffer<bool, GL_SHADER_STORAGE_BUFFER>(this->name + " Segment Bool SSBO");
-    uint32_t numberOfSegments = this->totalSize / this->segmentSize;
-    this->SegmentBoolBuffer->SegmentBoolSSBO.SetData(std::vector<bool>(numberOfSegments, false), GL_DYNAMIC_DRAW);
-    this->SegmentBoolBuffer->NumberOfLinks++;
-}
-/// @brief Links the segment bool buffer of another GLGroupStorageBuffer
-template <typename T>
-inline void Shader::GLGroupStorageBuffer<T>::LinkSegmentBoolBuffer(GLGroupStorageBuffer &other)
-{
-    if(this->SegmentBoolBuffer || !other.SegmentBoolBuffer)
-        throw std::runtime_error("[" + this->name + "] Cannot link segment bool buffer! Buffer already set or linking an unset buffer");
-
-    this->SegmentBoolBuffer = other.SegmentBoolBuffer;
-    this->SegmentBoolBuffer->NumberOfLinks++;
-}
 template <typename T>
 inline Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer(GLGroupStorageBuffer &&other) noexcept
 {
     this->ID = other.ID;
     this->name = std::move(other.name);
+    this->segmentSize = other.segmentSize;
+    this->totalSize = other.totalSize;
+    this->staticSize = other.staticSize;
+    this->usage = other.usage;
+    this->DataStorage = other.DataStorage;
     other.ID = 0;
+    other.segmentSize = 0;
+    other.totalSize = 0;
+    other.staticSize = false;
+    other.usage = GL_DYNAMIC_DRAW;
+    other.DataStorage = nullptr;
 }
 template <typename T>
 inline Shader::GLGroupStorageBuffer<T> &Shader::GLGroupStorageBuffer<T>::operator=(GLGroupStorageBuffer &&other) noexcept
 {
     if (this != &other) {
         glDeleteBuffers(1, &ID);
-        ID = other.ID;
+        this->ID = other.ID;
         other.ID = 0;
+        this->name = std::move(other.name);
+        this->segmentSize = other.segmentSize;
+        other.segmentSize = 0;
+        this->totalSize = other.totalSize;
+        other.totalSize = 0;
+        this->staticSize = other.staticSize;
+        this->usage = other.usage;
+        this->DataStorage = other.DataStorage;
+        other.DataStorage = nullptr;
     }
     return *this;
 }
@@ -82,24 +84,26 @@ inline Shader::GLGroupStorageBuffer<T> &Shader::GLGroupStorageBuffer<T>::operato
 /// @brief Generates a ticket for using the storage buffer
 /// @return the Ticket
 template <typename T>
-inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTicket()
+inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTicket() //TODO: move
 {
-    if(!freeTickets.empty()){
-        uint32_t ticket = freeTickets.top();
-        freeTickets.pop();
+    this->AssertDataStorageGenerated();
+
+    if(!this->DataStorage->freeTickets.empty()){
+        uint32_t ticket = this->DataStorage->freeTickets.top();
+        this->DataStorage->freeTickets.pop();
 
         bool isNowUsed = true;
-        this->SegmentBoolBuffer->AvailabilitySSBO.UpdateData(ticket, &isNowUsed, 1);
+        this->DataStorage->SegmentBoolSSBO.UpdateData(ticket, &isNowUsed, 1);
         return ticket;
     }
 
-    uint32_t newTicket = nextTicket++;
+    uint32_t newTicket = this->DataStorage->nextTicket++;
 
     if(newTicket >= this->segmentSize)
-        this->ExpandBufferBySegments(1);
+        this->ExpandBufferBySegments(1, this->usage);
     
     bool isNowUsed = true;
-    this->SegmentBoolBuffer->AvailabilitySSBO.UpdateData(newTicket, &isNowUsed, 1);
+    this->DataStorage->SegmentBoolSSBO.UpdateData(newTicket, &isNowUsed, 1);
 
     return newTicket;
 }
@@ -109,14 +113,17 @@ inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTick
 template <typename T>
 inline void Shader::GLGroupStorageBuffer<T>::DiscardTicket(StorageBufferTicket &ticket)
 {
-    if(ticket >= nextTicket) return; // Invalid ticket
+    this->AssertDataStorageGenerated();
 
-    freeTickets.push(ticket);
+    if(ticket == InvalidTicket) return;
+    if(ticket >= this->DataStorage->nextTicket) return; // Invalid ticket
+
+    this->DataStorage->freeTickets.push(ticket);
 
     bool isNowUsed = false;
-    this->SegmentBoolBuffer->AvailabilitySSBO.UpdateData(ticket, &isNowUsed, 1);
+    this->DataStorage->SegmentBoolSSBO.UpdateData(ticket, &isNowUsed, 1);
 
-    ticket = 0;
+    ticket = InvalidTicket;
 }
 
 /// @brief Sets the data for a specific segment. Data must have the same size as segment size
@@ -187,6 +194,31 @@ inline void Shader::GLGroupStorageBuffer<T>::UpdateData(StorageBufferTicket tick
 }
 
 template <typename T>
+template <GLenum target>
+inline void Shader::GLGroupStorageBuffer<T>::UploadBufferIn(
+    GLuint copyOffset, GLuint writeOffset,
+    GLBuffer<T, target> &buffer, GLuint size) const
+{
+    if(size == 0){
+        size = buffer.bufferSize;
+    }
+
+    if (copyOffset + size > static_cast<GLuint>(buffer.bufferSize)) {
+        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(source)" << std::endl;
+        copyOffset = buffer.bufferSize - size;
+    }
+    if (writeOffset + size > static_cast<GLuint>(this->totalSize)) {
+        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(destination)" << std::endl;
+    }
+
+    glBindBuffer(GL_COPY_READ_BUFFER, buffer.ID);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, this->ID);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, copyOffset * sizeof(T), writeOffset * sizeof(T), size * sizeof(T));
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+}
+
+template <typename T>
 inline void Shader::GLGroupStorageBuffer<T>::BindBufferBase(GLuint binding) const
 {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ID);
@@ -197,10 +229,9 @@ inline void Shader::GLGroupStorageBuffer<T>::BindBufferBase(GLuint binding) cons
 template <typename T>
 inline void Shader::GLGroupStorageBuffer<T>::BindSegmentBoolBufferBase(GLuint binding) const
 {
-    if (!this->SegmentBoolBuffer)
-        throw std::runtime_error("[" + this->name + "] Cannot bind availability buffer! Buffer not generated");
+    this->AssertDataStorageGenerated();
 
-    this->SegmentBoolBuffer->AvailabilitySSBO.BindBufferBase(binding);
+    this->DataStorage->SegmentBoolSSBO.BindBufferBase(binding);
 }
 
 /// @brief Creates a new buffer with a bigger size, copying all data from the old one
@@ -213,7 +244,7 @@ inline void Shader::GLGroupStorageBuffer<T>::ExpandBufferBySegments(uint32_t new
 {
     if(this->staticSize)
         throw std::length_error("[" + this->name + "] Buffer is static size and cannot be expanded by " + std::to_string(newSegments) + " segments.");
-
+    
     this->totalSize += newSegments * segmentSize;
 
     GLuint newSSBO;
@@ -230,14 +261,17 @@ inline void Shader::GLGroupStorageBuffer<T>::ExpandBufferBySegments(uint32_t new
     glDeleteBuffers(1, &ID);
     ID = newSSBO;
 
-    if(!this->SegmentBoolBuffer) return;
+    if(!this->DataStorage) return;
     uint32_t numberOfSegments = this->totalSize / segmentSize;
+
+    if(this->DataStorage->SegmentBoolSSBO.GetSize() == numberOfSegments) return; // Already the right size
+
     GLBuffer<bool, GL_SHADER_STORAGE_BUFFER> newSegmentBoolSSBO(this->name + " Segment Bool SSBO");
 
     newSegmentBoolSSBO.SetData(std::vector<bool>(numberOfSegments, false), GL_DYNAMIC_DRAW);
-    newSegmentBoolSSBO.UploadBufferIn(0, 0, this->SegmentBoolBuffer->SegmentBoolSSBO, 0);
+    newSegmentBoolSSBO.UploadBufferIn(0, 0, this->DataStorage->SegmentBoolSSBO, 0);
 
-    this->SegmentBoolBuffer->SegmentBoolSSBO = std::move(newSegmentBoolSSBO);
+    this->DataStorage->SegmentBoolSSBO = std::move(newSegmentBoolSSBO);
 }
 
 template <typename T>
@@ -249,4 +283,11 @@ inline void Shader::GLGroupStorageBuffer<T>::ClearBuffer(const StorageBufferTick
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ID);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, segmentSize * sizeof(T), zeros.data());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+template <typename T>
+inline void Shader::GLGroupStorageBuffer<T>::AssertDataStorageGenerated() const
+{
+    if (!this->DataStorage)
+        throw std::runtime_error("[" + this->name + "] Data storage not generated! Have you forgot to use GenerateDataStorage or LinkDataStorage?");
 }

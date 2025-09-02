@@ -20,6 +20,13 @@ ChunkMatrix::~ChunkMatrix()
     this->cleanup();
 }
 
+void ChunkMatrix::Initialize()
+{
+    if(!chunkShaderManager) {
+        chunkShaderManager = new Shader::ChunkShaderManager();
+    }
+}
+
 void ChunkMatrix::cleanup()
 {
     if(cleaned) return;
@@ -163,6 +170,8 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
 
     Volume::Chunk* chunk = this->ChunkGeneratorFunction(chunkPos, *this);
 
+    chunk->bufferTicket = this->chunkShaderManager->GenerateChunkTicket();
+
     chunk->lastCheckedCountDown = 20;
 
     uint8_t AssignedGridPass = 0;
@@ -201,6 +210,9 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
         if(this->Grid[i]->GetPos() == pos)
         {
             Chunk *c = this->Grid[i];
+
+            this->chunkShaderManager->DiscardChunkTicket(c->bufferTicket);
+
             this->Grid.erase(this->Grid.begin() + i);
             delete c;
             return;

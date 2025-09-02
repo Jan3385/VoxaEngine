@@ -2,6 +2,7 @@
 #include <cstring>
 #include "Shader/GLVertexArray.h"
 #include "GLBuffer.h"
+#include "GLGroupStorageBuffer.h"
 
 namespace Shader{
 
@@ -98,8 +99,18 @@ template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::SetData(const std::vector<T> &data, GLenum usage)
 {
     this->Bind();
-    glBufferData(Target, data.size() * sizeof(T), data.data(), usage);
-    this->bufferSize = static_cast<GLint>(data.size());
+    if constexpr (!std::is_same_v<T, bool>) {
+        glBufferData(Target, data.size() * sizeof(T), data.data(), usage);
+        this->bufferSize = static_cast<GLint>(data.size());
+    } else{
+        // special behaviour for std::vector<bool>
+        std::vector<uint8_t> boolData(data.size());
+        for (size_t i = 0; i < data.size(); ++i) {
+            boolData[i] = data[i] ? 1 : 0;
+        }
+        glBufferData(Target, boolData.size() * sizeof(uint8_t), boolData.data(), usage);
+        this->bufferSize = static_cast<GLint>(data.size());
+    }
 }
 
 /// @brief Updates a portion of the buffer with new data
@@ -124,7 +135,8 @@ template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const T *data, GLuint size) const
 {
     if (offset + size > static_cast<GLuint>(this->bufferSize)) {
-        std::cerr << "[" << this->name << "] GLBuffer::UpdateData ARR - Error: Attempt to update buffer data out of bounds!" << std::endl;
+        std::cerr << "[" << this->name << "] GLBuffer::UpdateData ARR - Error: Attempt to update buffer data out of bounds!\n";
+        std::cerr << "Offset: " << offset << ", Size: " << size << ", BufferSize: " << this->bufferSize << std::endl;
     }
 
     this->Bind();
