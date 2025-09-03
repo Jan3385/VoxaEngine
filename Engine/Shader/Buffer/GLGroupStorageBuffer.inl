@@ -88,7 +88,7 @@ inline Shader::GLGroupStorageBuffer<T> &Shader::GLGroupStorageBuffer<T>::operato
 /// @brief Generates a ticket for using the storage buffer
 /// @return the Ticket
 template <typename T>
-inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTicket() //TODO: move
+inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTicket()
 {
     this->AssertDataStorageGenerated();
 
