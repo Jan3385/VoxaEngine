@@ -130,6 +130,21 @@ inline void Shader::GLGroupStorageBuffer<T>::DiscardTicket(StorageBufferTicket &
     ticket = InvalidTicket;
 }
 
+template <typename T>
+inline uint32_t Shader::GLGroupStorageBuffer<T>::GetNumOfUsedTickets() const
+{
+    this->AssertDataStorageGenerated();
+    uint32_t start = this->DataStorage->nextTicket;
+
+    // Go down for each unused ticket to find the first used one
+    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> freeTicketsCopy = this->DataStorage->freeTickets;
+    while (!freeTicketsCopy.empty() && freeTicketsCopy.top() == start - 1) {
+        start--;
+        freeTicketsCopy.pop();
+    }
+    return start;
+}
+
 /// @brief Sets the data for a specific segment. Data must have the same size as segment size
 /// @param ticket The ticket for the segment
 /// @param data The array of data to set

@@ -50,6 +50,7 @@ namespace Shader{
         void DiscardTicket(StorageBufferTicket &ticket);
         static constexpr uint32_t TicketToIndex(const StorageBufferTicket ticket) { return ticket; }
 
+        uint32_t GetNumOfUsedTickets() const;
         /// @brief Number of elements in a segment
         uint32_t GetSegmentSize() const { return segmentSize; }
         /// @brief Number of total elements

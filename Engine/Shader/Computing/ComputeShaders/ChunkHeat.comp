@@ -4,8 +4,8 @@ layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 layout(std430, binding = 0) buffer OutputBuffer {
     float voxelTempsOut[];
 };
-layout(std430, binding = 1) buffer SegmentBuffer {
-    bool shouldUseSegment[];
+layout(std430, binding = 1) buffer OutputBufferCompressed {
+    float voxelTempsOutCompressed[];
 };
 layout(std430, binding = 2) buffer TemperatureBuffer {
     float voxelTemps[];
@@ -46,8 +46,9 @@ void main(){
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
     uint c = gl_GlobalInvocationID.z;   // current chunk segment
-    
+
     uint index = chunkData[c].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
+    uint compressedUploadIndex = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
     float sum = 0.0;
 
@@ -88,4 +89,5 @@ void main(){
     newTemp = clamp(newTemp, MIN_TEMP, MAX_TEMP);
 
     voxelTempsOut[index] = newTemp;
+    voxelTempsOutCompressed[compressedUploadIndex] = newTemp;
 }

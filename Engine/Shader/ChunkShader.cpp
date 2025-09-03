@@ -34,6 +34,7 @@ Shader::ChunkShaderManager::ChunkShaderManager()
     this->voxelIdBuffer.LinkDataStorage(this->voxelTemperatureBuffer);
 
     this->floatOutputDataBuffer = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Float Output Data Buffer");
+    this->floatOutputDataBufferCompressed = GLBuffer<float, GL_SHADER_STORAGE_BUFFER>("Float Output Data Buffer Compressed");
     this->chemicalOutputDataBuffer = GLBuffer<ChemicalVoxelChanges, GL_SHADER_STORAGE_BUFFER>("Chemical Output Data Buffer");
 
     this->atomicCounterBuffer = GLBuffer<uint32_t, GL_ATOMIC_COUNTER_BUFFER>("Atomic Counter Buffer");
@@ -122,7 +123,8 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     float *heatOutput = nullptr;
     if(GameEngine::instance->runHeatSimulation)
     {
-        floatOutputDataBuffer.ClearBuffer(bufferNumberOfVoxels, GL_DYNAMIC_DRAW);
+        floatOutputDataBuffer.ClearBuffer(this->voxelTemperatureBuffer.GetTotalSize(), GL_DYNAMIC_DRAW);
+        floatOutputDataBufferCompressed.ClearBuffer(numberOfVoxels, GL_DYNAMIC_DRAW);
         this->BindHeatShaderBuffers();
         this->heatShader->Use();
 
@@ -130,14 +132,14 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
         this->heatShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
 
-        heatOutput = floatOutputDataBuffer.ReadBuffer(bufferNumberOfVoxels);
+        heatOutput = floatOutputDataBufferCompressed.ReadBuffer(numberOfVoxels);
 
         // Update the GPU buffer of the chunk
         this->voxelTemperatureBuffer.UploadBufferIn(0, 0, floatOutputDataBuffer, 0);
         for(uint16_t i = 0; i < chunksToUpdate.size(); ++i){
             Volume::Chunk *c = chunksToUpdate[i];
-            unsigned int offset = c->bufferTicket * Volume::Chunk::CHUNK_SIZE_SQUARED;
-            c->renderTemperatureVBO.UploadBufferIn(offset, 0, floatOutputDataBuffer, Volume::Chunk::CHUNK_SIZE_SQUARED);
+            unsigned int offset = i * Volume::Chunk::CHUNK_SIZE_SQUARED;
+            c->renderTemperatureVBO.UploadBufferIn(offset, 0, floatOutputDataBufferCompressed, Volume::Chunk::CHUNK_SIZE_SQUARED);
         }
     }
 
@@ -152,7 +154,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
         this->pressureShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
 
-        pressureOutput = floatOutputDataBuffer.ReadBuffer(bufferNumberOfVoxels);
+        pressureOutput = floatOutputDataBufferCompressed.ReadBuffer(numberOfVoxels);
 
         // Update the GPU buffer of the chunk
         this->voxelPressureBuffer.UploadBufferIn(0, 0, floatOutputDataBuffer, 0);
@@ -183,16 +185,16 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
     // Apply the heat and pressure updates
     #pragma omp parallel for
-    for (uint32_t i = 0; i < bufferNumberOfVoxels; i++) {
-        uint16_t ticketIndex = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
-        if(!availableTickets.contains(ticketIndex))
-            continue;
+    for (uint32_t i = 0; i < numberOfVoxels; i++) {
+        uint16_t index = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
+        //if(!availableTickets.contains(ticketIndex))
+        //    continue;
 
         uint16_t voxelIndex = i % Volume::Chunk::CHUNK_SIZE_SQUARED;	
         uint16_t x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
-        auto& chunk = ticketToChunkMap[ticketIndex];
+        auto& chunk = chunksToUpdate[index];
         if(heatOutput) chunk->voxels[y][x]->temperature = Volume::Temperature(heatOutput[i]);
         if(pressureOutput) chunk->voxels[y][x]->amount = pressureOutput[i];
 
@@ -235,7 +237,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 void Shader::ChunkShaderManager::BindHeatShaderBuffers()
 {
     floatOutputDataBuffer.BindBufferBase(0);
-    voxelTemperatureBuffer.BindSegmentBoolBufferBase(1);
+    floatOutputDataBufferCompressed.BindBufferBase(1);
     voxelTemperatureBuffer.BindBufferBase(2);
     voxelHeatCapacityBuffer.BindBufferBase(3);
     voxelConductivityBuffer.BindBufferBase(4);
@@ -245,7 +247,7 @@ void Shader::ChunkShaderManager::BindHeatShaderBuffers()
 void Shader::ChunkShaderManager::BindPressureShaderBuffers()
 {
     floatOutputDataBuffer.BindBufferBase(0);
-    voxelIdBuffer.BindSegmentBoolBufferBase(1);
+    floatOutputDataBufferCompressed.BindBufferBase(1);
     voxelIdBuffer.BindBufferBase(2);
     voxelPressureBuffer.BindBufferBase(3);
     chunkConnectivityBuffer.BindBufferBase(4);

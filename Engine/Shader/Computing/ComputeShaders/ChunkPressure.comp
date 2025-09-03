@@ -1,10 +1,10 @@
 layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 
-layout(std430, binding = 0) buffer OutputChunkBuffer {
+layout(std430, binding = 0) buffer OutputBuffer {
     float voxelPressureOut[];
 };
-layout(std430, binding = 1) buffer SegmentBuffer {
-    bool shouldUseSegment[];
+layout(std430, binding = 1) buffer OutputBufferCompressed {
+    float voxelPressureOutCompressed[];
 };
 layout(std430, binding = 2) buffer IdBuffer {
     uint voxelIds[];
@@ -42,6 +42,7 @@ void main(){
     uint c = gl_GlobalInvocationID.z;
 
 	uint index = chunkData[c].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
+    uint compressedUploadIndex = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
 	// if not gas, return
 	if((voxelIds[index] & (0x1 << 31)) != 0){
@@ -75,4 +76,5 @@ void main(){
 	if(NumOfValidDirections == 0) NumOfValidDirections = 1;
     
     voxelPressureOut[index] = voxelPressures[index] - (sum / NumOfValidDirections);
+    voxelPressureOutCompressed[compressedUploadIndex] = voxelPressureOut[index];
 }
