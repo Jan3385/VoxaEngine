@@ -39,13 +39,9 @@ uniform uint NumberOfChunks;
 void main(){
 	uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
-    uint segment = gl_GlobalInvocationID.z;
+    uint c = gl_GlobalInvocationID.z;
 
-    if(!shouldUseSegment[segment]){
-        //return; //FIXME: idk doesnt work??
-    }
-
-	uint index = chunkData[segment].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
+	uint index = chunkData[c].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
 	// if not gas, return
 	if((voxelIds[index] & (0x1 << 31)) != 0){
@@ -61,7 +57,7 @@ void main(){
 	for(int i = 0; i < DIRECTION_COUNT; ++i){
 		ivec2 testPos = localPos + directions[i];
 
-        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, chunkData[segment].chunk, NumberOfChunks);
+        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, chunkData[c].chunk, NumberOfChunks);
 
         if (nIndex == uint(-1) || nIndex >= NumberOfChunks * CHUNK_SIZE_SQUARED)
             continue;

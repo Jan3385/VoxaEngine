@@ -104,11 +104,11 @@ inline void GLBuffer<T, Target>::SetData(const std::vector<T> &data, GLenum usag
         this->bufferSize = static_cast<GLint>(data.size());
     } else{
         // special behaviour for std::vector<bool>
-        std::vector<uint8_t> boolData(data.size());
+        std::vector<uint32_t> boolData(data.size());
         for (size_t i = 0; i < data.size(); ++i) {
             boolData[i] = data[i] ? 1 : 0;
         }
-        glBufferData(Target, boolData.size() * sizeof(uint8_t), boolData.data(), usage);
+        glBufferData(Target, boolData.size() * sizeof(uint32_t), boolData.data(), usage);
         this->bufferSize = static_cast<GLint>(data.size());
     }
 }

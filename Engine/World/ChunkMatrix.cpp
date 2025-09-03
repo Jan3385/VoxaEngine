@@ -192,6 +192,7 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
 
 void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 {
+    this->chunkCreationMutex.lock();
     uint8_t AssignedGridPass = 0;
     if (pos.x % 2 != 0) AssignedGridPass += 1;
     if (pos.y % 2 != 0) AssignedGridPass += 2;
@@ -215,9 +216,12 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
 
             this->Grid.erase(this->Grid.begin() + i);
             delete c;
+            
+            this->chunkCreationMutex.unlock();
             return;
         }
     }
+    this->chunkCreationMutex.unlock();
 }
 
 Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeObjects)
@@ -652,8 +656,7 @@ void ChunkMatrix::UpdateParticles()
 
 void ChunkMatrix::RunGPUSimulations()
 {
-    if(!this->chunkShaderManager) {
-        this->chunkShaderManager = new Shader::ChunkShaderManager();
-    }
+    chunkCreationMutex.lock();
     this->chunkShaderManager->BatchRunChunkShaders(*this);
+    chunkCreationMutex.unlock();
 }

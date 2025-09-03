@@ -1,4 +1,8 @@
 #include "GLGroupStorageBuffer.h"
+
+#include <iostream>
+#include <stack>
+
 template <typename T>
 Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer()
     : staticSize(false), usage(GL_DYNAMIC_DRAW)
@@ -99,7 +103,7 @@ inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTick
 
     uint32_t newTicket = this->DataStorage->nextTicket++;
 
-    if(newTicket >= this->segmentSize)
+    if(newTicket >= this->GetNumberOfSegments())
         this->ExpandBufferBySegments(1, this->usage);
     
     bool isNowUsed = true;

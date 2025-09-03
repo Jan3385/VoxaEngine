@@ -94,7 +94,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     for(uint16_t i = 0; i < static_cast<uint16_t>(chunksToUpdate.size()); ++i){
         // Set up chunk connectivity data
         ChunkConnectivityData data;
-        data.chunk = i;
+        data.chunk = chunksToUpdate[i]->bufferTicket;
         data.chunkUp = -1;
         data.chunkDown = -1;
         data.chunkLeft = -1;
@@ -107,16 +107,16 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         for(uint16_t j = 0; j < static_cast<uint16_t>(chunksToUpdate.size()); ++j){
             Vec2i otherPos = chunksToUpdate[j]->GetPos();
             if(otherPos == posUp)
-                data.chunkUp = j;
+                data.chunkUp = chunksToUpdate[j]->bufferTicket;
             else if(otherPos == posDown)
-                data.chunkDown = j;
+                data.chunkDown = chunksToUpdate[j]->bufferTicket;
             else if(otherPos == posLeft)
-                data.chunkLeft = j;
+                data.chunkLeft = chunksToUpdate[j]->bufferTicket;
             else if(otherPos == posRight)
-                data.chunkRight = j;
+                data.chunkRight = chunksToUpdate[j]->bufferTicket;
         }
         
-        connectivityDataBuffer[chunksToUpdate[i]->bufferTicket] = data;
+        connectivityDataBuffer[i] = data;
         availableTickets.insert(chunksToUpdate[i]->bufferTicket);
         ticketToChunkMap[chunksToUpdate[i]->bufferTicket] = chunksToUpdate[i];
     }
@@ -131,9 +131,9 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         this->BindHeatShaderBuffers();
         this->heatShader->Use();
 
-        this->heatShader->SetUnsignedInt("NumberOfChunks", this->voxelPressureBuffer.GetNumberOfSegments());
+        this->heatShader->SetUnsignedInt("NumberOfChunks", chunksToUpdate.size());
 
-        this->heatShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, this->voxelTemperatureBuffer.GetNumberOfSegments());
+        this->heatShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
 
         heatOutput = floatOutputDataBuffer.ReadBuffer(this->voxelTemperatureBuffer.GetTotalSize());
 
@@ -153,9 +153,10 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         this->BindPressureShaderBuffers();
         this->pressureShader->Use();
         
-        this->pressureShader->SetUnsignedInt("NumberOfChunks", this->voxelPressureBuffer.GetNumberOfSegments());
+        this->pressureShader->SetUnsignedInt("NumberOfChunks", chunksToUpdate.size());
 
         this->pressureShader->Run(Volume::Chunk::CHUNK_SIZE/8, Volume::Chunk::CHUNK_SIZE/4, chunkCount);
+
         pressureOutput = floatOutputDataBuffer.ReadBuffer(this->voxelPressureBuffer.GetTotalSize());
 
         // Update the GPU buffer of the chunk
@@ -187,16 +188,16 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 
     // Apply the heat and pressure updates
     #pragma omp parallel for
-    for (uint32_t i = 0; i < numberOfVoxels; i++) {
-        uint16_t index = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
-        //if(!availableTickets.contains(ticketIndex))
-        //    continue;
+    for (uint32_t i = 0; i < this->voxelPressureBuffer.GetTotalSize(); i++) {
+        uint16_t ticketIndex = i / Volume::Chunk::CHUNK_SIZE_SQUARED;
+        if(!availableTickets.contains(ticketIndex))
+            continue;
 
         uint16_t voxelIndex = i % Volume::Chunk::CHUNK_SIZE_SQUARED;	
         uint16_t x = voxelIndex % Volume::Chunk::CHUNK_SIZE;
         uint16_t y = voxelIndex / Volume::Chunk::CHUNK_SIZE;
 
-        auto& chunk = chunksToUpdate[index];
+        auto& chunk = ticketToChunkMap[ticketIndex];
         if(heatOutput) chunk->voxels[y][x]->temperature = Volume::Temperature(heatOutput[i]);
         if(pressureOutput) chunk->voxels[y][x]->amount = pressureOutput[i];
 

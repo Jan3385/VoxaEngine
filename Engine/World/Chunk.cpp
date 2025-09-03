@@ -245,7 +245,7 @@ void Volume::Chunk::UpdateComputeGPUBuffers(
         std::cerr << "Error: Trying to update compute GPU buffers of chunk without a valid ticket (" << m_x << ", " << m_y << ")" << std::endl;
         return;
     }
-
+    
     if(updatePressureBuffer){
         float pressureBufferData[CHUNK_SIZE_SQUARED];
         for (int y = 0; y < CHUNK_SIZE; ++y) {

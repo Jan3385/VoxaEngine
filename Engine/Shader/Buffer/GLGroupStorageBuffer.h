@@ -15,7 +15,7 @@ namespace Shader{
     protected:
         struct BufferDataStorage{
             GLBuffer<bool, GL_SHADER_STORAGE_BUFFER> SegmentBoolSSBO;
-            uint32_t NumberOfLinks;
+            uint32_t NumberOfLinks = 0;
             uint32_t nextTicket = 0;
             std::priority_queue<
                 uint32_t,
