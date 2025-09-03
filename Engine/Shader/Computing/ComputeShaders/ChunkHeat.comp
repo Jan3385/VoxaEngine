@@ -81,10 +81,11 @@ void main(){
     if(NumOfValidDirections == 0) NumOfValidDirections = 1;
     
     float newTemp = voxelTemps[index] + (sum / NumOfValidDirections);
-    newTemp = clamp(newTemp, MIN_TEMP, MAX_TEMP);
 
     if(isnan(newTemp) || isinf(newTemp))
         newTemp = voxelTemps[index];
+
+    newTemp = clamp(newTemp, MIN_TEMP, MAX_TEMP);
 
     voxelTempsOut[index] = newTemp;
 }

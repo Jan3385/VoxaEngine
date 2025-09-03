@@ -656,7 +656,5 @@ void ChunkMatrix::UpdateParticles()
 
 void ChunkMatrix::RunGPUSimulations()
 {
-    chunkCreationMutex.lock();
     this->chunkShaderManager->BatchRunChunkShaders(*this);
-    chunkCreationMutex.unlock();
 }

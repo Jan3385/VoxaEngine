@@ -262,10 +262,12 @@ void GameEngine::SimulationThread(IGame& game)
 }
 void GameEngine::FixedUpdate(IGame& game)
 {
+    this->chunkMatrix.chunkCreationMutex.lock();
     this->chunkMatrix.voxelMutex.lock();
     // Run heat and pressure simulation
     this->chunkMatrix.RunGPUSimulations(); //FIXME: ~9ms runtime -> voxel cellular automata suffers
     this->chunkMatrix.voxelMutex.unlock();
+    this->chunkMatrix.chunkCreationMutex.unlock();
 }
 
 void GameEngine::PollEvents()
