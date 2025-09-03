@@ -213,7 +213,6 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
     //Place voxels that underwent chemical reactions
     //#pragma omp parallel for ( crashes :( )
     for(uint32_t i = 0; i < reactionsSize; i++) {
-        continue; //FIXME:
         ChemicalVoxelChanges& change = reactionOutput[i];
         std::string stringID = Registry::VoxelRegistry::GetStringID(change.voxelID);
         Vec2i voxelPos =  Vec2i(change.localPosX, change.localPosY) + chunkIndexToPosOffset[change.chunk];

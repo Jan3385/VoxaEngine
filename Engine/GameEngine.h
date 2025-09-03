@@ -94,7 +94,7 @@ public:
     static GameEngine* instance;
 
     static constexpr int MAX_FRAME_RATE = 60;
-    float fixedDeltaTime = 1/30.0;
+    float fixedDeltaTime = 3/30.0; // FIXME: default should be 1/30.0 but its acting wierdly with simulationTime
     float simulationFixedDeltaTime = 1/30.0;
 
     static bool MovementKeysHeld[4]; //W, S, A, D
