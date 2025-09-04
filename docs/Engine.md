@@ -39,9 +39,6 @@ The `GameEngine::fixedDeltaTime` and `GameEngine::voxelFixedDeltaTime` *can* be 
 
 `IGame::Update` provides a standard `deltaTime` variable which works as any standard delta time as it is the time between frames in seconds.
 
-> [!NOTE]
-> The deltaTime is the time between the previous last two frames. This is a technical issue almost all engines have. This can be ignored in most if not all scenarios
-
 ## Misc
 
 `GameEngine::MovementKeysHeld[4]` is a bool array to easily access held movement keys in the following order: [W, S, A, D]
