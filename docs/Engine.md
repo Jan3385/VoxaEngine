@@ -40,4 +40,4 @@ The `GameEngine::fixedDeltaTime` and `GameEngine::voxelFixedDeltaTime` *can* be 
 `IGame::Update` provides a standard `deltaTime` variable which works as any standard delta time as it is the time between frames in milliseconds.
 
 > [!NOTE]
-> The deltaTime is the time between the previous last two frames. This is a technical issue all engines have
+> The deltaTime is the time between the previous last two frames. This is a technical issue almost all engines have
