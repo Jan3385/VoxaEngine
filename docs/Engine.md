@@ -12,7 +12,7 @@ GameEngine engine;
 
 // Config setup before calling *engine.run*
 EngineConfig config;
-config.backgroundColor = RGBA(25, 196, 255, 255);
+config.backgroundColor = RGB(255, 0, 255);
 config.vsync = true;
 // *any other values avalible in config*
 
