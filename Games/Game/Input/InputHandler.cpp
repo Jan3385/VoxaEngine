@@ -19,7 +19,7 @@ void Input::OnMouseScroll(int yOffset)
 void Input::OnKeyboardDown(int key)
 {
     Vec2f worldMousePos = ChunkMatrix::MousePosToWorldPos(
-        GameEngine::instance->mousePos, 
+        GameEngine::instance->GetMousePos(), 
         GameEngine::renderer->GetCameraOffset()
     );
 
@@ -57,7 +57,7 @@ void Input::OnMouseButtonDown(int button)
             );
         }else{
             GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
-                GameEngine::instance->mousePos,
+                GameEngine::instance->GetMousePos(),
                 mouseData.placeVoxelType,
                 GameEngine::renderer->GetCameraOffset(),
                 Volume::Temperature(mouseData.placeVoxelTemperature),
@@ -69,7 +69,7 @@ void Input::OnMouseButtonDown(int button)
         break;
     case SDL_BUTTON_RIGHT:
         GameEngine::instance->chunkMatrix.ExplodeAtMousePosition(
-            GameEngine::instance->mousePos,
+            GameEngine::instance->GetMousePos(),
             15,
             GameEngine::renderer->GetCameraOffset()
         );

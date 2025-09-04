@@ -21,7 +21,7 @@ GameRenderer::GameRenderer()
 }
 
 GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool loadChunksInView)
-    : backgroundColor(backgroundColor), loadChunksInView(loadChunksInView)
+    : loadChunksInView(loadChunksInView), backgroundColor(backgroundColor)
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);

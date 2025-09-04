@@ -90,6 +90,9 @@ private:
 
     std::thread simulationThread;
 
+    // Mouse position in screen coordinates
+    Vec2f mousePos;
+
     VoxelObject *player = nullptr;
 
     float fixedUpdateTimer = 0;
@@ -136,8 +139,8 @@ public:
     bool runPressureSimulation = true;
     bool runChemicalReactions = true;
 
-    // Mouse position in screen coordinates
-    Vec2f mousePos;
+    /// @return Mouse pos in screen space coordinates
+    Vec2f GetMousePos() const { return mousePos; }
 
     ChunkMatrix chunkMatrix;
 

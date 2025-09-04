@@ -105,7 +105,7 @@ void Player::UpdatePlayer(ChunkMatrix& chunkMatrix, float deltaTime)
 
     //update player laser
     this->gunLaserParticleGenerator->position = Vec2f(this->position);
-    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, vector::ZERO) + GameEngine::renderer->GetCameraOffset();
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->GetMousePos(), vector::ZERO) + GameEngine::renderer->GetCameraOffset();
     Vec2f direction = mousePos - (this->position);
     float angle = std::atan2(direction.y, direction.x);
     this->gunLaserParticleGenerator->angle = angle;
@@ -137,7 +137,7 @@ void Player::FireGun(ChunkMatrix &chunkMatrix)
 {
     if(!this->gunEnabled) return;
 
-    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->mousePos, GameEngine::renderer->GetCameraOffset());
+    Vec2f mousePos = chunkMatrix.MousePosToWorldPos(GameEngine::instance->GetMousePos(), GameEngine::renderer->GetCameraOffset());
     
     Vec2f direction = mousePos - this->position;
     

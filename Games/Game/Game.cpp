@@ -49,7 +49,7 @@ void Game::VoxelUpdate(float deltaTime)
 void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 {
     Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(
-        GameEngine::instance->mousePos, 
+        GameEngine::instance->GetMousePos(), 
         GameEngine::renderer->GetCameraOffset()
     );
 
