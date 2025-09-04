@@ -25,3 +25,19 @@ engine.Run(game, config);
 return 0;
 ```
 
+## Player
+
+The player variable inside the GameEngine does **not** have to be set for the game to function properly. Its only usage is during the rendering process, where it is rendered on top of all other objects. *Any player logic is for the user to handle*
+
+## Camera
+
+Camera movement is handeled by the user. The final camera position should be given to the Renderer inside the `GameEngine` using `GameRenderer::SetCameraPosition`. Doing so can load all the chunks in the screen view based on the config `EngineConfig::automaticLoadingOfChunksInView`. If the config is set to false, the chunks in player's view won't load
+
+## DeltaTimes
+
+The `GameEngine::fixedDeltaTime` and `GameEngine::voxelFixedDeltaTime` *can* be modified at any time during the programs lifetime safely but that should be avoided if possible. Changing those values impacts both the Engine's build in fixed & voxel updates but also the ones in `IGame`. These values are also inside the `EngineConfig`, which sets them before running anything
+
+`IGame::Update` provides a standard `deltaTime` variable which works as any standard delta time as it is the time between frames in milliseconds.
+
+> [!NOTE]
+> The deltaTime is the time between the previous last two frames. This is a technical issue all engines have

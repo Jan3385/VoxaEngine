@@ -36,6 +36,7 @@ private:
     void UpdateParticleVBO(ChunkMatrix &chunkMatrix);
 
     AABB Camera;
+    bool loadChunksInView;
 
     Shader::GLVertexArray particleVAO;
     Shader::GLBuffer<Particle::ParticleRenderData, GL_ARRAY_BUFFER> particleVBO;
@@ -46,7 +47,7 @@ private:
     Shader::GLVertexArray cursorVAO;
 public:
     GameRenderer();
-    GameRenderer(SDL_GLContext *glContext, RGB backgroundColor);
+    GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool loadChunksInView);
     ~GameRenderer();
 
     RGB backgroundColor;
@@ -56,6 +57,7 @@ public:
     bool renderMeshData = false;
 
     void SetCameraPosition(Vec2f centerPos);
+    /// @brief Used by the engine during window resize 
     void SetCameraSize(Vec2f size);
     Vec2f GetCameraOffset() const { return this->Camera.corner; }
     AABB GetCameraAABB() const { return this->Camera; }

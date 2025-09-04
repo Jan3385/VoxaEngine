@@ -32,7 +32,7 @@ void GameEngine::Initialize(const EngineConfig& config){
 
     GameEngine::physics = new GamePhysics();
 
-    GameEngine::renderer = new GameRenderer(&glContext, config.backgroundColor);
+    GameEngine::renderer = new GameRenderer(&glContext, config.backgroundColor, config.automaticLoadingOfChunksInView);
 
     this->fixedDeltaTime = config.fixedDeltaTime;
     this->voxelFixedDeltaTime = config.voxelFixedDeltaTime;
@@ -387,7 +387,10 @@ void GameEngine::StartSimulationThread(IGame& game)
     this->simulationThread = std::thread(&GameEngine::SimulationThread, this, std::ref(game));
 }
 
-Volume::Chunk* GameEngine::LoadChunkInView(Vec2i pos)
+/// @brief Loads and generates a chunk at the specified chunk position and adds it to the world
+/// @param pos position in chunk coordinates
+/// @return pointer to the loaded chunk or nullptr if failed
+Volume::Chunk* GameEngine::LoadChunkAtPosition(Vec2i pos)
 {
     if(!chunkMatrix.IsValidChunkPosition(pos)) return nullptr;
     if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;

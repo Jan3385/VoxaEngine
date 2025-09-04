@@ -73,6 +73,7 @@ public:
 struct EngineConfig{
     RGB backgroundColor = RGB(0, 0, 0);
     bool vsync = true;
+    bool automaticLoadingOfChunksInView = true;
     float fixedDeltaTime = 3/30.0;
     float voxelFixedDeltaTime = 1/30.0;
 };
@@ -148,7 +149,7 @@ public:
     VoxelObject *GetPlayer() const { return player; };
     ~GameEngine();
 
-    Volume::Chunk* LoadChunkInView(Vec2i pos);
+    Volume::Chunk* LoadChunkAtPosition(Vec2i pos);
 
     // disallow copying
     GameEngine(const GameEngine&) = delete;

@@ -20,8 +20,8 @@ GameRenderer::GameRenderer()
     
 }
 
-GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor)
-    : backgroundColor(backgroundColor)
+GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool loadChunksInView)
+    : backgroundColor(backgroundColor), loadChunksInView(loadChunksInView)
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -201,7 +201,7 @@ void GameRenderer::SetCameraPosition(Vec2f centerPos)
         }
 
         for (const auto& chunkPos : chunksToLoad) {
-            GameEngine::instance->LoadChunkInView(chunkPos);
+            GameEngine::instance->LoadChunkAtPosition(chunkPos);
         }
     }
 }
