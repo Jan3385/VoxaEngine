@@ -76,7 +76,7 @@ void ImGuiRenderer::RenderDebugPanel()
     ImGui::SetNextItemWidth(ITEM_WIDTH);
     ImGui::DragFloat("Heat sim speed", &GameEngine::instance->fixedDeltaTime, 0.05f, 1/30.0, 4);
     ImGui::SetNextItemWidth(ITEM_WIDTH);
-    ImGui::DragFloat("CA sim speed", &GameEngine::instance->simulationFixedDeltaTime, 0.05f, 1/30.0, 4);
+    ImGui::DragFloat("CA sim speed", &GameEngine::instance->voxelFixedDeltaTime, 0.05f, 1/30.0, 4);
 
     ImGui::Text("Loaded chunks: %lld", GameEngine::instance->chunkMatrix.Grid.size());
 

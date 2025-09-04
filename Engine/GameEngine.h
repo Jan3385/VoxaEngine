@@ -35,9 +35,10 @@ public:
     virtual void OnShutdown() = 0;
     /// @brief Runs once per frame
     virtual void Update(float deltaTime) = 0;
-    /// @brief Runs at a fixed interval. Runs in the main thread after Update
+    /// @brief Runs at the fixed time. Runs in the main thread after Update
     virtual void FixedUpdate(float fixedDeltaTime) = 0;
-    /// @brief Runs at the simulation interval. Runs in a separate thread. Beware of race conditions
+    /// @brief Runs at the voxel fixed time
+    /// @warning Runs on another thread. Beware of race conditions
     virtual void VoxelUpdate(float deltaTime) = 0;
     /// @brief Runs once per frame, after Update. Should be only used to render custom elements
     virtual void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) = 0;
@@ -67,9 +68,13 @@ public:
     virtual void OnWindowResize(int newX, int newY) = 0;
 };
 
+// FIXME: default should be 1/30.0 but its acting wierdly with voxelFixedDeltaTime
+
 struct EngineConfig{
-    RGBA backgroundColor;
-    bool vsync;
+    RGB backgroundColor = RGB(0, 0, 0);
+    bool vsync = true;
+    float fixedDeltaTime = 3/30.0;
+    float voxelFixedDeltaTime = 1/30.0;
 };
 
 class GameEngine
@@ -87,7 +92,7 @@ private:
     VoxelObject *player = nullptr;
 
     float fixedUpdateTimer = 0;
-    std::atomic<float> simulationUpdateTimer = 0;
+    std::atomic<float> voxelUpdateTimer = 0;
 
     //Deletes old chunks and updates steps for voxel celluar automata simulation
     void UpdateGridVoxel(int pass);
@@ -112,8 +117,8 @@ public:
     static GameEngine* instance;
 
     static constexpr int MAX_FRAME_RATE = 60;
-    float fixedDeltaTime = 3/30.0; // FIXME: default should be 1/30.0 but its acting wierdly with simulationTime
-    float simulationFixedDeltaTime = 1/30.0;
+    float fixedDeltaTime;
+    float voxelFixedDeltaTime;
 
     static bool MovementKeysHeld[4]; //W, S, A, D
 

@@ -23,16 +23,19 @@ GameEngine::GameEngine()
 
     //init srand
     std::srand(static_cast<unsigned>(time(NULL)));
-
-    GameEngine::physics = new GamePhysics();
-
-    GameEngine::renderer = new GameRenderer(&glContext);
 }
 
 void GameEngine::Initialize(const EngineConfig& config){
     if(GameEngine::instance != nullptr){
         throw std::runtime_error("GameEngine is already initialized! Cannot run more than one instance.");
     }
+
+    GameEngine::physics = new GamePhysics();
+
+    GameEngine::renderer = new GameRenderer(&glContext, config.backgroundColor);
+
+    this->fixedDeltaTime = config.fixedDeltaTime;
+    this->voxelFixedDeltaTime = config.voxelFixedDeltaTime;
 
     GameEngine::instance = this;
     GameEngine::renderer->SetVSYNC(config.vsync);
@@ -153,7 +156,7 @@ void GameEngine::Update(IGame& game)
 
     // Fixed update
     fixedUpdateTimer += deltaTime;
-    simulationUpdateTimer += deltaTime;
+    voxelUpdateTimer += deltaTime;
     if (fixedUpdateTimer >= fixedDeltaTime)
     {
         FixedUpdate(game);
@@ -174,8 +177,8 @@ void GameEngine::Update(IGame& game)
     if(fixedUpdateTimer > fixedDeltaTime*2.5f)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
     
-    if(simulationUpdateTimer > simulationFixedDeltaTime*2.5f)
-        std::cout << "Voxel Simulation update timer is too high: " << simulationUpdateTimer << std::endl;
+    if(voxelUpdateTimer > voxelFixedDeltaTime*2.5f)
+        std::cout << "Voxel Simulation update timer is too high: " << voxelUpdateTimer << std::endl;
 }
 void GameEngine::UpdateGridVoxel(int pass)
 {    
@@ -192,13 +195,13 @@ void GameEngine::SimulationThread(IGame& game)
 {
     while (this->running)
     {
-        if (simulationUpdateTimer < simulationFixedDeltaTime) {
+        if (voxelUpdateTimer < voxelFixedDeltaTime) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Sleep for a bit to avoid busy waiting
             continue;
         }
             
 
-        simulationUpdateTimer -= simulationFixedDeltaTime;
+        voxelUpdateTimer -= voxelFixedDeltaTime;
 
         chunkMatrix.voxelMutex.lock();
         // Update game objects
@@ -257,7 +260,7 @@ void GameEngine::SimulationThread(IGame& game)
 
         chunkMatrix.UpdateParticles();
 
-        game.VoxelUpdate(this->simulationFixedDeltaTime);
+        game.VoxelUpdate(this->voxelFixedDeltaTime);
     }
 }
 void GameEngine::FixedUpdate(IGame& game)
@@ -375,7 +378,7 @@ void GameEngine::PollEvents()
 void GameEngine::Render()
 {
     chunkMatrix.voxelMutex.lock();
-    GameEngine::renderer->Render(chunkMatrix, this->mousePos, config.backgroundColor, this->currentGame);
+    GameEngine::renderer->Render(chunkMatrix, this->mousePos, this->currentGame);
     chunkMatrix.voxelMutex.unlock();
 }
 

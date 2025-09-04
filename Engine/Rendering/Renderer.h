@@ -46,8 +46,10 @@ private:
     Shader::GLVertexArray cursorVAO;
 public:
     GameRenderer();
-    GameRenderer(SDL_GLContext *glContext);
+    GameRenderer(SDL_GLContext *glContext, RGB backgroundColor);
     ~GameRenderer();
+
+    RGB backgroundColor;
 
     bool showHeatAroundCursor = false;
     bool debugRendering = false;
@@ -64,7 +66,7 @@ public:
 
     void ToggleDebugRendering();
 
-    void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor, IGame *game);
+    void Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, IGame *game);
     void DrawClosedShape(const std::vector<glm::vec2> &points, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
     void DrawClosedShape(const GLuint VAO, const GLsizei size, const glm::vec4 &color, glm::mat4 projection, float lineWidth);
 

@@ -13,7 +13,7 @@ GameEngine engine;
 // Config setup before calling *engine.run*
 EngineConfig config;
 config.backgroundColor = RGBA(25, 196, 255, 255);
-config.vsync = false;
+config.vsync = true;
 // *any other values avalible in config*
 
 // Creating a *Game* struct which is a custom implementation of *IGame*

@@ -20,7 +20,8 @@ GameRenderer::GameRenderer()
     
 }
 
-GameRenderer::GameRenderer(SDL_GLContext *glContext)
+GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor)
+    : backgroundColor(backgroundColor)
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -212,7 +213,7 @@ void GameRenderer::SetCameraSize(Vec2f size)
     this->Camera.size = size;
 }
 
-void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgroundColor, IGame *game)
+void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, IGame *game)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -221,10 +222,10 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, RGBA backgro
 
     // clear screen with a light blue color
     glClearColor(
-        backgroundColor.r / 255.0f,
-        backgroundColor.g / 255.0f,
-        backgroundColor.b / 255.0f,
-        backgroundColor.a / 255.0f
+        this->backgroundColor.r / 255.0f,
+        this->backgroundColor.g / 255.0f,
+        this->backgroundColor.b / 255.0f,
+        1.0f
     );
     glClear(GL_COLOR_BUFFER_BIT);
 
