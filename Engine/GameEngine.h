@@ -29,23 +29,41 @@ struct IGame{
 public:
     virtual ~IGame() = default;
 
+    /// @brief Runs once at the start
     virtual void OnInitialize() = 0;
+    /// @brief Runs once before exiting
     virtual void OnShutdown() = 0;
+    /// @brief Runs once per frame
     virtual void Update(float deltaTime) = 0;
+    /// @brief Runs at a fixed interval. Runs in the main thread after Update
     virtual void FixedUpdate(float fixedDeltaTime) = 0;
+    /// @brief Runs at the simulation interval. Runs in a separate thread. Beware of race conditions
     virtual void VoxelUpdate(float deltaTime) = 0;
+    /// @brief Runs once per frame, after Update. Should be only used to render custom elements
     virtual void Render(glm::mat4 voxelProjection, glm::mat4 viewProjection) = 0;
 
+    /// @brief Runs once at the start, Should be used to insert voxels into the VoxelRegistry
     virtual void RegisterVoxels() = 0;
+    /// @brief Runs once at the start, Should be used to insert voxel objects into the VoxelObjectRegistry.
+    /// Runs after `IGame::RegisterVoxels`
     virtual void RegisterVoxelObjects() = 0;
 
+    /// @brief Called when the mouse is scrolled. Runs once per frame before Update
     virtual void OnMouseScroll(int yOffset) = 0;
+    /// @brief Called when a mouse button is pressed down. Runs once per frame before Update
     virtual void OnMouseButtonDown(int button) = 0;
+    /// @brief Called when a mouse button is released. Runs once per frame before Update
     virtual void OnMouseButtonUp(int button) = 0;
+    /// @brief Called when the mouse is moved. Runs once per frame before Update
+    /// @param x New mouse x position
+    /// @param y New mouse y position
     virtual void OnMouseMove(int x, int y) = 0;
+    /// @brief Called when a keyboard key is pressed down. Runs once per frame before Update
     virtual void OnKeyboardDown(int key) = 0;
+    /// @brief Called when a keyboard key is released. Runs once per frame before Update
     virtual void OnKeyboardUp(int key) = 0;
 
+    /// @brief Called when the window is resized. Runs once per frame before Update
     virtual void OnWindowResize(int newX, int newY) = 0;
 };
 
