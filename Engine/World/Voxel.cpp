@@ -350,8 +350,10 @@ bool VoxelLiquid::Step(ChunkMatrix *matrix)
 			if(this->amount <= 0){
 				if(above->GetState() == State::Gas){
 					DieAndReplace(*matrix, above->id);
+					return true;
 				}else{
 					DieAndReplace(*matrix, "Empty");
+					return true;
 				}
 			}
 			Vec2i localPos = Vec2i(this->position.x % Chunk::CHUNK_SIZE, this->position.y % Chunk::CHUNK_SIZE);

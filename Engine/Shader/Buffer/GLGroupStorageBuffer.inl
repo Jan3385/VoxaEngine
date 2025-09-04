@@ -1,4 +1,8 @@
 #include "GLGroupStorageBuffer.h"
+
+#include <iostream>
+#include <stack>
+
 template <typename T>
 Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer()
     : staticSize(false), usage(GL_DYNAMIC_DRAW)
@@ -84,7 +88,7 @@ inline Shader::GLGroupStorageBuffer<T> &Shader::GLGroupStorageBuffer<T>::operato
 /// @brief Generates a ticket for using the storage buffer
 /// @return the Ticket
 template <typename T>
-inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTicket() //TODO: move
+inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTicket()
 {
     this->AssertDataStorageGenerated();
 
@@ -99,7 +103,7 @@ inline Shader::StorageBufferTicket Shader::GLGroupStorageBuffer<T>::GenerateTick
 
     uint32_t newTicket = this->DataStorage->nextTicket++;
 
-    if(newTicket >= this->segmentSize)
+    if(newTicket >= this->GetNumberOfSegments())
         this->ExpandBufferBySegments(1, this->usage);
     
     bool isNowUsed = true;
@@ -124,6 +128,21 @@ inline void Shader::GLGroupStorageBuffer<T>::DiscardTicket(StorageBufferTicket &
     this->DataStorage->SegmentBoolSSBO.UpdateData(ticket, &isNowUsed, 1);
 
     ticket = InvalidTicket;
+}
+
+template <typename T>
+inline uint32_t Shader::GLGroupStorageBuffer<T>::GetNumOfUsedTickets() const
+{
+    this->AssertDataStorageGenerated();
+    uint32_t start = this->DataStorage->nextTicket;
+
+    // Go down for each unused ticket to find the first used one
+    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> freeTicketsCopy = this->DataStorage->freeTickets;
+    while (!freeTicketsCopy.empty() && freeTicketsCopy.top() == start - 1) {
+        start--;
+        freeTicketsCopy.pop();
+    }
+    return start;
 }
 
 /// @brief Sets the data for a specific segment. Data must have the same size as segment size

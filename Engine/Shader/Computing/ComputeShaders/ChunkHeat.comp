@@ -4,8 +4,8 @@ layout(local_size_x = 8, local_size_y = 4, local_size_z = 1) in;
 layout(std430, binding = 0) buffer OutputBuffer {
     float voxelTempsOut[];
 };
-layout(std430, binding = 1) buffer SegmentBuffer {
-    bool shouldUseSegment[];
+layout(std430, binding = 1) buffer OutputBufferCompressed {
+    float voxelTempsOutCompressed[];
 };
 layout(std430, binding = 2) buffer TemperatureBuffer {
     float voxelTemps[];
@@ -45,13 +45,10 @@ const float MAX_TEMP = 50000.0;
 void main(){
     uint x = gl_GlobalInvocationID.x;
     uint y = gl_GlobalInvocationID.y;
-    uint segment = gl_GlobalInvocationID.z;   // current chunk segment
+    uint c = gl_GlobalInvocationID.z;   // current chunk segment
 
-    if(!shouldUseSegment[segment]){
-        //return; //FIXME: idk doesnt work??
-    }
-
-    uint index = chunkData[segment].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
+    uint index = chunkData[c].chunk * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
+    uint compressedUploadIndex = c * CHUNK_SIZE_SQUARED + y * CHUNK_SIZE + x;
 
     float sum = 0.0;
 
@@ -62,9 +59,9 @@ void main(){
         ivec2 testPos = localPos + directions[i];
 
         // get index from position
-        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, chunkData[segment].chunk, NumberOfChunks);
+        uint nIndex = GetIndexFromLocalPositionAtChunk(testPos, chunkData[c].chunk, NumberOfChunks);
 
-        if (nIndex == uint(-1) || nIndex >= NumberOfChunks * CHUNK_SIZE_SQUARED)
+        if (nIndex == uint(-1))
             continue;
 
         ++NumOfValidDirections;
@@ -85,10 +82,12 @@ void main(){
     if(NumOfValidDirections == 0) NumOfValidDirections = 1;
     
     float newTemp = voxelTemps[index] + (sum / NumOfValidDirections);
-    newTemp = clamp(newTemp, MIN_TEMP, MAX_TEMP);
 
     if(isnan(newTemp) || isinf(newTemp))
         newTemp = voxelTemps[index];
 
+    newTemp = clamp(newTemp, MIN_TEMP, MAX_TEMP);
+
     voxelTempsOut[index] = newTemp;
+    voxelTempsOutCompressed[compressedUploadIndex] = newTemp;
 }

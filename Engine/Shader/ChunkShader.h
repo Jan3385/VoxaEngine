@@ -42,6 +42,7 @@ namespace Shader{
               GLGroupStorageBuffer<uint32_t> voxelIdBuffer;
 
               GLBuffer<float, GL_SHADER_STORAGE_BUFFER> floatOutputDataBuffer;
+              GLBuffer<float, GL_SHADER_STORAGE_BUFFER> floatOutputDataBufferCompressed;
 
               struct ChemicalVoxelChanges {
                      uint32_t voxelID;

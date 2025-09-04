@@ -507,6 +507,9 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,
         Vec2i(mousePos.x, mousePos.y),
         true
     );
+    Volume::Chunk* chunkAtMousePos = chunkMatrix.GetChunkAtWorldPosition(
+        Vec2i(mousePos.x, mousePos.y)
+    );
     glm::vec4 fontColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.6f);
     if(voxelAtMousePos != nullptr){
         fontRenderer.RenderText(
@@ -537,6 +540,22 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,
             "Amount: " + std::to_string(static_cast<int>(voxelAtMousePos->amount)),
             fontRenderer.pixelFont,
             Vec2f(5, 40),
+            1.0f,
+            fontColor,
+            screenProj
+        );
+        fontRenderer.RenderText(
+            "Chunk Ticket: " + std::to_string(static_cast<int>(chunkAtMousePos->bufferTicket)),
+            fontRenderer.pixelFont,
+            Vec2f(5, 50),
+            1.0f,
+            fontColor,
+            screenProj
+        );
+        fontRenderer.RenderText(
+            "Chunk Index: " + std::to_string(chunkMatrix.Grid.size() > 0 ? std::distance(chunkMatrix.Grid.begin(), std::find(chunkMatrix.Grid.begin(), chunkMatrix.Grid.end(), chunkAtMousePos)) : -1),
+            fontRenderer.pixelFont,
+            Vec2f(5, 60),
             1.0f,
             fontColor,
             screenProj

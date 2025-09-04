@@ -50,13 +50,14 @@ Chunk* ChunkGenerator::GenerateChunk(const Vec2i &chunkPos, ChunkMatrix &chunkMa
 Volume::Chunk *ChunkGenerator::FillChunkWith(std::string materialID, bool unmovable, Volume::Chunk *chunk)
 {
     Volume::VoxelProperty *prop = Registry::VoxelRegistry::GetProperties(materialID);
+    bool isGas = prop->Constructor == Registry::DefaultVoxelConstructor::GasVoxel;
     for (int x = 0; x < Chunk::CHUNK_SIZE; ++x) {
         for (int y = 0; y < Chunk::CHUNK_SIZE; ++y) {
             Volume::VoxelElement* voxel = CreateVoxelElement(
                 prop,
                 materialID,
                 Vec2i(x + chunk->GetPos().x * Chunk::CHUNK_SIZE, y + chunk->GetPos().y * Chunk::CHUNK_SIZE),
-                20,
+                isGas ? 1 : 20,
                 Temperature(21),
                 unmovable
             );

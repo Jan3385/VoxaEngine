@@ -15,7 +15,7 @@ namespace Shader{
     protected:
         struct BufferDataStorage{
             GLBuffer<bool, GL_SHADER_STORAGE_BUFFER> SegmentBoolSSBO;
-            uint32_t NumberOfLinks;
+            uint32_t NumberOfLinks = 0;
             uint32_t nextTicket = 0;
             std::priority_queue<
                 uint32_t,
@@ -50,6 +50,7 @@ namespace Shader{
         void DiscardTicket(StorageBufferTicket &ticket);
         static constexpr uint32_t TicketToIndex(const StorageBufferTicket ticket) { return ticket; }
 
+        uint32_t GetNumOfUsedTickets() const;
         /// @brief Number of elements in a segment
         uint32_t GetSegmentSize() const { return segmentSize; }
         /// @brief Number of total elements
