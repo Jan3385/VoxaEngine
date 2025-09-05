@@ -1,5 +1,7 @@
 # Chunks
 
+> NAMESPACE: Volume
+
 <img src="images/chunk-debug.png" alt="Chunk during debug rendering" title="Example of a rendered chunk during debug rendering enabled" width="258">
 
 > [!NOTE]  
@@ -25,3 +27,29 @@ NoDelete is a bit more dangerous. You override the voxel at that position, repla
 > Use `ChunkMatrix::VirtualSetAt_NoDelete` with caution. Failing to do so **will** generate memory leaks in your application, which **will** pile up in an unexpectedly short time
 
 Currently the ChunkMatrix is only a single class inside the `GameEngine` object. In the future (or currently, if I forgot to update this doc) I will want to make the ChunkMatrix a pointer, which will allow swapping them during runtime. It would be like loading a new level or world in any other engine
+
+Before running the engine you are expected to set the `ChunkMatrix::ChunkGeneratorFunction(const Vec2i&, ChunkMatrix&)`. This function is called when generating any chunk in that ChunkMatrix and you are expected to fill that chunk with voxels using `CreateVoxelElement` and `Chunk::voxels[][]`
+
+An example of basic implementation for `ChunkMatrix::ChunkGeneratorFunction(const Vec2i&, ChunkMatrix&)`:
+```cpp
+Volume::Chunk* GenerateChunk(const Vec2i &chunkPos, ChunkMatrix &chunkMatrix){
+    Chunk* chunk = new Chunk(chunkPos);
+    for(int x = 0; x < Chunk::CHUNK_SIZE; ++x){
+        for(int y = 0; y < Chunk::CHUNK_SIZE; ++y){
+            chunk->voxels[y][x] = CreateVoxelElement(
+                "MyElement",
+                Vec2i(x + chunkPos.x * Chunk::CHUNK_SIZE, y + chunkPos.y * Chunk::CHUNK_SIZE),
+                20.0f,
+                Temperature(21.0f),
+                true
+            );
+        }
+    }
+    return chunk;
+}
+// Game is a class inheriting from IGame
+void Game::OnInitialize()
+{
+    GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = GenerateChunk;
+}
+```
