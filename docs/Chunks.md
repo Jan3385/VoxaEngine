@@ -17,7 +17,7 @@ A lot of methods are called directly by the `ChunkMatrix` managing them. You sho
 
 <img src="images/chunkmatrix-debug.png" alt="ChunkMatrix during debug rendering" title="Example of a ChunkMatrix holding multiple chunks" width="512">
 
-ChunkMatrix is a class built for managing and interacting with chunks in a simple way. It's one of the most important classes in the whole engine. It can be compared to a world or a level in other engines. To simplify working with individual voxels in the game, you should use `ChunkMatrix::VirtualGetAt` and `ChunkMatrix::VirtualSetAt` to interact with voxels individually. They are called *Virtual...* since they act like if you were accessing a 2D array that hosts all the voxels in the ChunkMatrix, even though it is not. They also have *_NoLoad* and *_NoDelete* variation, which are used for more fine-tuned control
+ChunkMatrix is a class built for managing and interacting with chunks in a simple way. It's one of the most important classes in the whole engine. It can be compared to a world or a level in other engines. To simplify working with individual voxels in the game, you should use `ChunkMatrix::VirtualGetAt` and `ChunkMatrix::VirtualSetAt` to interact with voxels individually. They are called *Virtual* since they act like if you were accessing a 2D array that hosts all the voxels in the ChunkMatrix, even though it is not. They also have *_NoLoad* and *_NoDelete* variation, which are used for more fine-tuned control
 
 NoLoad means that it won't load any new chunks by itself. If a chunk at that location isn't loaded, you just get an empty pointer
 
