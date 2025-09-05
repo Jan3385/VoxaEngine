@@ -56,3 +56,6 @@ void Game::OnInitialize()
     GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = GenerateChunk;
 }
 ```
+
+> [!IMPORTANT]  
+> Without setting `ChunkMatrix::ChunkGeneratorFunction(const Vec2i&, ChunkMatrix&)`, the GameEngine will throw an error during any attempt to generate a chunk. You **must** set it before any chunk generation can happen to prevent crashes
