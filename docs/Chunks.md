@@ -1,6 +1,6 @@
 ### Chunks
 
-<img src="images/chunk-debug.png" alt="Chunk during debug rendering" title="Example of a rendered chunk during debug rendering enabled" width="48">
+<img src="images/chunk-debug.png" alt="Chunk during debug rendering" title="Example of a rendered chunk during debug rendering enabled" width="128">
 
 > [!NOTE]  
 > Confused why and what are "voxels" doing in a 2D game engine? Please refer to the note in `Engine.md`
@@ -13,7 +13,7 @@ A lot of methods are called directly by the `ChunkMatrix` managing them. You sho
 
 ### ChunkMatrix
 
-<img src="images/chunk-debug.png" alt="ChunkMatrix during debug rendering" title="Example of a ChunkMatrix holding multiple chunks" width="48">
+<img src="images/chunkmatrix-debug.png" alt="ChunkMatrix during debug rendering" title="Example of a ChunkMatrix holding multiple chunks" width="128">
 
 ChunkMatrix is a class build for managing and interacting with chunks in a simple way. Its one of the most important classes in the whole engine. It could be compared to a world or a level in other engines. To simplify working with individual voxels in the game, you should use `ChunkMatrix::VirtualGetAt` and `ChunkMatrix::VirtualSetAt` to interact with voxels individually. They are called *Virtual...* since they act like if you were accesing a 2D array that hosts all the voxels in the ChunkMatrix, even when its not. They also have a *_NoLoad* and *_NoDelete* variation which are used for more fine tuned control. 
 
