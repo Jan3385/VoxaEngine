@@ -1,4 +1,4 @@
-### Chunks
+# Chunks
 
 <img src="images/chunk-debug.png" alt="Chunk during debug rendering" title="Example of a rendered chunk during debug rendering enabled" width="258">
 
@@ -11,7 +11,7 @@ They have their own Box2D meshes, manage their own GPU simulation and rendering 
 
 A lot of methods are called directly by the `ChunkMatrix` managing them. You shouldn't have to mess with them too much out of the box.
 
-### ChunkMatrix
+# ChunkMatrix
 
 <img src="images/chunkmatrix-debug.png" alt="ChunkMatrix during debug rendering" title="Example of a ChunkMatrix holding multiple chunks" width="512">
 
