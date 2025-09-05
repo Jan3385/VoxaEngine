@@ -74,6 +74,7 @@ struct EngineConfig{
     RGB backgroundColor = RGB(0, 0, 0);
     bool vsync = true;
     bool automaticLoadingOfChunksInView = true;
+    bool disableGPUSimulations = false;
     float fixedDeltaTime = 3/30.0;
     float voxelFixedDeltaTime = 1/30.0;
 };

@@ -78,6 +78,7 @@ namespace Volume
 			Shader::GLGroupStorageBuffer<float> 	&heatConductivityBuffer
 		);
 		void UpdateRenderGPUBuffers();
+
 		void SetTemperatureAt(Vec2i pos, Temperature temperature);
 		void SetPressureAt(Vec2i pos, float pressure);
 		void UpdatedVoxelAt(Vec2i pos);
@@ -97,8 +98,6 @@ namespace Volume
 		AABB GetAABB() const;
 
 		uint8_t lastCheckedCountDown = 20;
-		bool forceHeatUpdate = true;
-		bool forcePressureUpdate = true;
 		DirtyRect dirtyRect = DirtyRect();
 
 		// connectivity data
@@ -122,11 +121,7 @@ namespace Volume
 		// rendering data
 		VoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
 		Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER> renderVBO;
-		// knows where to update render for chunk
-		//Math::Range updateRenderBufferRanges[CHUNK_SIZE]; 
-		//Math::Range updateVoxelIdRanges[CHUNK_SIZE];
-		//Math::Range updateVoxelTemperatureRanges[CHUNK_SIZE];
-		//Math::Range updateVoxelPressureRanges[CHUNK_SIZE];
+
 		bool updateRenderBuffer;
 		bool updateVoxelBuffer;
 		bool updateTemperatureBuffer;

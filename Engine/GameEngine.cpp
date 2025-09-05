@@ -40,7 +40,7 @@ void GameEngine::Initialize(const EngineConfig& config){
     GameEngine::instance = this;
     GameEngine::renderer->SetVSYNC(config.vsync);
 
-    this->chunkMatrix.Initialize();
+    this->chunkMatrix.Initialize(config.disableGPUSimulations);
 
     //TODO: just a temp fix to stop fixed and simulation time from running at the same time, blocking each other
     this->fixedUpdateTimer = -fixedDeltaTime / 2.0f;

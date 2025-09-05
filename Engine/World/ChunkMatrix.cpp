@@ -20,9 +20,9 @@ ChunkMatrix::~ChunkMatrix()
     this->cleanup();
 }
 
-void ChunkMatrix::Initialize()
+void ChunkMatrix::Initialize(bool disableGPUSimulations)
 {
-    if(!chunkShaderManager) {
+    if(!chunkShaderManager && !disableGPUSimulations) {
         chunkShaderManager = new Shader::ChunkShaderManager();
     }
 }
@@ -170,7 +170,8 @@ Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
 
     Volume::Chunk* chunk = this->ChunkGeneratorFunction(chunkPos, *this);
 
-    chunk->bufferTicket = this->chunkShaderManager->GenerateChunkTicket();
+    if(this->chunkShaderManager)
+        chunk->bufferTicket = this->chunkShaderManager->GenerateChunkTicket();
 
     chunk->lastCheckedCountDown = 20;
 
@@ -212,7 +213,8 @@ void ChunkMatrix::DeleteChunk(const Vec2i &pos)
         {
             Chunk *c = this->Grid[i];
 
-            this->chunkShaderManager->DiscardChunkTicket(c->bufferTicket);
+            if(this->chunkShaderManager)
+                this->chunkShaderManager->DiscardChunkTicket(c->bufferTicket);
 
             this->Grid.erase(this->Grid.begin() + i);
             delete c;
@@ -342,9 +344,6 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
 
     chunk->dirtyRect.Include(localPos);
     chunk->UpdatedVoxelAt(localPos);
-
-    chunk->forceHeatUpdate = true;
-    chunk->forcePressureUpdate = true;
 }
 // Same as VirtualSetAt but does not delete the old voxel
 void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includeObjects)
@@ -391,9 +390,6 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
 
     chunk->dirtyRect.Include(localPos);
     chunk->UpdatedVoxelAt(localPos);
-
-    chunk->forceHeatUpdate = true;
-    chunk->forcePressureUpdate = true;
 }
 
 void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, 
@@ -656,5 +652,7 @@ void ChunkMatrix::UpdateParticles()
 
 void ChunkMatrix::RunGPUSimulations()
 {
+    if(!this->chunkShaderManager) return;
+
     this->chunkShaderManager->BatchRunChunkShaders(*this);
 }
