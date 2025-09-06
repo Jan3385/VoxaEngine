@@ -13,7 +13,7 @@ public:
 	ChunkMatrix();
 	~ChunkMatrix();
 
-	void Initialize(bool DisableGPUSimulations);
+	void Initialize(bool disableGPUSimulations);
 
 	//Disable copy/move
 	ChunkMatrix(const ChunkMatrix&) = delete;

@@ -33,7 +33,7 @@ Before running the engine you are expected to set the `ChunkMatrix::ChunkGenerat
 An example of basic implementation for `ChunkMatrix::ChunkGeneratorFunction(const Vec2i&, ChunkMatrix&)`:
 ```cpp
 Volume::Chunk* GenerateChunk(const Vec2i &chunkPos, ChunkMatrix &chunkMatrix){
-    Volume::Chunk* chunk = new Chunk(chunkPos);
+    Volume::Chunk* chunk = new Volume::Chunk(chunkPos);
     for(int x = 0; x < Volume::Chunk::CHUNK_SIZE; ++x){
         for(int y = 0; y < Volume::Chunk::CHUNK_SIZE; ++y){
             chunk->voxels[y][x] = CreateVoxelElement(
