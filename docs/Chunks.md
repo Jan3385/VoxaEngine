@@ -4,9 +4,6 @@
 
 <img src="images/chunk-debug.png" alt="Chunk during debug rendering" title="Example of a rendered chunk during debug rendering enabled" width="258">
 
-> [!NOTE]  
-> Confused about why and what "voxels" are doing in a 2D game engine? Please refer to the note in `Engine.md`
-
 Chunks work in a similar way to the popular hit game *Minecraft*. Each chunk holds a 2D array of voxels. The chunk is responsible for managing its voxels
 
 They have their own Box2D meshes, manage their own GPU simulation and rendering data, etc
