@@ -1,4 +1,3 @@
-
 [README]: README.md
 
 > [!NOTE]  
@@ -8,15 +7,15 @@
 
 > NAMESPACE: Volume
 
-## Buildin voxel types
+## Built-in voxel types
 
 > BASE_CLASS: Volume::VoxelElement
 
-<img src="images/voxels.gif" alt="Voxels interacting" title="Showcase of the buildin voxel types interacting" width="440">
+<img src="images/voxels.gif" alt="Voxels interacting" title="Showcase of the built-in voxel types interacting" width="440">
 
-The provided buildin voxel types are a basic selection of voxels made for simulations reminding of real life. If the selection does not fit your usecase you are encouraged to expand the list in your own application by inhereting from the `Volume::VoxelElement` base class
+The provided built-in voxel types are a basic selection of voxels made for simulations reminding of real life. If the selection does not fit your use case you are encouraged to expand the list in your own application by inheriting from the `Volume::VoxelElement` base class
 
-The most important method is the `bool Volume::VoxelElement::Step(ChunkMatrix* matrix)` which may be called each voxel update. It must be overriden to implement any custom functionality like movement. It should return `true` if you expect the element to be also updated the next frame (eg. if it moved this frame). Returning `false` does ***not** guarantee it won't be called the again next or any other frame. You should also change the `bool Volume::VoxelElement::updatedThisFrame` to `true` to prevent the voxel to be updated more than once per frame
+The most important method is the `bool Volume::VoxelElement::Step(ChunkMatrix* matrix)` which may be called each voxel update. It must be overridden to implement any custom functionality like movement. It should return `true` if you expect the element to be also updated the next frame (e.g. if it moved this frame). Returning `false` does ***not** guarantee it won't be called again next or any other frame. You should also change the `bool Volume::VoxelElement::updatedThisFrame` to `true` to prevent the voxel from being updated more than once per frame
 
 Basic implementation of a `MyVoxel` class. The following example will make a voxel that falls straight down until it encounters something solid. After that it deletes itself
 ```cpp
@@ -27,7 +26,7 @@ class MyVoxel : public VoxelElement{
     // defines that the voxel will change the collider mesh of the voxel it is in for physics simulations when moved
     bool ShouldTriggerDirtyColliders() const override { return true; }; 
 
-    // defines that the voxel will be part of that mesh. For eg. it wouldn't make sense to generate a solid mesh for liquids or gasses
+    // defines that the voxel will be part of that mesh. For eg. it wouldn't make sense to generate a solid mesh for liquids or gases
     bool IsSolidCollider() const override { return true; };
 
 	bool Step(ChunkMatrix* matrix) override;
@@ -35,9 +34,9 @@ class MyVoxel : public VoxelElement{
 
 bool Volume::MyVoxel::Step(ChunkMatrix* matrix){
     Vec2i positionBelow = this->position + vector::DOWN;
-    Volume::VoxelElement voxelBelow* = matrix->VirtualGetAt(positionBelow);
+    Volume::VoxelElement* voxelBelow = matrix->VirtualGetAt(positionBelow);
 
-    if(voxelBelow && below->GetState() != Volume::State::Solid){ // Voxel below is not solid
+    if(voxelBelow && voxelBelow->GetState() != Volume::State::Solid){ // Voxel below is not solid
         // Swap with the voxel below
         this->Swap(positionBelow, *matrix);
         return true;
@@ -62,25 +61,25 @@ Works as the ground, sand or any other generally solid substance in sand falling
 
 > Volume::VoxelLiquid
 
-Simple liquid class. Tries to fill in any avalible space formed by `Volume::VoxelSolid`. It tries to force itself to have the same `float Volume::VoxelElement::amount` as a static variable `uint16_t Volume::VoxelLiquid::DesiredAmount` which is set to 20
+Simple liquid class. Tries to fill in any available space formed by `Volume::VoxelSolid`. It tries to force itself to have the same `float Volume::VoxelElement::amount` as a static variable `uint16_t Volume::VoxelLiquid::DesiredAmount` which is set to 20
 
-If the `float Volume::VoxelElement::amount` goes to 0 or below it is replaced by an `Volume::EmptyVoxel`
+If the `float Volume::VoxelElement::amount` goes to 0 or below it is replaced by a `Volume::EmptyVoxel`
 
-Liquids sort themselfes by density
+Liquids sort themselves by density
 
 ### Gas voxel
 
 > Volume::VoxelGas
 
-Tried to fill any space not filled by `Volume::VoxelSolid` or `Volume::VoxelLiquid`. If they reach amount (pressure) below static member variable `double Volume::VoxelSolid::MinimumGasAmount` which is set to 1e-7f they get replaced by an `Volume::EmptyVoxel`
+Tries to fill any space not filled by `Volume::VoxelSolid` or `Volume::VoxelLiquid`. If they reach amount (pressure) below static member variable `double Volume::VoxelSolid::MinimumGasAmount` which is set to 1e-7f they get replaced by a `Volume::EmptyVoxel`
 
-Gasses will sort themselfes by density
+Gases will sort themselves by density
 
 ### Empty voxel
 
 > Volume::EmptyVoxel
 
-Empty voxel is the only pre-registered voxel type avalible. Chunks can **not** have a null pointer inside their voxel 2D arrays, they expect to be always full with actual elements. This gives a purpose for the empty voxel element where you can use it instead of `nullptr` to prevent your aplication from crashing but also defining an empty space. The voxel does not move nor iteracts with anything except when trying to find any gasses to fill its space
+Empty voxel is the only pre-registered voxel type available. Chunks can **not** have a null pointer inside their voxel 2D arrays, they expect to be always full with actual elements. This gives a purpose for the empty voxel element where you can use it instead of `nullptr` to prevent your application from crashing but also defining an empty space. The voxel does not move nor interacts with anything except when trying to find any gases to fill its space
 
 It is also spawned when a `Volume::VoxelGas` reaches a low enough pressure (amount) and replaces the gas
 
