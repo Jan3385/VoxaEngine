@@ -34,14 +34,16 @@ class MyVoxel : public VoxelElement{
 }
 
 bool Volume::MyVoxel::Step(ChunkMatrix* matrix){
-    Vec2i posBelow = this->position + vector::DOWN;
-    Volume::VoxelElement voxelBelow* = matrix->VirtualGetAt(posBelow);
+    Vec2i positionBelow = this->position + vector::DOWN;
+    Volume::VoxelElement voxelBelow* = matrix->VirtualGetAt(positionBelow);
 
-    if(voxelBelow && below->GetState() != Volume::State::Solid){
-        this->Swap(posBelow, *matrix);
+    if(voxelBelow && below->GetState() != Volume::State::Solid){ // Voxel below is not solid
+        // Swap with the voxel below
+        this->Swap(positionBelow, *matrix);
         return true;
     }
-    else{ // Voxel is a solid (or non-existent)
+    else{ // Voxel below is a solid (or non-existent)
+        // Change this voxel for a voxel with id "Empty"
         this->DieAndReplace(*matrix, "Empty");
         return true;
     }
@@ -66,7 +68,7 @@ bool Volume::MyVoxel::Step(ChunkMatrix* matrix){
 
 > Volume::EmptyVoxel
 
-Empty voxel is the only pre-registered voxel type avalible. Chunks can **not** have a null pointer inside their voxel 2D arrays, they expect to be always full with actual elements. This gives a purpose for the empty voxel element where you can use it instead of `nullptr` to prevent your aplication from crashing but also defining an empty space. The voxel does not move nor iteracts with anything
+Empty voxel is the only pre-registered voxel type avalible. Chunks can **not** have a null pointer inside their voxel 2D arrays, they expect to be always full with actual elements. This gives a purpose for the empty voxel element where you can use it instead of `nullptr` to prevent your aplication from crashing but also defining an empty space. The voxel does not move nor iteracts with anything except when trying to find any gasses to fill its space
 
 It is also spawned when a `Volume::VoxelGas` reaches a low enough pressure(amount) and replaces the gas
 

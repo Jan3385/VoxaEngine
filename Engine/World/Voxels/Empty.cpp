@@ -9,9 +9,6 @@ EmptyVoxel::EmptyVoxel(Vec2i position)
     : VoxelElement("Empty", position, Temperature(0), 0) {  };
 
 bool EmptyVoxel::Step(ChunkMatrix* matrix){
-    //return false;
-
-    
     // Search for nearby voxels to fill the empty space
     for(Vec2i dir : vector::AROUND8){
         VoxelElement* next = matrix->VirtualGetAt_NoLoad(this->position + dir);
