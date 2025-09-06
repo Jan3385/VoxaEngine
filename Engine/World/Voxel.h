@@ -49,7 +49,7 @@ namespace Volume {
 
 		const std::string id;
 		const VoxelProperty* properties = nullptr;
-		// worlds space position
+		// world space position
 		Vec2i position;
 		RGBA color;
 		Temperature temperature;
@@ -60,13 +60,11 @@ namespace Volume {
 		float amount;
 
 		// Functions
-		//return the state of the element
+		/// @brief return the state of the element
 		virtual State GetState() const { return State::Gas; };
-		//returm true if the voxel moved
+		/// @brief Should return true if the voxel moved or needs to be updated next frame 
 		virtual bool Step(ChunkMatrix* matrix) { updatedThisFrame = true; return false; };
-		//return true if the voxel acted on another voxel
-		virtual bool ActOnAnother() { return false; };
-		//return the id of the voxel that this voxel should transition to, empty string if no transition
+		/// @brief return the id of the voxel that this voxel should transition to, empty string if no transition
 		std::string ShouldTransitionToID();
 
 		// Swap the voxel with another voxel
@@ -76,15 +74,12 @@ namespace Volume {
 		bool IsMoveableSolid();
 		bool IsUnmoveableSolid();
 
-		// Check if the voxel meets all the conditions to update colliders in its chunk
-		virtual bool ShouldTriggerDirtyColliders() { return false; };
+		/// @brief Returns true if the voxels should trigger dirty colliders when moving
+		virtual bool ShouldTriggerDirtyColliders() const { return false; };
 		virtual bool IsSolidCollider() const { return false; };
 
 		bool IsStateBelowDensity(State state, float density) const;
 		bool IsStateAboveDensity(State state, float density) const;
-
-		static const char* computeShaderPressure;
-		static GLuint computeShaderPressure_Program;
 	};
 
 	//Solid Voxels -> inherit from base voxel class
@@ -102,7 +97,7 @@ namespace Volume {
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		void TryToMoveVoxelBelow(ChunkMatrix* matrix);
 
-		bool ShouldTriggerDirtyColliders() override;
+		bool ShouldTriggerDirtyColliders() const override { return true; };
 		bool IsSolidCollider() const override;
 	private:
 		void StopFalling();

@@ -268,11 +268,6 @@ void VoxelSolid::TryToMoveVoxelBelow(ChunkMatrix *matrix)
     }
 }
 
-bool Volume::VoxelSolid::ShouldTriggerDirtyColliders()
-{
-	return true;
-}
-
 bool Volume::VoxelSolid::IsSolidCollider() const
 {
 	if (isFalling) return false;

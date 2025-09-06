@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include "World/voxelTypes.h"
+#include "World/Voxels/Empty.h"
 #include "GameObjectRegistry.h"
 #include "VoxelRegistry.h"
 #include "GameEngine.h"
