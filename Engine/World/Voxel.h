@@ -115,13 +115,13 @@ namespace Volume {
 		bool StepAlongDirection(ChunkMatrix* matrix, Vec2i direction, short int length);
 		Vec2i GetValidSideSwapPosition(ChunkMatrix& matrix, short int length);
 	private:
-		static constexpr uint16_t DesiredDensity = 20;
+		static constexpr uint16_t DesiredAmount = 20;
 	};
 
 	//Gas voxels -> inherit from base voxel class
-	struct VoxelGas : public VoxelElement {
+	class VoxelGas : public VoxelElement {
 	public:
-		static constexpr double MinimumGasAmount = 0.0000001f;
+		static constexpr double MinimumGasAmount = 1e-7f;
 
 		VoxelGas() : VoxelElement("Oxygen", vector::ZERO, Temperature(21), 1) {};
 		VoxelGas(std::string id, Vec2i position, Temperature temp, float amount);

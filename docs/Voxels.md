@@ -56,13 +56,25 @@ bool Volume::MyVoxel::Step(ChunkMatrix* matrix){
 
 > Volume::VoxelSolid
 
+Works as the ground, sand or any other generally solid substance in sand falling simulations. It has an important member variable called `bool Volume::VoxelSolid::isStatic` which makes the voxel either static (like the ground) or moving (like sand)
+
 ### Liquid voxel
 
 > Volume::VoxelLiquid
 
+Simple liquid class. Tries to fill in any avalible space formed by `Volume::VoxelSolid`. It tries to force itself to have the same `float Volume::VoxelElement::amount` as a static variable `uint16_t Volume::VoxelLiquid::DesiredAmount` which is set to 20
+
+If the `float Volume::VoxelElement::amount` goes to 0 or below it is replaced by an `Volume::EmptyVoxel`
+
+Liquids sort themselfes by density
+
 ### Gas voxel
 
 > Volume::VoxelGas
+
+Tried to fill any space not filled by `Volume::VoxelSolid` or `Volume::VoxelLiquid`. If they reach amount (pressure) below static member variable `double Volume::VoxelSolid::MinimumGasAmount` which is set to 1e-7f they get replaced by an `Volume::EmptyVoxel`
+
+Gasses will sort themselfes by density
 
 ### Empty voxel
 
@@ -70,6 +82,6 @@ bool Volume::MyVoxel::Step(ChunkMatrix* matrix){
 
 Empty voxel is the only pre-registered voxel type avalible. Chunks can **not** have a null pointer inside their voxel 2D arrays, they expect to be always full with actual elements. This gives a purpose for the empty voxel element where you can use it instead of `nullptr` to prevent your aplication from crashing but also defining an empty space. The voxel does not move nor iteracts with anything except when trying to find any gasses to fill its space
 
-It is also spawned when a `Volume::VoxelGas` reaches a low enough pressure(amount) and replaces the gas
+It is also spawned when a `Volume::VoxelGas` reaches a low enough pressure (amount) and replaces the gas
 
 This "element" has zero density, heat conductivity and heat capacity. It is also fully transparent
