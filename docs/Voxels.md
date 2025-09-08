@@ -126,7 +126,7 @@ This particle is a predefined functional class for having solid voxels thrown ar
 
 > BASE_CLASS: Particle::ParticleGenerator
 
-<img src="images/laser-particle-generator.gif.gif" alt="Voxel particle generator laser showcase" title="Showcase of laser particle generator" width="480">
+<img src="images/laser-particle-generator.gif" alt="Voxel particle generator laser showcase" title="Showcase of laser particle generator" width="480">
 
 Particle generators are a class that when created generate particles based on their implementation. When created, they link themselves to the `ChunkMatrix` provided and their `void Particle::ParticleGenerator::TickParticles()` function gets triggered each `GameEngine::voxelFixedDeltaTime`
 
