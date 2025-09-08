@@ -84,3 +84,38 @@ Empty voxel is the only pre-registered voxel type available. Chunks can **not** 
 It is also spawned when a `Volume::VoxelGas` reaches a low enough pressure (amount) and replaces the gas
 
 This "element" has zero density, heat conductivity and heat capacity. It is also fully transparent
+
+## Particles
+
+> NAMESPACE: Particle
+
+> BASE_CLASS: Particle::VoxelParticle
+
+Particles have their own separate storage that it not connected to the 2D voxel array or to any chunk. They are instead tied to a `ChunkMatrix`'s particles vector. They have their own `bool Particle::VoxelParticle::Step(ChunkMatrix *matrix)` function, which should return true when the particle should be deleted. It is recommended but not forced to use the `bool Particle::VoxelParticle::ShouldDie() const` as a return value or for a check so the particle gets deleted when needed.
+
+The particle's step function is called in the voxel simulation thread after preforming the cellular automata step. The Step function is to update the `Vec2f Particle::VoxelParticle::position` member variable for any movement with additional checks. You can use `Volume::VoxelElement* ChunkMatrix::VirtualGetAt(Vec2i, bool)`, `void ChunkMatrix::VirtualSetAt(Vec2i, bool)` and `void ChunkMatrix::PlaceVoxelAt(...)` to interact with the world.
+
+Minimal step function may look like the following:
+```cpp
+bool MyCustomParticle::Step(ChunkMatrix *matrix)
+{
+    // falls staight down, ignoring everything. 1 voxel per `GameEngine::voxelFixedDeltaTime`
+    this->position += vector::DOWN;
+
+    // reduce lifetime each update to make the particle die off after a predefined time
+    if(!isTimeImmortal)
+        this->particleLifeTime--;
+
+    return this->ShouldDie();
+}
+```
+
+Each particle is rendered on the top most layer of the rendering step.
+
+### Solid Falling Particle
+
+> Particle::SolidFallingParticle
+
+<img src="images/solid-particles.gif" alt="Voxel particles showcase" title="Showcase of solid falling particles" width="440">
+
+This particle is a predefined functional class for having solid voxels thrown around and fly though the air. They hold a pointer to a `Volume::VoxelElement` inside and they fall utilizing gravity. When they land (or fly for too long), they die and spawn a voxel into the world based on the voxel inside `Volume::VoxelElement* Particle::SolidFallingParticle::voxel`. They are used for example when making explosions a bit more realistic.

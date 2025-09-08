@@ -34,18 +34,18 @@ Particle::SolidFallingParticle::~SolidFallingParticle()
 bool SolidFallingParticle::Step(ChunkMatrix *matrix)
 {
     //new position variables
-    this->fPosition += m_dPosition;
+    this->position += m_dPosition;
 
     //Adjust position according to gravity
     m_dPosition = m_dPosition + Vec2f(0, Particle::GRAVITY); // Apply gravity
 
-    Vec2f futurePos = fPosition + m_dPosition;
+    Vec2f futurePos = position + m_dPosition;
 
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
     if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
     {
         //check if the position for the particle exists
-    	if (!matrix->IsValidWorldPosition(this->fPosition))
+    	if (!matrix->IsValidWorldPosition(this->position))
     	{
     		return true;
     	}
@@ -53,7 +53,7 @@ bool SolidFallingParticle::Step(ChunkMatrix *matrix)
         if(this->precision)
             this->SetNextValidPosition(matrix);
 
-		matrix->PlaceVoxelAt(this->fPosition, voxel->id, voxel->temperature, false, voxel->amount, false);
+		matrix->PlaceVoxelAt(this->position, voxel->id, voxel->temperature, false, voxel->amount, false);
         delete voxel;
         voxel = nullptr;
 
@@ -72,14 +72,14 @@ void Particle::SolidFallingParticle::SetNextValidPosition(ChunkMatrix *matrix)
 
     m_dPosition = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y)); // Normalize the velocity vector
 
-    Vec2f futurePos = fPosition + m_dPosition;
+    Vec2f futurePos = position + m_dPosition;
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
 
     while(futureVoxel && futureVoxel->GetState() != Volume::State::Solid && iteration < 5000)
     {
         // Move the particle in the direction of the velocity vector until we hit a solid voxel
-        this->fPosition = futurePos;
-        futurePos = fPosition + m_dPosition;
+        this->position = futurePos;
+        futurePos = position + m_dPosition;
         futureVoxel = matrix->VirtualGetAt(futurePos);
         iteration++;
     }
@@ -87,7 +87,7 @@ void Particle::SolidFallingParticle::SetNextValidPosition(ChunkMatrix *matrix)
 
 Vec2f Particle::SolidFallingParticle::GetPosition() const
 {
-    return Vec2f((Vec2i)this->fPosition);
+    return Vec2f((Vec2i)this->position);
 }
 
 // No need to delete voxel pointer, done automatically

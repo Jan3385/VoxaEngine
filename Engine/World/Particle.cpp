@@ -7,13 +7,13 @@ using namespace Particle;
 
 VoxelParticle::VoxelParticle()
 {
-    this->fPosition = Vec2f(0, 0);
+    this->position = Vec2f(0, 0);
     this->color = RGBA(255, 0, 255, 255);
 }
 
 VoxelParticle::VoxelParticle(const Vec2f &position, RGBA color)
 {
-    this->fPosition = position;
+    this->position = position;
     this->color = color;
 }
 

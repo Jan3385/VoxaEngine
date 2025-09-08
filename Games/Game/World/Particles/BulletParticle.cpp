@@ -28,7 +28,7 @@ Particle::BulletParticle::BulletParticle(Vec2f position, float angle, float spee
 {
     this->particleLifeTime = 600; 
     this->color = RGBA(255, 255, 0, 255);
-    this->fPosition = position;
+    this->position = position;
 }
 
 Particle::BulletParticle::~BulletParticle()
@@ -36,12 +36,12 @@ Particle::BulletParticle::~BulletParticle()
 }
 bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
     //new position variables
-    this->fPosition += m_dPosition;
+    this->position += m_dPosition;
 
     //Adjust position according to gravity
     m_dPosition = m_dPosition + Vec2f(0, Particle::GRAVITY * this->gravityMultiplier); // Apply gravity
 
-    Vec2f futurePos = fPosition + m_dPosition;
+    Vec2f futurePos = position + m_dPosition;
 
     //40% chance to create a falling particle in opposite direction
     if (rand() % 100 < 40)
@@ -51,7 +51,7 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
             std::atan2(m_dPosition.y, m_dPosition.x) + M_PI + variation(60)/100.0f,
             1.0f + variation(5)/10.0f,
             0.3f,
-            fPosition,
+            position,
             40 + variation(20)
         );
     }
@@ -63,21 +63,21 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
             rand() % 360 * M_PI / 180.0f,
             1.3f + variation(5)/10.0f,
             0.1f,
-            fPosition,
+            position,
             35 + variation(25)
         );
     }
 
     Vec2f normalizedVelocity = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y));
-    Vec2f stepPosition = fPosition + normalizedVelocity;
+    Vec2f stepPosition = position + normalizedVelocity;
     
-    float futureDistanceSQRT = (futurePos - fPosition).LengthSquared();
-    float stepDistanceSQRT = (stepPosition - fPosition).LengthSquared();
+    float futureDistanceSQRT = (futurePos - position).LengthSquared();
+    float stepDistanceSQRT = (stepPosition - position).LengthSquared();
 
     while (stepDistanceSQRT < futureDistanceSQRT)
     {
         stepPosition += normalizedVelocity;
-        stepDistanceSQRT = (stepPosition - fPosition).LengthSquared();
+        stepDistanceSQRT = (stepPosition - position).LengthSquared();
 
         Volume::VoxelElement *stepVoxel = matrix->VirtualGetAt(stepPosition, true);
         if (!stepVoxel || stepVoxel->GetState() == Volume::State::Solid ||this->ShouldDie()){
@@ -86,7 +86,7 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
 
             matrix->PlaceVoxelAt(stepPosition, "Iron", Volume::Temperature(100*this->damage), false, 1.0f, true, false);
 
-            this->fPosition = stepPosition;
+            this->position = stepPosition;
 
             return true;
         }
@@ -99,7 +99,7 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
 }
 
 Vec2f Particle::BulletParticle::GetPosition() const {
-    return Vec2f((Vec2i)this->fPosition);
+    return Vec2f((Vec2i)this->position);
 }
 
 Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,

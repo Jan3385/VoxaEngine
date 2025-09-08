@@ -7,7 +7,7 @@ Particle::FallingParticle::FallingParticle() :
     VoxelParticle(),
     m_dPosition(0, 0)
 {
-    this->fPosition = Vec2f(0, 0);
+    this->position = Vec2f(0, 0);
     this->color = RGBA(255, 255, 255, 255);
 }
 
@@ -16,7 +16,7 @@ Particle::FallingParticle::FallingParticle(Vec2f position, RGBA color, float ang
     m_dPosition(speed * cos(angle), speed * sin(angle)),
     gravityMultiplier(gravityMultiplier)
 {
-    this->fPosition = position;
+    this->position = position;
     this->color = color;
 }
 
@@ -27,12 +27,12 @@ Particle::FallingParticle::~FallingParticle()
 bool Particle::FallingParticle::Step(ChunkMatrix *matrix)
 { 
     //new position variables
-    this->fPosition += m_dPosition;
+    this->position += m_dPosition;
 
     //Adjust position according to gravity
     m_dPosition = m_dPosition + Vec2f(0, Particle::GRAVITY * this->gravityMultiplier); // Apply gravity
 
-    Vec2f futurePos = fPosition + m_dPosition;
+    Vec2f futurePos = position + m_dPosition;
 
     Volume::VoxelElement *futureVoxel = matrix->VirtualGetAt(futurePos);
     if (!futureVoxel || futureVoxel->GetState() == Volume::State::Solid || this->ShouldDie())
@@ -48,7 +48,7 @@ bool Particle::FallingParticle::Step(ChunkMatrix *matrix)
 
 Vec2f Particle::FallingParticle::GetPosition() const
 {
-    return Vec2f((Vec2i)this->fPosition);
+    return Vec2f((Vec2i)this->position);
 }
 
 Particle::FallingParticle* Particle::AddFallingParticle(ChunkMatrix *matrix, 

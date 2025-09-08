@@ -29,10 +29,10 @@ namespace Particle{
             particleLifeTime--;
             return ShouldDie(); 
         };
-        virtual Vec2f GetPosition() const { return fPosition; };
+        virtual Vec2f GetPosition() const { return position; };
     protected:
         bool ShouldDie() const { return particleLifeTime <= 0 && !isTimeImmortal; };
-        Vec2f fPosition;
+        Vec2f position;
 	};
 
     void AddParticle(ChunkMatrix *matrix, RGBA color, const Vec2f& position, uint16_t lifetime);
