@@ -43,7 +43,13 @@ void Particle::LaserGenerator::TickParticles()
         }
         // 10% chance to increase lifetime by one simulation tick
         bool increaseLifetime = rand() % 10 == 0;
-        Particle::AddParticle(matrix, RGBA(249, 56, 39, alpha+alphaOffset), currentPos, 1+increaseLifetime);
+
+        Particle::VoxelParticle *particle = new Particle::VoxelParticle(
+            currentPos,
+            RGBA(249, 56, 39, alpha+alphaOffset)
+        );
+        particle->particleLifeTime = 1+increaseLifetime;
+        matrix->AddParticle(particle);
         // --------------------------
 
         if (currentPos == endPosition) break;

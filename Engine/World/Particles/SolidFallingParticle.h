@@ -21,6 +21,4 @@ namespace Particle{
         void SetNextValidPosition(ChunkMatrix *matrix);
         Vec2f GetPosition() const;
 	};
-    
-    Particle::SolidFallingParticle *AddSolidFallingParticle(ChunkMatrix *matrix, Volume::VoxelElement *voxel, float angle, float speed, bool precision = false);
 }

@@ -141,13 +141,13 @@ void Player::FireGun(ChunkMatrix &chunkMatrix)
     
     Vec2f direction = mousePos - this->position;
     
-    Particle::AddBulletParticle(
-        &chunkMatrix,
+    Particle::BulletParticle *bullet = new Particle::BulletParticle(
+        position,
         std::atan2(direction.y, direction.x),
         20.0f,
-        3.0f,
-        this->position
+        3.0f
     );
+    chunkMatrix.AddParticle(bullet);
 }
 bool Player::ShouldRender() const
 {

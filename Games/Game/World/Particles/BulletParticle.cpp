@@ -46,26 +46,28 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
     //40% chance to create a falling particle in opposite direction
     if (rand() % 100 < 40)
     {
-        Particle::AddFallingParticle(matrix, 
+        VoxelParticle *particle = new FallingParticle(
+            position,
             RGBA(240+variation(10), 240+variation(10), 240+variation(10), 100+variation(15)),
             std::atan2(m_dPosition.y, m_dPosition.x) + M_PI + variation(60)/100.0f,
             1.0f + variation(5)/10.0f,
-            0.3f,
-            position,
-            40 + variation(20)
+            0.3f
         );
+        particle->particleLifeTime = 40 + variation(20);
+        matrix->AddParticle(particle);
     }
 
     // 20% chance to create a random red falling particle
     if (rand() % 100 < 20){
-        Particle::AddFallingParticle(matrix, 
+        VoxelParticle *particle = new FallingParticle(
+            position,
             RGBA(240+variation(15), 90+variation(40), 2+variation(2), 205+variation(15)),
             rand() % 360 * M_PI / 180.0f,
             1.3f + variation(5)/10.0f,
-            0.1f,
-            position,
-            35 + variation(25)
+            0.1f
         );
+        particle->particleLifeTime = 35 + variation(25);
+        matrix->AddParticle(particle);
     }
 
     Vec2f normalizedVelocity = m_dPosition / std::max(std::abs(m_dPosition.x), std::abs(m_dPosition.y));
@@ -100,13 +102,4 @@ bool Particle::BulletParticle::Step(ChunkMatrix* matrix){
 
 Vec2f Particle::BulletParticle::GetPosition() const {
     return Vec2f((Vec2i)this->position);
-}
-
-Particle::BulletParticle* Particle::AddBulletParticle(ChunkMatrix *matrix,
-    float angle, float speed, float damage, Vec2f position)
-{
-    BulletParticle *particle = new BulletParticle(position, angle, speed, damage);
-    matrix->newParticles.push_back(particle);
-
-    return particle;
 }

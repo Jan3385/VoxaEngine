@@ -24,15 +24,16 @@ public:
 	// cleans the chunkMatrix
 	void cleanup();
 
-	//mutex for changing the voxels
+	// mutex for changing voxels
 	std::mutex voxelMutex;
+	// mutex for creating/deleting chunks
 	std::mutex chunkCreationMutex;
 	//not precomputed array of chunks
 	std::vector<Volume::Chunk*> Grid;
 	//precomputed grids for simulation passing -> 0 - 3 passees
 	std::vector<Volume::Chunk*> GridSegmented[4];
 
-	std::vector<Particle::VoxelParticle*> newParticles;
+	void AddParticle(Particle::VoxelParticle* particle);
 	std::vector<Particle::VoxelParticle*> particles;
 	std::vector<Particle::ParticleGenerator*> particleGenerators;
 
@@ -88,6 +89,8 @@ public:
 private:
 	Random randomGenerator;
 	bool cleaned = false;
+
+	std::vector<Particle::VoxelParticle*> newParticles;
 
 	// Chunk shader manager for handling chunk-related shaders
 	Shader::ChunkShaderManager *chunkShaderManager = nullptr;

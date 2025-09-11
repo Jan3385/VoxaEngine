@@ -17,8 +17,5 @@ namespace Particle{
 		bool Step(ChunkMatrix* matrix) override;
         Vec2f GetPosition() const;
 	};
-    
-    Particle::FallingParticle* AddFallingParticle(ChunkMatrix *matrix, RGBA color, 
-        float angle, float speed, float gravityMultiplier,
-        Vec2f position, float particleLifetime);
+
 }

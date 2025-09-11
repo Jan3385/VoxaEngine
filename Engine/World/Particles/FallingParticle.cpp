@@ -50,16 +50,3 @@ Vec2f Particle::FallingParticle::GetPosition() const
 {
     return Vec2f((Vec2i)this->position);
 }
-
-Particle::FallingParticle* Particle::AddFallingParticle(ChunkMatrix *matrix, 
-    RGBA color, float angle, 
-    float speed, float gravityMultiplier,
-    Vec2f position, float particleLifetime)
-{
-    FallingParticle *particle = new FallingParticle(position, color, angle, speed, gravityMultiplier);
-    particle->particleLifeTime = particleLifetime;
-
-    matrix->newParticles.push_back(particle);
-
-    return particle;
-}

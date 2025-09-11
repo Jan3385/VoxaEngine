@@ -83,6 +83,11 @@ Vec2f ChunkMatrix::MousePosToWorldPos(const Vec2f &mousePos, const Vec2f &camera
     );
 }
 
+void ChunkMatrix::AddParticle(Particle::VoxelParticle *particle)
+{
+    this->newParticles.push_back(particle);
+}
+
 Volume::Chunk *ChunkMatrix::GetChunkAtWorldPosition(const Vec2f &pos)
 {
     Vec2i chunkPos = WorldToChunkPosition(pos);
@@ -598,7 +603,13 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
                     double smallAngleDeviation = this->randomGenerator.GetFloat(-0.05f, 0.05f);
                     
                     voxel->position = Vec2f(currentPos);
-                    Particle::AddSolidFallingParticle(this, voxel, angle + smallAngleDeviation, (radius*1.1f - j)*0.7f);
+                    Particle::SolidFallingParticle* particle = new Particle::SolidFallingParticle(
+                        voxel,
+                        angle + smallAngleDeviation,
+                        (radius*1.1f - j)*0.7f
+                    );
+                    particle->precision = false;
+                    this->AddParticle(particle);
 
                     VoxelElement *fireVoxel = CreateVoxelElement("Fire", currentPos, 1.3f, Temperature(radius * 100), false);
                     

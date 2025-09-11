@@ -34,6 +34,4 @@ namespace Particle{
         bool ShouldDie() const { return particleLifeTime <= 0 && !isTimeImmortal; };
         Vec2f position;
 	};
-
-    void AddParticle(ChunkMatrix *matrix, RGBA color, const Vec2f& position, uint16_t lifetime);
 }

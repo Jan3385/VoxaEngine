@@ -17,7 +17,4 @@ namespace Particle{
 		bool Step(ChunkMatrix* matrix) override;
         Vec2f GetPosition() const;
 	};
-    
-    Particle::BulletParticle* AddBulletParticle(ChunkMatrix *matrix,
-        float angle, float speed, float damage, Vec2f position);
 }
