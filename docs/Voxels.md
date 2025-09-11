@@ -110,9 +110,26 @@ bool MyCustomParticle::Step(ChunkMatrix *matrix)
 }
 ```
 
-TODO: add info about particle factories when done
-
 Each particle is rendered on the top most layer of the rendering step.
+
+#### Creating Particles
+
+Particles should be created as a new object and then passed into the `void ChunkMatrix::AddParticle(Particle::VoxelParticle *particle)`, which will insert it into the world
+
+Basic particle creation may look like the following:
+
+```cpp
+// ChunkMatrix *matrix; <- avalible world ChunkMatrix from elsewhere
+
+Particle::MyVoxelParticle particle = new Particle::MyVoxelParticle(
+    Vec2f(100.0f, 100.0f),
+    RGBA(255, 0, 255, 255),
+    /* Any other parameters in you constructor */
+);
+
+// This will insert the particle into the world on the next frame
+matrix->AddParticle(particle);
+```
 
 ### Solid Falling Particle
 
