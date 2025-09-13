@@ -69,7 +69,7 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 		VoxelBuilder(DefaultVoxelConstructor::Custom, 0, 0, 0)
 			.SetName("Vacuum")
 			.SetColor(RGBA(0, 0, 0, 0))
-			.SetFluidDispursionRate(0)
+			.SetFluidDispersionRate(0)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxelFactory(
@@ -306,7 +306,7 @@ VoxelBuilder &VoxelBuilder::SetSolidInertiaResistance(float resistance)
 	return *this;
 }
 
-VoxelBuilder &VoxelBuilder::SetFluidDispursionRate(uint8_t rate)
+VoxelBuilder &VoxelBuilder::SetFluidDispersionRate(uint8_t rate)
 {
 	this->FluidDispursionRate = rate;
 	return *this;

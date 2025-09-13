@@ -123,7 +123,7 @@ namespace Registry{
 		VoxelBuilder& ReactionOxidation(std::string To, float OxygenReactionSpeed);
 		VoxelBuilder& VoxelTextureMap(const std::string& textureName, bool keepRandomTints);
 		VoxelBuilder& SetSolidInertiaResistance(float resistance);
-		VoxelBuilder& SetFluidDispursionRate(uint8_t rate);
+		VoxelBuilder& SetFluidDispersionRate(uint8_t rate);
 		VoxelBuilder& SetFlamability(uint8_t flamability);
 		Volume::VoxelProperty Build();
 	private:

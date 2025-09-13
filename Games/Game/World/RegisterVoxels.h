@@ -70,7 +70,7 @@ void RegisterGameVoxels(){
 			.SetName("Molten Gold")
 			.SetColor(RGBA(255, 215, 0, 240))
 			.PhaseDown("Gold", Temperature(1064))
-			.SetFluidDispursionRate(4)
+			.SetFluidDispersionRate(4)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -87,7 +87,7 @@ void RegisterGameVoxels(){
 			.SetColor(RGBA(3, 169, 244, 200))
 			.PhaseDown("Ice", Temperature(0))
 			.PhaseUp("Steam", Temperature(99.98))
-			.SetFluidDispursionRate(10)
+			.SetFluidDispersionRate(10)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -105,7 +105,7 @@ void RegisterGameVoxels(){
 			.SetName("Steam")
 			.SetColor(RGBA(101, 193, 235, 180))
 			.PhaseDown("Water", Temperature(99.98))
-			.SetFluidDispursionRate(7)
+			.SetFluidDispersionRate(7)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -114,7 +114,7 @@ void RegisterGameVoxels(){
 			.SetName("Magma")
 			.SetColor(RGBA(161, 56, 14, 230))
 			.PhaseDown("Stone", Temperature(1200))
-			.SetFluidDispursionRate(3)
+			.SetFluidDispersionRate(3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -133,7 +133,7 @@ void RegisterGameVoxels(){
 			.SetName("Glass")
 			.SetColor(RGBA(255, 219, 176, 100))
 			.PhaseDown("Glass", Temperature(1000))
-			.SetFluidDispursionRate(4)
+			.SetFluidDispersionRate(4)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -151,7 +151,7 @@ void RegisterGameVoxels(){
 			.SetName("Plasma")
 			.SetColor(RGBA(156, 39, 176, 160))
 			.PhaseDown("Fire", Temperature(1000))
-			.SetFluidDispursionRate(1)
+			.SetFluidDispersionRate(1)
 			.Build()
 	);
     VoxelRegistry::RegisterVoxel(
@@ -170,7 +170,7 @@ void RegisterGameVoxels(){
 			.SetName("Molten Iron")
 			.SetColor(RGBA(130, 130, 130, 240))
 			.PhaseDown("Iron", Temperature(1538))
-			.SetFluidDispursionRate(4)
+			.SetFluidDispersionRate(4)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -199,7 +199,7 @@ void RegisterGameVoxels(){
 			.SetName("Molten Copper")
 			.SetColor(RGBA(184, 115, 51, 240))
 			.PhaseDown("Copper", Temperature(1085))
-			.SetFluidDispursionRate(4)
+			.SetFluidDispersionRate(4)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -237,7 +237,7 @@ void RegisterGameVoxels(){
 			.SetName("Oxygen")
 			.SetColor(RGBA(15, 15, 15, 50))
 			.PhaseDown("Liquid_Oxygen", Temperature(-182.96))
-			.SetFluidDispursionRate(3)
+			.SetFluidDispersionRate(3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -247,7 +247,7 @@ void RegisterGameVoxels(){
 			.SetColor(RGBA(50, 50, 50, 122))
 			.PhaseUp("Oxygen", Temperature(-182.96))
 			.PhaseDown("Solid_Oxygen", Temperature(-218.79))
-			.SetFluidDispursionRate(10)
+			.SetFluidDispersionRate(10)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -266,7 +266,7 @@ void RegisterGameVoxels(){
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", Temperature(200))
-			.SetFluidDispursionRate(5)
+			.SetFluidDispersionRate(5)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxelFactory(
@@ -296,7 +296,7 @@ void RegisterGameVoxels(){
 			.SetName("Fire")
 			.SetColor(RGBA(255, 87, 34, 210))
 			.PhaseDown("Carbon_Dioxide", Temperature(100))
-			.SetFluidDispursionRate(2)
+			.SetFluidDispersionRate(2)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxelFactory(
@@ -320,7 +320,7 @@ void RegisterGameVoxels(){
 			.SetName("Carbon Dioxide")
 			.SetColor(RGBA(4, 4, 4, 70))
 			.PhaseDown("Liquid_Carbon_Dioxide", Temperature(-56.6))
-			.SetFluidDispursionRate(3)
+			.SetFluidDispersionRate(3)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(
@@ -330,7 +330,7 @@ void RegisterGameVoxels(){
 			.SetColor(RGBA(4, 4, 4, 150))
 			.PhaseDown("Solid_Carbon_Dioxide", Temperature(-78.5))
 			.PhaseUp("Carbon_Dioxide", Temperature(-56.6))
-			.SetFluidDispursionRate(13)
+			.SetFluidDispersionRate(13)
 			.Build()
 	);
 	VoxelRegistry::RegisterVoxel(

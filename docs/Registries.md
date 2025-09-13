@@ -12,15 +12,15 @@ During `void IGame::RegisterVoxels()` you are required to register all relevant 
 
 ### Textures
 
-When a voxel is spawned, its color is randomized a bit to have a small variation. This can be overriden using a texture
+When a voxel is spawned, its color is randomized a bit to have a small variation. This can be overridden using a texture
 
-You can register a texture such as following:
+You can register a texture as follows:
 
 ```cpp
 Registry::VoxelRegistry::RegisterTextureMap("TextureGameName", "TextureFileNameOrPath", Registry::TextureRotation::Any);
 ```
 
-`enum Registry::TextureRotation` corresponds to how the texture can be rotated. If you want the texture to be just indentically repeating then you can set it to `None`. But if your texture allows flipping it vertically or horizontally (or both) you can set it respectively
+`enum Registry::TextureRotation` corresponds to how the texture can be rotated. If you want the texture to be just identically repeating then you can set it to `None`. But if your texture allows flipping it vertically or horizontally (or both) you can set it respectively
 
 ### Voxels
 
@@ -34,7 +34,7 @@ Registry::VoxelRegistry::RegisterVoxel(
         .SetColor(RGBA(3, 169, 244, 200))
         .PhaseDown("Ice", Volume::Temperature(0))       // Optional
         .PhaseUp("Steam", Volume::Temperature(99.98))   // Optional
-        .SetFluidDispursionRate(10)
+        .SetFluidDispersionRate(10)
         .Build()                                        // Required at the end of `Registry::VoxelBuilder`
 );
 ```
@@ -49,7 +49,7 @@ The `false` specifies that we are overriding the random voxel hue shifts. If you
 
 #### Constructor factory override
 
-You won't always want a voxel to have the default behaviour but you'd want to expand it/make your own. This is why the constructor factory override exists
+You won't always want a voxel to have the default behavior but you'd want to expand it/make your own. This is why the constructor factory override exists
 
 An example of such override may look like the following:
 
@@ -60,7 +60,7 @@ Registry::VoxelRegistry::RegisterVoxel(
         .SetName("Scary fire")
         .SetColor(RGBA(255, 87, 34, 210))
         .PhaseDown("Carbon_Dioxide", Volume::Temperature(200))
-        .SetFluidDispursionRate(5)
+        .SetFluidDispersionRate(5)
         .Build()
 );
 Registry::VoxelRegistry::RegisterVoxelFactory(
@@ -73,23 +73,23 @@ Registry::VoxelRegistry::RegisterVoxelFactory(
 
 #### Inertia resistance
 
-Inertia resistance is a behaviour only used for solids. It is a value between 0 and 1. The bigger the value, the more the solid resists being moved. It can make movable solids feel more "clumped" and break off in groups instead of always forming a perfect piramid
+Inertia resistance is a behavior only used for solids. It is a value between 0 and 1. The bigger the value, the more the solid resists being moved. It can make movable solids feel more "clumped" and break off in groups instead of always forming a perfect pyramid
 
 It can be set using `.SetSolidInertiaResistance(float)`
 
-#### Fluid dispursion rate
+#### Fluid dispersion rate
 
-Fluid dispursion rate is a value used by gasses and liquids. It is a `uint8_t` value (0-255). The bigger the value, the more rapid movement the fluid movement. It can make the liquid feel more "viscous" and gasses feel quicker
+Fluid dispersion rate is a value used by gases and liquids. It is a `uint8_t` value (0-255). The bigger the value, the more rapid movement the fluid movement. It can make the liquid feel more "viscous" and gases feel quicker
 
-It can be set using `.SetFluidDispursionRate(uint8_t)`
+It can be set using `.SetFluidDispersionRate(uint8_t)`
 
 #### Chemical reactions
 
-You may want voxels to chemically interract together, such as iron oxidizing, salt and water creating sea water and much more. Doing that via the `bool Volume::VoxelElement::Step(ChunkMatrix&)` would be very computationally expensive. This provides a GPU accelerated way to add reactions with little to none performance impacts
+You may want voxels to chemically interact together, such as iron oxidizing, salt and water creating sea water and much more. Doing that via the `bool Volume::VoxelElement::Step(ChunkMatrix&)` would be very computationally expensive. This provides a GPU accelerated way to add reactions with little to no performance impacts
 
-There are two ways to add a chemical reactions. There is `.Reaction(...)` and `.ReactionOxidation(...)`. The first one simply creates a single reaction as specified where the second one generates several ones that are specifically for oxidation, which makes it react to the specified element in different speeds based on if it's touching oxygen, water or liquid oxygen
+There are two ways to add chemical reactions. There is `.Reaction(...)` and `.ReactionOxidation(...)`. The first one simply creates a single reaction as specified where the second one generates several ones that are specifically for oxidation, which makes it react to the specified element at different speeds based on if it's touching oxygen, water or liquid oxygen
 
-If you use `.ReactionOxidation(...)` it is expected that you defined voxels for following ID's:
+If you use `.ReactionOxidation(...)` it is expected that you defined voxels for the following IDs:
 - Oxygen
 - Liquid_Oxygen
 - Water
@@ -123,7 +123,7 @@ An example of registering an object looks like the following:
 GameObjectRegistry::RegisterGameObject(
     "Barrel",
     GameObjectBuilder(GameObjectType::PhysicsObject)
-        .SetDensityOverride(400.0f)     // Optional, density is calculated automatically when not overriden
+        .SetDensityOverride(400.0f)     // Optional, density is calculated automatically when not overridden
         .SetVoxelFileName("Barrel")
         .Build()
 );
@@ -158,4 +158,4 @@ Format: 0xAARRGGBB
 0xFF000000 -> Charcoal
 0xFFFFA500 -> Organics
 
-Be carefull to not use colors outside this range and to not use a color for which you have not defined a voxel with that ID
+Be careful to not use colors outside this range and to not use a color for which you have not defined a voxel with that ID
