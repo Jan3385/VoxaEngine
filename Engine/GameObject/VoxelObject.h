@@ -52,7 +52,6 @@ public:
 
     Vec2f GetRotatedLocalPosition(const Vec2f& localPos) const;
     Vec2i GetWorldPositionFromLocalRotatedIndex(int x, int y) const;
-    Vec2i WorldPosToObjectWorldPos(const Vec2i& worldPos) const;
 
     virtual void UpdateRotatedVoxelBuffer();
  
