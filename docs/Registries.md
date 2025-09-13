@@ -149,13 +149,21 @@ This is the material texture for the object. For example the barrel is entirely 
 So far the colors are set to this (this **will** be changed later)
 
 Format: 0xAARRGGBB
+
 0xFFFF0000 -> Iron
+
 0xFFFFFF00 -> Gold
+
 0xFF964B00 -> Wood
+
 0xFF00FF00 -> Rust
+
 0xFF0000FF -> Stone
+
 0xFFFFFFFF -> Glass
+
 0xFF000000 -> Charcoal
+
 0xFFFFA500 -> Organics
 
 Be careful to not use colors outside this range and to not use a color for which you have not defined a voxel with that ID
