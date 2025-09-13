@@ -136,13 +136,13 @@ This code will expect a `Barrel.bmp` and `Barrel.mat.bmp` to be present in the `
 
 ### Barrel.bmp
 
-<img src="../Games/Game/Sources/Objects/Barrel.bmp" alt="Barrel visual texture">
+<img src="../Games/Game/Sources/Objects/Barrel.bmp" alt="Barrel visual texture" width="36" style="image-rendering: pixelated; image-rendering: crisp-edges;">
 
 This is the visual texture for the object. It controls the "looks"
 
 ### Barrel.mat.bmp
 
-<img src="../Games/Game/Sources/Objects/Barrel.mat.bmp" alt="Barrel visual texture">
+<img src="../Games/Game/Sources/Objects/Barrel.mat.bmp" alt="Barrel visual texture" width="36">
 
 This is the material texture for the object. For example the barrel is entirely made out of metal (which is red). With this you can make parts of the object have different material than others. Better tools for controlling these textures will be made later
 
