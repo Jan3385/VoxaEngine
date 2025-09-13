@@ -17,7 +17,7 @@ When a voxel is spawned, its color is randomized a bit to have a small variation
 You can register a texture as follows:
 
 ```cpp
-Registry::VoxelRegistry::RegisterTextureMap("TextureGameName", "TextureFileNameOrPath", Registry::TextureRotation::Any);
+Registry::VoxelRegistry::RegisterTextureMap("TextureGameName", "BMPTextureFileNameOrPath", Registry::TextureRotation::Any);
 ```
 
 `enum Registry::TextureRotation` corresponds to how the texture can be rotated. If you want the texture to be just identically repeating then you can set it to `None`. But if your texture allows flipping it vertically or horizontally (or both) you can set it respectively
