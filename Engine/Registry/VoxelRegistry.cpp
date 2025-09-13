@@ -24,16 +24,16 @@ Shader::GLBuffer<Registry::VoxelRegistry::ChemicalReactionGL, GL_SHADER_STORAGE_
 uint32_t VoxelRegistry::idCounter = 1;
 bool VoxelRegistry::registryClosed = false;
 
-void VoxelRegistry::RegisterVoxel(const std::string &name, VoxelProperty property)
+void VoxelRegistry::RegisterVoxel(const std::string &id, VoxelProperty property)
 {
 	if(registryClosed) 
-		throw std::runtime_error("Voxel registered after designated time window: " + name);
+		throw std::runtime_error("Voxel registered after designated time window: " + id);
 	
 	property.id = ++idCounter;
 
-	registry[name] = property;
+	registry[id] = property;
 
-	idRegistry[property.id] = &registry[name];
+	idRegistry[property.id] = &registry[id];
 }
 
 void Registry::VoxelRegistry::RegisterVoxelFactory(const std::string &name, VoxelFactory factory)
@@ -219,19 +219,19 @@ VoxelBuilder &VoxelBuilder::SetColor(RGBA Color)
 	return *this;
 }
 
-VoxelBuilder &VoxelBuilder::PhaseUp(std::string To, float Temperature)
+VoxelBuilder &VoxelBuilder::PhaseUp(std::string To, Volume::Temperature Temperature)
 {
 	this->HeatedChange = { Temperature, To };
 	return *this;
 }
 
-VoxelBuilder &VoxelBuilder::PhaseDown(std::string To, float Temperature)
+VoxelBuilder &VoxelBuilder::PhaseDown(std::string To, Volume::Temperature Temperature)
 {
 	this->CooledChange = { Temperature, To };
 	return *this;
 }
 
-VoxelBuilder &Registry::VoxelBuilder::Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst, float MinTemperatureC)
+VoxelBuilder &Registry::VoxelBuilder::Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst, Volume::Temperature MinTemperature)
 {
 	VoxelRegistry::reactionRegistry.push_back({ 
 		this->Name, 
@@ -239,7 +239,7 @@ VoxelBuilder &Registry::VoxelBuilder::Reaction(std::string To, std::string Catal
 		To, 
 		ReactionSpeed, 
 		PreserveCatalyst, 
-		MinTemperatureC 
+		MinTemperature.GetCelsius() 
 	});
 
 	return *this;

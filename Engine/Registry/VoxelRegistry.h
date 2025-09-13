@@ -117,9 +117,9 @@ namespace Registry{
 		VoxelBuilder(DefaultVoxelConstructor Constructor, float tCapacity, float tConductivity, float Density);
 		VoxelBuilder& SetName(std::string Name);
 		VoxelBuilder& SetColor(RGBA Color);
-		VoxelBuilder& PhaseUp(std::string To, float Temperature);
-		VoxelBuilder& PhaseDown(std::string To, float Temperature);
-		VoxelBuilder& Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst = true, float MinTemperatureC = Volume::Temperature::absoluteZero.GetCelsius());
+		VoxelBuilder& PhaseUp(std::string To, Volume::Temperature Temperature);
+		VoxelBuilder& PhaseDown(std::string To, Volume::Temperature Temperature);
+		VoxelBuilder& Reaction(std::string To, std::string Catalyst, float ReactionSpeed, bool PreserveCatalyst = true, Volume::Temperature MinTemperature = Volume::Temperature::absoluteZero);
 		VoxelBuilder& ReactionOxidation(std::string To, float OxygenReactionSpeed);
 		VoxelBuilder& VoxelTextureMap(const std::string& textureName, bool keepRandomTints);
 		VoxelBuilder& SetSolidInertiaResistance(float resistance);
@@ -154,7 +154,7 @@ namespace Registry{
 		static bool CanBeMovedBySolid(Volume::State state);
 		static bool CanBeMovedByLiquid(Volume::State state);
 
-		static void RegisterVoxel(const std::string& name, Volume::VoxelProperty property);
+		static void RegisterVoxel(const std::string& id, Volume::VoxelProperty property);
 		static void RegisterVoxelFactory(const std::string& name, VoxelFactory factory);
 		static void RegisterTextureMap(const std::string& name, const std::string& texturePath, TextureRotation possibleRotations);
 		static void RegisterReaction(Registry::ChemicalReaction reaction);
