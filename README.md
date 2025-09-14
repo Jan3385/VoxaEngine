@@ -58,10 +58,10 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 > ImGui and poly2tri libraries are dynamically downloaded on build. Your first build may take few minutes
 
 > [!CAUTION]
-> Installing and setting up `vcpkg` is an extensive process. You will have to install your OSs triplets and such. If you have no experience with `vcpkg` it's recommended to first look up a tutorial to set it up correctly before compiling this project
+> Installing and setting up `vcpkg` is an extensive process. If you have no experience with `vcpkg` it's recommended to first look up a tutorial to set it up correctly before compiling this project
 
 > [!TIP]
-> There are prebuild binaries avalible which you can just download and immediately run
+> There are prebuild binaries avalible which you can just download and immediately run (they will be probably slightly outdated)
 
 ## Windows 10/11
 
