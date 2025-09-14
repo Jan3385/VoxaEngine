@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 if(WIN32 AND DEFINED ENV{VCPKG_ROOT})
   set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+elseif(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  message(FATAL_ERROR "VCPKG_ROOT or CMAKE_TOOLCHAIN_FILE is not defined. Make sure you specify it with DCMAKE_TOOLCHAIN_FILE")
 endif()
 
 project(Voxa LANGUAGES C CXX)
