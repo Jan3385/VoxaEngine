@@ -73,7 +73,11 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 
 To prepare the project for compilation run:
 
-`cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH\TO\VCPKG\CMAKE\vcpkg.cmake"`
+`cmake -S . -B build`
+
+> [!NOTE]
+> If you do not have **VCPKG_ROOT** enviroment variable configured use the following command instead:
+> `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="PATH\TO\VCPKG\CMAKE\vcpkg.cmake"`
 
 Afterwards run following to set the release preset:
 
@@ -100,7 +104,7 @@ You need to install these packages before compiling (package name depends on you
 
 To prepare the project for compilation run:
 
-`cmake -S . -B build -G "Ninja" -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
+`cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="PATH/TO/VCPKG/CMAKE/vcpkg.cmake"`
 
 Afterwards run following to set the release preset:
 

@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+if(WIN32 AND DEFINED ENV{VCPKG_ROOT})
+  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
+endif()
 
 project(Voxa LANGUAGES C CXX)
-
-# set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # vcpkg dependencies
 find_package(SDL2 CONFIG REQUIRED)
