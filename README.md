@@ -77,6 +77,7 @@ To prepare the project for compilation run:
 
 > [!NOTE]
 > If you do not have **VCPKG_ROOT** enviroment variable configured use the following command instead:
+> 
 > `cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="PATH\TO\VCPKG\CMAKE\vcpkg.cmake"`
 
 Afterwards run following to set the release preset:
