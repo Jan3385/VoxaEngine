@@ -16,6 +16,7 @@ namespace Registry
     enum class GameObjectType{
         GameObject,         // Regular game object
         PhysicsObject,      // Moving, physical object
+        Custom              // Uses custom constructor
     };
     struct VoxelData{
         std::string id;
@@ -27,6 +28,7 @@ namespace Registry
 
         std::vector<std::vector<VoxelData>> voxelData;
 
+        std::string specialFactoryID; // empty string = no factory override
         uint32_t id = 0; // Unique identifier for the game object
 
         ~GameObjectProperty();
@@ -37,14 +39,18 @@ namespace Registry
         GameObjectBuilder(GameObjectType objectType);
         GameObjectBuilder& SetDensityOverride(float density);
         GameObjectBuilder& SetVoxelFileName(std::string fileName);
+        GameObjectBuilder& SpecialFactoryOverride(std::string factoryID);
         GameObjectProperty Build();
     private:
         GameObjectType type;
         std::string voxelPath;
         float densityOverride = 0.0f;
+        std::string specialFactoryID = "";
     };
 
     void CreateGameObject(std::string id, Vec2f position, ChunkMatrix *matrix, GamePhysics *gamePhysics);
+
+    using VoxelObjectFactory = std::function<VoxelObject*(Vec2f position, const std::vector<std::vector<VoxelData>>& voxelData, std::string name)>;
 
     class GameObjectRegistry{
     public:
@@ -52,7 +58,10 @@ namespace Registry
         static GameObjectProperty* GetProperties(uint32_t id);
 
         static void RegisterGameObject(const std::string &name, GameObjectProperty property);
+        static void RegisterGameObjectFactory(const std::string &name, VoxelObjectFactory factory);
         static void SetVoxelsFromFile(GameObjectProperty &property, const std::string &fileName);
+
+        static VoxelObjectFactory *FindFactoryWithID(std::string id);
 
         static void RegisterObjects(IGame *game);
         static void CloseRegistry();
@@ -64,5 +73,7 @@ namespace Registry
     private:
         static uint32_t idCounter;
 		static bool registryClosed;
+
+        static std::unordered_map<std::string, VoxelObjectFactory> voxelObjectFactories;
     };
 }

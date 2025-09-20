@@ -132,6 +132,15 @@ void Registry::VoxelRegistry::CloseRegistry()
 	std::vector<ChemicalReactionGL>().swap(reactions); // free memory
 }
 
+VoxelFactory *Registry::VoxelRegistry::FindFactoryWithID(std::string id)
+{
+    auto it = VoxelRegistry::voxelFactories.find(id);
+    if (it != VoxelRegistry::voxelFactories.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+
 /// @brief Prevents memory leaks at the end of the application
 void Registry::VoxelRegistry::CleanupRegistry()
 {
@@ -318,6 +327,12 @@ VoxelBuilder &VoxelBuilder::SetFlamability(uint8_t flamability)
 	return *this;
 }
 
+VoxelBuilder &Registry::VoxelBuilder::SpecialFactoryOverride(std::string factoryID)
+{
+    this->specialFactoryID = factoryID;
+	return *this;
+}
+
 VoxelProperty VoxelBuilder::Build()
 {
 	Registry::VoxelTextureMap *map = nullptr;
@@ -343,7 +358,8 @@ VoxelProperty VoxelBuilder::Build()
 		.Flamability = this->Flamability,
 		.TextureMap = map,
 		.RandomColorTints = this->RandomColorTints,
-		.Reactions = {}
+		.Reactions = {},
+		.specialFactoryID = this->specialFactoryID
 	};
 }
 
@@ -373,13 +389,14 @@ Volume::VoxelElement *CreateVoxelElement(Volume::VoxelProperty *property, std::s
 	VoxelElement *voxel;
 
     if(property->Constructor == DefaultVoxelConstructor::Custom){
-		auto it = VoxelRegistry::voxelFactories.find(id);
+		std::string factoryID = property->specialFactoryID.empty() ? id : property->specialFactoryID;
+		auto it = VoxelRegistry::FindFactoryWithID(factoryID);
 
-		if(it == VoxelRegistry::voxelFactories.end()){
-			throw std::runtime_error("Voxel factory not found for id: " + id + ". Did you forget use RegisterVoxelFactory?");
+		if(it == nullptr){
+			throw std::runtime_error("Voxel factory not found for id: " + factoryID + ". Did you forget use RegisterVoxelFactory?");
 		}
 
-		voxel = it->second(position, temp, amount, placeUnmovableSolids);
+		voxel = (*it)(position, temp, amount, placeUnmovableSolids);
 		return voxel;
 	}
 	

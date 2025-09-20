@@ -104,6 +104,7 @@ namespace Volume{
 		bool RandomColorTints = true;
 
 		std::vector<Registry::ChemicalReactionProperty> Reactions;
+		std::string specialFactoryID = "";
 	};
 }
 
@@ -125,6 +126,7 @@ namespace Registry{
 		VoxelBuilder& SetSolidInertiaResistance(float resistance);
 		VoxelBuilder& SetFluidDispersionRate(uint8_t rate);
 		VoxelBuilder& SetFlamability(uint8_t flamability);
+		VoxelBuilder& SpecialFactoryOverride(std::string factoryID);
 		Volume::VoxelProperty Build();
 	private:
 		DefaultVoxelConstructor Constructor;
@@ -140,6 +142,7 @@ namespace Registry{
 		uint8_t Flamability = 0;		// 0 - 255 (0 being no flamability and 255 being full flamability)
 		std::string TextureMapName = "";
 		bool RandomColorTints = true;
+		std::string specialFactoryID = "";
 	};
 
 	using VoxelFactory = std::function<Volume::VoxelElement*(Vec2i pos, Volume::Temperature temp, float amount, bool placeUnmovableSolids)>;
@@ -155,17 +158,15 @@ namespace Registry{
 		static bool CanBeMovedByLiquid(Volume::State state);
 
 		static void RegisterVoxel(const std::string& id, Volume::VoxelProperty property);
-		static void RegisterVoxelFactory(const std::string& name, VoxelFactory factory);
+		static void RegisterVoxelFactory(const std::string& id, VoxelFactory factory);
 		static void RegisterTextureMap(const std::string& name, const std::string& texturePath, TextureRotation possibleRotations);
 		static void RegisterReaction(Registry::ChemicalReaction reaction);
 		static void RegisterVoxels(IGame *game);
 		static void CloseRegistry();
 
-		static void CleanupRegistry();
+		static VoxelFactory* FindFactoryWithID(std::string id);
 
-		static std::unordered_map<std::string, Volume::VoxelProperty> registry;
-		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
-		static std::unordered_map<std::string, VoxelFactory> voxelFactories;
+		static void CleanupRegistry();
 
 		struct ChemicalReactionGL{
 			uint32_t fromID;
@@ -179,6 +180,10 @@ namespace Registry{
 
 		friend class VoxelBuilder;
 	private:
+		static std::unordered_map<std::string, Volume::VoxelProperty> registry;
+		static std::unordered_map<uint32_t, Volume::VoxelProperty*> idRegistry;
+		static std::unordered_map<std::string, VoxelFactory> voxelFactories;
+
 		static std::unordered_map<std::string, VoxelTextureMap*> textureMaps;
 		static std::vector<Registry::ChemicalReaction> reactionRegistry;  // cleared after closing registries
 		static uint32_t idCounter;

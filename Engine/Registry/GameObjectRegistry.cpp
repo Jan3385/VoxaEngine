@@ -9,6 +9,7 @@ using namespace Registry;
 
 std::unordered_map<std::string, GameObjectProperty> GameObjectRegistry::registry = {};
 std::unordered_map<uint32_t, GameObjectProperty*> GameObjectRegistry::idRegistry = {};
+std::unordered_map<std::string, VoxelObjectFactory> GameObjectRegistry::voxelObjectFactories = {};
 uint32_t GameObjectRegistry::idCounter = 1;
 bool GameObjectRegistry::registryClosed = false;
 
@@ -24,6 +25,13 @@ void GameObjectRegistry::RegisterGameObject(const std::string &name, GameObjectP
     registry[name] = property;
 
     idRegistry[property.id] = &property;
+}
+void Registry::GameObjectRegistry::RegisterGameObjectFactory(const std::string &name, VoxelObjectFactory factory)
+{
+    if(registryClosed)
+        throw std::runtime_error("GameObject factory registered after designated time window: " + name);
+    
+    voxelObjectFactories[name] = factory;
 }
 void Registry::GameObjectRegistry::SetVoxelsFromFile(GameObjectProperty &property, const std::string &fileName)
 {
@@ -70,6 +78,14 @@ void Registry::GameObjectRegistry::SetVoxelsFromFile(GameObjectProperty &propert
     SDL_FreeSurface(colorSurface);
     SDL_FreeSurface(materialSurface);
 }
+VoxelObjectFactory *Registry::GameObjectRegistry::FindFactoryWithID(std::string id)
+{
+    auto it = voxelObjectFactories.find(id);
+    if (it != voxelObjectFactories.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
 void GameObjectRegistry::RegisterObjects(IGame *game)
 {
     std::cout << "Registering game objects ";
@@ -115,9 +131,8 @@ std::string Registry::GameObjectRegistry::GetVoxelFromColorID(uint32_t colorId)
 void Registry::CreateGameObject(std::string id, Vec2f position, ChunkMatrix *matrix, GamePhysics *gamePhysics)
 {
     GameObjectProperty *property = GameObjectRegistry::GetProperties(id);
-    if (!property) {
+    if (!property)
         throw std::runtime_error("GameObject with id " + id + " not found in registry.");
-    }
 
     if (property->type == GameObjectType::GameObject) {
         VoxelObject *gameObject = new VoxelObject(position, property->voxelData, id);
@@ -127,6 +142,17 @@ void Registry::CreateGameObject(std::string id, Vec2f position, ChunkMatrix *mat
         PhysicsObject *physicsObject = new PhysicsObject(position, property->voxelData, property->densityOverride, id);
         matrix->voxelObjects.push_back(physicsObject);
         gamePhysics->physicsObjects.push_back(physicsObject);
+    } else{
+        VoxelObject *gameObject = nullptr;
+
+        std::string factoryID = property->specialFactoryID.empty() ? id : property->specialFactoryID;
+
+        auto factory = GameObjectRegistry::FindFactoryWithID(factoryID);
+
+        if(!factory)
+            throw std::runtime_error("No factory found for custom game object with id: " + factoryID);
+
+        gameObject = (*factory)(position, property->voxelData, id);
     }
 }
 
@@ -145,11 +171,17 @@ GameObjectBuilder &GameObjectBuilder::SetVoxelFileName(std::string fileName)
     this->voxelPath = fileName;
     return *this;
 }
+GameObjectBuilder &Registry::GameObjectBuilder::SpecialFactoryOverride(std::string factoryID)
+{
+    this->specialFactoryID = factoryID;
+    return *this;
+}
 GameObjectProperty GameObjectBuilder::Build()
 {
     GameObjectProperty property;
     property.type = this->type;
     property.densityOverride = this->densityOverride;
+    property.specialFactoryID = this->specialFactoryID;
 
     GameObjectRegistry::SetVoxelsFromFile(property, this->voxelPath);
 

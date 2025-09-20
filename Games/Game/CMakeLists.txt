@@ -34,12 +34,14 @@ add_custom_target(copy_assets ALL
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/ComputeShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${INCLUDE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/Includes
 
-  if(WIN32)
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Engine/DLLs $<TARGET_FILE_DIR:VoxaGame>
-  endif()
-
   DEPENDS VoxaEngine
 )
+
+if(WIN32)
+  add_custom_command(TARGET copy_assets POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Engine/DLLs $<TARGET_FILE_DIR:VoxaGame>
+  )
+endif()
 
 # Windows support DLL's (UNUSED - for dynamic linking)
 #if(WIN32)
