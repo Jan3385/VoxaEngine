@@ -31,9 +31,13 @@ add_custom_target(copy_assets ALL
   # Shaders
   COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxaGame>/Shaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${RENDER_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/RenderShaders
-  # COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER_GAME} $<TARGET_FILE_DIR:VoxaGame>/Shaders/ComputeShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${COMPUTE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/ComputeShaders
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${INCLUDE_SHADERS_FOLDER} $<TARGET_FILE_DIR:VoxaGame>/Shaders/Includes
+
+  if(WIN32)
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Engine/DLLs $<TARGET_FILE_DIR:VoxaGame>
+  endif()
+
   DEPENDS VoxaEngine
 )
 
