@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GameEngine.h>
-#include "GameObject/Player/Player.h"
+#include "VoxelObject/Player/Player.h"
 
 class Game : public IGame {
 public:

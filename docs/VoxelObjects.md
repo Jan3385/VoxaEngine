@@ -26,11 +26,11 @@ The object also has its density controlled by the type of voxels it is made out 
 
 [REGISTRY_TUTORIAL]: Registries.md
 
-First you will have to register the VoxelObject in the `Registry::GameObjectRegistry` (example in [Registries.md][README])
+First you will have to register the VoxelObject in the `Registry::VoxelObjectRegistry` (example in [Registries.md][README])
 
-After that all you need is to call a `void Registry::CreateGameObject(std::string, Vec2f, ChunkMatrix*, GamePhysics*)`. This will insert a new clone of the object in registry into the world (and physics simulation if PhysicsObject)
+After that all you need is to call a `void Registry::CreateVoxelObject(std::string, Vec2f, ChunkMatrix*, GamePhysics*)`. This will insert a new clone of the object in registry into the world (and physics simulation if PhysicsObject)
 
 An example to create an object with the ID "Barrel":
 ```cpp
-Registry::CreateGameObject("Barrel", Vec2f(0, 0), &GameEngine::instance->chunkMatrix, GameEngine::physics);
+Registry::CreateVoxelObject("Barrel", Vec2f(0, 0), &GameEngine::instance->chunkMatrix, GameEngine::physics);
 ```

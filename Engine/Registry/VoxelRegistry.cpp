@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "World/Voxels/Empty.h"
-#include "GameObjectRegistry.h"
+#include "VoxelObjectRegistry.h"
 #include "VoxelRegistry.h"
 #include "GameEngine.h"
 

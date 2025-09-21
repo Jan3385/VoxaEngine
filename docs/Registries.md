@@ -116,7 +116,7 @@ VoxelRegistry::RegisterVoxel(
 );
 ```
 
-## GameObjectRegistry
+## VoxelObjectRegistry
 
 <img src="images/voxelobjects.png" alt="Voxel Objects" title="Voxel objects registered to the registry" width="149">
 
@@ -125,9 +125,9 @@ During `void IGame::RegisterVoxelObjects()`, you are required to register all re
 An example of registering an object looks like the following:
 
 ```cpp
-GameObjectRegistry::RegisterGameObject(
+VoxelObjectRegistry::RegisterVoxelObject(
     "Barrel",
-    GameObjectBuilder(GameObjectType::PhysicsObject)
+    VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
         .SetDensityOverride(400.0f)     // Optional, density is calculated automatically when not overridden
         .SetVoxelFileName("Barrel")
         .Build()
@@ -180,13 +180,13 @@ You won't always want an object to have the default behavior, but you may want t
 An example of such an override may look like the following:
 
 ```cpp
-GameObjectRegistry::RegisterGameObject(
+VoxelObjectRegistry::RegisterVoxelObject(
     "Crate",
-    GameObjectBuilder(GameObjectType::Custom)
+    VoxelObjectBuilder(VoxelObjectType::Custom)
         .SetVoxelFileName("Crate")
         .Build()
 );
-Registry::GameObjectRegistry::RegisterGameObjectFactory(
+Registry::VoxelObjectRegistry::RegisterVoxelObjectFactory(
     "Crate",
     [](Vec2f position, const std::vector<std::vector<VoxelData>>& voxelData, std::string name) {
         return new Volume::MyCrateVoxelObject(position, voxelData, name);
@@ -197,4 +197,4 @@ Registry::GameObjectRegistry::RegisterGameObjectFactory(
 The following code expects the voxel objects and factories' IDs to match. If you want to use a factory with a different name (e.g., reuse an existing one), you can use `.SpecialFactoryOverride(std::string)`, where the `std::string` corresponds to the factory ID that will be used
 
 > ![NOTE]
-> No override will ever happen unless you set the `Registry::GameObjectType` to `Custom`. Also, you must have a valid factory for all custom voxels
+> No override will ever happen unless you set the `Registry::VoxelObjectType` to `Custom`. Also, you must have a valid factory for all custom voxels

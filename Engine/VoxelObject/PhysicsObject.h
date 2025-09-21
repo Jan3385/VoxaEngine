@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameObject/VoxelObject.h"
+#include "VoxelObject/VoxelObject.h"
 #include "Physics/Triangle.h"
 
 #include <box2d/box2d.h>

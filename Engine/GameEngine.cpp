@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "Shader/ChunkShader.h"
-#include "Registry/GameObjectRegistry.h"
+#include "Registry/VoxelObjectRegistry.h"
 
 using namespace std;
 
@@ -57,8 +57,8 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
     Registry::VoxelRegistry::RegisterVoxels(this->currentGame);
     Registry::VoxelRegistry::CloseRegistry();
 
-    Registry::GameObjectRegistry::RegisterObjects(this->currentGame);
-    Registry::GameObjectRegistry::CloseRegistry();
+    Registry::VoxelObjectRegistry::RegisterObjects(this->currentGame);
+    Registry::VoxelObjectRegistry::CloseRegistry();
 
     game.OnInitialize();
 

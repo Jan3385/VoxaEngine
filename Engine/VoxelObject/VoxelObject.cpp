@@ -2,7 +2,7 @@
 
 #include "Rendering/SpriteRenderer.h"
 #include "GameEngine.h"
-#include "Registry/GameObjectRegistry.h"
+#include "Registry/VoxelObjectRegistry.h"
 #include "World/Voxel.h"
 #include "Shader/GLVertexArray.h"
 

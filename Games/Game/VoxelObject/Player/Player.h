@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GameObject/PhysicsObject.h>
+#include <VoxelObject/PhysicsObject.h>
 #include <World/ChunkMatrix.h>
 #include "World/ParticleGenerators/LaserGenerator.h"
 

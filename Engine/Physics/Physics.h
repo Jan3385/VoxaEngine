@@ -6,7 +6,7 @@
 
 #include "Math/Vector.h"
 #include "World/Chunk.h"
-#include "GameObject/PhysicsObject.h"
+#include "VoxelObject/PhysicsObject.h"
 #include "Physics/Triangle.h"
 
 class GamePhysics{

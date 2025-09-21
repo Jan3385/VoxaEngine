@@ -5,14 +5,14 @@
 #include "World/ChunkGenerator.h"
 #include "World/RegisterVoxels.h"
 
-#include <Registry/GameObjectRegistry.h>
+#include <Registry/VoxelObjectRegistry.h>
 
 
 Player *Game::player = nullptr;
 
 void Game::OnInitialize()
 {
-    Registry::GameObjectProperty *playerProperties = Registry::GameObjectRegistry::GetProperties("Player");
+    Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
     Game::player = new Player(
         &GameEngine::instance->chunkMatrix,
         playerProperties->voxelData,
@@ -86,29 +86,29 @@ void Game::RegisterVoxelObjects()
 {
     using namespace Registry;
     
-    GameObjectRegistry::RegisterGameObject(
+    VoxelObjectRegistry::RegisterVoxelObject(
         "Player",
-        GameObjectBuilder(GameObjectType::PhysicsObject)
+        VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
             .SetDensityOverride(985.0f)
             .SetVoxelFileName("Player")
             .Build()
     );
-    GameObjectRegistry::RegisterGameObject(
+    VoxelObjectRegistry::RegisterVoxelObject(
         "Barrel",
-        GameObjectBuilder(GameObjectType::PhysicsObject)
+        VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
             .SetDensityOverride(400.0f)
             .SetVoxelFileName("Barrel")
             .Build()
     );
-    GameObjectRegistry::RegisterGameObject(
+    VoxelObjectRegistry::RegisterVoxelObject(
         "Ball",
-        GameObjectBuilder(GameObjectType::PhysicsObject)
+        VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
             .SetVoxelFileName("Ball")
             .Build()
     );
-    GameObjectRegistry::RegisterGameObject(
+    VoxelObjectRegistry::RegisterVoxelObject(
         "Crate",
-        GameObjectBuilder(GameObjectType::GameObject)
+        VoxelObjectBuilder(VoxelObjectType::VoxelObject)
             .SetVoxelFileName("Crate")
             .Build()
     );

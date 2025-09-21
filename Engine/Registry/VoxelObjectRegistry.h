@@ -3,8 +3,8 @@
 #include <SDL.h>
 
 #include "Math/Vector.h"
-#include "GameObject/VoxelObject.h"
-#include "GameObject/PhysicsObject.h"
+#include "VoxelObject/VoxelObject.h"
+#include "VoxelObject/PhysicsObject.h"
 #include "World/ChunkMatrix.h"
 #include "Physics/Physics.h"
 #include "World/Voxel.h"
@@ -13,8 +13,8 @@ struct IGame;
 
 namespace Registry
 {
-    enum class GameObjectType{
-        GameObject,         // Regular game object
+    enum class VoxelObjectType{
+        VoxelObject,         // Regular voxel object
         PhysicsObject,      // Moving, physical object
         Custom              // Uses custom constructor
     };
@@ -22,8 +22,8 @@ namespace Registry
         std::string id;
         RGBA color;
     };
-    struct GameObjectProperty{
-        GameObjectType type;
+    struct VoxelObjectProperty{
+        VoxelObjectType type;
         float densityOverride;  // 0 = no override, KG/m^3
 
         std::vector<std::vector<VoxelData>> voxelData;
@@ -31,35 +31,35 @@ namespace Registry
         std::string specialFactoryID; // empty string = no factory override
         uint32_t id = 0; // Unique identifier for the game object
 
-        ~GameObjectProperty();
+        ~VoxelObjectProperty();
     };
 
-    class GameObjectBuilder{
+    class VoxelObjectBuilder{
     public:
-        GameObjectBuilder(GameObjectType objectType);
-        GameObjectBuilder& SetDensityOverride(float density);
-        GameObjectBuilder& SetVoxelFileName(std::string fileName);
-        GameObjectBuilder& SpecialFactoryOverride(std::string factoryID);
-        GameObjectProperty Build();
+        VoxelObjectBuilder(VoxelObjectType objectType);
+        VoxelObjectBuilder& SetDensityOverride(float density);
+        VoxelObjectBuilder& SetVoxelFileName(std::string fileName);
+        VoxelObjectBuilder& SpecialFactoryOverride(std::string factoryID);
+        VoxelObjectProperty Build();
     private:
-        GameObjectType type;
+        VoxelObjectType type;
         std::string voxelPath;
         float densityOverride = 0.0f;
         std::string specialFactoryID = "";
     };
 
-    void CreateGameObject(std::string id, Vec2f position, ChunkMatrix *matrix, GamePhysics *gamePhysics);
+    void CreateVoxelObject(std::string id, Vec2f position, ChunkMatrix *matrix, GamePhysics *gamePhysics);
 
     using VoxelObjectFactory = std::function<VoxelObject*(Vec2f position, const std::vector<std::vector<VoxelData>>& voxelData, std::string name)>;
 
-    class GameObjectRegistry{
+    class VoxelObjectRegistry{
     public:
-        static GameObjectProperty* GetProperties(std::string id);
-        static GameObjectProperty* GetProperties(uint32_t id);
+        static VoxelObjectProperty* GetProperties(std::string id);
+        static VoxelObjectProperty* GetProperties(uint32_t id);
 
-        static void RegisterGameObject(const std::string &name, GameObjectProperty property);
-        static void RegisterGameObjectFactory(const std::string &name, VoxelObjectFactory factory);
-        static void SetVoxelsFromFile(GameObjectProperty &property, const std::string &fileName);
+        static void RegisterVoxelObject(const std::string &name, VoxelObjectProperty property);
+        static void RegisterVoxelObjectFactory(const std::string &name, VoxelObjectFactory factory);
+        static void SetVoxelsFromFile(VoxelObjectProperty &property, const std::string &fileName);
 
         static VoxelObjectFactory *FindFactoryWithID(std::string id);
 
@@ -68,8 +68,8 @@ namespace Registry
 
         static std::string GetVoxelFromColorID(uint32_t colorId);
 
-        static std::unordered_map<std::string, GameObjectProperty> registry;
-		static std::unordered_map<uint32_t, GameObjectProperty*> idRegistry;
+        static std::unordered_map<std::string, VoxelObjectProperty> registry;
+		static std::unordered_map<uint32_t, VoxelObjectProperty*> idRegistry;
     private:
         static uint32_t idCounter;
 		static bool registryClosed;

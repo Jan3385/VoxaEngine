@@ -4,7 +4,7 @@
 
 #include <SDL_keycode.h>
 #include <GameEngine.h>
-#include <Registry/GameObjectRegistry.h>
+#include <Registry/VoxelObjectRegistry.h>
 #include "Rendering/ImGuiRenderer.h"
 #include "Game.h"
 
@@ -25,13 +25,13 @@ void Input::OnKeyboardDown(int key)
 
     switch(key){
         case SDLK_t:
-            Registry::CreateGameObject("Barrel", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            Registry::CreateVoxelObject("Barrel", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
             break;
         case SDLK_z:
-            Registry::CreateGameObject("Ball", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            Registry::CreateVoxelObject("Ball", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
             break;
         case SDLK_u:
-            Registry::CreateGameObject("Crate", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            Registry::CreateVoxelObject("Crate", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
             break;
     }
 }

@@ -5,7 +5,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "GameObject/VoxelObject.h"
+#include "VoxelObject/VoxelObject.h"
 
 SpriteRenderer::SpriteRenderer()
 {
