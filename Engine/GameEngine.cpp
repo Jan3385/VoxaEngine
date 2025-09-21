@@ -25,7 +25,7 @@ GameEngine::GameEngine()
     std::srand(static_cast<unsigned>(time(NULL)));
 }
 
-void GameEngine::Initialize(const EngineConfig& config){
+void GameEngine::Initialize(const Config::EngineConfig& config){
     if(GameEngine::instance != nullptr){
         throw std::runtime_error("GameEngine is already initialized! Cannot run more than one instance.");
     }
@@ -36,6 +36,11 @@ void GameEngine::Initialize(const EngineConfig& config){
 
     this->fixedDeltaTime = config.fixedDeltaTime;
     this->voxelFixedDeltaTime = config.voxelFixedDeltaTime;
+
+    this->pauseVoxelSimulation = config.pauseVoxelSimulation;
+    this->runHeatSimulation =       (config.enabledFeatures & Config::EnabledEngineFeatures::HEAT_SIMULATION)       != Config::EnabledEngineFeatures::NONE;
+    this->runPressureSimulation =   (config.enabledFeatures & Config::EnabledEngineFeatures::PRESSURE_SIMULATION)   != Config::EnabledEngineFeatures::NONE;
+    this->runChemicalReactions =    (config.enabledFeatures & Config::EnabledEngineFeatures::CHEMICAL_REACTIONS)    != Config::EnabledEngineFeatures::NONE;
 
     GameEngine::instance = this;
     GameEngine::renderer->SetVSYNC(config.vsync);
@@ -49,7 +54,7 @@ void GameEngine::Initialize(const EngineConfig& config){
     this->config = config;
 }
 
-void GameEngine::Run(IGame &game, const EngineConfig& config)
+void GameEngine::Run(IGame &game, const Config::EngineConfig& config)
 {
     this->Initialize(config);
     this->currentGame = &game;
@@ -75,6 +80,14 @@ void GameEngine::Run(IGame &game, const EngineConfig& config)
     }
 
     game.OnShutdown();
+}
+
+void GameEngine::SetPauseVoxelSimulation(bool pause)
+{
+    this->pauseVoxelSimulation = pause;
+
+    if(!this->pauseVoxelSimulation)
+        this->voxelUpdateTimer = 0;
 }
 
 void GameEngine::SetPlayer(VoxelObject *player)
@@ -195,7 +208,7 @@ void GameEngine::SimulationThread(IGame& game)
 {
     while (this->running)
     {
-        if (voxelUpdateTimer < voxelFixedDeltaTime) {
+        if (voxelUpdateTimer < voxelFixedDeltaTime || this->pauseVoxelSimulation) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Sleep for a bit to avoid busy waiting
             continue;
         }

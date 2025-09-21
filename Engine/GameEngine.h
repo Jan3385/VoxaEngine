@@ -70,19 +70,50 @@ public:
 
 // FIXME: default should be 1/30.0 but its acting wierdly with voxelFixedDeltaTime
 
-struct EngineConfig{
-    RGB backgroundColor = RGB(0, 0, 0);
-    bool vsync = true;
-    bool automaticLoadingOfChunksInView = true;
-    bool disableGPUSimulations = false;
-    float fixedDeltaTime = 3/30.0;
-    float voxelFixedDeltaTime = 1/30.0;
-};
+namespace Config{
+    enum class EnabledEngineFeatures{
+        NONE = 0,
+        HEAT_SIMULATION = 1 << 0,
+        PRESSURE_SIMULATION = 1 << 1,
+        CHEMICAL_REACTIONS = 1 << 2,
+        ALL = HEAT_SIMULATION | PRESSURE_SIMULATION | CHEMICAL_REACTIONS
+    };
+
+    inline EnabledEngineFeatures operator|(EnabledEngineFeatures a, EnabledEngineFeatures b) {
+        return static_cast<EnabledEngineFeatures>(static_cast<int>(a) | static_cast<int>(b));
+    }
+    inline EnabledEngineFeatures operator&(EnabledEngineFeatures a, EnabledEngineFeatures b) {
+        return static_cast<EnabledEngineFeatures>(static_cast<int>(a) & static_cast<int>(b));
+    }
+    inline EnabledEngineFeatures operator~(EnabledEngineFeatures a) {
+        return static_cast<EnabledEngineFeatures>(~static_cast<int>(a));
+    }
+    inline EnabledEngineFeatures& operator|=(EnabledEngineFeatures& a, EnabledEngineFeatures b) {
+        a = a | b;
+        return a;
+    }
+    inline EnabledEngineFeatures& operator&=(EnabledEngineFeatures& a, EnabledEngineFeatures b) {
+        a = a & b;
+        return a;
+    }
+    
+    struct EngineConfig{
+        RGB backgroundColor = RGB(0, 0, 0);
+        bool vsync = true;
+        bool automaticLoadingOfChunksInView = true;
+        bool disableGPUSimulations = false;
+        float fixedDeltaTime = 3/30.0;
+        float voxelFixedDeltaTime = 1/30.0;
+
+        bool pauseVoxelSimulation = false;
+        EnabledEngineFeatures enabledFeatures = EnabledEngineFeatures::ALL;
+    };
+}
 
 class GameEngine
 {
 private:
-    EngineConfig config;
+    Config::EngineConfig config;
     IGame *currentGame = nullptr;
 
     SDL_GLContext glContext;
@@ -90,6 +121,8 @@ private:
     Uint64 LastFrameEndTime = SDL_GetPerformanceCounter();
 
     std::thread simulationThread;
+
+    bool pauseVoxelSimulation = false;
 
     // Mouse position in screen coordinates
     Vec2f mousePos;
@@ -115,7 +148,7 @@ private:
 
     void StartSimulationThread(IGame& game);
 
-    void Initialize(const EngineConfig& config);
+    void Initialize(const Config::EngineConfig& config);
 public:
     static GameRenderer* renderer;
     static GamePhysics* physics;
@@ -147,7 +180,10 @@ public:
 
     GameEngine();
 
-    void Run(IGame& game, const EngineConfig& config);
+    void Run(IGame& game, const Config::EngineConfig& config);
+
+    void SetPauseVoxelSimulation(bool pause);
+    bool IsVoxelSimulationPaused() const { return pauseVoxelSimulation; }
 
     void SetPlayer(VoxelObject *player);
     VoxelObject *GetPlayer() const { return player; };
