@@ -82,6 +82,58 @@ void GameEngine::Run(IGame &game, const Config::EngineConfig& config)
     game.OnShutdown();
 }
 
+void GameEngine::VoxelSimulationStep()
+{
+    // Update game objects
+    for (auto it = chunkMatrix.voxelObjects.begin(); it != chunkMatrix.voxelObjects.end(); ) {
+        VoxelObject* voxelObject = *it;
+        if (voxelObject->IsEnabled()) {
+            if (!voxelObject->Update(chunkMatrix)) {
+                it = chunkMatrix.voxelObjects.erase(it);
+
+                PhysicsObject* physicsObject = dynamic_cast<PhysicsObject*>(voxelObject);
+                if (physicsObject) {
+                    GameEngine::physics->physicsObjects.remove(physicsObject);
+                }
+
+                delete voxelObject;
+                continue;
+            }
+        }
+        ++it;
+    }
+
+    //Reset voxels to default pre-simulation state
+    #pragma omp parallel for
+    for(uint8_t i = 0; i < 4; ++i)
+    {
+        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+            // decrease lastCheckedCountDown, this slowly kills unused chunks
+            if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
+
+            if (!chunk->dirtyRect.IsEmpty())
+                chunk->SIM_ResetVoxelUpdateData();
+        }
+    }
+
+    //delete all chunks marked for deletion
+    for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
+        if(chunkMatrix.Grid[i]->ShouldChunkDelete(GameEngine::renderer->GetCameraAABB()))
+            chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
+    }
+
+    //Voxel update logic
+    for(uint8_t i = 0; i < 4; ++i) UpdateGridVoxel(i);
+
+    // Update colliders for all chunks
+    for(size_t i = 0; i < chunkMatrix.Grid.size(); ++i) {
+        if(chunkMatrix.Grid[i]->dirtyColliders)
+            physics->Generate2DCollidersForChunk(chunkMatrix.Grid[i]);
+    }
+
+    chunkMatrix.UpdateParticles();
+}
+
 void GameEngine::SetPauseVoxelSimulation(bool pause)
 {
     this->pauseVoxelSimulation = pause;
@@ -212,66 +264,13 @@ void GameEngine::SimulationThread(IGame& game)
             std::this_thread::sleep_for(std::chrono::milliseconds(1)); // Sleep for a bit to avoid busy waiting
             continue;
         }
-            
-
         voxelUpdateTimer -= voxelFixedDeltaTime;
 
         chunkMatrix.voxelMutex.lock();
-        // Update game objects
-        for (auto it = chunkMatrix.voxelObjects.begin(); it != chunkMatrix.voxelObjects.end(); ) {
-            VoxelObject* voxelObject = *it;
-            if (voxelObject->IsEnabled()) {
-                if (!voxelObject->Update(chunkMatrix)) {
-                    it = chunkMatrix.voxelObjects.erase(it);
 
-                    PhysicsObject* physicsObject = dynamic_cast<PhysicsObject*>(voxelObject);
-                    if (physicsObject) {
-                        GameEngine::physics->physicsObjects.remove(physicsObject);
-                    }
-
-                    delete voxelObject;
-                    continue;
-                }
-            }
-            ++it;
-        }
-
-        //Reset voxels to default pre-simulation state
-        #pragma omp parallel for
-        for(uint8_t i = 0; i < 4; ++i)
-        {
-            for (auto& chunk : chunkMatrix.GridSegmented[i]) {
-                // decrease lastCheckedCountDown, this slowly kills unused chunks
-                if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
-
-                if (!chunk->dirtyRect.IsEmpty())
-                    chunk->SIM_ResetVoxelUpdateData();
-            }
-        }
-
-        //delete all chunks marked for deletion
-        for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
-            if(chunkMatrix.Grid[i]->ShouldChunkDelete(GameEngine::renderer->GetCameraAABB()))
-            {
-                chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
-            }
-        }
-
-        //Voxel update logic
-        for(uint8_t i = 0; i < 4; ++i)
-        {
-            UpdateGridVoxel(i);
-        }
-
-        // Update colliders for all chunks
-        for(size_t i = 0; i < chunkMatrix.Grid.size(); ++i) {
-            if(chunkMatrix.Grid[i]->dirtyColliders)
-                physics->Generate2DCollidersForChunk(chunkMatrix.Grid[i]);
-        }
+        this->VoxelSimulationStep();
 
         chunkMatrix.voxelMutex.unlock();
-
-        chunkMatrix.UpdateParticles();
 
         game.VoxelUpdate(this->voxelFixedDeltaTime);
     }

@@ -96,7 +96,7 @@ namespace Config{
         a = a & b;
         return a;
     }
-    
+
     struct EngineConfig{
         RGB backgroundColor = RGB(0, 0, 0);
         bool vsync = true;
@@ -181,6 +181,8 @@ public:
     GameEngine();
 
     void Run(IGame& game, const Config::EngineConfig& config);
+
+    void VoxelSimulationStep();
 
     void SetPauseVoxelSimulation(bool pause);
     bool IsVoxelSimulationPaused() const { return pauseVoxelSimulation; }

@@ -640,7 +640,6 @@ void ChunkMatrix::ExplodeAt(const Vec2i &pos, short int radius)
 
 void ChunkMatrix::UpdateParticles()
 {
-    std::lock_guard<std::mutex> lock(this->voxelMutex);
     // Process particle generators
     for (auto& generator : particleGenerators) {
         if(generator->enabled)

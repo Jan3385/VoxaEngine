@@ -4,7 +4,7 @@ int main(int argc, char* argv[])
 {
     GameEngine engine;
 
-    EngineConfig config;
+    Config::EngineConfig config;
     config.backgroundColor = RGBA(25, 196, 255, 255);
     config.vsync = false;
 
