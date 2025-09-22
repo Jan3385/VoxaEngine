@@ -2,12 +2,15 @@
 
 #include <Registry/VoxelObjectRegistry.h>
 
+#include "Generation/ChunkGenerator.h"
+#include "Generation/VoxelRegistryGenerator.h"
+#include "Input/InputHandler.h"
 
 void Game::OnInitialize()
 {
     Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
     
-    GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = GenerateEmptyChunk;
+    GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
 }
 
 void Game::OnShutdown()
@@ -58,7 +61,7 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 
 void Game::RegisterVoxels()
 {
-    using namespace Registry;
+    Registry::RegisterEditorVoxels();
 }
 
 void Game::RegisterVoxelObjects()
@@ -69,57 +72,35 @@ void Game::RegisterVoxelObjects()
 
 void Game::OnMouseScroll(int yOffset)
 {
-    
+    Input::OnMouseScroll(yOffset);
 }
 
 void Game::OnMouseButtonDown(int button)
 {
-    
+    Input::OnMouseButtonDown(button);
 }
 
 void Game::OnMouseButtonUp(int button)
 {
-    
+    Input::OnMouseButtonUp(button);
 }
 
 void Game::OnMouseMove(int x, int y)
 {
-    
+    Input::OnMouseMove(x, y);
 }
 
 void Game::OnKeyboardDown(int key)
 {
-    
+    Input::OnKeyboardDown(key);
 }
 
 void Game::OnKeyboardUp(int key)
 {
-    
+    Input::OnKeyboardUp(key);
 }
 
 void Game::OnWindowResize(int newX, int newY)
 {
 
-}
-
-Volume::Chunk *GenerateEmptyChunk(const Vec2i &pos, ChunkMatrix &matrix)
-{
-    Volume::Chunk* chunk = new Volume::Chunk(pos);
-
-    for(int x = 0; x < Volume::Chunk::CHUNK_SIZE; ++x){
-        for(int y = 0; y < Volume::Chunk::CHUNK_SIZE; ++y){
-            chunk->voxels[y][x] = CreateVoxelElement(
-                "Empty",
-                Vec2i(
-                    x + pos.x * Volume::Chunk::CHUNK_SIZE, 
-                    y + pos.y * Volume::Chunk::CHUNK_SIZE
-                ),
-                20.0f,
-                Volume::Temperature(21.0f),
-                true
-            );
-        }
-    }
-
-    return chunk;
 }

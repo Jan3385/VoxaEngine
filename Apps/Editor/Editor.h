@@ -25,5 +25,3 @@ private:
 
     void OnWindowResize(int newX, int newY) override;
 };
-
-Volume::Chunk *GenerateEmptyChunk(const Vec2i& pos, ChunkMatrix& matrix);
