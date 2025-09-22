@@ -8,45 +8,45 @@
 #include <Registry/VoxelObjectRegistry.h>
 
 
-Player *Game::player = nullptr;
+Player *Editor::player = nullptr;
 
-void Game::OnInitialize()
+void Editor::OnInitialize()
 {
     Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
-    Game::player = new Player(
+    Editor::player = new Player(
         &GameEngine::instance->chunkMatrix,
         playerProperties->voxelData,
         playerProperties->densityOverride
     );
-    GameEngine::instance->SetPlayer(Game::player);
-    GameEngine::physics->physicsObjects.push_back(Game::player);
+    GameEngine::instance->SetPlayer(Editor::player);
+    GameEngine::physics->physicsObjects.push_back(Editor::player);
     
     GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = ChunkGenerator::GenerateChunk;
 }
 
-void Game::OnShutdown()
+void Editor::OnShutdown()
 {
-    delete Game::player;
-    Game::player = nullptr;
+    delete Editor::player;
+    Editor::player = nullptr;
 }
 
-void Game::Update(float deltaTime)
+void Editor::Update(float deltaTime)
 {
-    GameEngine::renderer->SetCameraPosition(Game::player->GetPosition());
-    Game::player->UpdatePlayer(GameEngine::instance->chunkMatrix, deltaTime);
+    GameEngine::renderer->SetCameraPosition(Editor::player->GetPosition());
+    Editor::player->UpdatePlayer(GameEngine::instance->chunkMatrix, deltaTime);
 }
 
-void Game::FixedUpdate(float fixedDeltaTime)
-{
-
-}
-
-void Game::VoxelUpdate(float deltaTime)
+void Editor::FixedUpdate(float fixedDeltaTime)
 {
 
 }
 
-void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
+void Editor::VoxelUpdate(float deltaTime)
+{
+
+}
+
+void Editor::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 {
     Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(
         GameEngine::instance->GetMousePos(), 
@@ -59,7 +59,7 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
     );
 
     int cursorSize = Input::mouseData.placementRadius * 2 + 1;
-    cursorSize = Game::player->gunEnabled ? 1 : cursorSize;
+    cursorSize = Editor::player->gunEnabled ? 1 : cursorSize;
 
     GameEngine::renderer->RenderCursor(
         mousePosInWorldInt,
@@ -77,12 +77,12 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }
 
-void Game::RegisterVoxels()
+void Editor::RegisterVoxels()
 {
     Registry::RegisterGameVoxels();
 }
 
-void Game::RegisterVoxelObjects()
+void Editor::RegisterVoxelObjects()
 {
     using namespace Registry;
     
@@ -114,37 +114,37 @@ void Game::RegisterVoxelObjects()
     );
 }
 
-void Game::OnMouseScroll(int yOffset)
+void Editor::OnMouseScroll(int yOffset)
 {
     Input::OnMouseScroll(yOffset);
 }
 
-void Game::OnMouseButtonDown(int button)
+void Editor::OnMouseButtonDown(int button)
 {
     Input::OnMouseButtonDown(button);
 }
 
-void Game::OnMouseButtonUp(int button)
+void Editor::OnMouseButtonUp(int button)
 {
     Input::OnMouseButtonUp(button);
 }
 
-void Game::OnMouseMove(int x, int y)
+void Editor::OnMouseMove(int x, int y)
 {
     Input::OnMouseMove(x, y);
 }
 
-void Game::OnKeyboardDown(int key)
+void Editor::OnKeyboardDown(int key)
 {
     Input::OnKeyboardDown(key);
 }
 
-void Game::OnKeyboardUp(int key)
+void Editor::OnKeyboardUp(int key)
 {
     Input::OnKeyboardUp(key);
 }
 
-void Game::OnWindowResize(int newX, int newY)
+void Editor::OnWindowResize(int newX, int newY)
 {
 
 }

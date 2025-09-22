@@ -3,9 +3,9 @@
 #include <GameEngine.h>
 #include "VoxelObject/Player/Player.h"
 
-class Game : public IGame {
+class Editor : public IGame {
 public:
-    ~Game() override = default;
+    ~Editor() override = default;
     static Player *player;
 private:
     void OnInitialize() override;

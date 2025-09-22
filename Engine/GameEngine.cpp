@@ -37,6 +37,7 @@ void GameEngine::Initialize(const Config::EngineConfig& config){
     this->fixedDeltaTime = config.fixedDeltaTime;
     this->voxelFixedDeltaTime = config.voxelFixedDeltaTime;
 
+    this->automaticLoadingOfChunksFromEvents = config.automaticLoadingOfChunksFromEvents;
     this->pauseVoxelSimulation = config.pauseVoxelSimulation;
     this->runHeatSimulation     =   (config.enabledFeatures & Config::EnabledEngineFeatures::HEAT_SIMULATION)       != Config::EnabledEngineFeatures::NONE;
     this->runPressureSimulation =   (config.enabledFeatures & Config::EnabledEngineFeatures::PRESSURE_SIMULATION)   != Config::EnabledEngineFeatures::NONE;

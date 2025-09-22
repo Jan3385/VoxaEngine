@@ -48,6 +48,14 @@ Vec2f Vec2f::operator*(const int &other) const
     );
 }
 
+Vec2f Vec2f::operator*(const float &other) const
+{
+    return Vec2f(
+        this->x * other,
+        this->y * other
+    );
+}
+
 Vec2f Vec2f::operator/(const float &other) const
 {
     if (other == 0.0f) {

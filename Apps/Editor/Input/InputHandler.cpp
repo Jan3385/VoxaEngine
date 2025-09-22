@@ -29,29 +29,19 @@ void Input::OnMouseButtonDown(int button)
 {
     GameEngine::instance->chunkMatrix.voxelMutex.lock();
 
+    if(button == SDL_BUTTON_LEFT)
+        mouseData.leftButtonDown = true;
+    if(button == SDL_BUTTON_RIGHT)
+        mouseData.rightButtonDown = true;
+
     switch (button)
     {
     case SDL_BUTTON_LEFT:
-        GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
-            GameEngine::instance->GetMousePos(),
-            "Solid",
-            GameEngine::renderer->GetCameraOffset(),
-            Volume::Temperature(21.0f),
-            true,
-            0,
-            20
-        );
+        mouseData.leftButtonDown = true;
         break;
     case SDL_BUTTON_RIGHT:
-        GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
-            GameEngine::instance->GetMousePos(),
-            "Empty",
-            GameEngine::renderer->GetCameraOffset(),
-            Volume::Temperature(21.0f),
-            true,
-            0,
-            20
-        );
+        mouseData.rightButtonDown = true;
+        GameEngine::instance->renderer->debugRendering = !GameEngine::instance->renderer->debugRendering;
         break;
     }
 
@@ -59,7 +49,10 @@ void Input::OnMouseButtonDown(int button)
 }
 void Input::OnMouseButtonUp(int button)
 {
-
+    if(button == SDL_BUTTON_LEFT)
+        mouseData.leftButtonDown = false;
+    if(button == SDL_BUTTON_RIGHT)
+        mouseData.rightButtonDown = false;
 }
 void Input::OnMouseMove(int x, int y)
 {

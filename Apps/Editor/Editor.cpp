@@ -6,34 +6,70 @@
 #include "Generation/VoxelRegistryGenerator.h"
 #include "Input/InputHandler.h"
 
-void Game::OnInitialize()
+void Editor::OnInitialize()
 {
     Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
     
     GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
 }
 
-void Game::OnShutdown()
+void Editor::OnShutdown()
 {
 
 }
 
-void Game::Update(float deltaTime)
+void Editor::Update(float deltaTime)
 {
-    GameEngine::renderer->SetCameraPosition(Vec2i(100, 100));
+    Vec2f movementVector = Vec2f(0, 0);
+    if(GameEngine::MovementKeysHeld[0]) //W
+        movementVector += vector::UP;
+    if(GameEngine::MovementKeysHeld[1]) //S
+        movementVector += vector::DOWN;
+    if(GameEngine::MovementKeysHeld[2]) //A
+        movementVector += vector::LEFT;
+    if(GameEngine::MovementKeysHeld[3]) //D
+        movementVector += vector::RIGHT;
+
+    this->cameraPosition += movementVector * deltaTime * 50.0f;
+    GameEngine::renderer->SetCameraPosition(this->cameraPosition);
+
+    if(Input::mouseData.leftButtonDown)
+    {
+        GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+            GameEngine::instance->GetMousePos(),
+            "Solid",
+            GameEngine::renderer->GetCameraOffset(),
+            Volume::Temperature(21.0f),
+            false,
+            0,
+            20
+        );
+    }
+    if(Input::mouseData.rightButtonDown)
+    {
+        GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+            GameEngine::instance->GetMousePos(),
+            "Empty",
+            GameEngine::renderer->GetCameraOffset(),
+            Volume::Temperature(21.0f),
+            false,
+            0,
+            20
+        );
+    }
 }
 
-void Game::FixedUpdate(float fixedDeltaTime)
+void Editor::FixedUpdate(float fixedDeltaTime)
 {
 
 }
 
-void Game::VoxelUpdate(float deltaTime)
+void Editor::VoxelUpdate(float deltaTime)
 {
 
 }
 
-void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
+void Editor::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 {
     Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(
         GameEngine::instance->GetMousePos(), 
@@ -50,6 +86,8 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
         voxelProjection,
         1
     );
+    
+    this->imguiRenderer.RenderPanel();
 
     // Set mouse based on if hovering over an element
     bool mouseOverUI = ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow);
@@ -59,48 +97,48 @@ void Game::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 }
 
-void Game::RegisterVoxels()
+void Editor::RegisterVoxels()
 {
     Registry::RegisterEditorVoxels();
 }
 
-void Game::RegisterVoxelObjects()
+void Editor::RegisterVoxelObjects()
 {
     using namespace Registry;
 
 }
 
-void Game::OnMouseScroll(int yOffset)
+void Editor::OnMouseScroll(int yOffset)
 {
     Input::OnMouseScroll(yOffset);
 }
 
-void Game::OnMouseButtonDown(int button)
+void Editor::OnMouseButtonDown(int button)
 {
     Input::OnMouseButtonDown(button);
 }
 
-void Game::OnMouseButtonUp(int button)
+void Editor::OnMouseButtonUp(int button)
 {
     Input::OnMouseButtonUp(button);
 }
 
-void Game::OnMouseMove(int x, int y)
+void Editor::OnMouseMove(int x, int y)
 {
     Input::OnMouseMove(x, y);
 }
 
-void Game::OnKeyboardDown(int key)
+void Editor::OnKeyboardDown(int key)
 {
     Input::OnKeyboardDown(key);
 }
 
-void Game::OnKeyboardUp(int key)
+void Editor::OnKeyboardUp(int key)
 {
     Input::OnKeyboardUp(key);
 }
 
-void Game::OnWindowResize(int newX, int newY)
+void Editor::OnWindowResize(int newX, int newY)
 {
 
 }

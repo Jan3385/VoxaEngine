@@ -180,7 +180,7 @@ void GameRenderer::SetCameraPosition(Vec2f centerPos)
     this->Camera.corner.y = centerPos.y - this->Camera.size.y / 2.0f;
 
     // Camera position changed
-    if(prevPosition != this->Camera.corner) {
+    if(prevPosition != this->Camera.corner && this->loadChunksInView) {
         // Generate any new chunks
         Vec2f cameraMin = Camera.corner;
         Vec2f cameraMax = Camera.corner + Camera.size;

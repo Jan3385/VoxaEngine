@@ -51,8 +51,8 @@ void Input::OnMouseButtonDown(int button)
     switch (button)
     {
     case SDL_BUTTON_LEFT:
-        if(Game::player->gunEnabled){
-            Game::player->FireGun(
+        if(Editor::player->gunEnabled){
+            Editor::player->FireGun(
                 GameEngine::instance->chunkMatrix
             );
         }else{

@@ -239,6 +239,9 @@ Volume::VoxelElement* ChunkMatrix::VirtualGetAt(const Vec2i &pos, bool includeOb
 
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
     if(!chunk){
+        if(!GameEngine::instance->automaticLoadingOfChunksFromEvents)
+            return nullptr;
+            
         chunk = GenerateChunk(chunkPos);
     }
 
@@ -331,6 +334,8 @@ void ChunkMatrix::VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects)
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
+        if(!GameEngine::instance->automaticLoadingOfChunksFromEvents)
+            return;
         chunk = GenerateChunk(chunkPos);
     }
 
@@ -382,6 +387,8 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     Chunk *chunk = GetChunkAtChunkPosition(chunkPos);
 
     if (!chunk) {
+        if(!GameEngine::instance->automaticLoadingOfChunksFromEvents)
+            return;
         chunk = GenerateChunk(chunkPos);
     }
 

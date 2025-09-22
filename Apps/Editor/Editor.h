@@ -2,10 +2,14 @@
 
 #include <GameEngine.h>
 
-class Game : public IGame {
+#include "Rendering/ImGuiRenderer.h"
+
+class Editor : public IGame {
 public:
-    ~Game() override = default;
+    ~Editor() override = default;
+    Vec2f cameraPosition = Vec2f(0, 0);
 private:
+    ImGuiRenderer imguiRenderer;
     void OnInitialize() override;
     void OnShutdown() override;
     void Update(float deltaTime) override;

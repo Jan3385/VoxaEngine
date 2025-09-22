@@ -23,6 +23,7 @@ public:
     Vec2f operator-(const Vec2f& other) const;
     Vec2f operator+=(const Vec2f& other);
     Vec2f operator*(const int& other) const;
+    Vec2f operator*(const float& other) const;
     Vec2f operator/(const float& other) const;
     bool operator==(const Vec2f& other) const;
     bool operator!=(const Vec2f& other) const;
