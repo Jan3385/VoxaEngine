@@ -107,6 +107,8 @@ namespace Config{
 
         bool pauseVoxelSimulation = false;
         EnabledEngineFeatures enabledFeatures = EnabledEngineFeatures::ALL;
+
+        bool consoleTimerWarnings = false;
     };
 }
 
@@ -169,9 +171,11 @@ public:
 
     Vec2i WindowSize = {800, 600};    
 
-    bool runHeatSimulation = true;
-    bool runPressureSimulation = true;
-    bool runChemicalReactions = true;
+    bool runHeatSimulation;
+    bool runPressureSimulation;
+    bool runChemicalReactions;
+
+    bool consoleTimerWarnings;
 
     /// @return Mouse pos in screen space coordinates
     Vec2f GetMousePos() const { return mousePos; }

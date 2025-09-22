@@ -40,7 +40,7 @@ Volume::Chunk* GenerateChunk(const Vec2i &chunkPos, ChunkMatrix &chunkMatrix){
                     y + chunkPos.y * Volume::Chunk::CHUNK_SIZE
                 ),
                 20.0f,
-                Temperature(21.0f),
+                Volume::Temperature(21.0f),
                 true
             );
         }

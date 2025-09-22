@@ -38,9 +38,10 @@ void GameEngine::Initialize(const Config::EngineConfig& config){
     this->voxelFixedDeltaTime = config.voxelFixedDeltaTime;
 
     this->pauseVoxelSimulation = config.pauseVoxelSimulation;
-    this->runHeatSimulation =       (config.enabledFeatures & Config::EnabledEngineFeatures::HEAT_SIMULATION)       != Config::EnabledEngineFeatures::NONE;
+    this->runHeatSimulation     =   (config.enabledFeatures & Config::EnabledEngineFeatures::HEAT_SIMULATION)       != Config::EnabledEngineFeatures::NONE;
     this->runPressureSimulation =   (config.enabledFeatures & Config::EnabledEngineFeatures::PRESSURE_SIMULATION)   != Config::EnabledEngineFeatures::NONE;
-    this->runChemicalReactions =    (config.enabledFeatures & Config::EnabledEngineFeatures::CHEMICAL_REACTIONS)    != Config::EnabledEngineFeatures::NONE;
+    this->runChemicalReactions  =   (config.enabledFeatures & Config::EnabledEngineFeatures::CHEMICAL_REACTIONS)    != Config::EnabledEngineFeatures::NONE;
+    this->consoleTimerWarnings = config.consoleTimerWarnings;
 
     GameEngine::instance = this;
     GameEngine::renderer->SetVSYNC(config.vsync);
@@ -239,10 +240,10 @@ void GameEngine::Update(IGame& game)
         }
     }
 
-    if(fixedUpdateTimer > fixedDeltaTime*2.5f)
+    if(fixedUpdateTimer > fixedDeltaTime*2.5f && consoleTimerWarnings)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
-    
-    if(voxelUpdateTimer > voxelFixedDeltaTime*2.5f)
+
+    if(voxelUpdateTimer > voxelFixedDeltaTime*2.5f && consoleTimerWarnings && !this->pauseVoxelSimulation)
         std::cout << "Voxel Simulation update timer is too high: " << voxelUpdateTimer << std::endl;
 }
 void GameEngine::UpdateGridVoxel(int pass)

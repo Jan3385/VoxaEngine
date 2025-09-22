@@ -5,8 +5,9 @@ int main(int argc, char* argv[])
     GameEngine engine;
 
     Config::EngineConfig config;
-    config.backgroundColor = RGBA(25, 196, 255, 255);
+    config.backgroundColor = RGB(25, 196, 255);
     config.vsync = false;
+    config.consoleTimerWarnings = true;
 
     Game game;
     engine.Run(game, config);

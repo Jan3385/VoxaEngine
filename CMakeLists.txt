@@ -68,4 +68,4 @@ add_subdirectory(Engine)
 
 # Select which subprojects to build
 set(PROJECT "Game" CACHE STRING "Select the project to build (eg. -DPROJECT=Game)")
-add_subdirectory(Games/${PROJECT})
+add_subdirectory(Apps/${PROJECT})
