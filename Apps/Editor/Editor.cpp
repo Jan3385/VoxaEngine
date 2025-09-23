@@ -37,17 +37,20 @@ void Editor::Update(float deltaTime)
 
     if(Input::mouseData.leftButtonDown)
     {
-        Volume::VoxelElement* placedVoxel;
-        placedVoxel = GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+        std::vector<Volume::VoxelElement*> placedVoxels;
+        placedVoxels = GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
             GameEngine::instance->GetMousePos(),
             "Solid",
             GameEngine::renderer->GetCameraOffset(),
             Volume::Temperature(21.0f),
             false,
-            0,
+            Input::mouseData.brushRadius,
             20
         );
-        placedVoxel->color = Input::mouseData.placeColor;
+        for(auto& placedVoxel : placedVoxels){
+            if(placedVoxel == nullptr) continue;
+            placedVoxel->color = Input::mouseData.placeColor;
+        }
     }
     if(Input::mouseData.rightButtonDown)
     {
@@ -57,7 +60,7 @@ void Editor::Update(float deltaTime)
             GameEngine::renderer->GetCameraOffset(),
             Volume::Temperature(21.0f),
             false,
-            0,
+            Input::mouseData.brushRadius,
             20
         );
     }
@@ -75,6 +78,18 @@ void Editor::VoxelUpdate(float deltaTime)
 
 void Editor::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 {
+    if(this->stateStorage.GetChunkSize() != Vec2i(0, 0)){
+        glm::vec4 outlineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        Vec2i chunkSizeEnd = this->stateStorage.GetChunkSize() * Volume::Chunk::CHUNK_SIZE + Vec2i(Volume::Chunk::CHUNK_SIZE, Volume::Chunk::CHUNK_SIZE);
+        std::vector<glm::vec2> points = {
+            {Volume::Chunk::CHUNK_SIZE, Volume::Chunk::CHUNK_SIZE},
+            {chunkSizeEnd.x, Volume::Chunk::CHUNK_SIZE},
+            {chunkSizeEnd.x, chunkSizeEnd.y},
+            {Volume::Chunk::CHUNK_SIZE, chunkSizeEnd.y}
+        };
+        GameEngine::renderer->DrawClosedShape(points, outlineColor, voxelProjection, 1.0f);
+    }
+
     Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(
         GameEngine::instance->GetMousePos(), 
         GameEngine::renderer->GetCameraOffset()
@@ -88,7 +103,7 @@ void Editor::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
     GameEngine::renderer->RenderCursor(
         mousePosInWorldInt,
         voxelProjection,
-        1
+        Input::mouseData.brushRadius * 2 + 1
     );
     
     this->imguiRenderer.RenderPanel();

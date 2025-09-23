@@ -19,7 +19,7 @@ void Editor::OnInitialize()
         playerProperties->densityOverride
     );
     GameEngine::instance->SetPlayer(Editor::player);
-    GameEngine::physics->physicsObjects.push_back(Editor::player);
+    GameEngine::instance->chunkMatrix.physicsObjects.push_back(Editor::player);
     
     GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = ChunkGenerator::GenerateChunk;
 }

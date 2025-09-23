@@ -44,7 +44,7 @@ public:
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
 
-	Volume::VoxelElement* PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp, bool unmovable, int size, int amount);
+	std::vector<Volume::VoxelElement*> PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp, bool unmovable, int size, int amount);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 
 	Volume::Chunk* (*ChunkGeneratorFunction)(const Vec2i&, ChunkMatrix&) = nullptr;

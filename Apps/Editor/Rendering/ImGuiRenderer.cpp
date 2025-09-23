@@ -12,10 +12,6 @@
 
 void ImGuiRenderer::RenderPanel()
 {
-    ImGui::Begin("Debug panel");
-
-    ImGui::End();
-
     this->RenderLeftPanel();
     this->RenderDrawPanel();
 }
@@ -38,6 +34,8 @@ void ImGuiRenderer::RenderDrawPanel()
 
     ImGui::BeginGroup();
     ImGui::Text("Draw Options");
+    ImGui::SetNextItemWidth(100);
+    ImGui::SliderInt("Brush Radius", &Input::mouseData.brushRadius, 0, 10);
     ImGui::EndGroup();
 
     ImGui::End();
@@ -55,10 +53,11 @@ void ImGuiRenderer::RenderLeftPanel()
     
     // generating new chunks
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(83, 104, 120, 255));
-    ImGui::BeginChild("Chunk Matrix", ImVec2(panelSideWidth - 10, 70), false);
+    ImGui::BeginChild("Chunk Matrix", ImVec2(panelSideWidth - 10, 80), false);
+    ImGui::Text(("(Chunk is " + std::to_string(Volume::Chunk::CHUNK_SIZE) + "x" + std::to_string(Volume::Chunk::CHUNK_SIZE) + " voxels)").c_str());
     ImGui::Text("Generate new matrix");
     ImGui::SetNextItemWidth(panelSideWidth * 0.45f);
-    ImGui::DragInt2("Size", reinterpret_cast<int*>(&Editor::instance.stateStorage.generateNewChunksSize), 0.1f, 1, 100);
+    ImGui::DragInt2("Size", reinterpret_cast<int*>(&Editor::instance.stateStorage.generateNewChunksSize.x), 0.1f, 1, 100);
     ImGui::SameLine();
     if(ImGui::Button("Create"))
         Generator::SetNewMatrix(Editor::instance.stateStorage.generateNewChunksSize);

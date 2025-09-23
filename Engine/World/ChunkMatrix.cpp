@@ -137,26 +137,23 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
 /// @param size 
 /// @param amount 
 /// @return Returns the middle voxel that was placed
-Volume::VoxelElement* ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size, int amount)
+std::vector<Volume::VoxelElement*> ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size, int amount)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
 
-    if(!IsValidWorldPosition(MouseWorldPos)) return nullptr;
+    if(!IsValidWorldPosition(MouseWorldPos)) return {};
 
-    Volume::VoxelElement* middleVoxel = nullptr;
+    std::vector<Volume::VoxelElement*> placedVoxels(size * size * 4 + 1);
 
     for (int x = -size; x <= size; x++)
     {
         for (int y = -size; y <= size; y++)
         {
-            if(x == 0 && y == 0)
-                middleVoxel = PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false);
-            else
-                PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false);
+            placedVoxels.push_back(PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false));
         }
     }
-    return middleVoxel;
+    return placedVoxels;
 }
 
 void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec2f offset)

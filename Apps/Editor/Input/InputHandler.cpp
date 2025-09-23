@@ -11,7 +11,11 @@ Input::MouseData Input::mouseData = {};
 
 void Input::OnMouseScroll(int yOffset)
 {
-    
+    Input::mouseData.brushRadius = std::clamp(
+        Input::mouseData.brushRadius + yOffset,
+        0,
+        10
+    );   
 }
 
 void Input::OnKeyboardDown(int key)

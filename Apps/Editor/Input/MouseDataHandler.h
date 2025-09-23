@@ -8,5 +8,6 @@ namespace Input{
         bool leftButtonDown = false;
         bool rightButtonDown = false;
         RGBA placeColor = RGBA(255, 255, 255, 255);
+        int brushRadius = 0;
     };
 }
