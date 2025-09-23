@@ -608,7 +608,7 @@ void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection
         }
     }
 
-    for (PhysicsObject* physObj : GameEngine::physics->physicsObjects) {
+    for (PhysicsObject* physObj : GameEngine::instance->chunkMatrix.physicsObjects) {
         float rot = physObj->GetRotation();
         float cosR = std::cos(rot);
         float sinR = std::sin(rot);

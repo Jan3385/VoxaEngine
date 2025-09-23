@@ -95,7 +95,7 @@ void GameEngine::VoxelSimulationStep()
 
                 PhysicsObject* physicsObject = dynamic_cast<PhysicsObject*>(voxelObject);
                 if (physicsObject) {
-                    GameEngine::physics->physicsObjects.remove(physicsObject);
+                    GameEngine::instance->chunkMatrix.physicsObjects.remove(physicsObject);
                 }
 
                 delete voxelObject;
@@ -212,7 +212,7 @@ void GameEngine::Update(IGame& game)
     }
 
     //Physics
-    for(PhysicsObject* object : physics->physicsObjects) {
+    for(PhysicsObject* object : chunkMatrix.physicsObjects) {
         if(object->IsEnabled()) {
             object->UpdatePhysicsEffects(chunkMatrix, deltaTime);
         }

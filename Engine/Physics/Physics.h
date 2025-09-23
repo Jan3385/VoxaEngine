@@ -20,7 +20,6 @@ public:
     ~GamePhysics();
     void Step(float deltaTime, ChunkMatrix& chunkMatrix);
 
-    std::list<PhysicsObject*> physicsObjects;
     b2WorldId GetWorldId() const { return worldId; }
 
     void Generate2DCollidersForChunk(

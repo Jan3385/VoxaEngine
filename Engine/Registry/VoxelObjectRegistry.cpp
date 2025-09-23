@@ -141,7 +141,7 @@ void Registry::CreateVoxelObject(std::string id, Vec2f position, ChunkMatrix *ma
     } else if (property->type == VoxelObjectType::PhysicsObject) {
         PhysicsObject *physicsObj = new PhysicsObject(position, property->voxelData, property->densityOverride, id);
         matrix->voxelObjects.push_back(physicsObj);
-        gamePhysics->physicsObjects.push_back(physicsObj);
+        matrix->physicsObjects.push_back(physicsObj);
     } else{
         VoxelObject *voxelObj = nullptr;
 

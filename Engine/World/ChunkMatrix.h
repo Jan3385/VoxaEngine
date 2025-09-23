@@ -7,6 +7,7 @@
 
 #include "World/Chunk.h"
 #include "Shader/ChunkShader.h"
+#include "VoxelObject/PhysicsObject.h"
 
 class ChunkMatrix {
 public:
@@ -38,6 +39,7 @@ public:
 	std::vector<Particle::ParticleGenerator*> particleGenerators;
 
 	std::list<VoxelObject*> voxelObjects;
+	std::list<PhysicsObject*> physicsObjects;
 
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
