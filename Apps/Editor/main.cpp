@@ -12,8 +12,10 @@ int main(int argc, char* argv[])
     config.pauseVoxelSimulation = true;
     config.vsync = true;
 
-    Editor game;
-    engine.Run(game, config);
+    Editor editor;
+    Editor::instance = editor;
+    
+    engine.Run(Editor::instance, config);
 
     return EXIT_SUCCESS;
 }

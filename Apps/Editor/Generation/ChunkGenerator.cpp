@@ -1,5 +1,7 @@
 #include "ChunkGenerator.h"
 
+#include "Editor.h"
+
 Volume::Chunk *Generator::GenerateEmptyChunk(const Vec2i &pos, ChunkMatrix &matrix)
 {
     Volume::Chunk* chunk = new Volume::Chunk(pos);
@@ -20,4 +22,27 @@ Volume::Chunk *Generator::GenerateEmptyChunk(const Vec2i &pos, ChunkMatrix &matr
     }
 
     return chunk;
+}
+
+void Generator::SetNewMatrix(const Vec2i &size)
+{
+    for(int x = 1; x <= size.x; ++x)
+        for(int y = 1; y <= size.y; ++y)
+            GameEngine::instance->LoadChunkAtPosition(Vec2i(x, y));
+    Editor::instance.stateStorage.SetNewChunkSize(size);
+}
+
+void Generator::ExpandMatrixToSize(const Vec2i &size)
+{
+    if(size.x <= Editor::instance.stateStorage.GetChunkSize().x &&
+       size.y <= Editor::instance.stateStorage.GetChunkSize().y){
+        std::cout << "Generator expand size smaller or same than current size, aborting\n";
+        std::cout << "Current size: " << Editor::instance.stateStorage.GetChunkSize() << ", requested size: " << size << std::endl;
+        return;
+    }
+
+    for(int x = 1; x <= size.x; ++x)
+        for(int y = 1; y <= size.y; ++y)
+            GameEngine::instance->LoadChunkAtPosition(Vec2i(x, y));
+    Editor::instance.stateStorage.SetNewChunkSize(size);
 }

@@ -8,4 +8,5 @@ private:
     unsigned short int panelBottomHeight = 150;
     unsigned short int panelSideWidth = 200;
     void RenderDrawPanel();
+    void RenderLeftPanel();
 };

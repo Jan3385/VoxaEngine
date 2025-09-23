@@ -4,10 +4,22 @@
 
 #include "Rendering/ImGuiRenderer.h"
 
+struct EditorStateStorage{
+    Vec2i generateNewChunksSize = Vec2i(1, 1);
+
+    void SetNewChunkSize(const Vec2i& size) { this->chunkSize = size; }
+    Vec2i GetChunkSize() const { return this->chunkSize; }
+private:
+    Vec2i chunkSize = Vec2i(0, 0);
+};
+
 class Editor : public IGame {
 public:
     ~Editor() override = default;
+    static Editor instance;
+
     Vec2f cameraPosition = Vec2f(0, 0);
+    EditorStateStorage stateStorage = {};
 private:
     ImGuiRenderer imguiRenderer;
     void OnInitialize() override;

@@ -41,7 +41,6 @@ void Input::OnMouseButtonDown(int button)
         break;
     case SDL_BUTTON_RIGHT:
         mouseData.rightButtonDown = true;
-        GameEngine::instance->renderer->debugRendering = !GameEngine::instance->renderer->debugRendering;
         break;
     }
 

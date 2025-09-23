@@ -6,6 +6,8 @@
 #include "Generation/VoxelRegistryGenerator.h"
 #include "Input/InputHandler.h"
 
+Editor Editor::instance = Editor();
+
 void Editor::OnInitialize()
 {
     Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
