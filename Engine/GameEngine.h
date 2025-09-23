@@ -124,6 +124,7 @@ private:
     Uint64 LastFrameEndTime = SDL_GetPerformanceCounter();
 
     ChunkMatrix* chunkMatrix;
+    ChunkMatrix* futureChunkMatrix = nullptr;
 
     std::thread simulationThread;
 
@@ -197,8 +198,8 @@ public:
     VoxelObject *GetPlayer() const { return player; };
     ~GameEngine();
 
-    ChunkMatrix* GetActiveChunkMatrix() { return chunkMatrix; }
-    void SetActiveChunkMatrix(ChunkMatrix* matrix) { /* TODO: */ };
+    ChunkMatrix* GetActiveChunkMatrix();
+    ChunkMatrix* SetActiveChunkMatrix(ChunkMatrix* matrix);
 
     Volume::Chunk* LoadChunkAtPosition(Vec2i pos);
 

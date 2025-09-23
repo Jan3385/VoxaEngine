@@ -5,7 +5,7 @@ int main(int argc, char* argv[])
     GameEngine engine;
 
     Config::EngineConfig config;
-    config.backgroundColor = RGB(85, 85, 85);
+    config.backgroundColor = RGB(211, 211, 211);
     config.automaticLoadingOfChunksInView = false;
     config.automaticLoadingOfChunksFromEvents = false;
     config.disableGPUSimulations = true;

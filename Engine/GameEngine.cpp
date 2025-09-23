@@ -31,6 +31,7 @@ void GameEngine::Initialize(const Config::EngineConfig& config){
     }
 
     this->chunkMatrix = new ChunkMatrix();
+    this->chunkMatrix->isActive = true;
 
     GameEngine::physics = new GamePhysics();
 
@@ -244,6 +245,20 @@ void GameEngine::Update(IGame& game)
         }
     }
 
+    // Swap chunk matrices if a new one was set
+    if(this->futureChunkMatrix){
+        this->chunkMatrix->voxelMutex.lock();
+        this->chunkMatrix->chunkCreationMutex.lock();
+
+        this->chunkMatrix->isActive = false;
+        this->futureChunkMatrix->isActive = true;
+        this->chunkMatrix = this->futureChunkMatrix;
+        this->futureChunkMatrix = nullptr;
+
+        this->chunkMatrix->voxelMutex.unlock();
+        this->chunkMatrix->chunkCreationMutex.unlock();
+    }
+
     if(fixedUpdateTimer > fixedDeltaTime*2.5f && consoleTimerWarnings)
         std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
 
@@ -402,6 +417,29 @@ void GameEngine::Render()
 void GameEngine::StartSimulationThread(IGame& game)
 {
     this->simulationThread = std::thread(&GameEngine::SimulationThread, this, std::ref(game));
+}
+
+ChunkMatrix *GameEngine::GetActiveChunkMatrix()
+{
+    if(!this->chunkMatrix){
+        throw std::runtime_error("Active chunk matrix is not yet set! (nullptr)");
+    }
+
+    return this->chunkMatrix;
+}
+
+/// @brief Gives the signal to change the active chunk matrix. The change will be applied at the end of this update call
+/// @param matrix Matrix to set as active
+/// @return Previous active chunk matrix
+/// @warning The old chunk matrix will *not* be deleted. *You* are responsible for managing its memory
+ChunkMatrix *GameEngine::SetActiveChunkMatrix(ChunkMatrix *matrix)
+{
+    if(matrix == nullptr){
+        std::cerr << "Warning: Tried to set active chunk matrix to nullptr!" << std::endl;
+        return this->chunkMatrix;
+    }
+    this->futureChunkMatrix = matrix;
+    return this->chunkMatrix;
 }
 
 /// @brief Loads and generates a chunk at the specified chunk position and adds it to the world
