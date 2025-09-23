@@ -35,7 +35,8 @@ void Editor::Update(float deltaTime)
 
     if(Input::mouseData.leftButtonDown)
     {
-        GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+        Volume::VoxelElement* placedVoxel;
+        placedVoxel = GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
             GameEngine::instance->GetMousePos(),
             "Solid",
             GameEngine::renderer->GetCameraOffset(),
@@ -44,6 +45,7 @@ void Editor::Update(float deltaTime)
             0,
             20
         );
+        placedVoxel->color = Input::mouseData.placeColor;
     }
     if(Input::mouseData.rightButtonDown)
     {

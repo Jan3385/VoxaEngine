@@ -42,8 +42,7 @@ public:
 	Volume::Chunk* GetChunkAtWorldPosition(const Vec2f& pos);
 	Volume::Chunk* GetChunkAtChunkPosition(const Vec2i& pos);
 
-	void PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp, bool unmovable, int size, int amount);
-	void RemoveVoxelAtMousePosition(const Vec2f& pos, Vec2f offset);
+	Volume::VoxelElement* PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Volume::Temperature temp, bool unmovable, int size, int amount);
 	void ExplodeAtMousePosition(const Vec2f& pos, short int radius, Vec2f offset);
 
 	Volume::Chunk* (*ChunkGeneratorFunction)(const Vec2i&, ChunkMatrix&) = nullptr;
@@ -58,13 +57,13 @@ public:
 	void VirtualSetAt(Volume::VoxelElement *voxel, bool includeObjects = false);
 	void VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includeObjects = false);
 
-	void PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, 
+	Volume::VoxelElement* PlaceVoxelAt(const Vec2i &pos, std::string id, Volume::Temperature temp, 
 		bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects = false);
 
-	void PlaceVoxelAt(const Vec2i &pos, uint32_t id, Volume::Temperature temp, 
+	Volume::VoxelElement* PlaceVoxelAt(const Vec2i &pos, uint32_t id, Volume::Temperature temp, 
 		bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects = false);
-		
-	void PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects = false);
+
+	Volume::VoxelElement* PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects = false);
 	void SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp = std::nullopt);
 	// returns true if the gas was displaced. False if no change accured
 	bool TryToDisplaceGas(const Vec2i& pos, std::string id, Volume::Temperature temp, float amount, bool placeUnmovableSolids);

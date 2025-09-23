@@ -53,6 +53,13 @@ RGBA::RGBA(uint32_t color)
     this->g = (color >> 8) & 0xFF; 
     this->b = color & 0xFF;        
 }
+RGBA::RGBA(std::array<float, 4> color)
+{
+    this->r = static_cast<uint8_t>(color[0] * 255.0f);
+    this->g = static_cast<uint8_t>(color[1] * 255.0f);
+    this->b = static_cast<uint8_t>(color[2] * 255.0f);
+    this->a = static_cast<uint8_t>(color[3] * 255.0f);
+}
 glm::vec4 RGBA::getGLMVec4() const
 {
     constexpr float scale = 1.0f / 255.0f;
@@ -64,4 +71,31 @@ glm::vec4 RGBA::getGLMVec4() const
     );
 }
 
+std::array<float, 4> RGBA::toFloatArray() const
+{
+    return std::array<float, 4>{
+        static_cast<float>(this->r) / 255.0f,
+        static_cast<float>(this->g) / 255.0f,
+        static_cast<float>(this->b) / 255.0f,
+        static_cast<float>(this->a) / 255.0f
+    };
+}
+
 RGBA::~RGBA() {}
+
+std::ostream &operator<<(std::ostream &os, const RGB &color)
+{
+    os << "RGB(" << static_cast<int>(color.r) << ", "
+       << static_cast<int>(color.g) << ", "
+       << static_cast<int>(color.b) << ")";
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const RGBA &color)
+{
+    os << "RGBA(" << static_cast<int>(color.r) << ", "
+       << static_cast<int>(color.g) << ", "
+       << static_cast<int>(color.b) << ", "
+       << static_cast<int>(color.a) << ")";
+    return os;
+}

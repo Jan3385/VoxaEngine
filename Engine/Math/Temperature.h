@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace Volume{
     struct Temperature {
 	private:
@@ -21,5 +23,7 @@ namespace Volume{
 		Temperature(float celsius) : Temperature_C(celsius) {}
 
 		static const Temperature absoluteZero;
+
+		friend std::ostream& operator<<(std::ostream& os, const Temperature& temp);
 	};
 }

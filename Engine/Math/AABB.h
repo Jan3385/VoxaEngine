@@ -20,4 +20,6 @@ public:
     bool Contains(const AABB& other) const;
     bool Overlaps(const AABB& other) const;
     AABB Expand(float amount) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const AABB& aabb);
 };

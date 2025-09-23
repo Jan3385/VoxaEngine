@@ -128,30 +128,35 @@ Volume::Chunk *ChunkMatrix::GetChunkAtChunkPosition(const Vec2i &pos)
     return nullptr;
 }
 
-void ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size, int amount)
+/// @brief Places multiple voxels at the mouse position in a square shape
+/// @param pos 
+/// @param id 
+/// @param offset 
+/// @param temp 
+/// @param unmovable 
+/// @param size 
+/// @param amount 
+/// @return Returns the middle voxel that was placed
+Volume::VoxelElement* ChunkMatrix::PlaceVoxelsAtMousePosition(const Vec2f &pos, std::string id, Vec2f offset, Temperature temp, bool unmovable, int size, int amount)
 {
     Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
     Vec2i MouseWorldPosI(MouseWorldPos);
 
-    if(!IsValidWorldPosition(MouseWorldPos)) return;
+    if(!IsValidWorldPosition(MouseWorldPos)) return nullptr;
+
+    Volume::VoxelElement* middleVoxel = nullptr;
 
     for (int x = -size; x <= size; x++)
     {
         for (int y = -size; y <= size; y++)
         {
-            PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false);
+            if(x == 0 && y == 0)
+                middleVoxel = PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false);
+            else
+                PlaceVoxelAt(MouseWorldPosI + Vec2i(x, y), id, temp, unmovable, amount, false);
         }
     }
-}
-
-void ChunkMatrix::RemoveVoxelAtMousePosition(const Vec2f &pos, Vec2f offset)
-{
-    Vec2f MouseWorldPos = MousePosToWorldPos(pos, offset);
-    Vec2i MouseWorldPosI(MouseWorldPos);
-
-    if(!IsValidWorldPosition(MouseWorldPos)) return;
-
-    PlaceVoxelAt(MouseWorldPosI, "Oxygen", Temperature(21), false, 1, true);
+    return middleVoxel;
 }
 
 void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec2f offset)
@@ -404,20 +409,20 @@ void ChunkMatrix::VirtualSetAt_NoDelete(Volume::VoxelElement *voxel, bool includ
     chunk->UpdatedVoxelAt(localPos);
 }
 
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, 
+Volume::VoxelElement* ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, std::string id, Temperature temp, 
     bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects)
 {
     Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
-    PlaceVoxelAt(voxel, destructive, includeObjects);
+    return PlaceVoxelAt(voxel, destructive, includeObjects);
 }
-void ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, uint32_t id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects)
+Volume::VoxelElement* ChunkMatrix::PlaceVoxelAt(const Vec2i &pos, uint32_t id, Volume::Temperature temp, bool placeUnmovableSolids, float amount, bool destructive, bool includeObjects)
 {
     Volume::VoxelElement *voxel = CreateVoxelElement(id, pos, amount, temp, placeUnmovableSolids);
-    PlaceVoxelAt(voxel, destructive, includeObjects);
+    return PlaceVoxelAt(voxel, destructive, includeObjects);
 }
-void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects)
+Volume::VoxelElement* ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bool includeObjects)
 {
-    if(!voxel) return; // Check for null pointer
+    if(!voxel) return nullptr; // Check for null pointer
 
     if(!destructive){
         Volume::VoxelElement* replacedVoxel = this->VirtualGetAt(voxel->position, includeObjects);
@@ -425,13 +430,13 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bo
         if(!replacedVoxel){
             // if no voxel to replace, a problem must have happened. Stop
             delete voxel;
-            return;
+            return nullptr;
         }
 
         //still remain destructive if the voxel its trying to move is unmovable
         if(replacedVoxel->IsUnmoveableSolid()){
             VirtualSetAt(voxel, includeObjects);
-            return;
+            return nullptr;
         }
 
         //look for the same voxel around this one
@@ -450,7 +455,7 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bo
 
 
                 VirtualSetAt(voxel);
-                return;
+                return voxel;
             }
         }
 
@@ -461,7 +466,7 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bo
 
             if(!neighbour){
                 VirtualSetAt(voxel);
-                return;
+                return voxel;
             }
 
             //merge into any voxel thats the same type
@@ -474,20 +479,21 @@ void ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, bool destructive, bo
                      / (neighbour->amount + replacedVoxel->amount));
 
                 VirtualSetAt(voxel);
-                return;
+                return voxel;
             }
 
             //push away elements with the same state
             if(neighbour->GetState() == replacedVoxel->GetState()){
                 PlaceVoxelAt(dir, replacedVoxel->id, replacedVoxel->temperature, replacedVoxel->IsUnmoveableSolid(), replacedVoxel->amount, false);
                 VirtualSetAt(voxel);
-                return;
+                return voxel;
             }
         }
         
     }
         
     VirtualSetAt(voxel, includeObjects);
+    return voxel;
 }
 void ChunkMatrix::SetFireAt(const Vec2i &pos, std::optional<Volume::Temperature> temp)
 {

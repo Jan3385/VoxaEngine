@@ -1,4 +1,5 @@
 #include "Math/AABB.h"
+#include "AABB.h"
 
 Vec2f AABB::GetCenter() const
 {
@@ -46,4 +47,10 @@ AABB AABB::Expand(float amount) const
         size.x + amount * 2,
         size.y + amount * 2
     );
+}
+
+std::ostream &operator<<(std::ostream &os, const AABB &aabb)
+{
+    os << "AABB(" << aabb.corner << ", " << aabb.size << ")";
+    return os;
 }

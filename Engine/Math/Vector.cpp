@@ -174,3 +174,15 @@ bool Vec2i::operator==(const Vec2i &other) const
 {
     return this->x == other.x && this->y == other.y;
 }
+
+std::ostream &operator<<(std::ostream &os, const Vec2f &vec)
+{
+    os << "Vec2f(" << vec.x << ", " << vec.y << ")";
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const Vec2i &vec)
+{
+    os << "Vec2i(" << vec.x << ", " << vec.y << ")";
+    return os;
+}

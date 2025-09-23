@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 class Vec2i;
 
 class Vec2f
@@ -27,6 +29,8 @@ public:
     Vec2f operator/(const float& other) const;
     bool operator==(const Vec2f& other) const;
     bool operator!=(const Vec2f& other) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Vec2f& vec);
 };
 class Vec2i
 {
@@ -53,6 +57,8 @@ public:
     Vec2i operator*(const int& other) const;
     bool operator!=(const Vec2i& other) const;
     bool operator==(const Vec2i& other) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Vec2i& vec);
 };
 
 namespace vector{
