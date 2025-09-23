@@ -25,13 +25,13 @@ void Input::OnKeyboardDown(int key)
 
     switch(key){
         case SDLK_t:
-            Registry::CreateVoxelObject("Barrel", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            Registry::CreateVoxelObject("Barrel", worldMousePos, GameEngine::instance->GetActiveChunkMatrix(), GameEngine::physics);
             break;
         case SDLK_z:
-            Registry::CreateVoxelObject("Ball", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            Registry::CreateVoxelObject("Ball", worldMousePos, GameEngine::instance->GetActiveChunkMatrix(), GameEngine::physics);
             break;
         case SDLK_u:
-            Registry::CreateVoxelObject("Crate", worldMousePos, &GameEngine::instance->chunkMatrix, GameEngine::physics);
+            Registry::CreateVoxelObject("Crate", worldMousePos, GameEngine::instance->GetActiveChunkMatrix(), GameEngine::physics);
             break;
     }
 }
@@ -46,17 +46,17 @@ void Input::OnKeyboardUp(int key)
 }
 void Input::OnMouseButtonDown(int button)
 {
-    GameEngine::instance->chunkMatrix.voxelMutex.lock();
+    GameEngine::instance->GetActiveChunkMatrix()->voxelMutex.lock();
 
     switch (button)
     {
     case SDL_BUTTON_LEFT:
         if(Game::player->gunEnabled){
             Game::player->FireGun(
-                GameEngine::instance->chunkMatrix
+                *GameEngine::instance->GetActiveChunkMatrix()
             );
         }else{
-            GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+            GameEngine::instance->GetActiveChunkMatrix()->PlaceVoxelsAtMousePosition(
                 GameEngine::instance->GetMousePos(),
                 mouseData.placeVoxelType,
                 GameEngine::renderer->GetCameraOffset(),
@@ -68,7 +68,7 @@ void Input::OnMouseButtonDown(int button)
         } 
         break;
     case SDL_BUTTON_RIGHT:
-        GameEngine::instance->chunkMatrix.ExplodeAtMousePosition(
+        GameEngine::instance->GetActiveChunkMatrix()->ExplodeAtMousePosition(
             GameEngine::instance->GetMousePos(),
             15,
             GameEngine::renderer->GetCameraOffset()
@@ -76,7 +76,7 @@ void Input::OnMouseButtonDown(int button)
         break;
     }
 
-    GameEngine::instance->chunkMatrix.voxelMutex.unlock();
+    GameEngine::instance->GetActiveChunkMatrix()->voxelMutex.unlock();
 }
 void Input::OnMouseButtonUp(int button)
 {

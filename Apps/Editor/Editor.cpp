@@ -11,8 +11,8 @@ Editor Editor::instance = Editor();
 void Editor::OnInitialize()
 {
     Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
-    
-    GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
+
+    GameEngine::instance->GetActiveChunkMatrix()->ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
 }
 
 void Editor::OnShutdown()
@@ -38,7 +38,7 @@ void Editor::Update(float deltaTime)
     if(Input::mouseData.leftButtonDown)
     {
         std::vector<Volume::VoxelElement*> placedVoxels;
-        placedVoxels = GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+        placedVoxels = GameEngine::instance->GetActiveChunkMatrix()->PlaceVoxelsAtMousePosition(
             GameEngine::instance->GetMousePos(),
             "Solid",
             GameEngine::renderer->GetCameraOffset(),
@@ -54,7 +54,7 @@ void Editor::Update(float deltaTime)
     }
     if(Input::mouseData.rightButtonDown)
     {
-        GameEngine::instance->chunkMatrix.PlaceVoxelsAtMousePosition(
+        GameEngine::instance->GetActiveChunkMatrix()->PlaceVoxelsAtMousePosition(
             GameEngine::instance->GetMousePos(),
             "Empty",
             GameEngine::renderer->GetCameraOffset(),

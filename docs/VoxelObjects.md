@@ -32,5 +32,5 @@ After that all you need is to call a `void Registry::CreateVoxelObject(std::stri
 
 An example to create an object with the ID "Barrel":
 ```cpp
-Registry::CreateVoxelObject("Barrel", Vec2f(0, 0), &GameEngine::instance->chunkMatrix, GameEngine::physics);
+Registry::CreateVoxelObject("Barrel", Vec2f(0, 0), &GameEngine::instance->GetActiveChunkMatrix(), GameEngine::physics);
 ```

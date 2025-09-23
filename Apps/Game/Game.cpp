@@ -14,14 +14,14 @@ void Game::OnInitialize()
 {
     Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
     Game::player = new Player(
-        &GameEngine::instance->chunkMatrix,
+        GameEngine::instance->GetActiveChunkMatrix(),
         playerProperties->voxelData,
         playerProperties->densityOverride
     );
     GameEngine::instance->SetPlayer(Game::player);
-    GameEngine::instance->chunkMatrix.physicsObjects.push_back(Game::player);
-    
-    GameEngine::instance->chunkMatrix.ChunkGeneratorFunction = ChunkGenerator::GenerateChunk;
+    GameEngine::instance->GetActiveChunkMatrix()->physicsObjects.push_back(Game::player);
+
+    GameEngine::instance->GetActiveChunkMatrix()->ChunkGeneratorFunction = ChunkGenerator::GenerateChunk;
 }
 
 void Game::OnShutdown()
@@ -33,7 +33,7 @@ void Game::OnShutdown()
 void Game::Update(float deltaTime)
 {
     GameEngine::renderer->SetCameraPosition(Game::player->GetPosition());
-    Game::player->UpdatePlayer(GameEngine::instance->chunkMatrix, deltaTime);
+    Game::player->UpdatePlayer(*GameEngine::instance->GetActiveChunkMatrix(), deltaTime);
 }
 
 void Game::FixedUpdate(float fixedDeltaTime)

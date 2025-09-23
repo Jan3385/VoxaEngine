@@ -31,7 +31,7 @@ void Input::OnKeyboardUp(int key)
 }
 void Input::OnMouseButtonDown(int button)
 {
-    GameEngine::instance->chunkMatrix.voxelMutex.lock();
+    GameEngine::instance->GetActiveChunkMatrix()->voxelMutex.lock();
 
     if(button == SDL_BUTTON_LEFT)
         mouseData.leftButtonDown = true;
@@ -48,7 +48,7 @@ void Input::OnMouseButtonDown(int button)
         break;
     }
 
-    GameEngine::instance->chunkMatrix.voxelMutex.unlock();
+    GameEngine::instance->GetActiveChunkMatrix()->voxelMutex.unlock();
 }
 void Input::OnMouseButtonUp(int button)
 {

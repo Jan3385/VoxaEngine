@@ -25,9 +25,9 @@ Player::~Player()
     this->gunLaserParticleGenerator = nullptr;
     
     // Clean up the player object from the physics objects
-    auto it = std::find(GameEngine::instance->chunkMatrix.physicsObjects.begin(), GameEngine::instance->chunkMatrix.physicsObjects.end(), this);
-    if (it != GameEngine::instance->chunkMatrix.physicsObjects.end()) {
-        GameEngine::instance->chunkMatrix.physicsObjects.erase(it);
+    auto it = std::find(GameEngine::instance->GetActiveChunkMatrix()->physicsObjects.begin(), GameEngine::instance->GetActiveChunkMatrix()->physicsObjects.end(), this);
+    if (it != GameEngine::instance->GetActiveChunkMatrix()->physicsObjects.end()) {
+        GameEngine::instance->GetActiveChunkMatrix()->physicsObjects.erase(it);
     }
 }
 

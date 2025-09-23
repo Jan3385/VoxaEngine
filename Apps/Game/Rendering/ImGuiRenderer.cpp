@@ -78,7 +78,7 @@ void ImGuiRenderer::RenderDebugPanel()
     ImGui::SetNextItemWidth(ITEM_WIDTH);
     ImGui::DragFloat("CA sim speed", &GameEngine::instance->voxelFixedDeltaTime, 0.05f, 1/30.0, 4);
 
-    ImGui::Text("Loaded chunks: %lld", GameEngine::instance->chunkMatrix.Grid.size());
+    ImGui::Text("Loaded chunks: %lld", GameEngine::instance->GetActiveChunkMatrix()->Grid.size());
 
     ImGui::Checkbox("Player Gun", &Game::player->gunEnabled);
     ImGui::End();

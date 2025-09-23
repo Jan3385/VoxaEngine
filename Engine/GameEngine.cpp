@@ -30,6 +30,8 @@ void GameEngine::Initialize(const Config::EngineConfig& config){
         throw std::runtime_error("GameEngine is already initialized! Cannot run more than one instance.");
     }
 
+    this->chunkMatrix = new ChunkMatrix();
+
     GameEngine::physics = new GamePhysics();
 
     GameEngine::renderer = new GameRenderer(&glContext, config.backgroundColor, config.automaticLoadingOfChunksInView);
@@ -47,7 +49,7 @@ void GameEngine::Initialize(const Config::EngineConfig& config){
     GameEngine::instance = this;
     GameEngine::renderer->SetVSYNC(config.vsync);
 
-    this->chunkMatrix.Initialize(config.disableGPUSimulations);
+    this->chunkMatrix->Initialize(config.disableGPUSimulations);
 
     //TODO: just a temp fix to stop fixed and simulation time from running at the same time, blocking each other
     this->fixedUpdateTimer = -fixedDeltaTime / 2.0f;
@@ -87,15 +89,15 @@ void GameEngine::Run(IGame &game, const Config::EngineConfig& config)
 void GameEngine::VoxelSimulationStep()
 {
     // Update game objects
-    for (auto it = chunkMatrix.voxelObjects.begin(); it != chunkMatrix.voxelObjects.end(); ) {
+    for (auto it = chunkMatrix->voxelObjects.begin(); it != chunkMatrix->voxelObjects.end(); ) {
         VoxelObject* voxelObject = *it;
         if (voxelObject->IsEnabled()) {
-            if (!voxelObject->Update(chunkMatrix)) {
-                it = chunkMatrix.voxelObjects.erase(it);
+            if (!voxelObject->Update(*chunkMatrix)) {
+                it = chunkMatrix->voxelObjects.erase(it);
 
                 PhysicsObject* physicsObject = dynamic_cast<PhysicsObject*>(voxelObject);
                 if (physicsObject) {
-                    GameEngine::instance->chunkMatrix.physicsObjects.remove(physicsObject);
+                    GameEngine::instance->chunkMatrix->physicsObjects.remove(physicsObject);
                 }
 
                 delete voxelObject;
@@ -109,7 +111,7 @@ void GameEngine::VoxelSimulationStep()
     #pragma omp parallel for
     for(uint8_t i = 0; i < 4; ++i)
     {
-        for (auto& chunk : chunkMatrix.GridSegmented[i]) {
+        for (auto& chunk : chunkMatrix->GridSegmented[i]) {
             // decrease lastCheckedCountDown, this slowly kills unused chunks
             if(chunk->lastCheckedCountDown > 0 ) chunk->lastCheckedCountDown -= 1;
 
@@ -119,21 +121,21 @@ void GameEngine::VoxelSimulationStep()
     }
 
     //delete all chunks marked for deletion
-    for(int32_t i = static_cast<size_t>(chunkMatrix.Grid.size()) - 1; i >= 0; --i){
-        if(chunkMatrix.Grid[i]->ShouldChunkDelete(GameEngine::renderer->GetCameraAABB()))
-            chunkMatrix.DeleteChunk(chunkMatrix.Grid[i]->GetPos());
+    for(int32_t i = static_cast<size_t>(chunkMatrix->Grid.size()) - 1; i >= 0; --i){
+        if(chunkMatrix->Grid[i]->ShouldChunkDelete(GameEngine::renderer->GetCameraAABB()))
+            chunkMatrix->DeleteChunk(chunkMatrix->Grid[i]->GetPos());
     }
 
     //Voxel update logic
     for(uint8_t i = 0; i < 4; ++i) UpdateGridVoxel(i);
 
     // Update colliders for all chunks
-    for(size_t i = 0; i < chunkMatrix.Grid.size(); ++i) {
-        if(chunkMatrix.Grid[i]->dirtyColliders)
-            physics->Generate2DCollidersForChunk(chunkMatrix.Grid[i]);
+    for(size_t i = 0; i < chunkMatrix->Grid.size(); ++i) {
+        if(chunkMatrix->Grid[i]->dirtyColliders)
+            physics->Generate2DCollidersForChunk(chunkMatrix->Grid[i]);
     }
 
-    chunkMatrix.UpdateParticles();
+    chunkMatrix->UpdateParticles();
 }
 
 void GameEngine::SetPauseVoxelSimulation(bool pause)
@@ -167,7 +169,8 @@ GameEngine::~GameEngine()
         GameEngine::physics = nullptr;
     }
 
-    chunkMatrix.cleanup();
+    chunkMatrix->cleanup();
+    delete chunkMatrix;
 
     Registry::VoxelRegistry::CleanupRegistry();
 }
@@ -199,25 +202,25 @@ void GameEngine::Update(IGame& game)
     //Polls events - e.g. window close, keyboard input..
     this->PollEvents();
     
-    this->chunkMatrix.voxelMutex.lock();
+    this->chunkMatrix->voxelMutex.lock();
     
     // Run physics simulation
-    physics->Step(this->deltaTime, this->chunkMatrix);
+    physics->Step(this->deltaTime, *this->chunkMatrix);
 
     // update voxelobjects rotation
-    for(VoxelObject* object : chunkMatrix.voxelObjects) {
+    for(VoxelObject* object : chunkMatrix->voxelObjects) {
         if(object->IsEnabled()) {
             object->UpdateRotatedVoxelBuffer();
         }
     }
 
     //Physics
-    for(PhysicsObject* object : chunkMatrix.physicsObjects) {
+    for(PhysicsObject* object : chunkMatrix->physicsObjects) {
         if(object->IsEnabled()) {
-            object->UpdatePhysicsEffects(chunkMatrix, deltaTime);
+            object->UpdatePhysicsEffects(*chunkMatrix, deltaTime);
         }
     }
-    this->chunkMatrix.voxelMutex.unlock();
+    this->chunkMatrix->voxelMutex.unlock();
 
     game.Update(this->deltaTime);
 
@@ -232,9 +235,9 @@ void GameEngine::Update(IGame& game)
     }
 
     // Initialize any chunks that are not yet initialized
-    while (!chunkMatrix.newUninitializedChunks.empty()) {
-        auto chunk = chunkMatrix.newUninitializedChunks.front();
-        chunkMatrix.newUninitializedChunks.pop();
+    while (!chunkMatrix->newUninitializedChunks.empty()) {
+        auto chunk = chunkMatrix->newUninitializedChunks.front();
+        chunkMatrix->newUninitializedChunks.pop();
 
         if (!chunk->IsInitialized()) {
             chunk->InitializeBuffers();
@@ -250,10 +253,10 @@ void GameEngine::Update(IGame& game)
 void GameEngine::UpdateGridVoxel(int pass)
 {    
     #pragma omp parallel for
-    for (size_t i = 0; i < chunkMatrix.GridSegmented[pass].size(); ++i) {
-        auto& chunk = chunkMatrix.GridSegmented[pass][i];
+    for (size_t i = 0; i < chunkMatrix->GridSegmented[pass].size(); ++i) {
+        auto& chunk = chunkMatrix->GridSegmented[pass][i];
 
-        chunk->UpdateVoxels(&this->chunkMatrix);
+        chunk->UpdateVoxels(this->chunkMatrix);
         
         chunk->dirtyRect.Update();
     }
@@ -268,25 +271,25 @@ void GameEngine::SimulationThread(IGame& game)
         }
         voxelUpdateTimer -= voxelFixedDeltaTime;
 
-        chunkMatrix.voxelMutex.lock();
+        chunkMatrix->voxelMutex.lock();
 
         this->VoxelSimulationStep();
 
-        chunkMatrix.voxelMutex.unlock();
+        chunkMatrix->voxelMutex.unlock();
 
         game.VoxelUpdate(this->voxelFixedDeltaTime);
     }
 }
 void GameEngine::FixedUpdate(IGame& game)
 {
-    this->chunkMatrix.chunkCreationMutex.lock();
-    this->chunkMatrix.voxelMutex.lock();
+    this->chunkMatrix->chunkCreationMutex.lock();
+    this->chunkMatrix->voxelMutex.lock();
 
     // Run heat and pressure simulation
-    this->chunkMatrix.RunGPUSimulations();
+    this->chunkMatrix->RunGPUSimulations();
 
-    this->chunkMatrix.voxelMutex.unlock();
-    this->chunkMatrix.chunkCreationMutex.unlock();
+    this->chunkMatrix->voxelMutex.unlock();
+    this->chunkMatrix->chunkCreationMutex.unlock();
 }
 
 void GameEngine::PollEvents()
@@ -391,9 +394,9 @@ void GameEngine::PollEvents()
 
 void GameEngine::Render()
 {
-    chunkMatrix.voxelMutex.lock();
-    GameEngine::renderer->Render(chunkMatrix, this->mousePos, this->currentGame);
-    chunkMatrix.voxelMutex.unlock();
+    chunkMatrix->voxelMutex.lock();
+    GameEngine::renderer->Render(*chunkMatrix, this->mousePos, this->currentGame);
+    chunkMatrix->voxelMutex.unlock();
 }
 
 void GameEngine::StartSimulationThread(IGame& game)
@@ -406,9 +409,9 @@ void GameEngine::StartSimulationThread(IGame& game)
 /// @return pointer to the loaded chunk or nullptr if failed
 Volume::Chunk* GameEngine::LoadChunkAtPosition(Vec2i pos)
 {
-    if(!chunkMatrix.IsValidChunkPosition(pos)) return nullptr;
-    if(chunkMatrix.GetChunkAtChunkPosition(pos)) return nullptr;
+    if(!chunkMatrix->IsValidChunkPosition(pos)) return nullptr;
+    if(chunkMatrix->GetChunkAtChunkPosition(pos)) return nullptr;
 
-    Volume::Chunk* chunk = chunkMatrix.GenerateChunk(pos);
+    Volume::Chunk* chunk = chunkMatrix->GenerateChunk(pos);
     return chunk;
 }

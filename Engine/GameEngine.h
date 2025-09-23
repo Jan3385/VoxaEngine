@@ -123,6 +123,8 @@ private:
     SDL_Event windowEvent;
     Uint64 LastFrameEndTime = SDL_GetPerformanceCounter();
 
+    ChunkMatrix* chunkMatrix;
+
     std::thread simulationThread;
 
     bool pauseVoxelSimulation = false;
@@ -182,8 +184,6 @@ public:
     /// @return Mouse pos in screen space coordinates
     Vec2f GetMousePos() const { return mousePos; }
 
-    ChunkMatrix chunkMatrix;
-
     GameEngine();
 
     void Run(IGame& game, const Config::EngineConfig& config);
@@ -196,6 +196,9 @@ public:
     void SetPlayer(VoxelObject *player);
     VoxelObject *GetPlayer() const { return player; };
     ~GameEngine();
+
+    ChunkMatrix* GetActiveChunkMatrix() { return chunkMatrix; }
+    void SetActiveChunkMatrix(ChunkMatrix* matrix) { /* TODO: */ };
 
     Volume::Chunk* LoadChunkAtPosition(Vec2i pos);
 

@@ -194,8 +194,8 @@ void GameRenderer::SetCameraPosition(Vec2f centerPos)
         std::vector<Vec2i> chunksToLoad;
         for (int x = chunkMin.x; x <= chunkMax.x; ++x) {
             for (int y = chunkMin.y; y <= chunkMax.y; ++y) {
-                if(!GameEngine::instance->chunkMatrix.IsValidChunkPosition(Vec2i(x, y))) continue;    // Skip invalid chunk positions
-                if(GameEngine::instance->chunkMatrix.GetChunkAtChunkPosition(Vec2i(x, y))) continue;  // If the chunk already exists, skip it
+                if(!GameEngine::instance->GetActiveChunkMatrix()->IsValidChunkPosition(Vec2i(x, y))) continue;    // Skip invalid chunk positions
+                if(GameEngine::instance->GetActiveChunkMatrix()->GetChunkAtChunkPosition(Vec2i(x, y))) continue;  // If the chunk already exists, skip it
                 chunksToLoad.push_back(Vec2i(x, y));
             }
         }
@@ -608,7 +608,7 @@ void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection
         }
     }
 
-    for (PhysicsObject* physObj : GameEngine::instance->chunkMatrix.physicsObjects) {
+    for (PhysicsObject* physObj : GameEngine::instance->GetActiveChunkMatrix()->physicsObjects) {
         float rot = physObj->GetRotation();
         float cosR = std::cos(rot);
         float sinR = std::sin(rot);

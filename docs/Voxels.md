@@ -93,7 +93,7 @@ This "element" has zero density, heat conductivity and heat capacity. It is also
 
 Particles have their own separate storage that is not connected to the 2D voxel array or to any chunk. They are instead tied to a `ChunkMatrix`'s particles vector. They have their own `bool Particle::VoxelParticle::Step(ChunkMatrix *matrix)` function, which should return true when the particle should be deleted. It is recommended but not forced to use the `bool Particle::VoxelParticle::ShouldDie() const` as a return value or for a check so the particle gets deleted when needed.
 
-The particle's step function is called in the voxel simulation thread after performing the cellular automata step. The Step function is to update the `Vec2f Particle::VoxelParticle::position` member variable for any movement with additional checks. You can use `Volume::VoxelElement* ChunkMatrix::VirtualGetAt(Vec2i, bool)`, `void ChunkMatrix::VirtualSetAt(Vec2i, bool)` and `void ChunkMatrix::PlaceVoxelAt(...)` to interact with the world.
+The particle's step function is called in the voxel simulation thread after performing the cellular automata step. The Step function is to update the `Vec2f Particle::VoxelParticle::position` member variable for any movement with additional checks. You can use `Volume::VoxelElement* ChunkMatrix::VirtualGetAt(Vec2i, bool)`, `void ChunkMatrix::VirtualSetAt(Volume::VoxelElement*, bool)` and `Volume::VoxelElement* ChunkMatrix::PlaceVoxelAt(...)` to interact with the world.
 
 Minimal step function may look like the following:
 ```cpp
