@@ -26,4 +26,5 @@ namespace Volume{
 
 		friend std::ostream& operator<<(std::ostream& os, const Temperature& temp);
 	};
+	std::ostream& operator<<(std::ostream& os, const Temperature& temp);
 }

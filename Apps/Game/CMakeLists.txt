@@ -16,7 +16,7 @@ set(RENDER_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Rendering/RenderSha
 set(COMPUTE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Computing/ComputeShaders")
 set(INCLUDE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Includes")
 
-set(TEXTURES_FOLDER "${CMAKE_SOURCE_DIR}/Games/Game/Sources")
+set(TEXTURES_FOLDER "${CMAKE_SOURCE_DIR}/Apps/Game/Sources")
 
 add_custom_target(copy_assets ALL
   # Fonts
