@@ -30,6 +30,18 @@ void Generator::SetNewMatrix(const Vec2i &size)
         for(int y = 1; y <= size.y; ++y)
             GameEngine::instance->LoadChunkAtPosition(Vec2i(x, y));
     Editor::instance.stateStorage.SetNewChunkSize(size);
+
+    // Move camera to the center of the new matrix chunks
+    Vec2f center = Vec2f(
+        (size.x * Volume::Chunk::CHUNK_SIZE) / 2.0f + Volume::Chunk::CHUNK_SIZE,
+        (size.y * Volume::Chunk::CHUNK_SIZE) / 2.0f + Volume::Chunk::CHUNK_SIZE
+    );
+    center = center - Vec2i(
+        (Editor::instance.imguiRenderer.panelSideWidth / Volume::Chunk::RENDER_VOXEL_SIZE) / 2, 
+        -(Editor::instance.imguiRenderer.panelBottomHeight / Volume::Chunk::RENDER_VOXEL_SIZE) / 2
+    );
+    Editor::instance.cameraPosition = center;
+
 }
 
 void Generator::ExpandMatrixToSize(const Vec2i &size)

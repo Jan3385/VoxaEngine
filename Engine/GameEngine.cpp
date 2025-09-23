@@ -171,6 +171,7 @@ GameEngine::~GameEngine()
     }
 
     chunkMatrix->cleanup();
+    chunkMatrix->isActive = false;
     delete chunkMatrix;
 
     Registry::VoxelRegistry::CleanupRegistry();

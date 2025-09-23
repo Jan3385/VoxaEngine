@@ -20,8 +20,8 @@ public:
 
     Vec2f cameraPosition = Vec2f(0, 0);
     EditorStateStorage stateStorage = {};
-private:
     ImGuiRenderer imguiRenderer;
+private:
     void OnInitialize() override;
     void OnShutdown() override;
     void Update(float deltaTime) override;

@@ -72,6 +72,7 @@ void ImGuiRenderer::RenderLeftPanel()
     ImGui::PopStyleColor();
 
     ImGui::Checkbox("Debug Rendering", &GameEngine::instance->renderer->debugRendering);
+    ImGui::Checkbox("Render Mesh Data", &GameEngine::renderer->renderMeshData);
 
     ImGui::End();
 }
