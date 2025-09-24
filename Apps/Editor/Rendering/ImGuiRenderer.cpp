@@ -53,11 +53,28 @@ void ImGuiRenderer::RenderLeftPanel()
     
     // generating new chunks
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(83, 104, 120, 255));
-    ImGui::BeginChild("Chunk Matrix", ImVec2(panelSideWidth - 10, 80), false);
+    ImGui::BeginChild("Chunk Matrix", ImVec2(panelSideWidth - 16, 110), false);
+    ImGui::Spacing();
+
+    std::string currentSceneName = Editor::instance.scenes.empty() ? "No scene" : Editor::instance.scenes[Editor::instance.activeSceneIndex].name;
+    if(ImGui::BeginCombo("Scene", currentSceneName.c_str())){
+        for(int i = 0; i < Editor::instance.scenes.size(); i++){
+            bool isSelected = (i == Editor::instance.activeSceneIndex);
+
+            if(ImGui::Selectable(Editor::instance.scenes[i].name.c_str(), isSelected)){
+                Editor::instance.SwitchToScene(i);
+            }
+                
+            if(isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
     ImGui::Text(("(Chunk is " + std::to_string(Volume::Chunk::CHUNK_SIZE) + "x" + std::to_string(Volume::Chunk::CHUNK_SIZE) + " voxels)").c_str());
     ImGui::Text("Generate new matrix");
     ImGui::SetNextItemWidth(panelSideWidth * 0.45f);
-    ImGui::DragInt2("Size", reinterpret_cast<int*>(&Editor::instance.stateStorage.generateNewChunksSize.x), 0.1f, 1, 100);
+    ImGui::DragInt2("Size", reinterpret_cast<int*>(&Editor::instance.stateStorage.generateNewChunksSize.x), 0.1f, 1, 16, "%d", ImGuiSliderFlags_AlwaysClamp);
     ImGui::SameLine();
     if(ImGui::Button("Create"))
         Generator::SetNewMatrix(Editor::instance.stateStorage.generateNewChunksSize);
@@ -68,6 +85,8 @@ void ImGuiRenderer::RenderLeftPanel()
         Generator::ExpandMatrixToSize(Editor::instance.stateStorage.generateNewChunksSize);
     if(ImGui::IsItemHovered())
         ImGui::SetTooltip("*Expands* an existing chunk matrix to the specified size");
+
+    ImGui::Spacing();
     ImGui::EndChild();
     ImGui::PopStyleColor();
 

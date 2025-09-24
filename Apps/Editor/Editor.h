@@ -6,6 +6,24 @@
 
 struct EditorStateStorage{
     Vec2i generateNewChunksSize = Vec2i(1, 1);
+};
+
+class EditorScene{
+public:
+    enum class Type{
+        Unset,
+        ObjectEditor,
+        Sandbox
+    };
+    EditorScene() = default;
+    EditorScene(std::string name, Type type, ChunkMatrix* chunkMatrix, Vec2i chunkSize)
+        : name(name), type(type), chunkMatrix(chunkMatrix) {
+        this->chunkSize = chunkSize;
+    }
+
+    std::string name;
+    Type type = Type::Unset;
+    ChunkMatrix* chunkMatrix = nullptr;
 
     void SetNewChunkSize(const Vec2i& size) { this->chunkSize = size; }
     Vec2i GetChunkSize() const { return this->chunkSize; }
@@ -21,6 +39,12 @@ public:
     Vec2f cameraPosition = Vec2f(0, 0);
     EditorStateStorage stateStorage = {};
     ImGuiRenderer imguiRenderer;
+    
+    std::vector<EditorScene> scenes = {};
+    int activeSceneIndex = 0;
+    EditorScene* GetActiveScene();
+    void SwitchToScene(int index);
+
 private:
     void OnInitialize() override;
     void OnShutdown() override;

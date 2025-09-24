@@ -32,7 +32,6 @@ void Generator::SetNewMatrix(const Vec2i &size)
     for(int x = 1; x <= size.x; ++x)
         for(int y = 1; y <= size.y; ++y)
             newMatrix->GenerateChunk(Vec2i(x, y));
-    Editor::instance.stateStorage.SetNewChunkSize(size);
 
     // Move camera to the center of the new matrix chunks
     Vec2f center = Vec2f(
@@ -45,19 +44,37 @@ void Generator::SetNewMatrix(const Vec2i &size)
     );
     Editor::instance.cameraPosition = center;
     GameEngine::instance->SetActiveChunkMatrix(newMatrix);
+
+    Editor::instance.scenes.push_back(
+        EditorScene(
+            "Scene " + std::to_string(Editor::instance.scenes.size() + 1),
+            EditorScene::Type::ObjectEditor,
+            newMatrix,
+            size
+        )
+    );
+    Editor::instance.activeSceneIndex = Editor::instance.scenes.size() - 1;
+
+    Editor::instance.GetActiveScene()->SetNewChunkSize(size);
 }
 
 void Generator::ExpandMatrixToSize(const Vec2i &size)
 {
-    if(size.x <= Editor::instance.stateStorage.GetChunkSize().x &&
-       size.y <= Editor::instance.stateStorage.GetChunkSize().y){
+    EditorScene* activeScene = Editor::instance.GetActiveScene();
+
+    if(!activeScene) return;
+
+    Vec2i currentSize = activeScene->GetChunkSize();
+
+    if(size.x <= currentSize.x &&
+       size.y <= currentSize.y){
         std::cout << "Generator expand size smaller or same than current size, aborting\n";
-        std::cout << "Current size: " << Editor::instance.stateStorage.GetChunkSize() << ", requested size: " << size << std::endl;
+        std::cout << "Current size: " << currentSize << ", requested size: " << size << std::endl;
         return;
     }
 
     for(int x = 1; x <= size.x; ++x)
         for(int y = 1; y <= size.y; ++y)
             GameEngine::instance->GetActiveChunkMatrix()->GenerateChunk(Vec2i(x, y));
-    Editor::instance.stateStorage.SetNewChunkSize(size);
+    activeScene->SetNewChunkSize(size);
 }

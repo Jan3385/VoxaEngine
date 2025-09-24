@@ -8,6 +8,31 @@
 
 Editor Editor::instance = Editor();
 
+EditorScene *Editor::GetActiveScene()
+{
+    if (activeSceneIndex < 0 || activeSceneIndex >= scenes.size()) {
+        return nullptr;
+    }
+
+    return &scenes[activeSceneIndex];
+}
+
+void Editor::SwitchToScene(int index)
+{
+    if(index < 0 || index >= this->scenes.size()) {
+        std::cerr << "[Editor] Scene index out of bounds: " << index << std::endl;
+        return;
+    }
+    if(this->scenes[index].chunkMatrix == nullptr) {
+        std::cerr << "[Editor] Scene at index " << index << " has no ChunkMatrix!" << std::endl;
+        return;
+    }
+
+    ChunkMatrix* newMatrix = this->scenes[index].chunkMatrix;
+    GameEngine::instance->SetActiveChunkMatrix(newMatrix);
+    this->activeSceneIndex = index;
+}
+
 void Editor::OnInitialize()
 {
     GameEngine::instance->GetActiveChunkMatrix()->ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
@@ -76,16 +101,21 @@ void Editor::VoxelUpdate(float deltaTime)
 
 void Editor::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
 {
-    if(this->stateStorage.GetChunkSize() != Vec2i(0, 0)){
-        glm::vec4 outlineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        Vec2i chunkSizeEnd = this->stateStorage.GetChunkSize() * Volume::Chunk::CHUNK_SIZE + Vec2i(Volume::Chunk::CHUNK_SIZE, Volume::Chunk::CHUNK_SIZE);
-        std::vector<glm::vec2> points = {
-            {Volume::Chunk::CHUNK_SIZE, Volume::Chunk::CHUNK_SIZE},
-            {chunkSizeEnd.x, Volume::Chunk::CHUNK_SIZE},
-            {chunkSizeEnd.x, chunkSizeEnd.y},
-            {Volume::Chunk::CHUNK_SIZE, chunkSizeEnd.y}
-        };
-        GameEngine::renderer->DrawClosedShape(points, outlineColor, voxelProjection, 1.0f);
+    EditorScene* activeScene = this->GetActiveScene();
+    
+    if(activeScene){
+        Vec2i ChunksSize = activeScene->GetChunkSize();
+        if(ChunksSize != Vec2i(0, 0)){
+            glm::vec4 outlineColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+            Vec2i chunkSizeEnd = ChunksSize * Volume::Chunk::CHUNK_SIZE + Vec2i(Volume::Chunk::CHUNK_SIZE, Volume::Chunk::CHUNK_SIZE);
+            std::vector<glm::vec2> points = {
+                {Volume::Chunk::CHUNK_SIZE, Volume::Chunk::CHUNK_SIZE},
+                {chunkSizeEnd.x, Volume::Chunk::CHUNK_SIZE},
+                {chunkSizeEnd.x, chunkSizeEnd.y},
+                {Volume::Chunk::CHUNK_SIZE, chunkSizeEnd.y}
+            };
+            GameEngine::renderer->DrawClosedShape(points, outlineColor, voxelProjection, 1.0f);
+        }
     }
 
     Vec2f mousePosInWorldF = ChunkMatrix::MousePosToWorldPos(
@@ -162,5 +192,5 @@ void Editor::OnWindowResize(int newX, int newY)
 
 void Editor::OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix)
 {
-    delete oldMatrix;
+    //delete oldMatrix;
 }
