@@ -40,4 +40,5 @@ private:
     void OnKeyboardUp(int key) override;
 
     void OnWindowResize(int newX, int newY) override;
+    void OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix) override;
 };

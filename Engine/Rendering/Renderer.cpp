@@ -201,7 +201,7 @@ void GameRenderer::SetCameraPosition(Vec2f centerPos)
         }
 
         for (const auto& chunkPos : chunksToLoad) {
-            GameEngine::instance->LoadChunkAtPosition(chunkPos);
+            GameEngine::instance->GetActiveChunkMatrix()->GenerateChunk(chunkPos);
         }
     }
 }

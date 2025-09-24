@@ -148,3 +148,8 @@ void Game::OnWindowResize(int newX, int newY)
 {
 
 }
+
+void Game::OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix)
+{
+    delete oldMatrix;
+}

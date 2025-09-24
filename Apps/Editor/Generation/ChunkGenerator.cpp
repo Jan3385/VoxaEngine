@@ -26,9 +26,12 @@ Volume::Chunk *Generator::GenerateEmptyChunk(const Vec2i &pos, ChunkMatrix &matr
 
 void Generator::SetNewMatrix(const Vec2i &size)
 {
+    ChunkMatrix* newMatrix = new ChunkMatrix();
+    newMatrix->ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
+
     for(int x = 1; x <= size.x; ++x)
         for(int y = 1; y <= size.y; ++y)
-            GameEngine::instance->LoadChunkAtPosition(Vec2i(x, y));
+            newMatrix->GenerateChunk(Vec2i(x, y));
     Editor::instance.stateStorage.SetNewChunkSize(size);
 
     // Move camera to the center of the new matrix chunks
@@ -41,7 +44,7 @@ void Generator::SetNewMatrix(const Vec2i &size)
         -(Editor::instance.imguiRenderer.panelBottomHeight / Volume::Chunk::RENDER_VOXEL_SIZE) / 2
     );
     Editor::instance.cameraPosition = center;
-
+    GameEngine::instance->SetActiveChunkMatrix(newMatrix);
 }
 
 void Generator::ExpandMatrixToSize(const Vec2i &size)
@@ -55,6 +58,6 @@ void Generator::ExpandMatrixToSize(const Vec2i &size)
 
     for(int x = 1; x <= size.x; ++x)
         for(int y = 1; y <= size.y; ++y)
-            GameEngine::instance->LoadChunkAtPosition(Vec2i(x, y));
+            GameEngine::instance->GetActiveChunkMatrix()->GenerateChunk(Vec2i(x, y));
     Editor::instance.stateStorage.SetNewChunkSize(size);
 }

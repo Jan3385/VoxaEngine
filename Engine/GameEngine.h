@@ -66,6 +66,10 @@ public:
 
     /// @brief Called when the window is resized. Runs once per frame before Update
     virtual void OnWindowResize(int newX, int newY) = 0;
+
+    /// @brief Called after `ChunkMatrix` inside the `GameEngine` changes
+    /// @note If you are not storing the `oldMatrix` somewhere, you should delete it
+    virtual void OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix) = 0;
 };
 
 // FIXME: default should be 1/30.0 but its acting wierdly with voxelFixedDeltaTime
@@ -146,6 +150,8 @@ private:
 
     //Simulation thread, handles voxel simulation
     void SimulationThread(IGame& game);
+
+    void ChangeChunkMatrix(ChunkMatrix* newMatrix);
 
     void EndFrame();
     void Update(IGame& game);

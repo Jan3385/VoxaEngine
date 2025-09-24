@@ -236,6 +236,11 @@ void GameEngine::Update(IGame& game)
         fixedUpdateTimer -= fixedDeltaTime;
     }
 
+    // Swap chunk matrices if a new one was set
+    if(this->futureChunkMatrix){
+        this->ChangeChunkMatrix(this->futureChunkMatrix);
+    }
+
     // Initialize any chunks that are not yet initialized
     while (!chunkMatrix->newUninitializedChunks.empty()) {
         auto chunk = chunkMatrix->newUninitializedChunks.front();
@@ -244,20 +249,6 @@ void GameEngine::Update(IGame& game)
         if (!chunk->IsInitialized()) {
             chunk->InitializeBuffers();
         }
-    }
-
-    // Swap chunk matrices if a new one was set
-    if(this->futureChunkMatrix){
-        this->chunkMatrix->voxelMutex.lock();
-        this->chunkMatrix->chunkCreationMutex.lock();
-
-        this->chunkMatrix->isActive = false;
-        this->futureChunkMatrix->isActive = true;
-        this->chunkMatrix = this->futureChunkMatrix;
-        this->futureChunkMatrix = nullptr;
-
-        this->chunkMatrix->voxelMutex.unlock();
-        this->chunkMatrix->chunkCreationMutex.unlock();
     }
 
     if(fixedUpdateTimer > fixedDeltaTime*2.5f && consoleTimerWarnings)
@@ -296,7 +287,26 @@ void GameEngine::SimulationThread(IGame& game)
         game.VoxelUpdate(this->voxelFixedDeltaTime);
     }
 }
-void GameEngine::FixedUpdate(IGame& game)
+void GameEngine::ChangeChunkMatrix(ChunkMatrix *newMatrix)
+{
+    newMatrix->Initialize(this->config.disableGPUSimulations);
+
+    ChunkMatrix* oldMatrix = this->chunkMatrix;
+    oldMatrix->voxelMutex.lock();
+    oldMatrix->chunkCreationMutex.lock();
+
+    oldMatrix->isActive = false;
+    this->futureChunkMatrix->isActive = true;
+
+    this->chunkMatrix = this->futureChunkMatrix;
+    this->futureChunkMatrix = nullptr;
+
+    oldMatrix->voxelMutex.unlock();
+    oldMatrix->chunkCreationMutex.unlock();
+
+    this->currentGame->OnSceneChange(oldMatrix, this->chunkMatrix);
+}
+void GameEngine::FixedUpdate(IGame &game)
 {
     this->chunkMatrix->chunkCreationMutex.lock();
     this->chunkMatrix->voxelMutex.lock();
@@ -441,16 +451,4 @@ ChunkMatrix *GameEngine::SetActiveChunkMatrix(ChunkMatrix *matrix)
     }
     this->futureChunkMatrix = matrix;
     return this->chunkMatrix;
-}
-
-/// @brief Loads and generates a chunk at the specified chunk position and adds it to the world
-/// @param pos position in chunk coordinates
-/// @return pointer to the loaded chunk or nullptr if failed
-Volume::Chunk* GameEngine::LoadChunkAtPosition(Vec2i pos)
-{
-    if(!chunkMatrix->IsValidChunkPosition(pos)) return nullptr;
-    if(chunkMatrix->GetChunkAtChunkPosition(pos)) return nullptr;
-
-    Volume::Chunk* chunk = chunkMatrix->GenerateChunk(pos);
-    return chunk;
 }

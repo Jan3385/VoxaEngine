@@ -178,7 +178,7 @@ void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
         // Read the output data
         uint32_t *reactionsSizePointer = atomicCounterBuffer.ReadBuffer();
         reactionsSize = *reactionsSizePointer;
-        delete reactionsSizePointer;
+        delete[] reactionsSizePointer;
 
         reactionOutput = chemicalOutputDataBuffer.ReadBuffer(reactionsSize);
     }

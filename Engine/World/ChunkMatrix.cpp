@@ -169,9 +169,14 @@ void ChunkMatrix::ExplodeAtMousePosition(const Vec2f &pos, short int radius, Vec
     this->ExplodeAt(MouseWorldPosI, radius);
 }
 
-// Generates a chunk and inputs it into the grid, returns a pointer to it
+/// @brief Loads and generates a chunk at the specified chunk position and adds it to the world
+/// @param chunkPos position in chunk coordinates
+/// @return pointer to the loaded chunk or nullptr if failed
 Volume::Chunk* ChunkMatrix::GenerateChunk(const Vec2i &chunkPos)
 {
+    if(!this->IsValidChunkPosition(chunkPos)) return nullptr;
+    if(this->GetChunkAtChunkPosition(chunkPos)) return nullptr;
+
     this->chunkCreationMutex.lock();
     if(this->ChunkGeneratorFunction == nullptr) {
         this->chunkCreationMutex.unlock();

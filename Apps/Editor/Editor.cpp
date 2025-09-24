@@ -159,3 +159,8 @@ void Editor::OnWindowResize(int newX, int newY)
 {
 
 }
+
+void Editor::OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix)
+{
+    delete oldMatrix;
+}
