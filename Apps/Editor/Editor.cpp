@@ -10,8 +10,6 @@ Editor Editor::instance = Editor();
 
 void Editor::OnInitialize()
 {
-    Registry::VoxelObjectProperty *playerProperties = Registry::VoxelObjectRegistry::GetProperties("Player");
-
     GameEngine::instance->GetActiveChunkMatrix()->ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
 }
 

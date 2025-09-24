@@ -153,6 +153,7 @@ void Registry::CreateVoxelObject(std::string id, Vec2f position, ChunkMatrix *ma
             throw std::runtime_error("No factory found for custom game object with id: " + factoryID);
 
         voxelObj = (*factory)(position, property->voxelData, id);
+        matrix->voxelObjects.push_back(voxelObj);
     }
 }
 
