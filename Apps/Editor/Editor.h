@@ -4,16 +4,12 @@
 
 #include "Rendering/ImGuiRenderer.h"
 
-struct EditorStateStorage{
-    Vec2i generateNewChunksSize = Vec2i(1, 1);
-};
-
 class EditorScene{
 public:
     enum class Type{
-        Unset,
-        ObjectEditor,
-        Sandbox
+        Unset = 0,
+        ObjectEditor = 1,
+        Sandbox = 2
     };
     EditorScene() = default;
     EditorScene(std::string name, Type type, ChunkMatrix* chunkMatrix, Vec2i chunkSize)
@@ -29,6 +25,11 @@ public:
     Vec2i GetChunkSize() const { return this->chunkSize; }
 private:
     Vec2i chunkSize = Vec2i(0, 0);
+};
+
+struct EditorStateStorage{
+    EditorScene::Type selectedSceneType = EditorScene::Type::ObjectEditor;
+    Vec2i generateNewChunksSize = Vec2i(1, 1);
 };
 
 class Editor : public IGame {
@@ -64,5 +65,7 @@ private:
     void OnKeyboardUp(int key) override;
 
     void OnWindowResize(int newX, int newY) override;
+
+    bool isInDefaultScene = true;
     void OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix) override;
 };

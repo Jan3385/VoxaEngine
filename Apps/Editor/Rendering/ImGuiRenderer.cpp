@@ -13,7 +13,31 @@
 void ImGuiRenderer::RenderPanel()
 {
     this->RenderLeftPanel();
-    this->RenderDrawPanel();
+
+    EditorScene *activeScene = Editor::instance.GetActiveScene();
+
+    if(!activeScene) this->RenderEmptyBottomPanel();
+    else switch(activeScene->type){
+        case EditorScene::Type::ObjectEditor:
+            this->RenderDrawPanel();
+            break;
+        default:
+            this->RenderEmptyBottomPanel();
+            break;
+    }
+}
+
+void ImGuiRenderer::RenderEmptyBottomPanel()
+{
+    Vec2i screenCorner = GameEngine::instance->WindowSize;
+
+    ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+    ImGui::SetWindowPos(ImVec2(panelSideWidth, screenCorner.y - panelBottomHeight));
+    ImGui::SetWindowSize(ImVec2(screenCorner.x, panelBottomHeight));
+    
+
+
+    ImGui::End();
 }
 
 void ImGuiRenderer::RenderDrawPanel()
@@ -53,7 +77,7 @@ void ImGuiRenderer::RenderLeftPanel()
     
     // generating new chunks
     ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(83, 104, 120, 255));
-    ImGui::BeginChild("Chunk Matrix", ImVec2(panelSideWidth - 16, 110), false);
+    ImGui::BeginChild("Chunk Matrix", ImVec2(panelSideWidth - 16, 130), false);
     ImGui::Spacing();
 
     std::string currentSceneName = Editor::instance.scenes.empty() ? "No scene" : Editor::instance.scenes[Editor::instance.activeSceneIndex].name;
@@ -72,12 +96,30 @@ void ImGuiRenderer::RenderLeftPanel()
     }
 
     ImGui::Text(("(Chunk is " + std::to_string(Volume::Chunk::CHUNK_SIZE) + "x" + std::to_string(Volume::Chunk::CHUNK_SIZE) + " voxels)").c_str());
-    ImGui::Text("Generate new matrix");
+
+    ImGui::Text("Type of new scenes");
+    std::string currentTypeName = this->sceneTypeNames[this->currentlySelectedTypeIndex];
+    if(ImGui::BeginCombo("Type", currentTypeName.c_str())){
+        for(int i = 0; i < this->sceneTypeNames.size(); i++){
+            bool isSelected = (i == this->currentlySelectedTypeIndex);
+
+            if(ImGui::Selectable(this->sceneTypeNames[i].c_str(), isSelected)){
+                this->currentlySelectedTypeIndex = i;
+                Editor::instance.stateStorage.selectedSceneType = static_cast<EditorScene::Type>(i + 1);
+            }
+                
+            if(isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
+
     ImGui::SetNextItemWidth(panelSideWidth * 0.45f);
     ImGui::DragInt2("Size", reinterpret_cast<int*>(&Editor::instance.stateStorage.generateNewChunksSize.x), 0.1f, 1, 16, "%d", ImGuiSliderFlags_AlwaysClamp);
     ImGui::SameLine();
     if(ImGui::Button("Create"))
-        Generator::SetNewMatrix(Editor::instance.stateStorage.generateNewChunksSize);
+        Generator::SetNewMatrix(Editor::instance.stateStorage.generateNewChunksSize, Editor::instance.stateStorage.selectedSceneType);
     if(ImGui::IsItemHovered())
         ImGui::SetTooltip("Generates a *new chunk matrix* of specified size");
 

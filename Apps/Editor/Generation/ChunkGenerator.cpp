@@ -1,7 +1,5 @@
 #include "ChunkGenerator.h"
 
-#include "Editor.h"
-
 Volume::Chunk *Generator::GenerateEmptyChunk(const Vec2i &pos, ChunkMatrix &matrix)
 {
     Volume::Chunk* chunk = new Volume::Chunk(pos);
@@ -24,7 +22,7 @@ Volume::Chunk *Generator::GenerateEmptyChunk(const Vec2i &pos, ChunkMatrix &matr
     return chunk;
 }
 
-void Generator::SetNewMatrix(const Vec2i &size)
+void Generator::SetNewMatrix(const Vec2i &size, EditorScene::Type type)
 {
     ChunkMatrix* newMatrix = new ChunkMatrix();
     newMatrix->ChunkGeneratorFunction = Generator::GenerateEmptyChunk;
@@ -47,8 +45,8 @@ void Generator::SetNewMatrix(const Vec2i &size)
 
     Editor::instance.scenes.push_back(
         EditorScene(
-            "Scene " + std::to_string(Editor::instance.scenes.size() + 1),
-            EditorScene::Type::ObjectEditor,
+            editorTypeToStr[static_cast<int>(type)-1] + " " + std::to_string(Editor::instance.scenes.size() + 1),
+            type,
             newMatrix,
             size
         )
