@@ -10,16 +10,16 @@ Editor Editor::instance = Editor();
 
 EditorScene *Editor::GetActiveScene()
 {
-    if (activeSceneIndex < 0 || activeSceneIndex >= scenes.size()) {
+    if (activeSceneIndex >= scenes.size()) {
         return nullptr;
     }
 
     return &scenes[activeSceneIndex];
 }
 
-void Editor::SwitchToScene(int index)
+void Editor::SwitchToScene(size_t index)
 {
-    if(index < 0 || index >= this->scenes.size()) {
+    if(index >= this->scenes.size()) {
         std::cerr << "[Editor] Scene index out of bounds: " << index << std::endl;
         return;
     }

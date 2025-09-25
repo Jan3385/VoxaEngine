@@ -42,9 +42,9 @@ public:
     ImGuiRenderer imguiRenderer;
     
     std::vector<EditorScene> scenes = {};
-    int activeSceneIndex = 0;
+    size_t activeSceneIndex = 0;
     EditorScene* GetActiveScene();
-    void SwitchToScene(int index);
+    void SwitchToScene(size_t index);
 
 private:
     void OnInitialize() override;

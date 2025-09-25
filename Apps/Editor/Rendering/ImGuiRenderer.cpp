@@ -82,7 +82,7 @@ void ImGuiRenderer::RenderLeftPanel()
 
     std::string currentSceneName = Editor::instance.scenes.empty() ? "No scene" : Editor::instance.scenes[Editor::instance.activeSceneIndex].name;
     if(ImGui::BeginCombo("Scene", currentSceneName.c_str())){
-        for(int i = 0; i < Editor::instance.scenes.size(); i++){
+        for(size_t i = 0; i < Editor::instance.scenes.size(); i++){
             bool isSelected = (i == Editor::instance.activeSceneIndex);
 
             if(ImGui::Selectable(Editor::instance.scenes[i].name.c_str(), isSelected)){
@@ -100,7 +100,7 @@ void ImGuiRenderer::RenderLeftPanel()
     ImGui::Text("Type of new scenes");
     std::string currentTypeName = this->sceneTypeNames[this->currentlySelectedTypeIndex];
     if(ImGui::BeginCombo("Type", currentTypeName.c_str())){
-        for(int i = 0; i < this->sceneTypeNames.size(); i++){
+        for(size_t i = 0; i < this->sceneTypeNames.size(); i++){
             bool isSelected = (i == this->currentlySelectedTypeIndex);
 
             if(ImGui::Selectable(this->sceneTypeNames[i].c_str(), isSelected)){
