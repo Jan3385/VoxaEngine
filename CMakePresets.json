@@ -49,6 +49,20 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
                 "PROJECT": "Editor"
             }
+        },
+        {
+            "name": "editor-debug",
+            "hidden": false,
+            "description": "Debug configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic -Wno-unused-parameter -g",
+                "CMAKE_CXX_FLAGS_DEBUG": "-g",
+                "PROJECT": "Editor"
+            }
         }
     ]
 }
