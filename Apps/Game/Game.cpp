@@ -90,7 +90,7 @@ void Game::RegisterVoxelObjects()
         "Player",
         VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
             .SetDensityOverride(985.0f)
-            .SetVoxelFilePathName("Player")
+            .SetVoxelFilePathName("Textures/Objects/Player")
             .Build()
     );
     VoxelObjectRegistry::RegisterVoxelObject(
