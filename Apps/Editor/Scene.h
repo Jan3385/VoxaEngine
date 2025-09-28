@@ -18,12 +18,6 @@ public:
         : name(name), type(type), chunkMatrix(chunkMatrix) {
         this->chunkSize = chunkSize;
     }
-    virtual ~EditorScene(){
-        if(this->chunkMatrix){
-            delete this->chunkMatrix;
-            this->chunkMatrix = nullptr;
-        }
-    };
 
     std::string name;
     ChunkMatrix* chunkMatrix = nullptr;

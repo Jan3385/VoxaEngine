@@ -51,6 +51,7 @@ void Generator::SetNewMatrix(const Vec2i &size, EditorScene::Type type)
             size
         )
     );
+    
     Editor::instance.activeSceneIndex = Editor::instance.scenes.size() - 1;
 
     Editor::instance.GetActiveScene()->SetNewChunkSize(size);
