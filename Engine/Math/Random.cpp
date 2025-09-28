@@ -2,7 +2,7 @@
 
 Random::Random()
 {
-    this->seed = 12345;
+    this->seed = rand();
     generator.seed(this->seed);
 }
 Random::Random(int seed)

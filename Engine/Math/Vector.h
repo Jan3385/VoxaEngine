@@ -14,12 +14,19 @@ public:
     Vec2f(const Vec2i vec);
     ~Vec2f();
 
-    void RotateLeft();
-    void RotateRight();
-    void Rotate180();
-
+    /// @brief Get the length of the vector
+    /// @note slower than `.LengthSquared()`
+    /// @return The length of the vector
     float Length() const;
+    
+    /// @brief Get the squared length of the vector
+    /// @note Faster than `.Length()` and great for comparing which vector is shorter/longer
+    /// @return The squared length (length^2) of the vector
     float LengthSquared() const;
+
+    Vec2i Round() const;
+    Vec2i Floor() const;
+    Vec2i Ceil() const;
 
     Vec2f operator+(const Vec2f& other) const;
     Vec2f operator-(const Vec2f& other) const;
@@ -46,7 +53,14 @@ public:
     void RotateRight();
     void Rotate180();
 
+    /// @brief Get the length of the vector
+    /// @note slower than `.LengthSquared()`
+    /// @return The length of the vector
     float Length() const;
+
+    /// @brief Get the squared length of the vector
+    /// @note Faster than `.Length()` and great for comparing which vector is shorter/longer
+    /// @return The squared length (length^2) of the vector
     float LengthSquared() const;
 
     Vec2i operator+(const Vec2i& other) const;

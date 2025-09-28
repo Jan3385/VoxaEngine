@@ -116,6 +116,16 @@ void Vec2i::Rotate180()
     this->y = -this->y;
 }
 
+float Vec2i::Length() const
+{
+    return std::sqrt(this->x * this->x + this->y * this->y);
+}
+
+float Vec2i::LengthSquared() const
+{
+    return this->x * this->x + this->y * this->y;
+}
+
 float Vec2f::Length() const
 {
     return std::sqrt(this->x * this->x + this->y * this->y);
@@ -124,6 +134,21 @@ float Vec2f::Length() const
 float Vec2f::LengthSquared() const
 {
     return this->x * this->x + this->y * this->y;
+}
+
+Vec2i Vec2f::Round() const
+{
+    return Vec2i(std::round(this->x), std::round(this->y));
+}
+
+Vec2i Vec2f::Floor() const
+{
+    return Vec2i(std::floor(this->x), std::floor(this->y));
+}
+
+Vec2i Vec2f::Ceil() const
+{
+    return Vec2i(std::ceil(this->x), std::ceil(this->y));
 }
 
 Vec2i Vec2i::operator+(const Vec2i &other) const

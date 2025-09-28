@@ -21,4 +21,6 @@ public:
     // disable copy and move semantics
     Random(const Random&) = delete;
     Random& operator=(const Random&) = delete;
+    Random(Random&&) = delete;
+    Random& operator=(Random&&) = delete;
 };
