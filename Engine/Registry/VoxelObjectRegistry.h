@@ -38,7 +38,7 @@ namespace Registry
     public:
         VoxelObjectBuilder(VoxelObjectType objectType);
         VoxelObjectBuilder& SetDensityOverride(float density);
-        VoxelObjectBuilder& SetVoxelFileName(std::string fileName);
+        VoxelObjectBuilder& SetVoxelFilePathName(std::string fileName);
         VoxelObjectBuilder& SpecialFactoryOverride(std::string factoryID);
         VoxelObjectProperty Build();
     private:
@@ -59,7 +59,8 @@ namespace Registry
 
         static void RegisterVoxelObject(const std::string &name, VoxelObjectProperty property);
         static void RegisterVoxelObjectFactory(const std::string &name, VoxelObjectFactory factory);
-        static void SetVoxelsFromFile(VoxelObjectProperty &property, const std::string &fileName);
+        static void GetVoxelsFromFiles(std::vector<std::vector<VoxelData>> &elements, const std::string &fileName);
+        static void GetVoxelsFromFile(std::vector<std::vector<VoxelData>> &elements, const std::string &fileName, bool loadingColor = true);
 
         static VoxelObjectFactory *FindFactoryWithID(std::string id);
 

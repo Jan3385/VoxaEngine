@@ -6,6 +6,8 @@
 #include "Generation/VoxelRegistryGenerator.h"
 #include "Input/InputHandler.h"
 
+#include "Generation/VoxelObjLoader.h"
+
 Editor Editor::instance = Editor();
 
 EditorScene *Editor::GetActiveScene()
@@ -142,6 +144,8 @@ void Editor::Render(glm::mat4 voxelProjection, glm::mat4 viewProjection)
         ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
     else
         ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+
+    this->imguiRenderer.ActOnFileBrowserSelection();
 }
 
 void Editor::RegisterVoxels()

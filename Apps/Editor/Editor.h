@@ -2,34 +2,13 @@
 
 #include <GameEngine.h>
 
+#include "Scene.h"
 #include "Rendering/ImGuiRenderer.h"
-
-class EditorScene{
-public:
-    enum class Type{
-        Unset = 0,
-        ObjectEditor = 1,
-        Sandbox = 2
-    };
-    EditorScene() = default;
-    EditorScene(std::string name, Type type, ChunkMatrix* chunkMatrix, Vec2i chunkSize)
-        : name(name), type(type), chunkMatrix(chunkMatrix) {
-        this->chunkSize = chunkSize;
-    }
-
-    std::string name;
-    Type type = Type::Unset;
-    ChunkMatrix* chunkMatrix = nullptr;
-
-    void SetNewChunkSize(const Vec2i& size) { this->chunkSize = size; }
-    Vec2i GetChunkSize() const { return this->chunkSize; }
-private:
-    Vec2i chunkSize = Vec2i(0, 0);
-};
 
 struct EditorStateStorage{
     EditorScene::Type selectedSceneType = EditorScene::Type::ObjectEditor;
     Vec2i generateNewChunksSize = Vec2i(1, 1);
+    bool loadColorFromBMP = true;
 };
 
 class Editor : public IGame {

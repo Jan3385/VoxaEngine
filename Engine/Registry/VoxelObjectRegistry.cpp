@@ -33,10 +33,13 @@ void Registry::VoxelObjectRegistry::RegisterVoxelObjectFactory(const std::string
     
     voxelObjectFactories[name] = factory;
 }
-void Registry::VoxelObjectRegistry::SetVoxelsFromFile(VoxelObjectProperty &property, const std::string &fileName)
+/// @brief Loads voxel data for filename.bmp and filename.mat.bmp files
+/// @param elements vector to fill with voxel data
+/// @param fileName name of the file without extension (with path)
+void Registry::VoxelObjectRegistry::GetVoxelsFromFiles(std::vector<std::vector<VoxelData>> &elements, const std::string &fileName)
 {
-    const std::string voxelImage = "Textures/Objects/" + fileName + ".bmp";
-    const std::string materialImage = "Textures/Objects/" + fileName + ".mat.bmp";
+    const std::string voxelImage = fileName + ".bmp";
+    const std::string materialImage = fileName + ".mat.bmp";
 
     SDL_Surface *colorSurface = SDL_LoadBMP(voxelImage.c_str());
     SDL_Surface *materialSurface = SDL_LoadBMP(materialImage.c_str());
@@ -51,7 +54,7 @@ void Registry::VoxelObjectRegistry::SetVoxelsFromFile(VoxelObjectProperty &prope
         throw std::runtime_error("[VoxelObjectRegistry] Color and material images must be in ARGB8888 format for file named: " + fileName);
     }
 
-    property.voxelData.resize(colorSurface->h, std::vector<VoxelData>(colorSurface->w));
+    elements.resize(colorSurface->h, std::vector<VoxelData>(colorSurface->w));
     for (int y = 0; y < colorSurface->h; ++y) {
         for (int x = 0; x < colorSurface->w; ++x) {
             Uint32 colorPixel = ((Uint32*)colorSurface->pixels)[y * colorSurface->w + x];
@@ -60,7 +63,7 @@ void Registry::VoxelObjectRegistry::SetVoxelsFromFile(VoxelObjectProperty &prope
             RGBA color = RGBA(colorPixel);
 
             if(color.a == 0) {
-                property.voxelData[y][x] = { "", color }; // Transparent pixel
+                elements[y][x] = { "", color }; // Transparent pixel
                 continue; // Skip transparent pixels
             }
 
@@ -71,12 +74,60 @@ void Registry::VoxelObjectRegistry::SetVoxelsFromFile(VoxelObjectProperty &prope
                 .color = color
             };
 
-            property.voxelData[y][x] = data;
+            elements[y][x] = data;
         }
     }
 
     SDL_FreeSurface(colorSurface);
     SDL_FreeSurface(materialSurface);
+}
+
+/// @brief Loads voxel data from a single file
+/// @param elements Vector to fill with voxel data
+/// @param fileName Name of the file to load (with path **and extension**)
+/// @param loadingColor Whether to load color information or material information
+void Registry::VoxelObjectRegistry::GetVoxelsFromFile(std::vector<std::vector<VoxelData>> &elements, const std::string &fileName, bool loadingColor)
+{
+    SDL_Surface *surface = SDL_LoadBMP(fileName.c_str());
+    
+    if (!surface) {
+        throw std::runtime_error("[VoxelObjectRegistry] Failed to load image for file named: " + fileName);
+    }
+    else if (surface->format->format != SDL_PIXELFORMAT_ARGB8888) {
+        throw std::runtime_error("[VoxelObjectRegistry] Image must be in ARGB8888 format for file named: " + fileName);
+    }
+
+    elements.resize(surface->h, std::vector<VoxelData>(surface->w));
+    for (int y = 0; y < surface->h; ++y) {
+        for (int x = 0; x < surface->w; ++x) {
+            Uint32 pixel = ((Uint32*)surface->pixels)[y * surface->w + x];
+
+            RGBA color = RGBA(pixel);
+
+            if(color.a == 0) {
+                elements[y][x] = { "", color }; // Transparent pixel
+                continue; // Skip transparent pixels
+            }
+
+            VoxelData data;
+            if(loadingColor){
+                data = {
+                    .id = "",
+                    .color = color
+                };
+            } else{
+                uint32_t materialId = pixel;
+                data = {
+                    .id = GetVoxelFromColorID(materialId),
+                    .color = RGBA(0, 0, 0, 0)
+                };
+            }
+
+            elements[y][x] = data;
+        }
+    }
+
+    SDL_FreeSurface(surface);
 }
 VoxelObjectFactory *Registry::VoxelObjectRegistry::FindFactoryWithID(std::string id)
 {
@@ -167,7 +218,7 @@ VoxelObjectBuilder &VoxelObjectBuilder::SetDensityOverride(float density)
     return *this;
 }
 
-VoxelObjectBuilder &VoxelObjectBuilder::SetVoxelFileName(std::string fileName)
+VoxelObjectBuilder &VoxelObjectBuilder::SetVoxelFilePathName(std::string fileName)
 {
     this->voxelPath = fileName;
     return *this;
@@ -184,7 +235,7 @@ VoxelObjectProperty VoxelObjectBuilder::Build()
     property.densityOverride = this->densityOverride;
     property.specialFactoryID = this->specialFactoryID;
 
-    VoxelObjectRegistry::SetVoxelsFromFile(property, this->voxelPath);
+    VoxelObjectRegistry::GetVoxelsFromFiles(property.voxelData, this->voxelPath);
 
     return property;
 }

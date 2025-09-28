@@ -1,14 +1,18 @@
 #include "ImGuiRenderer.h"
 
-#include <imgui.h>
-#include <imgui_impl_sdl2.h>
-#include <imgui_impl_opengl3.h>
-
 #include <GameEngine.h>
 
 #include "Editor.h"
 #include "Input/InputHandler.h"
 #include "Generation/ChunkGenerator.h"
+#include "Generation/VoxelObjLoader.h"
+
+ImGuiRenderer::ImGuiRenderer()
+    : fileDialog(ImGuiFileBrowserFlags_ConfirmOnEnter, std::filesystem::current_path())
+{
+    this->fileDialog.SetTitle("Select Voxel File to load");
+    this->fileDialog.SetTypeFilters({ ".bmp", ".BMP" });
+}
 
 void ImGuiRenderer::RenderPanel()
 {
@@ -17,7 +21,7 @@ void ImGuiRenderer::RenderPanel()
     EditorScene *activeScene = Editor::instance.GetActiveScene();
 
     if(!activeScene) this->RenderEmptyBottomPanel();
-    else switch(activeScene->type){
+    else switch(activeScene->GetType()){
         case EditorScene::Type::ObjectEditor:
             this->RenderDrawPanel();
             break;
@@ -25,6 +29,22 @@ void ImGuiRenderer::RenderPanel()
             this->RenderEmptyBottomPanel();
             break;
     }
+    this->fileDialog.Display();
+}
+
+void ImGuiRenderer::ActOnFileBrowserSelection()
+{
+    if(!this->fileDialog.HasSelected()) return;
+
+    std::string selectedFilePath = this->fileDialog.GetSelected().string();
+    EditorScene *activeScene = Editor::instance.GetActiveScene();
+
+    if(activeScene && !selectedFilePath.empty()){
+        std::cout << "Selected voxel file: " << selectedFilePath << std::endl;
+        ObjLoader::InsertVoxelsFromFileIntoScene(selectedFilePath, activeScene);
+    }
+
+    this->fileDialog.ClearSelected();
 }
 
 void ImGuiRenderer::RenderEmptyBottomPanel()
@@ -34,8 +54,6 @@ void ImGuiRenderer::RenderEmptyBottomPanel()
     ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
     ImGui::SetWindowPos(ImVec2(panelSideWidth, screenCorner.y - panelBottomHeight));
     ImGui::SetWindowSize(ImVec2(screenCorner.x, panelBottomHeight));
-    
-
 
     ImGui::End();
 }
@@ -60,6 +78,12 @@ void ImGuiRenderer::RenderDrawPanel()
     ImGui::Text("Draw Options");
     ImGui::SetNextItemWidth(100);
     ImGui::SliderInt("Brush Radius", &Input::mouseData.brushRadius, 0, 10);
+    ImGui::EndGroup();
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    ImGui::Checkbox("Load color not material", &Editor::instance.stateStorage.loadColorFromBMP);
+    if(ImGui::Button("Load Voxel File"))
+        this->fileDialog.Open();
     ImGui::EndGroup();
 
     ImGui::End();

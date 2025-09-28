@@ -129,12 +129,12 @@ VoxelObjectRegistry::RegisterVoxelObject(
     "Barrel",
     VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
         .SetDensityOverride(400.0f)     // Optional, density is calculated automatically when not overridden
-        .SetVoxelFileName("Barrel")
+        .SetVoxelFilePathName("Textures/Objects/Barrel")
         .Build()
 );
 ```
 
-This code will expect a `Barrel.bmp` and `Barrel.mat.bmp` to be present in the `Textures` folder during build
+This code will expect a `Barrel.bmp` and `Barrel.mat.bmp` to be present in the `Textures/Objects/` folder during build
 
 > [!CAUTION]  
 > Both `*.bmp` and `*.mat.bmp` **have** to be present and both **have** to have the same width and height. This is not optional
@@ -183,7 +183,7 @@ An example of such an override may look like the following:
 VoxelObjectRegistry::RegisterVoxelObject(
     "Crate",
     VoxelObjectBuilder(VoxelObjectType::Custom)
-        .SetVoxelFileName("Crate")
+        .SetVoxelFilePathName("Textures/Objects/Crate")
         .Build()
 );
 Registry::VoxelObjectRegistry::RegisterVoxelObjectFactory(

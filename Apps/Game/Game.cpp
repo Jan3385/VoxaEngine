@@ -90,26 +90,26 @@ void Game::RegisterVoxelObjects()
         "Player",
         VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
             .SetDensityOverride(985.0f)
-            .SetVoxelFileName("Player")
+            .SetVoxelFilePathName("Player")
             .Build()
     );
     VoxelObjectRegistry::RegisterVoxelObject(
         "Barrel",
         VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
             .SetDensityOverride(400.0f)
-            .SetVoxelFileName("Barrel")
+            .SetVoxelFilePathName("Textures/Objects/Barrel")
             .Build()
     );
     VoxelObjectRegistry::RegisterVoxelObject(
         "Ball",
         VoxelObjectBuilder(VoxelObjectType::PhysicsObject)
-            .SetVoxelFileName("Ball")
+            .SetVoxelFilePathName("Textures/Objects/Ball")
             .Build()
     );
     VoxelObjectRegistry::RegisterVoxelObject(
         "Crate",
         VoxelObjectBuilder(VoxelObjectType::VoxelObject)
-            .SetVoxelFileName("Crate")
+            .SetVoxelFilePathName("Textures/Objects/Crate")
             .Build()
     );
 }
