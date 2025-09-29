@@ -15,7 +15,7 @@ public:
 
     EditorScene() = default;
     EditorScene(std::string name, Type type, ChunkMatrix* chunkMatrix, Vec2i chunkSize)
-        : name(name), type(type), chunkMatrix(chunkMatrix) {
+        : name(name), chunkMatrix(chunkMatrix), type(type) {
         this->chunkSize = chunkSize;
     }
 
