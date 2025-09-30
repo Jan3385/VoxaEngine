@@ -32,7 +32,23 @@ void Editor::SwitchToScene(size_t index)
 
     ChunkMatrix* newMatrix = this->scenes[index].chunkMatrix;
     GameEngine::instance->SetActiveChunkMatrix(newMatrix);
-    this->activeSceneIndex = index;
+}
+
+void Editor::SetSimulationActive(bool state)
+{
+    if(state){
+        if(Editor::instance.stateStorage.simulationFPS > 0.0f &&
+          !Editor::instance.stateStorage.runSimulationAuto){
+
+            Editor::instance.stateStorage.runSimulationAuto = true;
+            GameEngine::instance->SetPauseVoxelSimulation(false);
+        }
+    }else{
+        if(Editor::instance.stateStorage.runSimulationAuto){
+            Editor::instance.stateStorage.runSimulationAuto = false;
+            GameEngine::instance->SetPauseVoxelSimulation(true);
+        }
+    }
 }
 
 void Editor::OnInitialize()
@@ -62,19 +78,43 @@ void Editor::Update(float deltaTime)
 
     if(Input::mouseData.leftButtonDown)
     {
+        std::string voxelID = "Solid";
+        bool placeUnmovable = true;
+
+        if(Editor::instance.stateStorage.selectedSceneType == EditorScene::Type::Sandbox)
+        {
+            placeUnmovable = Editor::instance.stateStorage.placedSimVoxelsAreUnmovable;
+
+            switch (Editor::instance.stateStorage.selectedVoxelState)
+            {
+            case Volume::State::Gas:
+                voxelID = "Oxygen";
+                break;
+            case Volume::State::Liquid:
+                voxelID = "Water";
+                break;
+            case Volume::State::Solid:
+                voxelID = "Dirt";
+                break;
+            }
+        }
+
         std::vector<Volume::VoxelElement*> placedVoxels;
         placedVoxels = GameEngine::instance->GetActiveChunkMatrix()->PlaceVoxelsAtMousePosition(
             GameEngine::instance->GetMousePos(),
-            "Solid",
+            voxelID,
             GameEngine::renderer->GetCameraOffset(),
             Volume::Temperature(21.0f),
-            false,
+            placeUnmovable,
             Input::mouseData.brushRadius,
             20
         );
-        for(auto& placedVoxel : placedVoxels){
-            if(placedVoxel == nullptr) continue;
-            placedVoxel->color = Input::mouseData.placeColor;
+
+        if(Editor::instance.stateStorage.selectedSceneType == EditorScene::Type::ObjectEditor){
+            for(auto& placedVoxel : placedVoxels){
+                if(placedVoxel == nullptr) continue;
+                placedVoxel->color = Input::mouseData.placeColor;
+            }
         }
     }
     if(Input::mouseData.rightButtonDown)
@@ -200,4 +240,23 @@ void Editor::OnSceneChange(ChunkMatrix* oldMatrix, ChunkMatrix* newMatrix)
         isInDefaultScene = false;
         delete oldMatrix;
     }
+
+    size_t index = 0;
+    for(size_t i = 0; i < this->scenes.size(); ++i){
+        if(this->scenes[i].chunkMatrix == newMatrix){
+            index = i;
+            break;
+        }
+    }
+    EditorScene *scene = &this->scenes[index];
+
+    // if switching from sandbox, stop some stuff
+    if(this->stateStorage.selectedSceneType == EditorScene::Type::Sandbox){
+        Editor::instance.SetSimulationActive(false);
+        GameEngine::renderer->debugRendering = false;
+        GameEngine::renderer->renderMeshData = false;
+    }
+
+    this->stateStorage.selectedSceneType = scene->GetType();
+    this->activeSceneIndex = index;
 }

@@ -10,6 +10,7 @@ int main(int argc, char* argv[])
     config.automaticLoadingOfChunksFromEvents = false;
     config.disableGPUSimulations = true;
     config.pauseVoxelSimulation = true;
+    config.voxelFixedDeltaTime = 1.0f / 30.0f;
     config.vsync = true;
 
     Editor editor;

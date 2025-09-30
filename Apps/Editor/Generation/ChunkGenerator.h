@@ -9,6 +9,7 @@
 
 namespace Generator{
     Volume::Chunk *GenerateEmptyChunk(const Vec2i& pos, ChunkMatrix& matrix);
+    Volume::Chunk *GenerateOxygenFilledChunk(const Vec2i& pos, ChunkMatrix& matrix);
     void SetNewMatrix(const Vec2i& size, EditorScene::Type type);
     void ExpandMatrixToSize(const Vec2i& size);
 

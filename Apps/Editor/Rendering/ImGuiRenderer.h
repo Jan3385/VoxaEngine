@@ -25,8 +25,14 @@ private:
         "Object Editor",
         "Sandbox"
     };
+    std::array<std::string, 3> voxelStateNames = {
+        "Gas",
+        "Liquid",
+        "Solid"
+    };
 
     void RenderEmptyBottomPanel();
     void RenderDrawPanel();
+    void RenderSandboxPanel();
     void RenderLeftPanel();
 };

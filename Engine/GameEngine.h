@@ -107,8 +107,8 @@ namespace Config{
         bool automaticLoadingOfChunksInView = true;
         bool automaticLoadingOfChunksFromEvents = true;
         bool disableGPUSimulations = false;
-        float fixedDeltaTime = 3/30.0;
-        float voxelFixedDeltaTime = 1/30.0;
+        float fixedDeltaTime = 3.0f / 30.0f;
+        float voxelFixedDeltaTime = 1.0f / 30.0f;
 
         bool pauseVoxelSimulation = false;
         EnabledEngineFeatures enabledFeatures = EnabledEngineFeatures::ALL;

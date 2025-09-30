@@ -25,6 +25,9 @@ void ImGuiRenderer::RenderPanel()
         case EditorScene::Type::ObjectEditor:
             this->RenderDrawPanel();
             break;
+        case EditorScene::Type::Sandbox:
+            this->RenderSandboxPanel();
+            break;
         default:
             this->RenderEmptyBottomPanel();
             break;
@@ -84,6 +87,67 @@ void ImGuiRenderer::RenderDrawPanel()
     ImGui::Checkbox("Load color not material", &Editor::instance.stateStorage.loadColorFromBMP);
     if(ImGui::Button("Load Voxel File"))
         this->fileDialog.Open();
+    ImGui::EndGroup();
+
+    ImGui::End();
+}
+
+void ImGuiRenderer::RenderSandboxPanel()
+{
+    Vec2i screenCorner = GameEngine::instance->WindowSize;
+
+    ImGui::Begin("Sandbox Panel", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+    ImGui::SetWindowPos(ImVec2(panelSideWidth, screenCorner.y - panelBottomHeight));
+    ImGui::SetWindowSize(ImVec2(screenCorner.x, panelBottomHeight));
+
+    ImGui::BeginGroup();
+    ImGui::SetNextItemWidth(panelBottomHeight * 0.75f - 1);
+    std::string currentStateName = this->voxelStateNames[static_cast<int>(Editor::instance.stateStorage.selectedVoxelState)];
+    if(ImGui::BeginCombo("State", currentStateName.c_str())){
+        for(size_t i = 0; i < this->voxelStateNames.size(); i++){
+            bool isSelected = (i == static_cast<size_t>(Editor::instance.stateStorage.selectedVoxelState));
+
+            if(ImGui::Selectable(this->voxelStateNames[i].c_str(), isSelected)){
+                Editor::instance.stateStorage.selectedVoxelState = static_cast<Volume::State>(i);
+            }
+                
+            if(isSelected)
+                ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+    if(Editor::instance.stateStorage.selectedVoxelState == Volume::State::Solid)
+        ImGui::Checkbox("Place Unmovable", &Editor::instance.stateStorage.placedSimVoxelsAreUnmovable);
+    ImGui::EndGroup();
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    ImGui::Text("Simulation Options");
+    if(ImGui::Button("Start Simulation")) {
+        Editor::instance.SetSimulationActive(true);
+    }
+    if(ImGui::Button("Pause Simulation")){
+        Editor::instance.SetSimulationActive(false);
+    }
+    ImGui::SetNextItemWidth(panelBottomHeight * 0.75f - 1);
+    if(ImGui::SliderFloat("Simulation FPS", &Editor::instance.stateStorage.simulationFPS, 0.0f, 30.0f, "%.1f FPS")){
+        GameEngine::instance->voxelFixedDeltaTime = 1.0f / Editor::instance.stateStorage.simulationFPS;
+
+        // Stop simulation if FPS is set to 0
+        if(GameEngine::instance->voxelFixedDeltaTime <= 0.0f)
+            Editor::instance.SetSimulationActive(false);
+    }
+    if(ImGui::Button("Step")){
+        // Ignore the step if the simulation is running
+        if(!Editor::instance.stateStorage.runSimulationAuto)
+            GameEngine::instance->VoxelSimulationStep();
+    }
+    ImGui::EndGroup();
+    ImGui::SameLine();
+
+    ImGui::BeginGroup();
+    ImGui::Checkbox("Debug Rendering", &GameEngine::instance->renderer->debugRendering);
+    ImGui::Checkbox("Render Mesh Data", &GameEngine::renderer->renderMeshData);
     ImGui::EndGroup();
 
     ImGui::End();
@@ -155,9 +219,6 @@ void ImGuiRenderer::RenderLeftPanel()
     ImGui::Spacing();
     ImGui::EndChild();
     ImGui::PopStyleColor();
-
-    ImGui::Checkbox("Debug Rendering", &GameEngine::instance->renderer->debugRendering);
-    ImGui::Checkbox("Render Mesh Data", &GameEngine::renderer->renderMeshData);
 
     ImGui::End();
 }

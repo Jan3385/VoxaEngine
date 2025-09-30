@@ -7,6 +7,12 @@
 
 struct EditorStateStorage{
     EditorScene::Type selectedSceneType = EditorScene::Type::ObjectEditor;
+
+    Volume::State selectedVoxelState = Volume::State::Solid;
+    bool placedSimVoxelsAreUnmovable = false;
+    float simulationFPS = 30.0f;
+    bool runSimulationAuto = false;
+
     Vec2i generateNewChunksSize = Vec2i(1, 1);
     bool loadColorFromBMP = true;
 };
@@ -24,6 +30,8 @@ public:
     size_t activeSceneIndex = 0;
     EditorScene* GetActiveScene();
     void SwitchToScene(size_t index);
+
+    void SetSimulationActive(bool state);
 
 private:
     void OnInitialize() override;

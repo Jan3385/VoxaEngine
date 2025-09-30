@@ -279,7 +279,7 @@ void GameEngine::SimulationThread(IGame& game)
         voxelUpdateTimer -= voxelFixedDeltaTime;
 
         chunkMatrix->voxelMutex.lock();
-
+        
         this->VoxelSimulationStep();
 
         chunkMatrix->voxelMutex.unlock();
