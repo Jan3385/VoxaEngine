@@ -448,16 +448,18 @@ Volume::VoxelElement* ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, boo
         for(Vec2i dir : vector::AROUND4){
             Volume::VoxelElement* neighbour = this->VirtualGetAt_NoLoad(voxel->position + dir);
             if(neighbour && neighbour->properties == replacedVoxel->properties){
-                neighbour->amount += replacedVoxel->amount;
+                if(GameEngine::instance->runPressureSimulation)
+                    neighbour->amount += replacedVoxel->amount;
 
-                if(replacedVoxel->amount != 0 || replacedVoxel->amount != 0){
-                    neighbour->temperature.SetCelsius(
-                        (neighbour->temperature.GetCelsius() * neighbour->amount + replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
-                         / (neighbour->amount + replacedVoxel->amount));
+                if(GameEngine::instance->runHeatSimulation){
+                    if(replacedVoxel->amount != 0 || replacedVoxel->amount != 0){
+                        neighbour->temperature.SetCelsius(
+                            (neighbour->temperature.GetCelsius() * neighbour->amount + replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
+                            / (neighbour->amount + replacedVoxel->amount));
+                    }
+                    //when amount is 0, set temperature to 21
+                    else neighbour->temperature.SetCelsius(21);
                 }
-                //whem amount is 0, set temperature to 21
-                else neighbour->temperature.SetCelsius(21);
-
 
                 VirtualSetAt(voxel);
                 return voxel;
@@ -476,12 +478,15 @@ Volume::VoxelElement* ChunkMatrix::PlaceVoxelAt(Volume::VoxelElement *voxel, boo
 
             //merge into any voxel thats the same type
             if(neighbour->properties == replacedVoxel->properties){
-                neighbour->amount += replacedVoxel->amount;
+                if(GameEngine::instance->runPressureSimulation)
+                    neighbour->amount += replacedVoxel->amount;
 
-                neighbour->temperature.SetCelsius(
-                    (neighbour->temperature.GetCelsius() * neighbour->amount + 
-                    replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
-                     / (neighbour->amount + replacedVoxel->amount));
+                if(GameEngine::instance->runHeatSimulation){
+                    neighbour->temperature.SetCelsius(
+                        (neighbour->temperature.GetCelsius() * neighbour->amount + 
+                        replacedVoxel->temperature.GetCelsius() * replacedVoxel->amount)
+                        / (neighbour->amount + replacedVoxel->amount));
+                }
 
                 VirtualSetAt(voxel);
                 return voxel;
