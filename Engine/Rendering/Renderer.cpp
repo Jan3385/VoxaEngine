@@ -81,7 +81,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool l
         Debug::LogFatal("Error initializing GLEW: " + std::string(reinterpret_cast<const char*>(glewGetErrorString(err))));
     }
 
-    Debug::LogInfo("Compiling voxel render shaders...");
+    Debug::LogInfo("Compiling voxel render shaders");
     this->voxelRenderProgram = new Shader::RenderShader(
         "VoxelArrayRender"
     );
@@ -97,7 +97,6 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool l
     this->cursorRenderProgram = new Shader::RenderShader(
         "CursorRender"
     );
-    Debug::LogInfo("Voxel render shaders compiled");
 
     // Quad VBO setup ----
     const glm::vec2 quad[] = {

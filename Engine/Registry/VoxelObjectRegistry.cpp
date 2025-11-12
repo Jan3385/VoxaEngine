@@ -139,11 +139,9 @@ VoxelObjectFactory *Registry::VoxelObjectRegistry::FindFactoryWithID(std::string
 }
 void VoxelObjectRegistry::RegisterObjects(IGame *game)
 {
-    Debug::LogInfo("Registering voxel objects...");
+    Debug::LogInfo("Registering voxel objects");
 
     game->RegisterVoxelObjects();
-
-    Debug::LogInfo("Voxel object registration complete");
 }
 
 void Registry::VoxelObjectRegistry::CloseRegistry()

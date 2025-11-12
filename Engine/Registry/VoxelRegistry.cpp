@@ -62,7 +62,7 @@ void Registry::VoxelRegistry::RegisterReaction(Registry::ChemicalReaction reacti
 
 void VoxelRegistry::RegisterVoxels(IGame *game)
 {
-	Debug::LogInfo("Registering voxels...");
+	Debug::LogInfo("Registering voxels");
 	using namespace Volume;
 	VoxelRegistry::RegisterVoxel(
 		"Empty",
@@ -80,8 +80,6 @@ void VoxelRegistry::RegisterVoxels(IGame *game)
 	);
 
 	game->RegisterVoxels();
-
-	Debug::LogInfo("Voxel registration complete");
 }
 
 void Registry::VoxelRegistry::CloseRegistry()
