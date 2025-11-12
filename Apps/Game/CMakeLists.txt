@@ -12,7 +12,6 @@ set_property(TARGET VoxaGame PROPERTY CXX_STANDARD 20)
 
 set(FONTS_FOLDER "${CMAKE_SOURCE_DIR}/Fonts")
 set(RENDER_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Rendering/RenderShaders")
-# set(COMPUTE_SHADERS_FOLDER_GAME "${CMAKE_SOURCE_DIR}/Games/Game/Shaders/ComputeShaders")
 set(COMPUTE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Computing/ComputeShaders")
 set(INCLUDE_SHADERS_FOLDER "${CMAKE_SOURCE_DIR}/Engine/Shader/Includes")
 
@@ -42,19 +41,3 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/Engine/DLLs $<TARGET_FILE_DIR:VoxaGame>
   )
 endif()
-
-# Windows support DLL's (UNUSED - for dynamic linking)
-#if(WIN32)
-#  file(GLOB VCPKG_DLLS "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/*.dll")
-#  add_custom_target(copy_dlls ALL
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#      ${VCPKG_DLLS}
-#      $<TARGET_FILE_DIR:VoxaGame>
-#
-#    COMMAND ${CMAKE_COMMAND} -E copy
-#      $<TARGET_FILE_DIR:VoxaEngine>/libVoxaEngine.dll
-#      $<TARGET_FILE_DIR:VoxaGame>
-#
-#    DEPENDS VoxaEngine
-#  )
-#endif()
