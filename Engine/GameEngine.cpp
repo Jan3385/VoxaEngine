@@ -252,10 +252,10 @@ void GameEngine::Update(IGame& game)
     }
 
     if(fixedUpdateTimer > fixedDeltaTime*2.5f && consoleTimerWarnings)
-        std::cout << "Fixed update timer is too high: " << fixedUpdateTimer << std::endl;
+        Debug::LogSpam("Fixed update timer is too high: " + std::to_string(fixedUpdateTimer));
 
     if(voxelUpdateTimer > voxelFixedDeltaTime*2.5f && consoleTimerWarnings && !this->pauseVoxelSimulation)
-        std::cout << "Voxel Simulation update timer is too high: " << voxelUpdateTimer << std::endl;
+        Debug::LogSpam("Voxel Simulation update timer is too high: " + std::to_string(voxelUpdateTimer));
 }
 void GameEngine::UpdateGridVoxel(int pass)
 {    
@@ -446,7 +446,7 @@ ChunkMatrix *GameEngine::GetActiveChunkMatrix()
 ChunkMatrix *GameEngine::SetActiveChunkMatrix(ChunkMatrix *matrix)
 {
     if(matrix == nullptr){
-        std::cerr << "Warning: Tried to set active chunk matrix to nullptr!" << std::endl;
+        Debug::LogWarn("Tried to set active chunk matrix to nullptr!");
         return this->chunkMatrix;
     }
     this->futureChunkMatrix = matrix;

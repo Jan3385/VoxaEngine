@@ -21,7 +21,7 @@ void ObjLoader::InsertVoxelsFromFileIntoScene(const std::string &filePath, Edito
     );
 
     if (!sceneAABB.Contains(boundingBox)) {
-        std::cerr << "[ObjLoader] Voxel object from file " << filePath << " does not fit into the scene!" << std::endl;
+        Debug::LogError("Voxel object from file " + filePath + " does not fit into the scene!");
         return;
     }
 

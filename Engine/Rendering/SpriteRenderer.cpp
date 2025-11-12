@@ -5,6 +5,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Debug/Logger.h"
 #include "VoxelObject/VoxelObject.h"
 
 SpriteRenderer::SpriteRenderer()
@@ -82,7 +83,7 @@ GLuint SpriteRenderer::LoadTextureFromFile(const std::string &filePath, Vec2i *r
 {
     SDL_Surface *surface = SDL_LoadBMP(filePath.c_str());
     if (!surface) {
-        std::cerr << "Failed to load texture from file: " << filePath << " - " << SDL_GetError() << std::endl;
+        Debug::LogError("Failed to load texture from file: " + filePath + " - " + SDL_GetError());
         return 0;
     }
 

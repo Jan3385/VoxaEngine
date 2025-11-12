@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "Debug/Logger.h"
+
 using namespace Shader;
 
 const std::string RenderShader::SHADER_EXTENSION_VERT = ".vert";
@@ -50,7 +52,7 @@ RenderShader::RenderShader(const char* vertexPath, const char* fragmentPath, std
     if (!success) {
         GLchar infoLog[512];
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        std::cerr << printShaderName << "Error linking rendering shader program: " << infoLog << std::endl;
+        Debug::LogError(printShaderName + "Error linking rendering shader program: " + infoLog);
         ID = 0; // Prevent use of invalid shader
     }
 

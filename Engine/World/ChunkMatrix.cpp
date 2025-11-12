@@ -18,7 +18,7 @@ ChunkMatrix::ChunkMatrix()
 ChunkMatrix::~ChunkMatrix()
 {
     if(this->isActive){
-        std::cerr << "Tried to delete active chunk matrix! This is not allowed. Replace it with a different one before deletion (deletion is not instant)" << std::endl;
+        Debug::LogError("Tried to delete active chunk matrix! This is not allowed. Replace it with a different one before deletion (deletion is not instant)");
     }
     this->cleanup();
 }

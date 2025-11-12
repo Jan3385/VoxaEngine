@@ -76,7 +76,7 @@ Volume::Chunk::~Chunk()
 void Volume::Chunk::InitializeBuffers()
 {
     if(this->IsInitialized()){
-        std::cerr << "Warning: Duplicate initialization of chunk buffers (" << m_x << ", " << m_y << ")\n";
+        Debug::LogWarn("Duplicate initialization of chunk buffers (" + std::to_string(m_x) + ", " + std::to_string(m_y) + ")");
         return;
     }
 
@@ -145,7 +145,7 @@ void Volume::Chunk::UpdateComputeGPUBuffers(
     Shader::GLGroupStorageBuffer<float>     &heatConductivityBuffer)
 {
     if(this->bufferTicket == Shader::InvalidTicket){
-        std::cerr << "Error: Trying to update compute GPU buffers of chunk without a valid ticket (" << m_x << ", " << m_y << ")" << std::endl;
+        Debug::LogError("Trying to update compute GPU buffers of chunk without a valid ticket (" + std::to_string(m_x) + ", " + std::to_string(m_y) + ").");
         return;
     }
     
@@ -363,7 +363,7 @@ void Volume::Chunk::DestroyPhysicsBody()
 void Volume::Chunk::CreatePhysicsBody(b2WorldId worldId)
 {
     if (b2Body_IsValid(m_physicsBody)) {
-        std::cerr << "Physics body already exists for chunk at (" << m_x << ", " << m_y << ")." << std::endl;
+        Debug::LogError("Physics body already exists for chunk at (" + std::to_string(m_x) + ", " + std::to_string(m_y) + ").");
         return;
     }
     

@@ -2,6 +2,8 @@
 
 int main(int argc, char* argv[])
 {
+    Debug::Logger::Instance().minLogLevel = Debug::Logger::Level::SPAM;
+
     GameEngine engine;
 
     Config::EngineConfig config;

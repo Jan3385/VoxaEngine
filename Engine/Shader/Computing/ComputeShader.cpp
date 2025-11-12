@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "Debug/Logger.h"
+
 using namespace Shader;
 
 const std::string ComputeShader::SHADER_EXTENSION = ".comp";
@@ -37,7 +39,8 @@ ComputeShader::ComputeShader(const char *computePath, std::string shaderName)
     if (!success) {
         GLchar infoLog[512];
         glGetProgramInfoLog(ID, 512, NULL, infoLog);
-        std::cerr << printShaderName << "Error linking compute shader program: " << infoLog << std::endl;
+        
+        Debug::LogError(printShaderName + "Error linking compute shader program: " + infoLog);
         ID = 0; // Prevent use of invalid shader
     }
 
@@ -48,7 +51,7 @@ void ComputeShader::Run(GLuint workGroupX, GLuint workGroupY, GLuint workGroupZ)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "[PRE-" << this->name << "] GL error: [" << err << "]" << std::endl;
+        Debug::LogError("[PRE-" + this->name + "] GL error: [" + std::to_string(err) + "]");
     }
 
     this->Use();
@@ -57,7 +60,7 @@ void ComputeShader::Run(GLuint workGroupX, GLuint workGroupY, GLuint workGroupZ)
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "[" << this->name << "] GL error: [" << err << "]" << std::endl;
+        Debug::LogError("[" + this->name + "] GL error: [" + std::to_string(err) + "]");
     }
 }
 

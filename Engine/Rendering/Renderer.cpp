@@ -28,7 +28,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool l
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
-        std::cerr << "Error initializing SDL2: " << SDL_GetError() << std::endl;
+        Debug::LogFatal("Error initializing SDL2: " + std::string(SDL_GetError()));
     }
 
     IMGUI_CHECKVERSION();
@@ -46,14 +46,12 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool l
     glViewport(0, 0, 800, 600);
 
     if(r_window == nullptr) {
-        std::cout << "Error with window creation: " << SDL_GetError() << std::endl;
-        exit(1);
+        Debug::LogFatal("Error with window creation: " + std::string(SDL_GetError()));
     }
 
     *glContext = SDL_GL_CreateContext(r_window);
     if (!glContext) {
-        std::cerr << "Error creating OpenGL context: " << SDL_GetError() << std::endl;
-        exit(1);
+        Debug::LogFatal("Error creating OpenGL context: " + std::string(SDL_GetError()));
     }
     r_GLContext = glContext;
 
@@ -80,10 +78,10 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool l
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (err != GLEW_OK) {
-        std::cerr << "Error initializing GLEW: " << glewGetErrorString(err) << std::endl;
+        Debug::LogFatal("Error initializing GLEW: " + std::string(reinterpret_cast<const char*>(glewGetErrorString(err))));
     }
 
-    std::cout << "Compiling voxel render shaders... ";
+    Debug::LogInfo("Compiling voxel render shaders...");
     this->voxelRenderProgram = new Shader::RenderShader(
         "VoxelArrayRender"
     );
@@ -99,7 +97,7 @@ GameRenderer::GameRenderer(SDL_GLContext *glContext, RGB backgroundColor, bool l
     this->cursorRenderProgram = new Shader::RenderShader(
         "CursorRender"
     );
-    std::cout << "[Done]" << std::endl;
+    Debug::LogInfo("Voxel render shaders compiled");
 
     // Quad VBO setup ----
     const glm::vec2 quad[] = {
@@ -217,7 +215,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, IGame *game)
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "[PreRender] GL error: [" << err << "]" << std::endl;
+        Debug::LogError("[PreRender] GL error: [" + std::to_string(err) + "]");
     }
 
     // clear screen with a light blue color
@@ -279,10 +277,10 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, IGame *game)
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    SDL_GL_SwapWindow(r_window);
+    SDL_GL_SwapWindow(r_window); 
 
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "[Render] GL error: [" << err << "]" << std::endl;
+        Debug::LogError("[Render] GL error: [" + std::to_string(err) + "]");
     }
 }
 
@@ -290,7 +288,7 @@ void GameRenderer::DrawClosedShape(const std::vector<glm::vec2> &points, const g
     glm::mat4 projection, float lineWidth)
 {
     if(points.size() < 3) {
-        std::cerr << "Error: Cannot draw closed shape with less than 3 points." << std::endl;
+        Debug::LogError("Error: Cannot draw closed shape with less than 3 points.");
         return;
     }
 
@@ -311,7 +309,7 @@ void GameRenderer::DrawClosedShape(const GLuint VAO, const GLsizei size, const g
     glm::mat4 projection, float lineWidth)
 {
     if(size < 3) {
-        std::cerr << "Error: Cannot draw closed shape with less than 3 points." << std::endl;
+        Debug::LogError("Error: Cannot draw closed shape with less than 3 points.");
         return;
     }
 

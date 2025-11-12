@@ -16,6 +16,7 @@
 #include <box2d/box2d.h>
 #include <box2d/types.h>
 
+#include "Debug/Logger.h"
 #include "Rendering/Renderer.h"
 #include "Math/Vector.h"
 #include "Math/AABB.h"

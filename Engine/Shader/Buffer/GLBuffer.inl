@@ -3,6 +3,7 @@
 #include "Shader/GLVertexArray.h"
 #include "GLBuffer.h"
 #include "GLGroupStorageBuffer.h"
+#include "Debug/Logger.h"
 
 namespace Shader{
 
@@ -120,7 +121,8 @@ template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const std::vector<T> &data) const
 {
     if (offset + data.size() > this->bufferSize) {
-        std::cerr << "[" << this->name << "] GLBuffer::UpdateData VEC - Error: Attempt to update buffer data out of bounds!" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::UpdateData VEC - Error: Attempt to update buffer data out of bounds!");
+        return;
     }
 
     this->Bind();
@@ -135,8 +137,9 @@ template <typename T, GLenum Target>
 inline void GLBuffer<T, Target>::UpdateData(GLuint offset, const T *data, GLuint size) const
 {
     if (offset + size > static_cast<GLuint>(this->bufferSize)) {
-        std::cerr << "[" << this->name << "] GLBuffer::UpdateData ARR - Error: Attempt to update buffer data out of bounds!\n";
-        std::cerr << "Offset: " << offset << ", Size: " << size << ", BufferSize: " << this->bufferSize << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::UpdateData ARR - Error: Attempt to update buffer data out of bounds!");
+        Debug::LogError("Offset: " + std::to_string(offset) + ", Size: " + std::to_string(size) + ", BufferSize: " + std::to_string(this->bufferSize));
+        return;
     }
 
     this->Bind();
@@ -157,11 +160,11 @@ inline void GLBuffer<T, Target>::UploadBufferIn(GLuint copyOffset, GLuint writeO
     }
 
     if (copyOffset + size > static_cast<GLuint>(buffer.bufferSize)) {
-        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(source)" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(source)");
         copyOffset = buffer.bufferSize - size;
     }
     if (writeOffset + size > static_cast<GLuint>(this->bufferSize)) {
-        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(destination)" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(destination)");
     }
 
     glBindBuffer(GL_COPY_READ_BUFFER, buffer.ID);
@@ -234,10 +237,10 @@ inline void GLBuffer<T, Target>::SetSize(GLuint size, bool silenceWarnings)
 {
     if(!silenceWarnings) {
         if (size == 0)
-            std::cerr << "[" << this->name << "] GLBuffer::SetSize - Warning: Setting buffer size to 0!" << std::endl;
+            Debug::LogWarn("[" + this->name + "] GLBuffer::SetSize - Warning: Setting buffer size to 0!");
         
         if(size > static_cast<GLuint>(this->bufferSize))
-            std::cerr << "[" << this->name << "] GLBuffer::SetSize - Warning: New size is larger than current buffer size! Without reallocation this may lead to undefined behaviour!" << std::endl;
+            Debug::LogWarn("[" + this->name + "] GLBuffer::SetSize - Warning: New size is larger than current buffer size! Without reallocation this may lead to undefined behaviour!");
     }
 
     this->bufferSize = size;
@@ -253,7 +256,7 @@ inline T *GLBuffer<T, Target>::ReadBuffer() const
 
     T* data = static_cast<T*>(glMapBuffer(Target, GL_READ_ONLY));
     if (!data) {
-        std::cerr << "[" << this->name << "] GLBuffer::ReadBuffer - Error: Failed to map buffer to client address space for reading!" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::ReadBuffer - Error: Failed to map buffer to client address space for reading!");
         return nullptr;
     }
 
@@ -271,7 +274,7 @@ template <typename T, GLenum Target>
 inline T *GLBuffer<T, Target>::ReadBuffer(GLuint size) const
 {
     if(this->bufferSize < static_cast<GLint>(size)){
-        std::cerr << "[" << this->name << "] GLBuffer::ReadBuffer - Warning: Requested size is larger than current buffer size! Returning only available data." << std::endl;
+        Debug::LogWarn("[" + this->name + "] GLBuffer::ReadBuffer - Warning: Requested size is larger than current buffer size! Returning only available data.");
         size = this->bufferSize;
     }
 
@@ -279,7 +282,7 @@ inline T *GLBuffer<T, Target>::ReadBuffer(GLuint size) const
 
     T* data = static_cast<T*>(glMapBuffer(Target, GL_READ_ONLY));
     if (!data) {
-        std::cerr << "[" << this->name << "] GLBuffer::ReadBuffer - Error: Failed to map buffer to client address space for reading!" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::ReadBuffer - Error: Failed to map buffer to client address space for reading!");
         return nullptr;
     }
 

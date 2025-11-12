@@ -43,7 +43,7 @@ void ImGuiRenderer::ActOnFileBrowserSelection()
     EditorScene *activeScene = Editor::instance.GetActiveScene();
 
     if(activeScene && !selectedFilePath.empty()){
-        std::cout << "Selected voxel file: " << selectedFilePath << std::endl;
+        Debug::LogInfo("Selected voxel file: " + selectedFilePath);
         ObjLoader::InsertVoxelsFromFileIntoScene(selectedFilePath, activeScene);
     }
 

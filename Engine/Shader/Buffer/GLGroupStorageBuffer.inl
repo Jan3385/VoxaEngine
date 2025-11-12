@@ -3,6 +3,8 @@
 #include <iostream>
 #include <stack>
 
+#include "Debug/Logger.h"
+
 template <typename T>
 Shader::GLGroupStorageBuffer<T>::GLGroupStorageBuffer()
     : staticSize(false), usage(GL_DYNAMIC_DRAW)
@@ -223,11 +225,11 @@ inline void Shader::GLGroupStorageBuffer<T>::UploadBufferIn(
     }
 
     if (copyOffset + size > static_cast<GLuint>(buffer.bufferSize)) {
-        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(source)" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(source)");
         copyOffset = buffer.bufferSize - size;
     }
     if (writeOffset + size > static_cast<GLuint>(this->totalSize)) {
-        std::cerr << "[" << this->name << "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(destination)" << std::endl;
+        Debug::LogError("[" + this->name + "] GLBuffer::UploadBufferIn - Error: Attempt to upload buffer data out of bounds!(destination)");
     }
 
     glBindBuffer(GL_COPY_READ_BUFFER, buffer.ID);

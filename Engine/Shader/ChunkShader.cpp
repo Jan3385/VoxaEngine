@@ -39,14 +39,14 @@ Shader::ChunkShaderManager::ChunkShaderManager()
 
     this->atomicCounterBuffer = GLBuffer<uint32_t, GL_ATOMIC_COUNTER_BUFFER>("Atomic Counter Buffer");
 
-    std::cout << "Compiling chunk compute shaders... ";
+    Debug::LogInfo("Compiling chunk compute shaders...");
 
     this->heatShader = new ComputeShader("ChunkHeat");
     this->pressureShader = new ComputeShader("ChunkPressure");
     this->reactionShader = new ComputeShader("ChunkReactions");
     this->clearBufferShader = new ComputeShader("ClearOutputBuffer.comp", "Output buffer clearing");
 
-    std::cout << "[Done]" << std::endl;
+    Debug::LogInfo("Chunk compute shaders compiled");
 }
 
 Shader::ChunkShaderManager::~ChunkShaderManager()

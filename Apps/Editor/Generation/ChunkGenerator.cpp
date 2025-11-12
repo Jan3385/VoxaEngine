@@ -99,8 +99,8 @@ void Generator::ExpandMatrixToSize(const Vec2i &size)
 
     if(size.x <= currentSize.x &&
        size.y <= currentSize.y){
-        std::cout << "Generator expand size smaller or same than current size, aborting\n";
-        std::cout << "Current size: " << currentSize << ", requested size: " << size << std::endl;
+        Debug::LogDebug("Generator expand size smaller or same than current size, aborting");        
+        Debug::LogDebug("Current size: " + std::to_string(currentSize.x) + ", " + std::to_string(currentSize.y) + ", requested size: " + std::to_string(size.x) + ", " + std::to_string(size.y));
         return;
     }
 

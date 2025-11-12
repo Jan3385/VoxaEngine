@@ -146,7 +146,7 @@ void PhysicsObject::DestroyPhysicsBody()
 void PhysicsObject::CreatePhysicsBody(b2WorldId worldId)
 {
     if (b2Body_IsValid(m_physicsBody)) {
-        std::cerr << "Physics body already exists for Physics Body at (" << this->position.x << ", " << this->position.y << ")." << std::endl;
+        Debug::LogError("Physics body already exists for Physics Body at (" + std::to_string(this->position.x) + ", " + std::to_string(this->position.y) + ").");
         return;
     }
 

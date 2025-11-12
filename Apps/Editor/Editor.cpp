@@ -22,11 +22,11 @@ EditorScene *Editor::GetActiveScene()
 void Editor::SwitchToScene(size_t index)
 {
     if(index >= this->scenes.size()) {
-        std::cerr << "[Editor] Scene index out of bounds: " << index << std::endl;
+        Debug::LogError("[Editor] Scene index out of bounds: " + std::to_string(index));
         return;
     }
     if(this->scenes[index].chunkMatrix == nullptr) {
-        std::cerr << "[Editor] Scene at index " << index << " has no ChunkMatrix!" << std::endl;
+        Debug::LogError("[Editor] Scene at index " + std::to_string(index) + " has no ChunkMatrix!");
         return;
     }
 

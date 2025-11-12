@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "Debug/Logger.h"
 #include "World/Chunk.h"
 
 using namespace Shader;
@@ -19,11 +20,11 @@ void Shader::Shader::Use() const
 {
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "[OnUSE-" << this->name << "] GL error: [" << err << "]" << std::endl;
+        Debug::LogError("[OnUSE-" + this->name + "] GL error: [" + std::to_string(err) + "]");
     }
 
     if (ID == 0)
-        throw std::runtime_error("Shader program with ID 0 is not valid.");
+        Debug::LogFatal("Shader with ID 0 is invalid. Name: " + this->name);
     
     if(activeShaderID == ID) {
         return; // Already using this shader
@@ -84,7 +85,7 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
                         source << this->LoadFileWithShaderPreprocessor(includePath, shaderName) << "\n";
                     }
                 }else{
-                    std::cerr << shaderName << " Warning: Invalid include (skipped): " << line << std::endl;
+                    Debug::LogWarn(shaderName + " Warning: Invalid include (skipped): " + line);
                 }
             }
             // handle #get to define constants
@@ -102,7 +103,7 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
                         source << "CHUNK_SIZE_SQUARED " << Volume::Chunk::CHUNK_SIZE_SQUARED << "\n";
                     } else{
                         source << "UNKNOWN_VARIABLE " << variableName << "\n";
-                        std::cerr << shaderName << " Warning: Unknown variable requested with #get: " << variableName << std::endl;
+                        Debug::LogWarn(shaderName + " Warning: Unknown variable requested with #get: " + variableName);
                     }
                 }
             } else {
@@ -111,7 +112,7 @@ std::string Shader::Shader::LoadFileWithShaderPreprocessor(const std::string &fi
         }   
     }
     catch (const std::ifstream::failure& e) {
-        std::cerr << shaderName << " Error reading shader files: \n" << e.what() << std::endl;
+        Debug::LogError(shaderName + " Error reading shader files: \n" + e.what());
     }
 
     return source.str();
@@ -139,7 +140,7 @@ GLint Shader::Shader::GetUniformLocation(const std::string &name)
     // Search for uniform location
     GLint location = glGetUniformLocation(ID, name.c_str());
     if (location == -1) {
-        std::cerr << "Warning: Uniform '" << name << "' not found in shader program." << std::endl;
+        Debug::LogWarn("Uniform '" + name + "' not found in shader program.");
     }
     uniformLocationCache[name] = location;
     return location;
@@ -200,7 +201,7 @@ GLuint Shader::Shader::CompileShader(const char *shaderSource, const std::string
     if (!success) {
         GLchar infoLog[512];
         glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-        std::cerr << "Error compiling " << shaderName << ": " << infoLog << std::endl;
+        Debug::LogError("Error compiling " + shaderName + ": " + std::string(infoLog));
     }
 
     return shaderID;
