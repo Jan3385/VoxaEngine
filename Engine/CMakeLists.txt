@@ -87,10 +87,10 @@ if(WIN32)
       glm::glm
       Freetype::Freetype
       imgui
-      ${CMAKE_SOURCE_DIR}/GLEW/lib/Release/x64/glew32s.lib
+      ${CMAKE_CURRENT_SOURCE_DIR}/GLEW/lib/Release/x64/glew32s.lib
       OpenGL::GL
   )
-  target_include_directories(VoxaEngine PUBLIC ${CMAKE_SOURCE_DIR}/GLEW/include)
+  target_include_directories(VoxaEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/GLEW/include)
   target_compile_definitions(VoxaEngine PUBLIC GLEW_STATIC)
 elseif(UNIX)
   find_package(GLEW REQUIRED)
