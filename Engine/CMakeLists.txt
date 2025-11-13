@@ -67,6 +67,9 @@ add_library(VoxaEngine STATIC ${ENGINE_SOURCES})
 # Engine include path
 target_include_directories(VoxaEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
+# SDL main override
+target_compile_definitions(VoxaEngine PUBLIC SDL_MAIN_HANDLED)
+
 # OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
@@ -78,7 +81,6 @@ if(WIN32)
   target_link_libraries(VoxaEngine
     PUBLIC
       SDL2::SDL2
-      $<$<TARGET_EXISTS:SDL2::SDL2main>:SDL2::SDL2main>
       box2d::box2d
       poly2tri
       glm::glm
@@ -94,7 +96,6 @@ elseif(UNIX)
   target_link_libraries(VoxaEngine
     PUBLIC
       SDL2::SDL2
-      $<$<TARGET_EXISTS:SDL2::SDL2main>:SDL2::SDL2main>
       box2d::box2d
       poly2tri
       glm::glm
