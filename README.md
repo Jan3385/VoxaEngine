@@ -66,7 +66,7 @@ SDL2 renderer and most of other renderers are not made with this kind of "voxel"
 ## Windows 10/11
 
 > [!IMPORTANT]
-> You need to have installed `CMake` v3.10 or more, `g++` compiler with `Ninja` generator.
+> You need to have installed `CMake` v3.10 or more, `g++` compiler using `mingw` with `Ninja` generator.
 > You will need to have `vcpkg` installed somewhere to use its path to get *vcpkg.cmake*
 
 (All commands are inside the *PROJECT* folder)

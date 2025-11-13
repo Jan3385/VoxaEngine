@@ -67,9 +67,6 @@ add_library(VoxaEngine STATIC ${ENGINE_SOURCES})
 # Engine include path
 target_include_directories(VoxaEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# SDL main override
-target_compile_definitions(VoxaEngine PUBLIC SDL_MAIN_HANDLED)
-
 # OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
