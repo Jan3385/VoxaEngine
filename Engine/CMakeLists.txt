@@ -13,22 +13,7 @@ find_package(OpenGL REQUIRED)
 
 message(STATUS "Fetching libraries (this might take a minute)")
 
-# Poly2Tri (not in vcpkg)
 include(FetchContent)
-FetchContent_Declare(
-  poly2tri
-  GIT_REPOSITORY https://github.com/greenm01/poly2tri.git
-  GIT_TAG master
-)
-FetchContent_MakeAvailable(poly2tri)
-add_library(poly2tri STATIC
-  ${poly2tri_SOURCE_DIR}/poly2tri/common/shapes.cc
-  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/advancing_front.cc
-  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/cdt.cc
-  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/sweep.cc
-  ${poly2tri_SOURCE_DIR}/poly2tri/sweep/sweep_context.cc
-)
-target_include_directories(poly2tri PUBLIC ${poly2tri_SOURCE_DIR})
 
 # ImGui
 FetchContent_Declare(
@@ -82,7 +67,6 @@ if(WIN32)
     PUBLIC
       SDL2::SDL2
       box2d::box2d
-      poly2tri
       glm::glm
       Freetype::Freetype
       imgui
@@ -97,7 +81,6 @@ elseif(UNIX)
     PUBLIC
       SDL2::SDL2
       box2d::box2d
-      poly2tri
       glm::glm
       Freetype::Freetype
       imgui
