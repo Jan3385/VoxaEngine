@@ -21,7 +21,7 @@ void Logger::ConsoleSink::Write(const LogMessage &message)
 Logger::FileSink::FileSink(const std::string &filename)
 {
     std::lock_guard<std::mutex> lock(fileMutex);
-    logFile.open(filename, std::ios::app);
+    logFile.open(filename);
     if (!logFile.is_open()) {
         Debug::LogError("Failed to open log file: " + filename);
     }
@@ -171,11 +171,13 @@ void Logger::WriteToSinks(const LogMessage &message)
     }
 }
 
+#if KEEP_SPAM_LOGGING == 1
 void Debug::LogSpam(const std::string &message)
 {
     std::string coloredMessage = LOG_SPAM_COLOR_MSG + message + LOG_END_SEQUENCE;
     Logger::Instance().Log(Logger::Level::SPAM, coloredMessage);
 }
+#endif
 
 void Debug::LogTrace(const std::string &message)
 {

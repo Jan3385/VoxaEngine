@@ -1,6 +1,7 @@
 #pragma once
 
 #define ENABLE_LOGGING
+#define KEEP_SPAM_LOGGING 1
 #define LOG_TIME_ENABLED
 
 #define DBG_CONSOLE_LOG_DEFAULT_ENABLED
@@ -24,7 +25,11 @@
 #include <fstream>
 
 namespace Debug{
+#if KEEP_SPAM_LOGGING == 1
     void LogSpam(const std::string& message);
+#else
+    inline void LogSpam(const std::string&) {}
+#endif
 
     void LogTrace(const std::string& message);
     void LogDebug(const std::string& message);
