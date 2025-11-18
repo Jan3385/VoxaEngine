@@ -439,7 +439,7 @@ bool IsPointInTriangle(const b2Vec2 &point, const Triangle &triangle)
 
 // ----------------------------------------------------------
 
-/// @brief Triangulates a polygon defined by a vector of b2Vec2 points (unused)
+/// @brief Triangulates a polygon defined by a vector of b2Vec2 points
 /// @param polygon Vector of b2Vec2 points representing the polygon vertices
 /// @return Vector of Triangle objects representing the triangulated polygons
 std::vector<Triangle> TriangulatePolygon(const std::vector<b2Vec2> &polygon)
