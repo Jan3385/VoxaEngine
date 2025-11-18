@@ -57,6 +57,8 @@ public:
  
     Vec2i GetSize() const { return Vec2i(width, height); }
 
+    std::string GetName() const { return name; }
+
     Shader::GLVertexArray renderVoxelArray;
 
     std::vector<std::vector<Volume::VoxelElement*>> voxels;

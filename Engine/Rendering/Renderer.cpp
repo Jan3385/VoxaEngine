@@ -563,7 +563,7 @@ void GameRenderer::RenderDebugMode(ChunkMatrix &chunkMatrix, glm::vec2 mousePos,
 
 void GameRenderer::RenderMeshData(ChunkMatrix &chunkMatrix, glm::mat4 projection)
 {
-    // Draw chunk mesh data as before
+    // Draw chunk mesh data
     for (auto& chunk : chunkMatrix.Grid) {
         if(chunk->GetAABB().Overlaps(this->Camera)) {
             for (const Triangle& t : chunk->GetColliders()) {
