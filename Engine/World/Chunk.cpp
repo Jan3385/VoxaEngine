@@ -49,14 +49,14 @@ Volume::Chunk::Chunk(const Vec2i &pos) : m_x(pos.x), m_y(pos.y)
                 (chunkWorldPos.x + x),
                 (chunkWorldPos.y + y)
             );
-            renderData[y][x].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color white
+            renderData[y][x].color = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f); // default color purple TODO: idk fix
         }
 
         this->updatePressureBuffer = true;
         this->updateTemperatureBuffer = true;
         this->updateRenderTemperatureBuffer = true;
         this->updateVoxelBuffer = true;
-        this->updateRenderBuffer = true;
+        this->updateRenderData = true;
     }
 }
 
@@ -190,21 +190,34 @@ void Volume::Chunk::UpdateComputeGPUBuffers(
     }
 }
 
-void Volume::Chunk::UpdateRenderGPUBuffers()
+void Volume::Chunk::UpdateRenderCPUData()
 {
     if(!renderVBO.IsInitialized()) return;
-    if(updateRenderBuffer){
+    
+    if(updateRenderData){
         for(uint8_t y = 0; y < CHUNK_SIZE; ++y) {
             for(uint8_t x = 0; x < CHUNK_SIZE; ++x) {
-                renderData[y][x].color = voxels[y][x]->color.getGLMVec4();
+                this->renderData[y][x].color = voxels[y][x]->color.getGLMVec4();
             }
         }
-        renderVBO.SetData(
-            &renderData[0][0],
-            CHUNK_SIZE_SQUARED,
-            GL_DYNAMIC_DRAW
-        );
+
+        this->updateRenderData = false;
+        this->updateRenderBuffer = true;
+
+        this->initializedRenderData = true;
     }
+}
+void Volume::Chunk::UpdateRenderGPUBuffers()
+{
+    if(!updateRenderBuffer) return;
+
+	renderVBO.SetData(
+        &this->renderData[0][0],
+        CHUNK_SIZE_SQUARED,
+        GL_DYNAMIC_DRAW
+    );
+
+    updateRenderBuffer = false;
 }
 void Volume::Chunk::SetTemperatureAt(Vec2i pos, Temperature temperature)
 {
@@ -241,7 +254,7 @@ void Volume::Chunk::UpdatedVoxelAt(Vec2i pos)
     updatePressureBuffer = true;
     updateTemperatureBuffer = true;
     updateVoxelBuffer = true;
-    updateRenderBuffer = true;
+    updateRenderData = true;
 }
 
 /// @brief Preforms cellular automata step for all voxels in the chunk
@@ -337,10 +350,6 @@ void Volume::Chunk::SIM_ResetVoxelUpdateData()
     }
 }
 
-void Volume::Chunk::Render(bool debugRender)
-{
-    this->UpdateRenderGPUBuffers();
-}
 Vec2i Volume::Chunk::GetPos() const
 {
     return Vec2i(m_x, m_y);

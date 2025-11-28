@@ -31,7 +31,8 @@ public:
     virtual bool Update(ChunkMatrix& chunkMatrix);
 
     virtual bool ShouldRender() const { return true; };
-    virtual unsigned int UpdateRenderBuffer();
+    virtual void UpdateCPURenderData();
+    virtual unsigned int UpdateGPURenderBuffer();
 
     Vec2f GetPosition() const   { return position; }
     // Get rotation in radians
@@ -75,6 +76,8 @@ protected:
     AABB boundingBox;
 
     float ExchangeHeatBetweenVoxels(Volume::VoxelElement* v1, Volume::VoxelElement* v2);
+
+    std::vector<Volume::VoxelRenderData> renderData;
 
     bool dirtyRotation = true;
     float bufferRotation = 0.0f;

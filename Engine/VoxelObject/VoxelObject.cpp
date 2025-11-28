@@ -55,7 +55,7 @@ VoxelObject::VoxelObject(Vec2f position, std::vector<std::vector<Registry::Voxel
     renderVoxelArray.Unbind();
 
     this->UpdateRotatedVoxelBuffer();
-    this->UpdateRenderBuffer();
+    this->UpdateCPURenderData();
 }
 
 VoxelObject::~VoxelObject()
@@ -81,6 +81,7 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
     bool runHeatSim = GameEngine::instance->runHeatSimulation;
     bool runChemSim = GameEngine::instance->runChemicalReactions;
     bool calculateHeat = runHeatSim && maxHeatTransfer > 0.1f;
+
     if(calculateHeat) maxHeatTransfer = 0.0f;
 
     PhysicsObject* thisPhys = dynamic_cast<PhysicsObject*>(this);
@@ -207,15 +208,19 @@ bool VoxelObject::Update(ChunkMatrix& chunkMatrix)
         }
     }
 
+    this->UpdateCPURenderData();
+
     if(!foundVoxel) {
         return false;
     }
     return true;
 }
 
-unsigned int VoxelObject::UpdateRenderBuffer()
+void VoxelObject::UpdateCPURenderData()
 {
-    std::vector<Volume::VoxelRenderData> renderData;
+    std::lock_guard<std::mutex> lock(GameEngine::instance->openGLMutex);
+    
+    this->renderData.clear();
 
     Vec2f offset = this->position - Vec2f((rotatedVoxelBuffer[0].size()) / 2.0f, (rotatedVoxelBuffer.size()) / 2.0f);
     offset.x = std::ceil(offset.x);
@@ -225,7 +230,7 @@ unsigned int VoxelObject::UpdateRenderBuffer()
         for (size_t x = 0; x < this->rotatedVoxelBuffer[0].size(); ++x) {
             Volume::VoxelElement* voxel = this->rotatedVoxelBuffer[y][x];
             if (voxel) {
-                renderData.push_back({
+                this->renderData.push_back({
                     .position = glm::ivec2(
                         x + offset.x, 
                         y + offset.y),
@@ -234,6 +239,10 @@ unsigned int VoxelObject::UpdateRenderBuffer()
             }
         }
     }
+}
+
+unsigned int VoxelObject::UpdateGPURenderBuffer()
+{
     renderVoxelBuffer.SetData(renderData, GL_DYNAMIC_DRAW);
     return renderData.size();
 }

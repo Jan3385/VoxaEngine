@@ -64,7 +64,7 @@ namespace Volume
     	~Chunk();
 
 		void InitializeBuffers();
-		bool IsInitialized() const { return this->renderTemperatureVBO.IsInitialized(); };
+		bool IsInitialized() const { return this->renderTemperatureVBO.IsInitialized() && this->initializedRenderData; };
 
 		bool ShouldChunkDelete(AABB Camera) const;
 		bool ShouldChunkCalculateHeat() const;
@@ -77,6 +77,7 @@ namespace Volume
 			Shader::GLGroupStorageBuffer<float> 	&heatCapacityBuffer,
 			Shader::GLGroupStorageBuffer<float> 	&heatConductivityBuffer
 		);
+		void UpdateRenderCPUData();
 		void UpdateRenderGPUBuffers();
 
 		void SetTemperatureAt(Vec2i pos, Temperature temperature);
@@ -93,7 +94,6 @@ namespace Volume
 		std::vector<b2Vec2> &GetEdges() { return m_edges; }
 
     	void SIM_ResetVoxelUpdateData();
-    	void Render(bool debugRender);
 		Vec2i GetPos() const;
 		AABB GetAABB() const;
 
@@ -118,11 +118,15 @@ namespace Volume
 		void DestroyPhysicsBody();
 		void CreatePhysicsBody(b2WorldId worldId);
 
+		bool initializedRenderData = false;
+
 		// rendering data
 		VoxelRenderData renderData[CHUNK_SIZE][CHUNK_SIZE];
 		Shader::GLBuffer<VoxelRenderData, GL_ARRAY_BUFFER> renderVBO;
 
-		bool updateRenderBuffer;
+		bool updateRenderData;
+		bool updateRenderBuffer = false;
+
 		bool updateVoxelBuffer;
 		bool updateTemperatureBuffer;
 		bool updateRenderTemperatureBuffer;

@@ -167,6 +167,9 @@ public:
     static GamePhysics* physics;
     static GameEngine* instance;
 
+    // Mutex for OpenGL context access from multiple threads
+    std::mutex openGLMutex;
+
     static constexpr int MAX_FRAME_RATE = 60;
     float fixedDeltaTime;
     float voxelFixedDeltaTime;

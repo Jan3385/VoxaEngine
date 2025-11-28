@@ -212,6 +212,7 @@ void GameRenderer::SetCameraSize(Vec2f size)
 
 void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, IGame *game)
 {
+    std::lock_guard<std::mutex> lock(GameEngine::instance->openGLMutex);
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
         Debug::LogError("[PreRender] GL error: [" + std::to_string(err) + "]");
@@ -227,6 +228,7 @@ void GameRenderer::Render(ChunkMatrix &chunkMatrix, Vec2i mousePos, IGame *game)
     glClear(GL_COLOR_BUFFER_BIT);
 
 
+    // TODO: camera mutex
     // set up projections
     glm::mat4 voxelProj = glm::ortho(
         this->Camera.corner.x, this->Camera.corner.x + this->Camera.size.x, 
@@ -339,7 +341,7 @@ void GameRenderer::RenderVoxelObjects(ChunkMatrix &chunkMatrix, glm::mat4 projec
 
         auto pos = object->GetPosition();
 
-        unsigned int voxelCount = object->UpdateRenderBuffer();
+        unsigned int voxelCount = object->UpdateGPURenderBuffer();
 
         object->renderVoxelArray.Bind();
         glDrawArraysInstanced(
@@ -355,7 +357,7 @@ void GameRenderer::RenderPlayer(VoxelObject *player, glm::mat4 projection)
     this->voxelRenderProgram->SetMat4("projection", projection);
 
     if(player->ShouldRender()) {
-        unsigned int voxelCount = player->UpdateRenderBuffer();
+        unsigned int voxelCount = player->UpdateGPURenderBuffer();
 
         player->renderVoxelArray.Bind();
         glDrawArraysInstanced(
@@ -373,9 +375,9 @@ void GameRenderer::RenderChunks(ChunkMatrix &chunkMatrix,  glm::mat4 projection)
     for (auto& chunk : chunkMatrix.Grid) {
         if(!chunk->IsInitialized()) continue;
         
-        if(chunk->GetAABB().Overlaps(this->Camera)){
-            chunk->Render(false);
+        chunk->UpdateRenderGPUBuffers();
 
+        if(chunk->GetAABB().Overlaps(this->Camera)){
             chunk->renderVoxelVAO.Bind();
             glDrawArraysInstanced(
                 GL_TRIANGLE_FAN, 0, 4, 
@@ -425,7 +427,7 @@ void GameRenderer::SetVSYNC(bool enabled)
     else{
         bool failed = SDL_GL_SetSwapInterval(-1) == -1;
         
-        if(!failed)
+        if(failed)
             SDL_GL_SetSwapInterval(1);
     }
 }

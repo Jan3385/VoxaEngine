@@ -136,6 +136,15 @@ void GameEngine::VoxelSimulationStep()
             physics->Generate2DCollidersForChunk(chunkMatrix->Grid[i]);
     }
 
+    // Update render buffers
+    this->openGLMutex.lock();
+    for (size_t i = 0; i < chunkMatrix->Grid.size(); ++i) {
+        auto& chunk = chunkMatrix->Grid[i];
+
+        chunk->UpdateRenderCPUData();
+    }
+    this->openGLMutex.unlock();
+
     chunkMatrix->UpdateParticles();
 }
 
@@ -247,6 +256,7 @@ void GameEngine::Update(IGame& game)
         chunkMatrix->newUninitializedChunks.pop();
 
         if (!chunk->IsInitialized()) {
+            std::lock_guard<std::mutex> lock(this->openGLMutex);
             chunk->InitializeBuffers();
         }
     }
@@ -285,6 +295,9 @@ void GameEngine::SimulationThread(IGame& game)
         chunkMatrix->voxelMutex.unlock();
 
         game.VoxelUpdate(this->voxelFixedDeltaTime);
+
+        // Give the thread a time to breathe
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
 }
 void GameEngine::ChangeChunkMatrix(ChunkMatrix *newMatrix)
@@ -308,14 +321,11 @@ void GameEngine::ChangeChunkMatrix(ChunkMatrix *newMatrix)
 }
 void GameEngine::FixedUpdate(IGame &game)
 {
-    this->chunkMatrix->chunkCreationMutex.lock();
-    this->chunkMatrix->voxelMutex.lock();
+    std::lock_guard<std::mutex> lock(this->chunkMatrix->chunkCreationMutex);
+    std::lock_guard<std::mutex> lock2(this->chunkMatrix->voxelMutex);
 
     // Run heat and pressure simulation
     this->chunkMatrix->RunGPUSimulations();
-
-    this->chunkMatrix->voxelMutex.unlock();
-    this->chunkMatrix->chunkCreationMutex.unlock();
 }
 
 void GameEngine::PollEvents()

@@ -27,6 +27,7 @@ public:
 
 	// mutex for changing voxels
 	std::mutex voxelMutex;
+
 	// mutex for creating/deleting chunks
 	std::mutex chunkCreationMutex;
 	//not precomputed array of chunks

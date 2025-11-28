@@ -56,6 +56,7 @@ Shader::ChunkShaderManager::~ChunkShaderManager()
 
 void Shader::ChunkShaderManager::BatchRunChunkShaders(ChunkMatrix &chunkMatrix)
 {
+    std::lock_guard<std::mutex> lock(GameEngine::instance->openGLMutex);
     std::vector<Volume::Chunk*> chunksToUpdate;
     for(Volume::Chunk* chunk : chunkMatrix.Grid){
         if(chunk->IsInitialized()){

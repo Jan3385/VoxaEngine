@@ -91,6 +91,7 @@ inline void GLBuffer<T, Target>::SetData(const T *data, GLuint size, GLenum usag
     this->Bind();
     glBufferData(Target, size * sizeof(T), data, usage);
     this->bufferSize = size;
+    this->Unbind();
 }
 
 /// @brief Sets a data vector (Causes reallocation)
