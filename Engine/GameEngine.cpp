@@ -131,6 +131,7 @@ void GameEngine::VoxelSimulationStep()
     for(uint8_t i = 0; i < 4; ++i) UpdateGridVoxel(i);
 
     // Update colliders for all chunks
+    //TODO: make multithreaded
     for(size_t i = 0; i < chunkMatrix->Grid.size(); ++i) {
         if(chunkMatrix->Grid[i]->dirtyColliders)
             physics->Generate2DCollidersForChunk(chunkMatrix->Grid[i]);
